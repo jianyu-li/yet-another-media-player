@@ -2475,8 +2475,8 @@ export const yampCardStyles = css`
   .grid-menu .entity-options-item {
     margin: 0;
     border-radius: 0;
-    border-bottom: 1px solid var(--yamp-overlay-divider);
-    border-right: 1px solid var(--yamp-overlay-divider);
+    border-bottom: 1px solid var(--divider-color, var(--yamp-overlay-divider)) !important;
+    border-right: 1px solid var(--divider-color, var(--yamp-overlay-divider)) !important;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -2489,7 +2489,7 @@ export const yampCardStyles = css`
 
   /* Remove right border on every 5th item */
   .grid-menu .entity-options-item:nth-child(5n) {
-    border-right: none;
+    border-right: none !important;
   }
   
   /* Give the icon a specific size in grid mode */
@@ -2518,8 +2518,8 @@ export const yampCardStyles = css`
     justify-content: center;
     margin: 0;
     border-radius: 0;
-    border-bottom: 1px solid var(--yamp-overlay-divider);
-    border-right: 1px solid var(--yamp-overlay-divider);
+    border-bottom: 1px solid var(--divider-color, var(--yamp-overlay-divider)) !important;
+    border-right: 1px solid var(--divider-color, var(--yamp-overlay-divider)) !important;
     padding: 12px 4px;
     gap: 6px;
     font-size: 0.7em;
@@ -2534,7 +2534,7 @@ export const yampCardStyles = css`
      Virtualizer absolutely positions things, but if the wrapper is 100% width, we can use the left position.
      However, standard nth-child(5n) will work if the virtualizer doesn't omit elements. */
   .search-result-grid-mode:nth-child(5n) {
-    border-right: none;
+    border-right: none !important;
   }
 
   .search-result-grid-mode .yamp-search-result-thumb,
@@ -3700,7 +3700,7 @@ export const yampCardStyles = css`
   }
 
   .queue-sortable-container.is-card-layout.grid-mode > .queue-drag-wrapper:nth-child(5n) .search-result-grid-mode {
-    border-right: none;
+    border-right: none !important;
   }
 
   .queue-sortable-container.is-card-layout .queue-drag-wrapper {
