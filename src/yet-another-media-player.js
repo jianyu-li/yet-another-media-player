@@ -9212,9 +9212,9 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
           if (isQueueDragAndDrop) {
             return html`
-              <div class="${this._showSearchInSheet ? 'search-sheet-results' : 'entity-options-search-results'} queue-results-wrapper"
-                   style="${(this.config.search_view === 'card' || this.config.search_view === 'card_minimal') ? `--search-card-columns: ${this.config.search_card_columns || 4};` : ''}">
-                <div class="queue-sortable-container ${isCard ? 'is-card-layout' : ''}"
+              <div class="${this._showSearchInSheet ? 'search-sheet-results' : 'entity-options-search-results'} queue-results-wrapper ${isGridMode ? 'grid-mode' : ''}"
+                   style="${(this.config.search_view === 'card' || this.config.search_view === 'card_minimal' || isGridMode) ? `--search-card-columns: ${isGridMode ? 5 : (this.config.search_card_columns || 4)};` : ''}">
+                <div class="queue-sortable-container ${(isCard || isGridMode) ? 'is-card-layout' : ''} ${isGridMode ? 'grid-mode' : ''}"
                   @pointerdown=${(e) => this._onQueueDragStart(e)}
                 >
                   ${currentResults.map((item, idx) => html`

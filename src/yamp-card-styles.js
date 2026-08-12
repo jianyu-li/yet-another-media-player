@@ -3694,6 +3694,15 @@ export const yampCardStyles = css`
     padding: 12px 12px 24px 12px;
   }
 
+  .queue-sortable-container.is-card-layout.grid-mode {
+    gap: 0;
+    padding: 0;
+  }
+
+  .queue-sortable-container.is-card-layout.grid-mode > .queue-drag-wrapper:nth-child(5n) .search-result-grid-mode {
+    border-right: none;
+  }
+
   .queue-sortable-container.is-card-layout .queue-drag-wrapper {
     height: 100%;
     display: flex;
