@@ -5272,6 +5272,21 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _renderMainMenu(sourceList, menuOnlyActions, showChipsInMenu) {
+    const isGridMode = this._alwaysCollapsed && (!this._expandOnSearch || !this._showSearchInSheet);
+    const renderMenuItem = (label, icon, onClick) => {
+      if (isGridMode) {
+        return html`
+          <button class="entity-options-item menu-action-item" @click=${onClick}>
+            <ha-icon class="menu-action-icon" icon=${icon}></ha-icon>
+            <span class="menu-action-label">${label}</span>
+          </button>
+        `;
+      }
+      return html`
+        <button class="entity-options-item" @click=${onClick}>${label}</button>
+      `;
+    };
+
     return html`
       <div class="entity-options-header">
         <button class="entity-options-item close-item" @click=${() => this._closeEntityOptions()}>
@@ -5279,37 +5294,28 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         </button>
         <div class="entity-options-divider"></div>
       </div>
-      <div class="entity-options-menu ${showChipsInMenu ? 'chips-in-menu' : ''} entity-options-scroll" style="display:flex; flex-direction:column;">
-        <button class="entity-options-item" @click=${() => {
-        const resolvedEntities = this._getResolvedEntitiesForCurrentChip();
-        if (resolvedEntities.length === 1) {
-          this._openMoreInfoForEntity(resolvedEntities[0]);
-          this._showEntityOptions = false;
-        } else {
-          this._showResolvedEntities = true;
-        }
-        this.requestUpdate();
-      }}>${localize('card.menu.more_info')}</button>
-        <button class="entity-options-item" @click=${() => { this._showSearchSheetInOptions(); }}>${localize('common.search')}</button>
+      <div class="entity-options-menu ${showChipsInMenu ? 'chips-in-menu' : ''} ${isGridMode ? 'grid-menu' : 'entity-options-scroll'}" style="${!isGridMode ? 'display:flex; flex-direction:column;' : ''}">
+        ${renderMenuItem(localize('card.menu.more_info'), 'mdi:information-outline', () => {
+          const resolvedEntities = this._getResolvedEntitiesForCurrentChip();
+          if (resolvedEntities.length === 1) {
+            this._openMoreInfoForEntity(resolvedEntities[0]);
+            this._showEntityOptions = false;
+          } else {
+            this._showResolvedEntities = true;
+          }
+          this.requestUpdate();
+        })}
+        ${renderMenuItem(localize('common.search'), 'mdi:magnify', () => { this._showSearchSheetInOptions(); })}
 
-        ${Array.isArray(sourceList) && sourceList.length > 0 ? html`
-          <button class="entity-options-item" @click=${() => this._openSourceList()}>${localize('card.menu.source')}</button>
-        ` : nothing}
+        ${Array.isArray(sourceList) && sourceList.length > 0 ? renderMenuItem(localize('card.menu.source'), 'mdi:import', () => this._openSourceList()) : nothing}
         
-        ${this._canShowTransferQueueOption() ? html`
-          <button class="entity-options-item" @click=${() => this._openTransferQueue()}>${localize('card.menu.transfer_queue')}</button>
-        ` : nothing}
+        ${this._canShowTransferQueueOption() ? renderMenuItem(localize('card.menu.transfer_queue'), 'mdi:swap-horizontal', () => this._openTransferQueue()) : nothing}
         
-        ${this._renderGroupingMenuOption()}
+        ${this._renderGroupingMenuOption(isGridMode)}
         
-        ${this._hasRemoteControlSupport() ? html`
-          <button class="entity-options-item" @click=${() => this._openRemoteControl()}>
-            ${localize('card.menu.remote_controls')}
-          </button>
-        ` : nothing}
+        ${this._hasRemoteControlSupport() ? renderMenuItem(localize('card.menu.remote_controls'), 'mdi:remote', () => this._openRemoteControl()) : nothing}
         
-        ${!this._alwaysCollapsed ? html`
-          <button class="entity-options-item" @click=${() => {
+        ${!this._alwaysCollapsed ? renderMenuItem(localize(this._lyricsActive ? 'card.menu.hide_lyrics' : 'card.menu.show_lyrics'), 'mdi:script-text-outline', () => {
           this._lyricsActive = !this._lyricsActive;
           if (!this._lyricsActive) {
             this._lastLyricsTrackId = null;
@@ -5319,28 +5325,26 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           }
           this._showEntityOptions = false;
           this.requestUpdate();
-        }}>${localize(this._lyricsActive ? 'card.menu.hide_lyrics' : 'card.menu.show_lyrics')}</button>
-        ` : nothing}
-        
+        }) : nothing}
         
         ${menuOnlyActions.length ? html`
           ${menuOnlyActions.map(({ action, idx }) => {
-          const label = this._getActionLabel(action);
-          return html`
-              <button
-                class="entity-options-item menu-action-item"
-                @click=${() => this._onMenuActionClick(idx)}
-              >
-                ${action.icon ? html`
-                  <ha-icon
-                    class="menu-action-icon"
-                    .icon=${action.icon}
-                  ></ha-icon>
-                ` : nothing}
-                ${label ? html`<span class="menu-action-label">${label}</span>` : nothing}
-              </button>
-            `;
-        })}
+            const label = this._getActionLabel(action);
+            return html`
+                <button
+                  class="entity-options-item menu-action-item"
+                  @click=${() => this._onMenuActionClick(idx)}
+                >
+                  ${action.icon ? html`
+                    <ha-icon
+                      class="menu-action-icon"
+                      .icon=${action.icon}
+                    ></ha-icon>
+                  ` : nothing}
+                  ${label ? html`<span class="menu-action-label">${label}</span>` : nothing}
+                </button>
+              `;
+          })}
         ` : nothing}
       </div>
     `;
@@ -5469,7 +5473,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     `;
   }
 
-  _renderGroupingMenuOption() {
+  _renderGroupingMenuOption(isGridMode = false) {
     const totalEntities = this.entityIds.length;
     if (totalEntities <= 1) return nothing;
 
@@ -5488,6 +5492,14 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const isFollower = groupKey !== currentId;
 
     if (groupableCount > 1 && this._isGroupCapable(currGroupState) && !isFollower) {
+      if (isGridMode) {
+        return html`
+          <button class="entity-options-item menu-action-item" @click=${() => this._openGrouping()}>
+            <ha-icon class="menu-action-icon" icon="mdi:speaker-multiple"></ha-icon>
+            <span class="menu-action-label">${localize('card.menu.group_players')}</span>
+          </button>
+        `;
+      }
       return html`
         <button class="entity-options-item" @click=${() => this._openGrouping()}>${localize('card.menu.group_players')}</button>
       `;

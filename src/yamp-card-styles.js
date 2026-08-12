@@ -2464,6 +2464,52 @@ export const yampCardStyles = css`
     text-align: center;
   }
 
+  .grid-menu {
+    display: grid !important;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0;
+    padding: 0;
+    margin: 8px 0;
+  }
+
+  .grid-menu .entity-options-item {
+    margin: 0;
+    border-radius: 0;
+    border-bottom: 1px solid var(--yamp-overlay-divider);
+    border-right: 1px solid var(--yamp-overlay-divider);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 4px;
+    min-height: 64px;
+    gap: 6px;
+    font-size: 0.7em;
+  }
+
+  /* Remove right border on every 5th item */
+  .grid-menu .entity-options-item:nth-child(5n) {
+    border-right: none;
+  }
+  
+  /* Give the icon a specific size in grid mode */
+  .grid-menu .menu-action-icon,
+  .grid-menu .entity-options-item > ha-icon {
+    --mdc-icon-size: 24px;
+    width: 24px;
+    height: 24px;
+    color: inherit;
+    --mdc-icon-color: currentColor;
+    --icon-color: currentColor;
+  }
+
+  .grid-menu .menu-action-label,
+  .grid-menu .entity-options-item > span {
+    line-height: 1.1;
+    text-align: center;
+    color: inherit;
+  }
+
   .entity-options-item.menu-action-item {
     display: flex;
     align-items: center;
