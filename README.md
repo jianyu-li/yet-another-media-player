@@ -68,6 +68,7 @@ Below you will find a list of all configuration options.
 | **Behavior**               |              |              |             |                                                                                                 |
 | `collapse_on_idle`         | boolean      | No           | `false`     | Collapse the card when nothing is playing                                                       |
 | `always_collapsed`         | boolean      | No           | `false`     | Keep the card collapsed even when something is playing ([Supports Templates](#template-support))                                          |
+| `disable_mini_menu`        | boolean      | No           | `false`     | Fallback to standard full-width menus instead of the mini grid menu layout when in `always_collapsed` mode |
 | `expand_on_search`         | boolean      | No           | `false`     | Temporarily expand the card when search is open (only available when `always_collapsed` is `true`) |
 | `hide_menu_player`         | boolean      | No           | `false`     | Hide the persistent media controls in the bottom sheet menu to reclaim space (only available when `always_collapsed` is `false`) |
 | `hide_reorder_progress`   | boolean      | No           | `false`     | Hide the floating queue re-ordering progress indicator at the bottom (also hidden if `hide_menu_player` is `true`) |
