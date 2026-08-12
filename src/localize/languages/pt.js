@@ -152,6 +152,7 @@ export default {
       not_available_alt_collapsed: "Não disponível em modo contraído.",
       not_available_collapsed: "Não disponível se contraído.",
       only_available_collapsed: "Apenas disponível se contraído.",
+      only_available_mini_menu: "Disponível apenas quando 'Sempre recolhido' é verdadeiro e 'Expandir na pesquisa' é falso",
       only_available_modern: "Apenas disponível com layout Moderno.",
       image_url_helper: "Insira um URL direto para uma imagem ou um caminho de arquivo local",
       selected_entity_helper:

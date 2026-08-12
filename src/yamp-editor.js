@@ -3077,7 +3077,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           title="${
             this._config.always_collapsed === true && !this._config.expand_on_search
               ? ""
-              : "Only available when Always Collapsed is true and Expand on Search is false"
+              : localize("editor.subtitles.only_available_mini_menu")
           }"
         >
           <div style="display: flex; align-items: center; gap: 8px;">

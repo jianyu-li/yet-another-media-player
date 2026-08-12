@@ -167,6 +167,7 @@ export default {
         "Nicht verfügbar mit alternativem Fortschrittsbalken oder im Modus 'Immer eingeklappt'.",
       not_available_collapsed: "Nicht verfügbar, wenn 'Immer eingeklappt' aktiviert ist.",
       only_available_collapsed: "Nur verfügbar, wenn 'Immer eingeklappt' aktiviert ist.",
+      only_available_mini_menu: "Nur verfügbar, wenn 'Immer eingeklappt' aktiviert und 'Bei Suche erweitern' deaktiviert ist",
       only_available_modern: "Nur verfügbar im modernen Layout.",
       image_url_helper: "Direkte Bild-URL oder lokalen Dateipfad eingeben.",
       selected_entity_helper:

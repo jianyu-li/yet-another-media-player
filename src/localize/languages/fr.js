@@ -159,6 +159,7 @@ export default {
       not_available_alt_collapsed: "Non disponible en mode 'Toujours réduit'.",
       not_available_collapsed: "Non disponible si 'Toujours réduit' est activé.",
       only_available_collapsed: "Uniquement disponible si 'Toujours réduit' est activé.",
+      only_available_mini_menu: "Uniquement disponible lorsque 'Toujours réduit' est vrai et 'Développer lors de la recherche' est faux",
       only_available_modern: "Uniquement disponible avec la mise en page Moderne.",
       image_url_helper: "Entrez une URL directe vers une image ou un chemin de fichier local",
       selected_entity_helper:

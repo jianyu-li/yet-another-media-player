@@ -197,6 +197,7 @@ export default {
         "Not available with Alternate Progress Bar or Always Collapsed mode",
       not_available_collapsed: "Not available when Always Collapsed is enabled",
       only_available_collapsed: "Only available when Always Collapsed is enabled",
+      only_available_mini_menu: "Only available when Always Collapsed is true and Expand on Search is false",
       only_available_modern: "Only available with Modern layout",
       image_url_helper: "Enter a direct URL to an image or a local file path",
       selected_entity_helper:
