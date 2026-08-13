@@ -133,12 +133,7 @@ export class YampLyricsView extends LitElement {
     }
 
     if (this.loading) {
-      return html`
-        <div class="lyrics-loading">
-          <ha-circular-progress active></ha-circular-progress>
-          <div>${localize("lyrics.finding")}</div>
-        </div>
-      `;
+      return html``;
     }
 
     if (!this.lyrics || this.lyrics.length === 0) {
