@@ -982,6 +982,8 @@ export const yampCardStyles = css`
     padding-top: calc(8px * var(--yamp-details-scale, 1));
     padding-bottom: calc(4px * var(--yamp-details-scale, 1));
     margin-bottom: calc(-4px * var(--yamp-details-scale, 1));
+    max-width: 100%;
+    position: relative;
   }
 
   .details .artist {
@@ -989,6 +991,67 @@ export const yampCardStyles = css`
     line-height: var(--yamp-details-line-height, 1.2);
     padding-bottom: calc(4px * var(--yamp-details-scale, 1));
     margin-bottom: calc(-4px * var(--yamp-details-scale, 1));
+    max-width: 100%;
+    position: relative;
+  }
+
+  .marquee-inner {
+    display: inline-block;
+    white-space: nowrap;
+    max-width: 100%;
+  }
+
+  [data-marquee="true"] {
+    overflow: hidden !important;
+    display: block !important;
+    text-overflow: clip !important;
+    -webkit-line-clamp: unset !important;
+    text-align: left !important;
+  }
+
+  [data-marquee="true"] > .marquee-inner {
+    max-width: none !important;
+    will-change: transform, opacity;
+    animation: yamp-marquee var(--yamp-marquee-duration, 8s) ease-in-out infinite;
+  }
+
+  @media (hover: hover) {
+    [data-marquee="true"]:hover > .marquee-inner {
+      animation-play-state: paused;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-marquee="true"] > .marquee-inner {
+      animation: none !important;
+      transform: none !important;
+      opacity: 1 !important;
+    }
+  }
+
+  @keyframes yamp-marquee {
+    0%,
+    22% {
+      transform: translateX(0);
+      opacity: 1;
+    }
+    72%,
+    88% {
+      transform: translateX(var(--yamp-marquee-distance, 0px));
+      opacity: 1;
+    }
+    93% {
+      transform: translateX(var(--yamp-marquee-distance, 0px));
+      opacity: 0;
+    }
+    96% {
+      transform: translateX(0);
+      opacity: 0;
+    }
+    100% {
+      transform: translateX(0);
+      opacity: 1;
+    }
   }
 
   .track-options-row {

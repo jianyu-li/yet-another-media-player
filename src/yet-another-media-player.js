@@ -4157,6 +4157,31 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       this._setAdaptiveTextVars(scale, undefined, detailScale);
       this.requestUpdate();
     }
+    this._updateMarquee();
+  }
+
+  _updateMarquee() {
+    if (!this.isConnected || !this.renderRoot) return;
+    const containers = this.renderRoot.querySelectorAll('.details .track-options-title, .details .artist');
+    containers.forEach((container) => {
+      const inner = container.querySelector('.marquee-inner');
+      if (!inner) return;
+      const containerWidth = container.clientWidth;
+      const contentWidth = inner.scrollWidth;
+      const overflow = contentWidth - containerWidth;
+      if (overflow > 4) {
+        const speed = 30; // pixels per second
+        const scrollDuration = overflow / speed;
+        const totalDuration = Math.max(5, Math.round((scrollDuration + 4.3) * 10) / 10);
+        container.style.setProperty('--yamp-marquee-distance', `-${Math.ceil(overflow)}px`);
+        container.style.setProperty('--yamp-marquee-duration', `${totalDuration}s`);
+        container.setAttribute('data-marquee', 'true');
+      } else {
+        container.removeAttribute('data-marquee');
+        container.style.removeProperty('--yamp-marquee-distance');
+        container.style.removeProperty('--yamp-marquee-duration');
+      }
+    });
   }
 
   _calculateDetailsScale(width, height, fallbackScale = 1) {
@@ -6576,6 +6601,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         if (overlayEl) overlayEl.scrollTop = 0;
       }, 0);
     }
+    this.updateComplete.then(() => this._updateMarquee());
   }
 
   _toggleSourceMenu() {
@@ -8500,7 +8526,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
                       </div>
                     ` : html`
                       <div class="title track-options-title" @click=${(e) => { if (shouldShowDetails && title) { e.stopPropagation(); this._showMediaTitleOptions = true; } }} style="${shouldShowDetails && title ? 'cursor: pointer;' : ''}" title="${shouldShowDetails && title ? localize('search.show_track_options') : ''}">
-                        ${shouldShowDetails && title ? title : html`&nbsp;`}
+                        <span class="marquee-inner">${shouldShowDetails && title ? title : html`&nbsp;`}</span>
                       </div>
                     `}
                     <div
@@ -8509,7 +8535,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           if (shouldShowDetails && stateObj.attributes.media_artist) this._searchArtistFromNowPlaying();
         }}
                         title=${shouldShowDetails && stateObj.attributes.media_artist ? localize('search.search_artist') : ""}
-                      >${shouldShowDetails && artist ? artist : html`&nbsp;`}</div>
+                      ><span class="marquee-inner">${shouldShowDetails && artist ? artist : html`&nbsp;`}</span></div>
                   </div>
                 ` : nothing}
                 ${(!collapsed && !this._alternateProgressBar)
