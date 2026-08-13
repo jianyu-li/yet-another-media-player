@@ -8667,6 +8667,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
                       Re-ordering ${this._queueOpsCompleted} / ${this._queueOpsTotal}
                     </div>
                   ` : nothing}
+                  ${this._lyricsActive && !this._isIdle && this._fetchingLyrics ? html`
+                    <div class="queue-ops-progress" style="position: absolute !important; bottom: -20px !important; left: 50% !important; transform: translate(-50%, 0) !important; z-index: 1000 !important; width: max-content !important; pointer-events: none !important; color: var(--search-text-secondary) !important;">
+                      ${localize("lyrics.finding")}
+                    </div>
+                  ` : nothing}
                 </div>
                 ${(() => {
             const idx = this._selectedIndex;
@@ -8706,6 +8711,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           ${!shouldShowPersistentControls && !this.config.hide_reorder_progress && !this.config.hide_menu_player && this._queueOpsTotal > 0 ? html`
             <div class="queue-ops-progress" style="position: absolute !important; bottom: 12px !important; left: 50% !important; transform: translate(-50%, 0) !important; z-index: 1000 !important; width: max-content !important; pointer-events: none !important; color: var(--search-text-secondary) !important;">
               Re-ordering ${this._queueOpsCompleted} / ${this._queueOpsTotal}
+            </div>
+          ` : ""}
+          ${(!this._showEntityOptions || !shouldShowPersistentControls) && this._lyricsActive && !this._isIdle && this._fetchingLyrics ? html`
+            <div class="queue-ops-progress" style="position: absolute !important; bottom: 2px !important; left: 50% !important; transform: translate(-50%, 0) !important; z-index: 1000 !important; width: max-content !important; pointer-events: none !important; color: var(--search-text-secondary) !important;">
+              ${localize("lyrics.finding")}
             </div>
           ` : ""}
           </div>
