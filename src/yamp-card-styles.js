@@ -92,6 +92,7 @@ export const yampCardStyles = css`
     --yamp-details-scale: var(--yamp-text-scale-details, 1);
     --yamp-details-line-height: 1.2;
     --yamp-details-max-lines: 3;
+    --yamp-details-white-space: normal;
     --yamp-section-bg: rgba(255, 255, 255, 0.02);
     --yamp-section-border: rgba(255, 255, 255, 0.1);
     --yamp-section-radius: 12px;
@@ -971,14 +972,13 @@ export const yampCardStyles = css`
     font-size: 1.1em;
     font-weight: 600;
     line-height: var(--yamp-details-line-height, 1.2);
-    white-space: normal;
+    white-space: var(--yamp-details-white-space, normal);
     word-break: break-word;
-    overflow: visible;
-    text-overflow: unset;
+    overflow: hidden;
+    text-overflow: ellipsis;
     display: -webkit-box;
     -webkit-box-orient: vertical;
     -webkit-line-clamp: var(--yamp-details-max-lines, 3);
-    overflow: hidden;
     padding-top: calc(8px * var(--yamp-details-scale, 1));
     padding-bottom: calc(4px * var(--yamp-details-scale, 1));
     margin-bottom: calc(-4px * var(--yamp-details-scale, 1));
