@@ -4091,6 +4091,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this.style.setProperty("--yamp-details-line-height", detailLineHeight.toFixed(2));
     const detailMaxLines = detailActive ? 1 : 3;
     this.style.setProperty("--yamp-details-max-lines", detailMaxLines.toString());
+    this.style.setProperty("--yamp-details-line-clamp", detailActive ? "unset" : "3");
+    this.style.setProperty("--yamp-details-display", detailActive ? "block" : "-webkit-box");
     this.style.setProperty("--yamp-details-white-space", detailActive ? "nowrap" : "normal");
     const lyricsActive = !!targetSet?.has("lyrics");
     this.style.setProperty("--yamp-text-scale-lyrics", lyricsActive ? safeDetailsScale.toFixed(2) : "1");

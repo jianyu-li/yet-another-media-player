@@ -92,6 +92,8 @@ export const yampCardStyles = css`
     --yamp-details-scale: var(--yamp-text-scale-details, 1);
     --yamp-details-line-height: 1.2;
     --yamp-details-max-lines: 3;
+    --yamp-details-line-clamp: 3;
+    --yamp-details-display: -webkit-box;
     --yamp-details-white-space: normal;
     --yamp-section-bg: rgba(255, 255, 255, 0.02);
     --yamp-section-border: rgba(255, 255, 255, 0.1);
@@ -976,9 +978,9 @@ export const yampCardStyles = css`
     word-break: break-word;
     overflow: hidden;
     text-overflow: ellipsis;
-    display: -webkit-box;
+    display: var(--yamp-details-display, -webkit-box);
     -webkit-box-orient: vertical;
-    -webkit-line-clamp: var(--yamp-details-max-lines, 3);
+    -webkit-line-clamp: var(--yamp-details-line-clamp, var(--yamp-details-max-lines, 3));
     padding-top: calc(8px * var(--yamp-details-scale, 1));
     padding-bottom: calc(4px * var(--yamp-details-scale, 1));
     margin-bottom: calc(-4px * var(--yamp-details-scale, 1));
@@ -997,7 +999,7 @@ export const yampCardStyles = css`
 
   .marquee-inner {
     display: inline-block;
-    white-space: nowrap;
+    white-space: inherit;
     max-width: 100%;
   }
 
