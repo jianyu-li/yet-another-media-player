@@ -680,6 +680,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._hideActiveEntityLabelOnIdle = false;
     this._currentDetailsScale = null;
     this._lastTitleLength = 0;
+    this._lastNonLyricsLowerContentHeight = null;
+    this._lowerControlsHeight = null;
 
     // Lyrics state
     this._massLyrics = []; // Array of parsed lyric objects { time, text }
@@ -4087,7 +4089,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       const isActive = !!targetSet?.has(target);
       this.style.setProperty(varName, isActive ? scaleString : "1");
     }
-    const detailActive = !!targetSet?.has("details");
+    const detailActive = !!targetSet?.has("details") && !this._lyricsActive;
     const safeDetailsScale = Number.isFinite(detailsScale) ? detailsScale : safeScale;
     const detailScaleString = detailActive ? safeDetailsScale.toFixed(2) : "1";
     const detailLineHeight = detailActive ? this._calculateDetailsLineHeight(safeDetailsScale) : 1.2;
@@ -4157,6 +4159,12 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const detailScale = this._calculateDetailsScale(width, height, scale, this._lastTitleLength || 0);
     const textScaleChanged = this._currentTextScale === null || Math.abs(this._currentTextScale - scale) > 0.01;
     const detailScaleChanged = this._currentDetailsScale === null || Math.abs(this._currentDetailsScale - detailScale) > 0.02;
+    if (!this._lyricsActive) {
+      const lowerContentEl = this.shadowRoot?.querySelector('.card-lower-content');
+      if (lowerContentEl && lowerContentEl.offsetHeight > 50) {
+        this._lastNonLyricsLowerContentHeight = lowerContentEl.offsetHeight;
+      }
+    }
     if (textScaleChanged || detailScaleChanged) {
       this._currentTextScale = scale;
       this._currentDetailsScale = detailScale;
@@ -6529,6 +6537,30 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     // Volume overlay detection (Issue #252)
     this._handleVolumeOverlayDetection(changedProps);
 
+    if (changedProps.has("_lyricsActive")) {
+      if (this._adaptiveText) {
+        this._setAdaptiveTextVars(this._currentTextScale, undefined, this._currentDetailsScale);
+        this._updateMarquee();
+      }
+    }
+
+    if (!this._lyricsActive) {
+      const lowerContentEl = this.shadowRoot?.querySelector('.card-lower-content');
+      if (lowerContentEl && lowerContentEl.offsetHeight > 50) {
+        this._lastNonLyricsLowerContentHeight = lowerContentEl.offsetHeight;
+      }
+    } else {
+      const lowerContentEl = this.shadowRoot?.querySelector('.card-lower-content');
+      const detailsEl = this.shadowRoot?.querySelector('.details');
+      if (lowerContentEl && detailsEl) {
+        const controlsH = Math.round(lowerContentEl.getBoundingClientRect().bottom - detailsEl.getBoundingClientRect().top);
+        if (controlsH > 30 && this._lowerControlsHeight !== controlsH) {
+          this._lowerControlsHeight = controlsH;
+          this.requestUpdate();
+        }
+      }
+    }
+
     // Lyrics fetch trigger
     if (this._lyricsActive) {
       const activeState = this.metadataStateObj || this.currentActivePlaybackStateObj || this.currentPlaybackStateObj || this.currentStateObj;
@@ -8327,7 +8359,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const collapsedDetailsMinHeight = effectiveExtraSpace > 0
       ? Math.round(baseDetailsMinHeight + detailGrowth)
       : (effectiveExtraSpace < -20 ? 36 : baseDetailsMinHeight);
-    const detailsScale = (this._adaptiveTextTargets?.has("details")) ? (this._currentDetailsScale || 1) : 1;
+    const detailsScale = (this._adaptiveTextTargets?.has("details") && !this._lyricsActive) ? (this._currentDetailsScale || 1) : 1;
     const detailsMinHeight = Math.round((collapsed ? collapsedDetailsMinHeight : baseDetailsMinHeight) * detailsScale);
     let showCollapsedPlaceholder;
     const expandedHeightBaseline = 350;
@@ -8453,15 +8485,21 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
     const volumeRowWillCollapse = isVolumeHiddenByConfig && !isCompactVolume && !hasLeadingControl && !hasRightPlaceholder;
 
-    const detailsHasAdaptiveText = this._adaptiveTextTargets?.has("details");
+    const detailsHasAdaptiveText = this._adaptiveTextTargets?.has("details") && !this._lyricsActive;
     this._lastSpacerRendered = !!(showCollapsedPlaceholder || (!collapsed && (!detailsHasAdaptiveText || hasSpacerContent)));
     this._lastVolumeRendered = !volumeRowWillCollapse;
 
-    const effectiveDetailsHeight = this.config.details_alignment === 'none' ? 0 : (detailsMinHeight || 48);
-    const lyricsBottomOffset = effectiveDetailsHeight +
+    const lowerControlsH = this._lowerControlsHeight || (
+      72 + // average unscaled details height
       (!this._alternateProgressBar ? 24 : 0) +
       (hideControlsNow ? 0 : 56) +
-      (volumeRowWillCollapse ? 0 : 56);
+      (volumeRowWillCollapse ? 0 : 56)
+    );
+    const spacerMarginBottom = 8; // details margin-top is 8px at scale 1.0
+    const lyricsSpacerHeight = this._lastNonLyricsLowerContentHeight != null
+      ? Math.max(48, Math.round(this._lastNonLyricsLowerContentHeight - lowerControlsH - spacerMarginBottom))
+      : 180;
+    const lyricsBottomOffset = lowerControlsH;
 
     return html`
         <ha-card class="yamp-card" 
@@ -8587,7 +8625,10 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
                     @pointermove=${this._onTapAreaPointerMove}
                     @pointerup=${this._onTapAreaPointerUp}
                     @pointercancel=${this._onTapAreaPointerCancel}
-                    style="${this._getGestureStyles()}"
+                    style="${[
+                      this._lyricsActive ? `height: ${lyricsSpacerHeight}px; min-height: ${lyricsSpacerHeight}px; max-height: ${lyricsSpacerHeight}px; flex: none;` : '',
+                      this._getGestureStyles()
+                    ].filter(Boolean).join('; ')}"
                   >
                     ${useInsetArtwork && artworkUrl ? html`
                       <div style="position: absolute; ${needsArtworkTopPadding ? 'top: 20px; right: 0; bottom: 0; left: 0;' : 'inset: 0;'} display: flex; align-items: center; justify-content: center; pointer-events: none; box-sizing: border-box; padding: 0 5px;">
@@ -8615,7 +8656,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           detailStyleParts.push(`min-height:${detailsMinHeight}px`);
           if (!shouldShowDetails) detailStyleParts.push('opacity:0');
           if (!this._lastSpacerRendered) {
-            detailStyleParts.push('flex: 1');
+            if (!this._lyricsActive) {
+              detailStyleParts.push('flex: 1');
+            } else {
+              detailStyleParts.push('margin-top: auto');
+            }
             detailStyleParts.push('justify-content: flex-end');
           }
           const gestureStyles = this._getGestureStyles(this._isIdle);
