@@ -416,10 +416,6 @@ export const yampCardStyles = css`
     min-height: 48px;
   }
 
-  .yamp-card-inner[data-lyrics-active="true"] .card-artwork-spacer {
-    min-height: 80px;
-  }
-
   /* Media background */
   .media-bg-full {
     position: absolute;
