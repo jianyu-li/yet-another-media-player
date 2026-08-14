@@ -5,16 +5,16 @@ export const Z_LAYERS = Object.freeze({
   MEDIA_BACKGROUND: 0,
   MEDIA_OVERLAY: 0,
   LYRICS_OVERLAY: 1,
-  FLOATING_ELEMENT: 1,
-  STICKY_CHIPS: 1,
-  ACCENT_FOREGROUND: 1,
-  FLOATING_CONTROLS: 1,
-  OVERLAY_BASE: 2,
-  MODAL_BACKDROP: 2,
-  MODAL_TOAST: 2,
-  SEARCH_SLIDE_OUT: 1,
-  SEARCH_SUCCESS: 1,
-  VOLUME_OVERLAY: 3,
+  FLOATING_ELEMENT: 3,
+  STICKY_CHIPS: 3,
+  ACCENT_FOREGROUND: 3,
+  FLOATING_CONTROLS: 3,
+  OVERLAY_BASE: 4,
+  MODAL_BACKDROP: 4,
+  MODAL_TOAST: 4,
+  SEARCH_SLIDE_OUT: 3,
+  SEARCH_SUCCESS: 3,
+  VOLUME_OVERLAY: 5,
 });
 
 const LYRICS_MASK_GRADIENT = css`linear-gradient(to bottom, transparent 0px, black 30px, black calc(100% - 30px), transparent 100%)`;
@@ -302,16 +302,17 @@ export const yampCardStyles = css`
   }
 
   .yamp-card-inner[data-lyrics-active="true"] .full-bleed-artwork-fade {
+    z-index: ${Z_LAYERS.LYRICS_OVERLAY + 1};
     background: linear-gradient(
       to bottom,
       transparent 0%,
       color-mix(
           in srgb,
-          var(--ha-card-background, var(--card-background-color, #000)) 40%,
+          var(--ha-card-background, var(--card-background-color, var(--card-bg, #000))) 40%,
           transparent
         )
         55%,
-      var(--ha-card-background, var(--card-background-color, #000)) 100%
+      var(--ha-card-background, var(--card-background-color, var(--card-bg, #000))) 100%
     );
   }
 
@@ -963,7 +964,7 @@ export const yampCardStyles = css`
     font-size: calc(1em * var(--yamp-details-scale, 1));
     flex-shrink: 0;
     position: relative;
-    z-index: ${Z_LAYERS.LYRICS_OVERLAY + 1};
+    z-index: ${Z_LAYERS.FLOATING_ELEMENT};
   }
 
   .details .title {
@@ -1175,7 +1176,7 @@ export const yampCardStyles = css`
     gap: 12px;
     padding: 4px 16px;
     position: relative;
-    z-index: ${Z_LAYERS.LYRICS_OVERLAY + 1};
+    z-index: ${Z_LAYERS.FLOATING_CONTROLS};
   }
 
   .controls-row.adaptive {
@@ -1356,7 +1357,7 @@ export const yampCardStyles = css`
     padding-right: 24px;
     box-sizing: border-box;
     position: relative;
-    z-index: ${Z_LAYERS.LYRICS_OVERLAY + 1};
+    z-index: ${Z_LAYERS.FLOATING_ELEMENT};
   }
 
   .progress-bar {
@@ -1392,7 +1393,7 @@ export const yampCardStyles = css`
     align-items: center;
     padding: 10px 16px 14px 16px;
     position: relative;
-    z-index: ${Z_LAYERS.LYRICS_OVERLAY + 1};
+    z-index: ${Z_LAYERS.FLOATING_CONTROLS};
   }
 
   /* Remove flex:1 since we are using grid columns */
@@ -1784,16 +1785,20 @@ export const yampCardStyles = css`
   }
 
   .yamp-card-inner[data-lyrics-active="true"] .card-lower-fade {
+    z-index: ${Z_LAYERS.LYRICS_OVERLAY + 1};
     background: linear-gradient(
       to bottom,
       transparent 0%,
+      transparent calc(100% - var(--yamp-lyrics-bottom-offset, 180px)),
       color-mix(
           in srgb,
-          var(--ha-card-background, var(--card-background-color, #000)) 40%,
+          var(--ha-card-background, var(--card-background-color, var(--card-bg, #000))) 85%,
           transparent
         )
-        55%,
-      var(--ha-card-background, var(--card-background-color, #000)) 100%
+        calc(100% - var(--yamp-lyrics-bottom-offset, 180px) + 30px),
+      var(--ha-card-background, var(--card-background-color, var(--card-bg, #000)))
+        calc(100% - var(--yamp-lyrics-bottom-offset, 180px) + 70px),
+      var(--ha-card-background, var(--card-background-color, var(--card-bg, #000))) 100%
     );
   }
 
@@ -4493,10 +4498,7 @@ export const lyricsStyles = css`
   :host {
     display: block;
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: -600px;
+    inset: 0;
     z-index: ${Z_LAYERS.LYRICS_OVERLAY};
     overflow: hidden;
     pointer-events: auto;
@@ -4508,10 +4510,10 @@ export const lyricsStyles = css`
 
   .lyrics-scroll-container {
     position: absolute;
-    top: 0;
+    top: var(--yamp-lyrics-top-offset, 0px);
     left: 0;
     right: 0;
-    bottom: 600px;
+    bottom: var(--yamp-lyrics-bottom-offset, 180px);
     box-sizing: border-box;
     overflow-y: auto;
     overflow-x: hidden;

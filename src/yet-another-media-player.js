@@ -8399,8 +8399,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const useInsetArtwork = (activeArtworkFit === "scaled-contain" || isAlternateFit) && !collapsed && !this._alwaysCollapsed;
     const hasSpacerContent =
       (useInsetArtwork && artworkUrl) ||
-      (!useInsetArtwork && !artworkUrl && !idleImageUrl) ||
-      (this._lyricsActive && !this._isIdle);
+      (!useInsetArtwork && !artworkUrl && !idleImageUrl);
     // Add top padding to artwork spacer when scaled-contain and chips are not shown inline
     const needsArtworkTopPadding = (activeArtworkFit === "scaled-contain" || isAlternateFit) &&
       (showChipRow === "in_menu" || (hasSingleEntity && showChipRow !== "always"));
@@ -8458,6 +8457,12 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._lastSpacerRendered = !!(showCollapsedPlaceholder || (!collapsed && (!detailsHasAdaptiveText || hasSpacerContent)));
     this._lastVolumeRendered = !volumeRowWillCollapse;
 
+    const effectiveDetailsHeight = this.config.details_alignment === 'none' ? 0 : (detailsMinHeight || 48);
+    const lyricsBottomOffset = effectiveDetailsHeight +
+      (!this._alternateProgressBar ? 24 : 0) +
+      (hideControlsNow ? 0 : 56) +
+      (volumeRowWillCollapse ? 0 : 56);
+
     return html`
         <ha-card class="yamp-card" 
           style=${(hasCustomCardHeight && (!collapsed || this._alwaysCollapsed)) ? `height:${customCardHeight}px;` : nothing}>
@@ -8496,6 +8501,29 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
                 </svg>
               </div>
             ` : nothing}
+            ${(this._lyricsActive && !this._isIdle) ? html`
+              <yamp-lyrics-view
+                data-match-theme="${String(this.config.match_theme === true)}"
+                data-artwork-fit="${activeArtworkFit}"
+                .hass=${this.hass}
+                .lyrics=${this._massLyrics}
+                .position=${pos}
+                .loading=${this._fetchingLyrics}
+                .error=${this._lyricsError}
+                .activeThemeColor=${this.config.match_theme === true ? "var(--custom-accent, var(--state-media_player-active-color, var(--primary-color, #ffffff)))" : "var(--custom-accent, #ffffff)"}
+                .mode=${this._isCurrentlyPlayingRadio() ? 'text' : (this.config.lyrics_mode || 'default')}
+                .preRoll=${this.config.lyrics_pre_roll ?? 0}
+                @pointerdown=${this._onTapAreaPointerDown}
+                @pointermove=${this._onTapAreaPointerMove}
+                @pointerup=${this._onTapAreaPointerUp}
+                @pointercancel=${this._onTapAreaPointerCancel}
+                style="${[
+                  `--yamp-lyrics-top-offset: ${showChipsInline ? 48 : 0}px`,
+                  `--yamp-lyrics-bottom-offset: ${lyricsBottomOffset}px`,
+                  this._getGestureStyles()
+                ].filter(Boolean).join('; ')}"
+              ></yamp-lyrics-view>
+            ` : nothing}
             ${chipsHiddenInline
         ? html`${this._renderInlineActionRow(rowActions)}${this._renderInlineChipRow(showChipsInline, chipsHiddenInline)}`
         : html`${this._renderInlineChipRow(showChipsInline, chipsHiddenInline)}${this._renderInlineActionRow(rowActions)}`}
@@ -8521,7 +8549,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         return styles.join('; ');
       })()}"
               ></div>
-              ${!(dimIdleFrame || this._isIdle) && (!useInsetArtwork || this._lyricsActive) ? html`<div class="card-lower-fade"></div>` : nothing}
+              ${!(dimIdleFrame || this._isIdle) && (!useInsetArtwork || this._lyricsActive) ? html`<div class="card-lower-fade" style="--yamp-lyrics-bottom-offset: ${lyricsBottomOffset}px;"></div>` : nothing}
               <div class="card-lower-content${collapsed ? ' collapsed transitioning' : ' transitioning'}${collapsed && artworkUrl && collapsedArtworkSize > 0 ? ' has-artwork' : ''}" style="${(() => {
         if (!hideControlsNow) return '';
         return collapsed
@@ -8569,22 +8597,6 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
                           style="max-width: 100%; max-height: 100%; object-fit: contain; pointer-events: none;" 
                         />
                       </div>
-                    ` : nothing}
-
-
-                    ${(this._lyricsActive && !this._isIdle) ? html`
-                      <yamp-lyrics-view
-                        data-match-theme="${String(this.config.match_theme === true)}"
-                        data-artwork-fit="${activeArtworkFit}"
-                        .hass=${this.hass}
-                        .lyrics=${this._massLyrics}
-                        .position=${pos}
-                        .loading=${this._fetchingLyrics}
-                        .error=${this._lyricsError}
-                        .activeThemeColor=${this.config.match_theme === true ? "var(--custom-accent, var(--state-media_player-active-color, var(--primary-color, #ffffff)))" : "var(--custom-accent, #ffffff)"}
-                        .mode=${this._isCurrentlyPlayingRadio() ? 'text' : (this.config.lyrics_mode || 'default')}
-                        .preRoll=${this.config.lyrics_pre_roll ?? 0}
-                      ></yamp-lyrics-view>
                     ` : nothing}
                   </div>
                 ` : nothing}
