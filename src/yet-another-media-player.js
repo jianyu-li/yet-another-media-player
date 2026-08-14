@@ -6550,10 +6550,16 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         this._lastNonLyricsLowerContentHeight = lowerContentEl.offsetHeight;
       }
     } else {
-      const lowerContentEl = this.shadowRoot?.querySelector('.card-lower-content');
       const detailsEl = this.shadowRoot?.querySelector('.details');
-      if (lowerContentEl && detailsEl) {
-        const controlsH = Math.round(lowerContentEl.getBoundingClientRect().bottom - detailsEl.getBoundingClientRect().top);
+      if (detailsEl) {
+        let controlsH = detailsEl.offsetHeight;
+        const progressEl = this.shadowRoot?.querySelector('.progress-bar-container:not(.alternate)');
+        if (progressEl) controlsH += progressEl.offsetHeight;
+        const controlsRowEl = this.shadowRoot?.querySelector('.controls-row');
+        if (controlsRowEl) controlsH += controlsRowEl.offsetHeight;
+        const volumeRowEl = this.shadowRoot?.querySelector('.volume-row');
+        if (volumeRowEl) controlsH += volumeRowEl.offsetHeight;
+        
         if (controlsH > 30 && this._lowerControlsHeight !== controlsH) {
           this._lowerControlsHeight = controlsH;
           this.requestUpdate();
