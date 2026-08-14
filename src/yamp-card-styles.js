@@ -1348,7 +1348,7 @@ export const yampCardStyles = css`
   .progress-bar {
     width: 100%;
     height: 4px;
-    background: rgba(255, 255, 255, 0.22);
+    background: rgb(234, 234, 234);
     border-radius: var(--progress-radius, 2px);
     overflow: hidden;
     position: relative;
@@ -1359,7 +1359,6 @@ export const yampCardStyles = css`
     height: 100%;
     background: var(--custom-accent);
     border-radius: var(--progress-radius, 3px) 0 0 var(--progress-radius, 3px);
-    box-shadow: 0 0 8px 2px rgba(0, 0, 0, 0.24);
   }
 
   .timestamps-container {
