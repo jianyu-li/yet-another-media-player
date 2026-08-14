@@ -680,6 +680,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._hideActiveEntityLabelOnIdle = false;
     this._currentDetailsScale = null;
     this._lastTitleLength = 0;
+    this._lastNonLyricsLowerContentHeight = null;
+    this._lowerControlsHeight = null;
 
     // Lyrics state
     this._massLyrics = []; // Array of parsed lyric objects { time, text }
@@ -4087,7 +4089,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       const isActive = !!targetSet?.has(target);
       this.style.setProperty(varName, isActive ? scaleString : "1");
     }
-    const detailActive = !!targetSet?.has("details");
+    const detailActive = !!targetSet?.has("details") && !this._lyricsActive;
     const safeDetailsScale = Number.isFinite(detailsScale) ? detailsScale : safeScale;
     const detailScaleString = detailActive ? safeDetailsScale.toFixed(2) : "1";
     const detailLineHeight = detailActive ? this._calculateDetailsLineHeight(safeDetailsScale) : 1.2;
@@ -4157,6 +4159,12 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const detailScale = this._calculateDetailsScale(width, height, scale, this._lastTitleLength || 0);
     const textScaleChanged = this._currentTextScale === null || Math.abs(this._currentTextScale - scale) > 0.01;
     const detailScaleChanged = this._currentDetailsScale === null || Math.abs(this._currentDetailsScale - detailScale) > 0.02;
+    if (!this._lyricsActive) {
+      const lowerContentEl = this.shadowRoot?.querySelector('.card-lower-content');
+      if (lowerContentEl && lowerContentEl.offsetHeight > 50) {
+        this._lastNonLyricsLowerContentHeight = lowerContentEl.offsetHeight;
+      }
+    }
     if (textScaleChanged || detailScaleChanged) {
       this._currentTextScale = scale;
       this._currentDetailsScale = detailScale;
@@ -6529,6 +6537,36 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     // Volume overlay detection (Issue #252)
     this._handleVolumeOverlayDetection(changedProps);
 
+    if (changedProps.has("_lyricsActive")) {
+      if (this._adaptiveText) {
+        this._setAdaptiveTextVars(this._currentTextScale, undefined, this._currentDetailsScale);
+        this._updateMarquee();
+      }
+    }
+
+    if (!this._lyricsActive) {
+      const lowerContentEl = this.shadowRoot?.querySelector('.card-lower-content');
+      if (lowerContentEl && lowerContentEl.offsetHeight > 50) {
+        this._lastNonLyricsLowerContentHeight = lowerContentEl.offsetHeight;
+      }
+    } else {
+      const detailsEl = this.shadowRoot?.querySelector('.details');
+      if (detailsEl) {
+        let controlsH = detailsEl.offsetHeight;
+        const progressEl = this.shadowRoot?.querySelector('.progress-bar-container:not(.alternate)');
+        if (progressEl) controlsH += progressEl.offsetHeight;
+        const controlsRowEl = this.shadowRoot?.querySelector('.controls-row');
+        if (controlsRowEl) controlsH += controlsRowEl.offsetHeight;
+        const volumeRowEl = this.shadowRoot?.querySelector('.volume-row');
+        if (volumeRowEl) controlsH += volumeRowEl.offsetHeight;
+        
+        if (controlsH > 30 && this._lowerControlsHeight !== controlsH) {
+          this._lowerControlsHeight = controlsH;
+          this.requestUpdate();
+        }
+      }
+    }
+
     // Lyrics fetch trigger
     if (this._lyricsActive) {
       const activeState = this.metadataStateObj || this.currentActivePlaybackStateObj || this.currentPlaybackStateObj || this.currentStateObj;
@@ -8091,7 +8129,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     // We'll set useInsetArtwork again later with full collapsed context for rendering.
     const preCalcInsetArtwork = this._artworkObjectFit === "scaled-contain" || this._artworkObjectFit === "scaled-contain-alternate";
     // Extend artwork when configured, when chips are hidden inline (in_menu_on_idle + idle), or when using scaled-contain
-    const artworkFullBleed = this.config.extend_artwork === true || chipsHiddenInline || preCalcInsetArtwork;
+    const artworkFullBleed = this.config.extend_artwork === true || chipsHiddenInline || preCalcInsetArtwork || this._lyricsActive;
 
     // Calculate shuffle/repeat state from the active playback entity when available
     const mainStateForPlayback = this.currentStateObj;
@@ -8327,7 +8365,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const collapsedDetailsMinHeight = effectiveExtraSpace > 0
       ? Math.round(baseDetailsMinHeight + detailGrowth)
       : (effectiveExtraSpace < -20 ? 36 : baseDetailsMinHeight);
-    const detailsScale = (this._adaptiveTextTargets?.has("details")) ? (this._currentDetailsScale || 1) : 1;
+    const detailsScale = (this._adaptiveTextTargets?.has("details") && !this._lyricsActive) ? (this._currentDetailsScale || 1) : 1;
     const detailsMinHeight = Math.round((collapsed ? collapsedDetailsMinHeight : baseDetailsMinHeight) * detailsScale);
     let showCollapsedPlaceholder;
     const expandedHeightBaseline = 350;
@@ -8396,11 +8434,10 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
     const activeArtworkFit = artworkObjectFit || this._artworkObjectFit;
     const isAlternateFit = activeArtworkFit === "scaled-contain-alternate";
-    const useInsetArtwork = (activeArtworkFit === "scaled-contain" || isAlternateFit) && !collapsed && !this._alwaysCollapsed;
+    const useInsetArtwork = (activeArtworkFit === "scaled-contain" || isAlternateFit) && !collapsed && !this._alwaysCollapsed && !this._lyricsActive;
     const hasSpacerContent =
       (useInsetArtwork && artworkUrl) ||
-      (!useInsetArtwork && !artworkUrl && !idleImageUrl) ||
-      (this._lyricsActive && !this._isIdle);
+      (!useInsetArtwork && !artworkUrl && !idleImageUrl);
     // Add top padding to artwork spacer when scaled-contain and chips are not shown inline
     const needsArtworkTopPadding = (activeArtworkFit === "scaled-contain" || isAlternateFit) &&
       (showChipRow === "in_menu" || (hasSingleEntity && showChipRow !== "always"));
@@ -8413,13 +8450,13 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
     const backgroundImageValue = (activeArtworkFit === "no_artwork")
       ? "none"
-      : (idleImageUrl || isAlternateFit)
+      : (idleImageUrl || (isAlternateFit && !this._lyricsActive))
         ? (idleImageUrl ? `url('${idleImageUrl}')` : "none")
         : artworkUrl
           ? `url('${artworkUrl}')`
           : "none";
     const hasBackgroundImage = backgroundImageValue !== "none";
-    const backgroundFilter = (artworkUrl && (this.config.blurred_artwork === true || (this.config.blurred_artwork !== false && (collapsed || (useInsetArtwork && activeArtworkFit === "scaled-contain")))))
+    const backgroundFilter = (artworkUrl && (this._lyricsActive || this.config.blurred_artwork === true || (this.config.blurred_artwork !== false && (collapsed || (useInsetArtwork && activeArtworkFit === "scaled-contain")))))
       ? "blur(18px) brightness(0.7) saturate(1.15)"
       : "none";
     let artworkPos = (typeof artworkObjectPosition !== 'undefined' ? artworkObjectPosition : null) || this.config.artwork_position || "top center";
@@ -8454,9 +8491,21 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
     const volumeRowWillCollapse = isVolumeHiddenByConfig && !isCompactVolume && !hasLeadingControl && !hasRightPlaceholder;
 
-    const detailsHasAdaptiveText = this._adaptiveTextTargets?.has("details");
+    const detailsHasAdaptiveText = this._adaptiveTextTargets?.has("details") && !this._lyricsActive;
     this._lastSpacerRendered = !!(showCollapsedPlaceholder || (!collapsed && (!detailsHasAdaptiveText || hasSpacerContent)));
     this._lastVolumeRendered = !volumeRowWillCollapse;
+
+    const lowerControlsH = this._lowerControlsHeight || (
+      72 + // average unscaled details height
+      (!this._alternateProgressBar ? 24 : 0) +
+      (hideControlsNow ? 0 : 56) +
+      (volumeRowWillCollapse ? 0 : 56)
+    );
+    const spacerMarginBottom = 8; // details margin-top is 8px at scale 1.0
+    const lyricsSpacerHeight = this._lastNonLyricsLowerContentHeight != null
+      ? Math.max(48, Math.round(this._lastNonLyricsLowerContentHeight - lowerControlsH - spacerMarginBottom))
+      : 180;
+    const lyricsBottomOffset = lowerControlsH;
 
     return html`
         <ha-card class="yamp-card" 
@@ -8496,6 +8545,29 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
                 </svg>
               </div>
             ` : nothing}
+            ${(this._lyricsActive && !this._isIdle) ? html`
+              <yamp-lyrics-view
+                data-match-theme="${String(this.config.match_theme === true)}"
+                data-artwork-fit="${activeArtworkFit}"
+                .hass=${this.hass}
+                .lyrics=${this._massLyrics}
+                .position=${pos}
+                .loading=${this._fetchingLyrics}
+                .error=${this._lyricsError}
+                .activeThemeColor=${this.config.match_theme === true ? "var(--custom-accent, var(--state-media_player-active-color, var(--primary-color, #ffffff)))" : "var(--custom-accent, #ffffff)"}
+                .mode=${this._isCurrentlyPlayingRadio() ? 'text' : (this.config.lyrics_mode || 'default')}
+                .preRoll=${this.config.lyrics_pre_roll ?? 0}
+                @pointerdown=${this._onTapAreaPointerDown}
+                @pointermove=${this._onTapAreaPointerMove}
+                @pointerup=${this._onTapAreaPointerUp}
+                @pointercancel=${this._onTapAreaPointerCancel}
+                style="${[
+                  `--yamp-lyrics-top-offset: ${showChipsInline ? 48 : 0}px`,
+                  `--yamp-lyrics-bottom-offset: ${lyricsBottomOffset}px`,
+                  this._getGestureStyles()
+                ].filter(Boolean).join('; ')}"
+              ></yamp-lyrics-view>
+            ` : nothing}
             ${chipsHiddenInline
         ? html`${this._renderInlineActionRow(rowActions)}${this._renderInlineChipRow(showChipsInline, chipsHiddenInline)}`
         : html`${this._renderInlineChipRow(showChipsInline, chipsHiddenInline)}${this._renderInlineActionRow(rowActions)}`}
@@ -8521,7 +8593,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         return styles.join('; ');
       })()}"
               ></div>
-              ${!(dimIdleFrame || this._isIdle) && (!useInsetArtwork || this._lyricsActive) ? html`<div class="card-lower-fade"></div>` : nothing}
+              ${!(dimIdleFrame || this._isIdle) && (!useInsetArtwork || this._lyricsActive) ? html`<div class="card-lower-fade" style="--yamp-lyrics-bottom-offset: ${lyricsBottomOffset}px;"></div>` : nothing}
               <div class="card-lower-content${collapsed ? ' collapsed transitioning' : ' transitioning'}${collapsed && artworkUrl && collapsedArtworkSize > 0 ? ' has-artwork' : ''}" style="${(() => {
         if (!hideControlsNow) return '';
         return collapsed
@@ -8559,7 +8631,10 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
                     @pointermove=${this._onTapAreaPointerMove}
                     @pointerup=${this._onTapAreaPointerUp}
                     @pointercancel=${this._onTapAreaPointerCancel}
-                    style="${this._getGestureStyles()}"
+                    style="${[
+                      this._lyricsActive ? `height: ${lyricsSpacerHeight}px; min-height: ${lyricsSpacerHeight}px; max-height: ${lyricsSpacerHeight}px; flex: none;` : '',
+                      this._getGestureStyles()
+                    ].filter(Boolean).join('; ')}"
                   >
                     ${useInsetArtwork && artworkUrl ? html`
                       <div style="position: absolute; ${needsArtworkTopPadding ? 'top: 20px; right: 0; bottom: 0; left: 0;' : 'inset: 0;'} display: flex; align-items: center; justify-content: center; pointer-events: none; box-sizing: border-box; padding: 0 5px;">
@@ -8569,22 +8644,6 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
                           style="max-width: 100%; max-height: 100%; object-fit: contain; pointer-events: none;" 
                         />
                       </div>
-                    ` : nothing}
-
-
-                    ${(this._lyricsActive && !this._isIdle) ? html`
-                      <yamp-lyrics-view
-                        data-match-theme="${String(this.config.match_theme === true)}"
-                        data-artwork-fit="${activeArtworkFit}"
-                        .hass=${this.hass}
-                        .lyrics=${this._massLyrics}
-                        .position=${pos}
-                        .loading=${this._fetchingLyrics}
-                        .error=${this._lyricsError}
-                        .activeThemeColor=${this.config.match_theme === true ? "var(--custom-accent, var(--state-media_player-active-color, var(--primary-color, #ffffff)))" : "var(--custom-accent, #ffffff)"}
-                        .mode=${this._isCurrentlyPlayingRadio() ? 'text' : (this.config.lyrics_mode || 'default')}
-                        .preRoll=${this.config.lyrics_pre_roll ?? 0}
-                      ></yamp-lyrics-view>
                     ` : nothing}
                   </div>
                 ` : nothing}
@@ -8603,7 +8662,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           detailStyleParts.push(`min-height:${detailsMinHeight}px`);
           if (!shouldShowDetails) detailStyleParts.push('opacity:0');
           if (!this._lastSpacerRendered) {
-            detailStyleParts.push('flex: 1');
+            if (!this._lyricsActive) {
+              detailStyleParts.push('flex: 1');
+            } else {
+              detailStyleParts.push('margin-top: auto');
+            }
             detailStyleParts.push('justify-content: flex-end');
           }
           const gestureStyles = this._getGestureStyles(this._isIdle);
