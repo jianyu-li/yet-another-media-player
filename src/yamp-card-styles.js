@@ -1011,20 +1011,36 @@ export const yampCardStyles = css`
     text-align: left !important;
   }
 
-  [data-marquee="true"] > .marquee-inner {
+  /* Single marquee mode (infinite loop when only 1 element overflows) */
+  [data-marquee="true"]:not([data-marquee-sequential="true"]) > .marquee-inner {
     max-width: none !important;
     will-change: transform, opacity;
     animation: yamp-marquee var(--yamp-marquee-duration, 8s) ease-in-out infinite;
   }
 
+  /* Sequential marquee mode (when both elements overflow) */
+  [data-marquee="true"][data-marquee-sequential="true"] > .marquee-inner {
+    max-width: none !important;
+    transform: translateX(0);
+    opacity: 1;
+  }
+
+  [data-marquee="true"][data-marquee-sequential="true"][data-marquee-active="true"]
+    > .marquee-inner {
+    will-change: transform, opacity;
+    animation: yamp-marquee var(--yamp-marquee-duration, 8s) ease-in-out 1;
+  }
+
   @media (hover: hover) {
-    [data-marquee="true"]:hover > .marquee-inner {
+    [data-marquee="true"]:hover > .marquee-inner,
+    .details:hover [data-marquee="true"] > .marquee-inner {
       animation-play-state: paused;
     }
   }
 
   @media (prefers-reduced-motion: reduce) {
-    [data-marquee="true"] > .marquee-inner {
+    [data-marquee="true"] > .marquee-inner,
+    [data-marquee="true"][data-marquee-active="true"] > .marquee-inner {
       animation: none !important;
       transform: none !important;
       opacity: 1 !important;

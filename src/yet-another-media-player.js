@@ -694,6 +694,10 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._suspendAdaptiveScaling = false;
     this._pendingAdaptiveScaleUpdate = false;
     this._adaptiveScrollTimer = null;
+    this._marqueeSequentialTimer = null;
+    this._marqueeAnimationEndHandler = null;
+    this._marqueeObservedElements = null;
+    this._lastMarqueeKey = null;
     this._lyricsFetchTimeout = null;
     this._handleGlobalScroll = this._handleGlobalScroll.bind(this);
     this._handleViewportResize = this._handleViewportResize.bind(this);
@@ -4162,28 +4166,126 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._updateMarquee();
   }
 
+  _cleanupMarquee() {
+    if (this._marqueeSequentialTimer) {
+      clearTimeout(this._marqueeSequentialTimer);
+      this._marqueeSequentialTimer = null;
+    }
+    if (this._marqueeAnimationEndHandler && this._marqueeObservedElements) {
+      this._marqueeObservedElements.forEach((el) => {
+        el.removeEventListener("animationend", this._marqueeAnimationEndHandler);
+      });
+      this._marqueeObservedElements = null;
+    }
+    this._lastMarqueeKey = null;
+  }
+
   _updateMarquee() {
     if (!this.isConnected || !this.renderRoot) return;
-    const containers = this.renderRoot.querySelectorAll('.details .track-options-title, .details .artist');
-    containers.forEach((container) => {
-      const inner = container.querySelector('.marquee-inner');
-      if (!inner) return;
+
+    const titleContainer = this.renderRoot.querySelector(".details .track-options-title");
+    const artistContainer = this.renderRoot.querySelector(".details .artist");
+
+    const getOverflowInfo = (container) => {
+      if (!container) return { container: null, inner: null, overflow: 0, text: "" };
+      const inner = container.querySelector(".marquee-inner");
+      if (!inner) return { container, inner: null, overflow: 0, text: "" };
       const containerWidth = container.clientWidth;
       const contentWidth = inner.scrollWidth;
       const overflow = contentWidth - containerWidth;
-      if (overflow > 4) {
-        const speed = 30; // pixels per second
-        const scrollDuration = overflow / speed;
-        const totalDuration = Math.max(5, Math.round((scrollDuration + 4.3) * 10) / 10);
-        container.style.setProperty('--yamp-marquee-distance', `-${Math.ceil(overflow)}px`);
-        container.style.setProperty('--yamp-marquee-duration', `${totalDuration}s`);
-        container.setAttribute('data-marquee', 'true');
-      } else {
-        container.removeAttribute('data-marquee');
-        container.style.removeProperty('--yamp-marquee-distance');
-        container.style.removeProperty('--yamp-marquee-duration');
-      }
-    });
+      const text = inner.textContent || "";
+      return { container, inner, overflow, text };
+    };
+
+    const titleInfo = getOverflowInfo(titleContainer);
+    const artistInfo = getOverflowInfo(artistContainer);
+
+    const titleOverflows = titleInfo.overflow > 4;
+    const artistOverflows = artistInfo.overflow > 4;
+
+    const marqueeKey = `${titleInfo.text}:${Math.round(titleInfo.overflow / 2) * 2}:${titleOverflows}|${artistInfo.text}:${Math.round(artistInfo.overflow / 2) * 2}:${artistOverflows}`;
+
+    if (this._lastMarqueeKey === marqueeKey) {
+      return;
+    }
+
+    this._cleanupMarquee();
+    this._lastMarqueeKey = marqueeKey;
+
+    const speed = 30; // pixels per second
+
+    const applyMarqueeVars = (info) => {
+      const scrollDuration = info.overflow / speed;
+      const totalDuration = Math.max(5, Math.round((scrollDuration + 4.3) * 10) / 10);
+      info.container.style.setProperty("--yamp-marquee-distance", `-${Math.ceil(info.overflow)}px`);
+      info.container.style.setProperty("--yamp-marquee-duration", `${totalDuration}s`);
+      info.container.setAttribute("data-marquee", "true");
+    };
+
+    const clearMarquee = (info) => {
+      if (!info.container) return;
+      info.container.removeAttribute("data-marquee");
+      info.container.removeAttribute("data-marquee-sequential");
+      info.container.removeAttribute("data-marquee-active");
+      info.container.style.removeProperty("--yamp-marquee-distance");
+      info.container.style.removeProperty("--yamp-marquee-duration");
+    };
+
+    if (titleOverflows && artistOverflows) {
+      // Both overflow: alternating sequential marquee mode
+      applyMarqueeVars(titleInfo);
+      applyMarqueeVars(artistInfo);
+      titleInfo.container.setAttribute("data-marquee-sequential", "true");
+      artistInfo.container.setAttribute("data-marquee-sequential", "true");
+
+      // Start sequential animation with title active first
+      titleInfo.container.setAttribute("data-marquee-active", "true");
+      artistInfo.container.removeAttribute("data-marquee-active");
+
+      const items = [titleInfo, artistInfo];
+      let activeIndex = 0;
+
+      this._marqueeAnimationEndHandler = (e) => {
+        if (e.animationName !== "yamp-marquee") return;
+        if (!this.isConnected || this._lastMarqueeKey !== marqueeKey) return;
+
+        const current = items[activeIndex];
+        if (current?.container) {
+          current.container.removeAttribute("data-marquee-active");
+        }
+
+        activeIndex = (activeIndex + 1) % items.length;
+        const next = items[activeIndex];
+
+        this._marqueeSequentialTimer = setTimeout(() => {
+          if (!this.isConnected || this._lastMarqueeKey !== marqueeKey) return;
+          if (next?.container) {
+            next.container.setAttribute("data-marquee-active", "true");
+          }
+        }, 600);
+      };
+
+      this._marqueeObservedElements = [titleInfo.inner, artistInfo.inner].filter(Boolean);
+      this._marqueeObservedElements.forEach((innerEl) => {
+        innerEl.addEventListener("animationend", this._marqueeAnimationEndHandler);
+      });
+    } else if (titleOverflows) {
+      // Only title overflows: single infinite marquee
+      applyMarqueeVars(titleInfo);
+      titleInfo.container.removeAttribute("data-marquee-sequential");
+      titleInfo.container.removeAttribute("data-marquee-active");
+      clearMarquee(artistInfo);
+    } else if (artistOverflows) {
+      // Only artist overflows: single infinite marquee
+      applyMarqueeVars(artistInfo);
+      artistInfo.container.removeAttribute("data-marquee-sequential");
+      artistInfo.container.removeAttribute("data-marquee-active");
+      clearMarquee(titleInfo);
+    } else {
+      // Neither overflows
+      clearMarquee(titleInfo);
+      clearMarquee(artistInfo);
+    }
   }
 
   _calculateDetailsScale(width, height, fallbackScale = 1) {
@@ -9997,6 +10099,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       clearTimeout(this._adaptiveScrollTimer);
       this._adaptiveScrollTimer = null;
     }
+    this._cleanupMarquee();
     // Clear tracking properties
     this._lastPlayingEntityId = null;
     this._controlFocusEntityId = null;
