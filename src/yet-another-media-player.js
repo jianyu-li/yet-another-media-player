@@ -8129,7 +8129,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     // We'll set useInsetArtwork again later with full collapsed context for rendering.
     const preCalcInsetArtwork = this._artworkObjectFit === "scaled-contain" || this._artworkObjectFit === "scaled-contain-alternate";
     // Extend artwork when configured, when chips are hidden inline (in_menu_on_idle + idle), or when using scaled-contain
-    const artworkFullBleed = this.config.extend_artwork === true || chipsHiddenInline || preCalcInsetArtwork;
+    const artworkFullBleed = this.config.extend_artwork === true || chipsHiddenInline || preCalcInsetArtwork || this._lyricsActive;
 
     // Calculate shuffle/repeat state from the active playback entity when available
     const mainStateForPlayback = this.currentStateObj;
@@ -8434,7 +8434,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
     const activeArtworkFit = artworkObjectFit || this._artworkObjectFit;
     const isAlternateFit = activeArtworkFit === "scaled-contain-alternate";
-    const useInsetArtwork = (activeArtworkFit === "scaled-contain" || isAlternateFit) && !collapsed && !this._alwaysCollapsed;
+    const useInsetArtwork = (activeArtworkFit === "scaled-contain" || isAlternateFit) && !collapsed && !this._alwaysCollapsed && !this._lyricsActive;
     const hasSpacerContent =
       (useInsetArtwork && artworkUrl) ||
       (!useInsetArtwork && !artworkUrl && !idleImageUrl);
@@ -8450,13 +8450,13 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
     const backgroundImageValue = (activeArtworkFit === "no_artwork")
       ? "none"
-      : (idleImageUrl || isAlternateFit)
+      : (idleImageUrl || (isAlternateFit && !this._lyricsActive))
         ? (idleImageUrl ? `url('${idleImageUrl}')` : "none")
         : artworkUrl
           ? `url('${artworkUrl}')`
           : "none";
     const hasBackgroundImage = backgroundImageValue !== "none";
-    const backgroundFilter = (artworkUrl && (this.config.blurred_artwork === true || (this.config.blurred_artwork !== false && (collapsed || (useInsetArtwork && activeArtworkFit === "scaled-contain")))))
+    const backgroundFilter = (artworkUrl && (this._lyricsActive || this.config.blurred_artwork === true || (this.config.blurred_artwork !== false && (collapsed || (useInsetArtwork && activeArtworkFit === "scaled-contain")))))
       ? "blur(18px) brightness(0.7) saturate(1.15)"
       : "none";
     let artworkPos = (typeof artworkObjectPosition !== 'undefined' ? artworkObjectPosition : null) || this.config.artwork_position || "top center";
