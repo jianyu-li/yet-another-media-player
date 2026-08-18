@@ -6,7 +6,7 @@
   "type": "module",
   "dependencies": {
     "@lit-labs/virtualizer": "^2.1.1",
-    "js-yaml": "^5.2.3",
+    "js-yaml": "^5.3.0",
     "lit": "^3.3.3",
     "sortablejs": "^1.15.7"
   },
@@ -17,7 +17,7 @@
     "esbuild": "^0.28.2",
     "eslint": "^10.8.1",
     "eslint-plugin-lit": "^2.3.1",
-    "globals": "^17.9.0",
+    "globals": "^17.11.0",
     "prettier": "^3.9.6",
     "rollup": "^4.62.4",
     "rollup-plugin-esbuild": "^6.2.1",
