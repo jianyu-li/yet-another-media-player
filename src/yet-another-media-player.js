@@ -527,6 +527,28 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     return layoutPref === "modern" ? "modern" : "classic";
   }
 
+  get _cardHeight() {
+    const raw = this.config?.card_height;
+    if (typeof raw === 'string' && (raw.includes('{{') || raw.includes('{%') || raw.trim().startsWith('[[['))) {
+      let resolved = this._cardHeightResolveCache?.['card']?.value;
+      
+      // Fallback for synchronous client-side JS template evaluation if not yet in cache
+      if (resolved === undefined && raw.trim().startsWith('[[[')) {
+        try {
+           resolved = resolveStringTemplateSync(this.hass, raw, this._getTemplateContext());
+        } catch(e) {
+           console.debug("YAMP template eval fallback error", e);
+        }
+      }
+      
+      if (resolved !== undefined && resolved !== null && resolved !== "") {
+        return resolved;
+      }
+      return null;
+    }
+    return raw;
+  }
+
   get _alwaysCollapsed() {
     const raw = this.config?.always_collapsed;
     if (typeof raw === 'string' && (raw.includes('{{') || raw.includes('{%') || raw.trim().startsWith('[[['))) {
@@ -4354,9 +4376,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _getAdaptiveBaselineHeight(collapsed = false) {
-    const raw = this._cardHeightTemplateValue?.card?.template
-      ? this._cardHeightResolveCache?.card?.value
-      : this.config?.card_height;
+    const raw = this._cardHeight;
     if (typeof raw === "number" && Number.isFinite(raw) && raw > 0) {
       return raw;
     }
@@ -8918,14 +8938,12 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _getCardHeightMetrics(config) {
-    const customCardHeightInput = this._cardHeightTemplateValue?.card?.template
-      ? this._cardHeightResolveCache?.card?.value
-      : config.card_height;
+    const customCardHeightInput = this._cardHeight;
     const customCardHeight = typeof customCardHeightInput === "string"
       ? parseFloat(customCardHeightInput)
       : Number(customCardHeightInput);
     const isValidCardHeightNumber = typeof customCardHeight === "number" && Number.isFinite(customCardHeight) && customCardHeight > 0;
-    const hasCustomCardHeight = isValidCardHeightNumber || (typeof customCardHeight === "string" && customCardHeight.trim() !== "");
+    const hasCustomCardHeight = isValidCardHeightNumber;
     return { customCardHeight, hasCustomCardHeight };
   }
 
@@ -9009,60 +9027,137 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const hasMultipleEntities = (this.entityObjs || []).length > 1;
     const showChipsInMenu = (showChipRow === "in_menu" || (showChipRow === "in_menu_on_idle" && this._isIdle)) && hasMultipleEntities;
     const renderChipRowSeparately = showChipRow !== "hidden" && !showChipsInMenu && hasMultipleEntities;
+    const renderActionChipRow = config.action_chips && config.action_chips.length > 0;
 
-    let baseMinHeight = 240;
-    let collapsedArtworkSize = 0;
     const cardWidth = this.offsetWidth || 0;
+    const topChipReserve = renderChipRowSeparately ? 58 : 0;
+    const topActionReserve = renderActionChipRow ? 42 : 0;
+    const totalTopReserve = topChipReserve + topActionReserve;
+    const effectiveHeight = hasCustomCardHeight ? Math.max(0, customCardHeight - totalTopReserve) : 0;
 
-    // Layout artwork size for CSS variable offsets — uses 95% of (height − padding)
-    // as the base, then clamps to a width-safe maximum (see _getMaxCollapsedArtworkWidth).
-    // This differs from the render-method value which targets visual proportion (48% of height).
+    const layoutStateKey = [
+      cardWidth,
+      customCardHeight,
+      collapsed,
+      showChipRow,
+      hasMultipleEntities,
+      this._isIdle,
+      renderActionChipRow,
+      this._artworkObjectFit,
+      this._collapsedBaselineHeight,
+      this._alwaysCollapsed,
+      this._getEffectiveVolumeMode(),
+      this._showEntityOptions
+    ].join('_');
+
+    if (this._lastLayoutStateKey === layoutStateKey) {
+      return;
+    }
+    this._lastLayoutStateKey = layoutStateKey;
+
     if (collapsed) {
+      let collapsedArtworkSize;
       if (hasCustomCardHeight) {
         const maxSize = this._getMaxCollapsedArtworkWidth(cardWidth);
         collapsedArtworkSize = Math.max(0, Math.min(maxSize, Math.round((customCardHeight - (isCompact ? 90 : 130)) * 0.95)));
       } else {
         collapsedArtworkSize = (this._artworkObjectFit === "no_artwork") ? 0 : 64;
       }
-    }
 
-    const baseExtraSpace = hasCustomCardHeight ? (customCardHeight - baseMinHeight) : 0;
-    const chipRowSpacing = renderChipRowSeparately ? 58 : 0;
-    const effectiveExtraSpace = Math.max(0, baseExtraSpace - chipRowSpacing);
-    const detailGrowth = Math.min(90, effectiveExtraSpace * 0.45);
-    const controlSpacerSize = effectiveExtraSpace > 0 ? Math.max(0, effectiveExtraSpace - detailGrowth) : 0;
-    const releaseControlsRow = controlSpacerSize >= 48;
-    const collapsedBaselineHeight = this._collapsedBaselineHeight || 220;
-    const collapsedExtraSpace = hasCustomCardHeight ? (customCardHeight - collapsedBaselineHeight) : 0;
+      const collapsedBaselineHeight = this._collapsedBaselineHeight || 220;
+      const collapsedExtraSpace = hasCustomCardHeight ? (customCardHeight - collapsedBaselineHeight) : 0;
 
-    const collapsedDetailsOffset = (collapsed && collapsedArtworkSize > 0)
-      ? Math.round(collapsedArtworkSize + (isCompact ? 12 : 24) + Math.min(40, Math.max(0, collapsedExtraSpace) * 0.12))
-      : (collapsed && collapsedArtworkSize === 0 ? 0 : null);
+      const collapsedDetailsOffset = (collapsedArtworkSize > 0)
+        ? Math.round(collapsedArtworkSize + (isCompact ? 12 : 24) + Math.min(40, Math.max(0, collapsedExtraSpace) * 0.12))
+        : 0;
 
-    const collapsedControlsOffset = releaseControlsRow ? 0 : (collapsedDetailsOffset ?? 0);
-    const widthScale = cardWidth > 380 ? Math.min(1.6, 1 + (cardWidth - 380) / 520) : 1;
-    const heightScale = collapsedExtraSpace > 0
-      ? Math.min(1.45, 1 + effectiveExtraSpace / 180)
-      : (isCompact ? 0.9 : 1);
-    const titleScale = (heightScale > 1 || widthScale > 1)
-      ? Math.min(1.6, Math.max(heightScale, widthScale))
-      : (isCompact ? 0.95 : 1);
-    const artistScale = isCompact ? 0.85 : Math.min(1.5, Math.max(heightScale * 0.92, widthScale * 0.92));
+      const baseExtraSpace = hasCustomCardHeight ? (customCardHeight - 240) : 0;
+      const effectiveExtraSpace = Math.max(0, baseExtraSpace - topChipReserve);
+      const detailGrowth = Math.min(90, effectiveExtraSpace * 0.45);
+      const controlSpacerSize = effectiveExtraSpace > 0 ? Math.max(0, effectiveExtraSpace - detailGrowth) : 0;
+      const releaseControlsRow = controlSpacerSize >= 48;
+      const collapsedControlsOffset = releaseControlsRow ? 0 : collapsedDetailsOffset;
 
-    const isCompactVolume = hasCustomCardHeight && customCardHeight < 320 && !this._alwaysCollapsed;
-    const hideVolume = this._getEffectiveVolumeMode() === "hidden" || isCompactVolume || (hasCustomCardHeight && customCardHeight < 260 && collapsed && !this._showEntityOptions);
-    const artworkClearance = hideVolume ? 54 : 100;
+      const widthScale = cardWidth > 380 ? Math.min(1.6, 1 + (cardWidth - 380) / 520) : 1;
+      const heightScale = collapsedExtraSpace > 0
+        ? Math.min(1.45, 1 + effectiveExtraSpace / 180)
+        : (isCompact ? 0.9 : 1);
+      const titleScale = (heightScale > 1 || widthScale > 1)
+        ? Math.min(1.6, Math.max(heightScale, widthScale))
+        : (isCompact ? 0.95 : 1);
+      const artistScale = isCompact ? 0.85 : Math.min(1.5, Math.max(heightScale * 0.92, widthScale * 0.92));
 
-    if (collapsedExtraSpace !== 0 || isCompact) {
-      if (collapsedDetailsOffset != null) {
+      const isCompactVolume = hasCustomCardHeight && customCardHeight < 320 && !this._alwaysCollapsed;
+      const hideVolume = this._getEffectiveVolumeMode() === "hidden" || isCompactVolume || (hasCustomCardHeight && customCardHeight < 260 && !this._showEntityOptions);
+      const artworkClearance = hideVolume ? 54 : 100;
+
+      if (collapsedExtraSpace !== 0 || isCompact) {
         host.style.setProperty('--yamp-collapsed-details-offset', `${collapsedDetailsOffset}px`);
+        host.style.setProperty('--yamp-collapsed-controls-offset', `${collapsedControlsOffset}px`);
+        host.style.setProperty('--yamp-collapsed-title-scale', titleScale.toFixed(3));
+        host.style.setProperty('--yamp-collapsed-artist-scale', artistScale.toFixed(3));
+        host.style.setProperty('--yamp-collapsed-artwork-size', `${collapsedArtworkSize}px`);
+        host.style.setProperty('--yamp-collapsed-artwork-clearance', `${artworkClearance}px`);
+      } else {
+        host.style.removeProperty('--yamp-collapsed-controls-offset');
+        host.style.removeProperty('--yamp-collapsed-details-offset');
+        host.style.removeProperty('--yamp-collapsed-artwork-size');
+        host.style.removeProperty('--yamp-collapsed-title-scale');
+        host.style.removeProperty('--yamp-collapsed-artist-scale');
+        host.style.removeProperty('--yamp-collapsed-artwork-clearance');
       }
-      host.style.setProperty('--yamp-collapsed-controls-offset', `${collapsedControlsOffset}px`);
-      host.style.setProperty('--yamp-collapsed-title-scale', titleScale.toFixed(3));
-      host.style.setProperty('--yamp-collapsed-artist-scale', artistScale.toFixed(3));
-      host.style.setProperty('--yamp-collapsed-artwork-size', `${collapsedArtworkSize}px`);
-      host.style.setProperty('--yamp-collapsed-artwork-clearance', `${artworkClearance}px`);
     } else {
+      // Expanded mode scaling
+      if (hasCustomCardHeight) {
+        // Adjust button sizes and padding based on available height
+        // Base expanded stack minimums: spacer 180 + details 60 + controls 82 + volume 64 = 386px
+        let primarySize = 70;
+        let mediumSize = 50;
+        let smallSize = 42;
+        let primaryIcon = 36;
+        let mediumIcon = 28;
+        let smallIcon = 24;
+        let controlsPadding = "16px";
+        let controlsGap = "20px";
+        let volumePadding = "10px 16px 14px 16px";
+
+        if (effectiveHeight < 380) {
+          const heightRatio = Math.max(0.6, effectiveHeight / 380);
+          
+          primarySize = Math.max(48, Math.round(70 * heightRatio));
+          mediumSize = Math.max(36, Math.round(50 * heightRatio));
+          smallSize = Math.max(32, Math.round(42 * heightRatio));
+          
+          primaryIcon = Math.max(24, Math.round(36 * heightRatio));
+          mediumIcon = Math.max(20, Math.round(28 * heightRatio));
+          smallIcon = Math.max(18, Math.round(24 * heightRatio));
+          
+          controlsPadding = `${Math.max(4, Math.round(16 * heightRatio))}px 16px`;
+          controlsGap = `${Math.max(8, Math.round(20 * heightRatio))}px`;
+          volumePadding = `${Math.max(4, Math.round(10 * heightRatio))}px 16px ${Math.max(8, Math.round(14 * heightRatio))}px 16px`;
+        }
+
+        host.style.setProperty('--yamp-modern-primary-size', `${primarySize}px`);
+        host.style.setProperty('--yamp-modern-medium-size', `${mediumSize}px`);
+        host.style.setProperty('--yamp-modern-small-size', `${smallSize}px`);
+        host.style.setProperty('--yamp-modern-primary-icon-size', `${primaryIcon}px`);
+        host.style.setProperty('--yamp-modern-medium-icon-size', `${mediumIcon}px`);
+        host.style.setProperty('--yamp-modern-small-icon-size', `${smallIcon}px`);
+        host.style.setProperty('--yamp-modern-padding', controlsPadding);
+        host.style.setProperty('--yamp-modern-gap', controlsGap);
+        host.style.setProperty('--yamp-volume-row-padding', volumePadding);
+      } else {
+        host.style.removeProperty('--yamp-modern-primary-size');
+        host.style.removeProperty('--yamp-modern-medium-size');
+        host.style.removeProperty('--yamp-modern-small-size');
+        host.style.removeProperty('--yamp-modern-primary-icon-size');
+        host.style.removeProperty('--yamp-modern-medium-icon-size');
+        host.style.removeProperty('--yamp-modern-small-icon-size');
+        host.style.removeProperty('--yamp-modern-padding');
+        host.style.removeProperty('--yamp-modern-gap');
+        host.style.removeProperty('--yamp-volume-row-padding');
+      }
+
       host.style.removeProperty('--yamp-collapsed-controls-offset');
       host.style.removeProperty('--yamp-collapsed-details-offset');
       host.style.removeProperty('--yamp-collapsed-artwork-size');

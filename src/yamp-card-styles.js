@@ -405,7 +405,7 @@ export const yampCardStyles = css`
     width: 100%;
     flex: 1 1 0;
     height: auto;
-    min-height: 180px;
+    min-height: 0;
     pointer-events: none;
     position: relative;
     display: flex;
@@ -413,8 +413,8 @@ export const yampCardStyles = css`
     justify-content: center;
   }
 
-  :host([data-has-custom-height="true"]) .card-artwork-spacer {
-    min-height: 48px;
+  :host(:not([data-has-custom-height="true"])) .card-artwork-spacer {
+    min-height: 180px;
   }
 
   /* Media background */
@@ -958,6 +958,7 @@ export const yampCardStyles = css`
     padding-left: calc(16px * var(--yamp-details-scale, 1));
     display: flex;
     flex-direction: column;
+    flex-shrink: 0;
     gap: calc(8px * var(--yamp-details-scale, 1));
     margin-top: calc(8px * var(--yamp-details-scale, 1));
     min-height: calc(48px * var(--yamp-details-scale, 1));
@@ -1177,6 +1178,7 @@ export const yampCardStyles = css`
     padding: 4px 16px;
     position: relative;
     z-index: ${Z_LAYERS.FLOATING_CONTROLS};
+    flex-shrink: 0;
   }
 
   .controls-row.adaptive {
@@ -1218,8 +1220,8 @@ export const yampCardStyles = css`
 
   .controls-row.modern {
     justify-content: center;
-    gap: 14px;
-    padding: 10px 16px 2px 16px;
+    gap: var(--yamp-modern-gap, 14px);
+    padding: var(--yamp-modern-padding, 10px 16px 2px 16px);
     /* Grid layout for robust centering */
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
@@ -1271,40 +1273,40 @@ export const yampCardStyles = css`
   }
 
   .modern-button.small {
-    width: 42px;
-    height: 42px;
+    width: var(--yamp-modern-small-size, 42px);
+    height: var(--yamp-modern-small-size, 42px);
     padding: 0;
   }
 
   .modern-button.medium {
-    width: 50px;
-    height: 50px;
+    width: var(--yamp-modern-medium-size, 50px);
+    height: var(--yamp-modern-medium-size, 50px);
     padding: 0;
   }
 
   .modern-button.primary {
-    width: 70px;
-    height: 70px;
+    width: var(--yamp-modern-primary-size, 70px);
+    height: var(--yamp-modern-primary-size, 70px);
     font-size: 1.9em;
     background: rgba(255, 255, 255, 0.1);
   }
 
   .modern-button ha-icon {
-    --mdc-icon-size: 24px;
-    width: 24px;
-    height: 24px;
+    --mdc-icon-size: var(--yamp-modern-small-icon-size, 24px);
+    width: var(--yamp-modern-small-icon-size, 24px);
+    height: var(--yamp-modern-small-icon-size, 24px);
   }
 
   .modern-button.medium ha-icon {
-    --mdc-icon-size: 28px;
-    width: 28px;
-    height: 28px;
+    --mdc-icon-size: var(--yamp-modern-medium-icon-size, 28px);
+    width: var(--yamp-modern-medium-icon-size, 28px);
+    height: var(--yamp-modern-medium-icon-size, 28px);
   }
 
   .modern-button.primary ha-icon {
-    --mdc-icon-size: 36px;
-    width: 36px;
-    height: 36px;
+    --mdc-icon-size: var(--yamp-modern-primary-icon-size, 36px);
+    width: var(--yamp-modern-primary-icon-size, 36px);
+    height: var(--yamp-modern-primary-icon-size, 36px);
   }
 
   @media (hover: hover) {
@@ -1391,9 +1393,10 @@ export const yampCardStyles = css`
     display: grid;
     grid-template-columns: minmax(min-content, 1fr) auto minmax(min-content, 1fr);
     align-items: center;
-    padding: 10px 16px 14px 16px;
+    padding: var(--yamp-volume-row-padding, 10px 16px 14px 16px);
     position: relative;
     z-index: ${Z_LAYERS.FLOATING_CONTROLS};
+    flex-shrink: 0;
   }
 
   /* Remove flex:1 since we are using grid columns */
