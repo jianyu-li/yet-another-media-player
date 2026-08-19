@@ -62,7 +62,7 @@ export function renderVolumeRow({
             hideVolume || isRemoteVolumeEntity
               ? "visibility:hidden; opacity:0; pointer-events:none;"
               : ""
-          }"
+          } display: flex; align-items: center; justify-content: center;"
         >
           ${
             muteSlotTemplate !== nothing
