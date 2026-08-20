@@ -1465,6 +1465,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._upcomingFilterActive = false;
     this._recommendationsFilterActive = false;
     this._initialFavoritesLoaded = false;
+    this._lastSearchUsedServerFavorites = false;
 
     // Render, then run search
     this.requestUpdate();
@@ -1506,6 +1507,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._upcomingFilterActive = false;
     this._recommendationsFilterActive = false;
     this._initialFavoritesLoaded = false;
+    this._lastSearchUsedServerFavorites = false;
 
     this.requestUpdate();
 
@@ -1652,6 +1654,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._addToPlaylistTarget = null; // Clear playlist target
     this._dismissMenuAfterPlaylistAdd = false; // Clear dismiss flag
     this._recommendationsFilterActive = false;
+    this._lastSearchUsedServerFavorites = false;
     if (this._quickMenuInvoke) {
       this._showEntityOptions = false;
       this._quickMenuInvoke = false;
@@ -10466,6 +10469,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         this._searchHierarchy = [];
         this._searchBreadcrumb = "";
         this._addToPlaylistTarget = null;
+        this._lastSearchUsedServerFavorites = false;
         this.requestUpdate();
       }
       // Clear quick menu flag on any overlay close
