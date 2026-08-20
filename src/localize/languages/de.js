@@ -126,6 +126,7 @@ export default {
       hide_search_headers_on_idle: "Sucheingabe und Filter im Leerlauf ausblenden.",
       disable_mass: "Optionale Mass Queue Integration deaktivieren, auch wenn sie installiert ist.",
       swap_pause_stop: "Pause-Taste durch Stop-Taste im modernen Layout ersetzen.",
+      show_album: "Den Albumnamen neben dem Interpreten in den Player-Details anzeigen.",
       adaptive_controls: "Wiedergabetasten an verfügbaren Platz anpassen.",
       hide_menu_player: "Entitäts-Label unten ausblenden, wenn Chips im Menü sind.",
       hide_reorder_progress:
@@ -226,6 +227,7 @@ export default {
       progress_bar_height: "Fortschrittsbalkenhöhe",
       display_timestamps: "Zeitstempel anzeigen",
       swap_pause_stop: "Pause durch Stop ersetzen",
+      show_album: "Albumname anzeigen",
       adaptive_controls: "Adaptive Tastengröße",
       hide_active_entity: "Aktives Entitäts-Label ausblenden",
       hide_active_entity_on_idle: "Aktive Entitätsbeschriftung im Leerlauf ausblenden",
@@ -487,6 +489,7 @@ export default {
       audiobook: "Hörbuch",
     },
     search_artist: "Nach diesem Künstler suchen",
+    search_album: "Titel von diesem Album durchsuchen",
     browse_album: "Albentitel von {album} durchsuchen",
     play_collection: "Diese Sammlung abspielen",
     play_collection_error: "Diese Sammlung kann nicht direkt abgespielt werden",

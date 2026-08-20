@@ -119,6 +119,7 @@ export default {
       hide_search_headers_on_idle: "Skrij iskalno polje in filtre med mirovanjem.",
       disable_mass: "Onemogoči integracijo Mass Queue.",
       swap_pause_stop: "Zamenjaj gumb pavze z gumbom zaustavitve med uporabo moderne postavitve.",
+      show_album: "Prikaži ime albuma zraven izvajalca v podrobnostih predvajalnika.",
       adaptive_controls: "Prilagodi velikost gumbov glede na prostor.",
       hide_menu_player: "Skrij oznako entitete v meniju.",
       hide_reorder_progress:
@@ -210,6 +211,7 @@ export default {
       progress_bar_height: "Višina vrstice napredka",
       display_timestamps: "Prikaži časovne oznake",
       swap_pause_stop: "Zamenjaj pavzo z zaustavitvijo",
+      show_album: "Prikaži ime albuma",
       adaptive_controls: "Prilagodljiva velikost gumbov",
       hide_active_entity: "Skrij oznako aktivne entitete",
       hide_active_entity_on_idle: "Skrij oznako aktivne entitete ob mirovanju",
@@ -471,6 +473,7 @@ export default {
       audiobook: "Zvočna knjiga",
     },
     search_artist: "Išči tega izvajalca",
+    search_album: "Prebrskaj skladbe iz tega albuma",
     browse_album: "Prebrskaj skladbe iz {album}",
     play_collection: "Predvajaj to zbirko",
     play_collection_error: "Te zbirke ni mogoče predvajati neposredno",

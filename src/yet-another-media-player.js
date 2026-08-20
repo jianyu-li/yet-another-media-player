@@ -270,13 +270,13 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const activeEntityId = this._getActivePlaybackEntityId(this._selectedIndex);
     if (!activeEntityId) return null;
 
-    // Check if the active entity is a Music Assistant entity
+    // Check if the active entity exists
     const activeState = this.hass?.states?.[activeEntityId];
-    if (!activeState || !isMusicAssistantEntity(activeState)) {
+    if (!activeState) {
       return null;
     }
 
-    // Active entity is Music Assistant, find its favorite button
+    // Find a favorite button associated with this entity
     const buttonEntities = this._findAssociatedButtonEntities(activeEntityId);
     const favoriteButton = buttonEntities.find(btn =>
       btn.friendly_name.toLowerCase().includes('favorite') ||
@@ -1465,12 +1465,54 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._upcomingFilterActive = false;
     this._recommendationsFilterActive = false;
     this._initialFavoritesLoaded = false;
+    this._lastSearchUsedServerFavorites = false;
 
     // Render, then run search
     this.requestUpdate();
     // Kick off search immediately so results populate without requiring user interaction.
     this._doSearch().catch((error) => {
       console.error('yamp: artist quick-search failed:', error);
+    });
+  }
+
+  /**
+   * Open the search sheet and navigate directly to the current album's tracks
+   * in hierarchical search view (only when media_album_name is present).
+   */
+  _searchAlbumFromNowPlaying() {
+    const activeObj = this.currentActivePlaybackStateObj || this.currentPlaybackStateObj || this.currentStateObj;
+    const album = activeObj?.attributes?.media_album_name || "";
+    const artist = activeObj?.attributes?.media_artist || "";
+    if (!album) return;
+
+    this._openedSearchFromNowPlaying = true;
+
+    // Open overlay + search sheet
+    this._showEntityOptions = true;
+    this._showSearchInSheet = true;
+    this._searchInputAutoFocused = false;
+
+    // Reset search state
+    this._searchError = "";
+    this._searchResults = [];
+    this._searchQuery = "";
+    this._searchAttempted = false;
+    this._searchResultsByType = {};
+    this._currentSearchQuery = "";
+    this._searchHierarchy = [];
+    this._searchBreadcrumb = "";
+    this._usingMusicAssistant = false;
+    this._favoritesFilterActive = false;
+    this._recentlyPlayedFilterActive = false;
+    this._upcomingFilterActive = false;
+    this._recommendationsFilterActive = false;
+    this._initialFavoritesLoaded = false;
+    this._lastSearchUsedServerFavorites = false;
+
+    this.requestUpdate();
+
+    this._searchAlbumTracks(album, artist, null).catch((error) => {
+      console.error("yamp: album quick-search failed:", error);
     });
   }
   // Show search sheet inside entity options
@@ -1596,6 +1638,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   _hideSearchSheetInOptions() {
     // In dedicated search mode, never close the search
     if (this._cardType === "search" || this._cardType === "up_next") return;
+    this._openedSearchFromNowPlaying = false;
     this._showSearchInSheet = false;
     this._searchError = "";
     this._searchResults = [];
@@ -1611,6 +1654,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._addToPlaylistTarget = null; // Clear playlist target
     this._dismissMenuAfterPlaylistAdd = false; // Clear dismiss flag
     this._recommendationsFilterActive = false;
+    this._lastSearchUsedServerFavorites = false;
     if (this._quickMenuInvoke) {
       this._showEntityOptions = false;
       this._quickMenuInvoke = false;
@@ -2443,6 +2487,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._searchMediaClassFilter = previousLevel.filter || 'all';
 
     if (this._searchHierarchy.length === 0) {
+      if (this._openedSearchFromNowPlaying) {
+        this._openedSearchFromNowPlaying = false;
+        this._closeEntityOptions();
+        return;
+      }
       this._searchBreadcrumb = "";
       this._doSearch(this._searchMediaClassFilter === 'all' ? null : this._searchMediaClassFilter);
     } else {
@@ -8268,6 +8317,13 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         ""
       )
       : "";
+    const showAlbum = this.config.show_album !== false;
+    const album = shouldShowDetails && showAlbum
+      ? (displaySource?.attributes?.media_album_name || "")
+      : "";
+    const hasSearchableArtist = !!(displaySource?.attributes?.media_artist || stateObj?.attributes?.media_artist);
+    const searchAlbumTitle = localize("search.search_album") || localize("search.browse_album", { "{album}": album });
+    const searchArtistTitle = hasSearchableArtist ? localize("search.search_artist") : "";
     this._lastTitleLength = title ? title.length : 0;
     if (this._adaptiveText) {
       this._updateAdaptiveTextScale(true);
@@ -8716,13 +8772,49 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
                         <span class="marquee-inner">${shouldShowDetails && title ? title : html`&nbsp;`}</span>
                       </div>
                     `}
-                    <div
-                        class="artist ${shouldShowDetails && stateObj.attributes.media_artist ? 'clickable-artist' : ''}"
-                        @click=${() => {
-          if (shouldShowDetails && stateObj.attributes.media_artist) this._searchArtistFromNowPlaying();
-        }}
-                        title=${shouldShowDetails && stateObj.attributes.media_artist ? localize('search.search_artist') : ""}
-                      ><span class="marquee-inner">${shouldShowDetails && artist ? artist : html`&nbsp;`}</span></div>
+                    <div class="artist">
+                      <span class="marquee-inner">${shouldShowDetails ? (
+                        artist && album ? html`
+                          <span
+                            class="artist-name ${hasSearchableArtist ? "clickable-artist" : ""}"
+                            @click=${(e) => {
+                              if (hasSearchableArtist) {
+                                e.stopPropagation();
+                                this._searchArtistFromNowPlaying();
+                              }
+                            }}
+                            title=${searchArtistTitle}
+                          >${artist}</span><span class="artist-album-separator"> - </span><span
+                            class="album-name clickable-album"
+                            @click=${(e) => {
+                              e.stopPropagation();
+                              this._searchAlbumFromNowPlaying();
+                            }}
+                            title=${searchAlbumTitle}
+                          >${album}</span>
+                        ` : artist ? html`
+                          <span
+                            class="artist-name ${hasSearchableArtist ? "clickable-artist" : ""}"
+                            @click=${(e) => {
+                              if (hasSearchableArtist) {
+                                e.stopPropagation();
+                                this._searchArtistFromNowPlaying();
+                              }
+                            }}
+                            title=${searchArtistTitle}
+                          >${artist}</span>
+                        ` : album ? html`
+                          <span
+                            class="album-name clickable-album"
+                            @click=${(e) => {
+                              e.stopPropagation();
+                              this._searchAlbumFromNowPlaying();
+                            }}
+                            title=${searchAlbumTitle}
+                          >${album}</span>
+                        ` : html`&nbsp;`
+                      ) : html`&nbsp;`}</span>
+                    </div>
                   </div>
                 ` : nothing}
                 ${(!collapsed && !this._alternateProgressBar)
@@ -10375,10 +10467,12 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         if (this._cardType !== "remote_control") {
           this._showRemoteControl = false;
         }
+        this._openedSearchFromNowPlaying = false;
         this._searchInputAutoFocused = false;
         this._searchHierarchy = [];
         this._searchBreadcrumb = "";
         this._addToPlaylistTarget = null;
+        this._lastSearchUsedServerFavorites = false;
         this.requestUpdate();
       }
       // Clear quick menu flag on any overlay close

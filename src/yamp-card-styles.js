@@ -3608,13 +3608,15 @@ export const yampCardStyles = css`
     border-bottom: none;
   }
 
-  /* Clickable artist */
-  .clickable-artist {
+  /* Clickable artist and album */
+  .clickable-artist,
+  .clickable-album {
     cursor: pointer;
   }
 
   @media (hover: hover) {
-    .clickable-artist:hover {
+    .clickable-artist:hover,
+    .clickable-album:hover {
       text-decoration: underline;
     }
   }

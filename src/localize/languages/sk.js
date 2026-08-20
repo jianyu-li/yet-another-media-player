@@ -125,6 +125,7 @@ export default {
       disable_mass: "Deaktivovať voliteľnú integráciu Mass Queue, aj keď je nainštalovaná.",
       swap_pause_stop:
         "Nahradiť tlačidlo pauzy tlačidlom zastavenia pri použití moderného rozloženia.",
+      show_album: "Zobraziť názov albumu vedľa interpreta v podrobnostiach prehrávača.",
       adaptive_controls: "Umožniť tlačidlám prehrávania meniť veľkosť podľa dostupného priestoru.",
       hide_menu_player: "Keď sú čipy v menu, skryť názov entity v spodnej časti karty.",
       hide_reorder_progress:
@@ -228,6 +229,7 @@ export default {
       progress_bar_height: "Výška indikátora priebehu",
       display_timestamps: "Zobraziť časové údaje",
       swap_pause_stop: "Vymeniť pauzu za stop",
+      show_album: "Zobraziť názov albumu",
       adaptive_controls: "Adaptívna veľkosť ovládania",
       hide_active_entity: "Skryť štítok aktívnej entity",
       hide_active_entity_on_idle: "Skryť štítok aktívnej entity pri nečinnosti",
@@ -489,6 +491,7 @@ export default {
       audiobook: "Audiokniha",
     },
     search_artist: "Hľadať tohto interpreta",
+    search_album: "Prehľadávať skladby z tohto albumu",
     browse_album: "Prehľadávať skladby z {album}",
     play_collection: "Prehrať túto kolekciu",
     play_collection_error: "Túto kolekciu nie je možné prehrať priamo",
