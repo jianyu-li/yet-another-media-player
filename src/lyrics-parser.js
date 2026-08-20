@@ -52,14 +52,55 @@ export function parseLrc(lrcString) {
     }
   });
 
+  // Filter out empty text lines that are often used in LRCs to indicate silence/gap
+  const validLyrics = parsedLyrics.filter((l) => l.text !== "" || l.time === null);
+
   // Sort by time (required because LRC can have out-of-order tags like [01:00.00][02:00.00] Chorus)
   // Non-timed lines stay at the end or maintain relative order.
-  parsedLyrics.sort((a, b) => {
+  validLyrics.sort((a, b) => {
     if (a.time === null && b.time === null) return 0;
     if (a.time === null) return 1;
     if (b.time === null) return -1;
     return a.time - b.time;
   });
 
-  return parsedLyrics;
+  // Automatically insert instrumental break markers for gaps >= 10.0s in synced lyrics
+  const syncedLines = validLyrics.filter((l) => l.time !== null);
+  if (syncedLines.length > 0) {
+    const withInstrumentals = [];
+    const INSTRUMENTAL_GAP_THRESHOLD = 10.0;
+
+    // Check intro gap (before first lyric line)
+    if (syncedLines[0].time >= INSTRUMENTAL_GAP_THRESHOLD) {
+      withInstrumentals.push({
+        time: 0,
+        text: "",
+        isInstrumental: true,
+      });
+    }
+
+    for (let i = 0; i < syncedLines.length; i++) {
+      withInstrumentals.push(syncedLines[i]);
+      if (i < syncedLines.length - 1) {
+        const currentLine = syncedLines[i];
+        const nextLine = syncedLines[i + 1];
+        const gap = nextLine.time - currentLine.time;
+        if (gap >= INSTRUMENTAL_GAP_THRESHOLD) {
+          // Place the instrumental marker at ~3s after current line start (or mid-gap if shorter)
+          const instrumentalTime = gap >= 6.0 ? currentLine.time + 3.0 : currentLine.time + gap / 2;
+          withInstrumentals.push({
+            time: instrumentalTime,
+            text: "",
+            isInstrumental: true,
+          });
+        }
+      }
+    }
+
+    // Append any unsynced fallback lines that were at the end
+    const unsyncedLines = validLyrics.filter((l) => l.time === null);
+    return [...withInstrumentals, ...unsyncedLines];
+  }
+
+  return validLyrics;
 }
