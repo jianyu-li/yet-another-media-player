@@ -1473,6 +1473,44 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       console.error('yamp: artist quick-search failed:', error);
     });
   }
+
+  /**
+   * Open the search sheet and navigate directly to the current album's tracks
+   * in hierarchical search view (only when media_album_name is present).
+   */
+  _searchAlbumFromNowPlaying() {
+    const activeObj = this.currentActivePlaybackStateObj || this.currentPlaybackStateObj || this.currentStateObj;
+    const album = activeObj?.attributes?.media_album_name || "";
+    const artist = activeObj?.attributes?.media_artist || "";
+    if (!album) return;
+
+    // Open overlay + search sheet
+    this._showEntityOptions = true;
+    this._showSearchInSheet = true;
+    this._searchInputAutoFocused = false;
+
+    // Reset search state
+    this._searchError = "";
+    this._searchResults = [];
+    this._searchQuery = "";
+    this._searchAttempted = false;
+    this._searchResultsByType = {};
+    this._currentSearchQuery = "";
+    this._searchHierarchy = [];
+    this._searchBreadcrumb = "";
+    this._usingMusicAssistant = false;
+    this._favoritesFilterActive = false;
+    this._recentlyPlayedFilterActive = false;
+    this._upcomingFilterActive = false;
+    this._recommendationsFilterActive = false;
+    this._initialFavoritesLoaded = false;
+
+    this.requestUpdate();
+
+    this._searchAlbumTracks(album, artist, null).catch((error) => {
+      console.error("yamp: album quick-search failed:", error);
+    });
+  }
   // Show search sheet inside entity options
   _showSearchSheetInOptions(mode = "default") {
     this._showSearchInSheet = true;
@@ -8268,6 +8306,10 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         ""
       )
       : "";
+    const showAlbum = this.config.show_album !== false;
+    const album = shouldShowDetails && showAlbum
+      ? (displaySource?.attributes?.media_album_name || "")
+      : "";
     this._lastTitleLength = title ? title.length : 0;
     if (this._adaptiveText) {
       this._updateAdaptiveTextScale(true);
@@ -8716,13 +8758,49 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
                         <span class="marquee-inner">${shouldShowDetails && title ? title : html`&nbsp;`}</span>
                       </div>
                     `}
-                    <div
-                        class="artist ${shouldShowDetails && stateObj.attributes.media_artist ? 'clickable-artist' : ''}"
-                        @click=${() => {
-          if (shouldShowDetails && stateObj.attributes.media_artist) this._searchArtistFromNowPlaying();
-        }}
-                        title=${shouldShowDetails && stateObj.attributes.media_artist ? localize('search.search_artist') : ""}
-                      ><span class="marquee-inner">${shouldShowDetails && artist ? artist : html`&nbsp;`}</span></div>
+                    <div class="artist">
+                      <span class="marquee-inner">${shouldShowDetails ? (
+                        artist && album ? html`
+                          <span
+                            class="artist-name ${displaySource?.attributes?.media_artist || stateObj?.attributes?.media_artist ? "clickable-artist" : ""}"
+                            @click=${(e) => {
+                              if (displaySource?.attributes?.media_artist || stateObj?.attributes?.media_artist) {
+                                e.stopPropagation();
+                                this._searchArtistFromNowPlaying();
+                              }
+                            }}
+                            title=${(displaySource?.attributes?.media_artist || stateObj?.attributes?.media_artist) ? localize("search.search_artist") : ""}
+                          >${artist}</span><span class="artist-album-separator"> - </span><span
+                            class="album-name clickable-album"
+                            @click=${(e) => {
+                              e.stopPropagation();
+                              this._searchAlbumFromNowPlaying();
+                            }}
+                            title=${localize("search.search_album") || localize("search.browse_album", { "{album}": album })}
+                          >${album}</span>
+                        ` : artist ? html`
+                          <span
+                            class="artist-name ${displaySource?.attributes?.media_artist || stateObj?.attributes?.media_artist ? "clickable-artist" : ""}"
+                            @click=${(e) => {
+                              if (displaySource?.attributes?.media_artist || stateObj?.attributes?.media_artist) {
+                                e.stopPropagation();
+                                this._searchArtistFromNowPlaying();
+                              }
+                            }}
+                            title=${(displaySource?.attributes?.media_artist || stateObj?.attributes?.media_artist) ? localize("search.search_artist") : ""}
+                          >${artist}</span>
+                        ` : album ? html`
+                          <span
+                            class="album-name clickable-album"
+                            @click=${(e) => {
+                              e.stopPropagation();
+                              this._searchAlbumFromNowPlaying();
+                            }}
+                            title=${localize("search.search_album") || localize("search.browse_album", { "{album}": album })}
+                          >${album}</span>
+                        ` : html`&nbsp;`
+                      ) : html`&nbsp;`}</span>
+                    </div>
                   </div>
                 ` : nothing}
                 ${(!collapsed && !this._alternateProgressBar)

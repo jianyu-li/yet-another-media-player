@@ -222,6 +222,7 @@ export interface YampCardConfig {
   hide_active_entity_label?: boolean;
   hide_active_entity_label_on_idle?: boolean;
   swap_pause_for_stop?: boolean;
+  show_album?: boolean;
   [key: string]: any;
 }
 

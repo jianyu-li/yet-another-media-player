@@ -159,6 +159,7 @@ export const CARD_CONFIG_DEFAULTS = Object.freeze({
   hide_active_entity_label: false,
   hide_active_entity_label_on_idle: false,
   swap_pause_for_stop: false,
+  show_album: true,
 });
 
 /**

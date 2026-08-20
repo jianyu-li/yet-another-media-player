@@ -152,6 +152,7 @@ export default {
       hide_search_headers_on_idle: "Hide search input and filters when the player is idle.",
       disable_mass: "Disable the optional Mass Queue integration even if it is installed.",
       swap_pause_stop: "Replace the pause button with stop while using the modern layout.",
+      show_album: "Display the album name next to the artist in the player details.",
       adaptive_controls: "Let the playback buttons grow or shrink to fit the available space.",
       hide_menu_player:
         "When chips live in the menu, hide the entity label at the bottom of the card.",
@@ -254,6 +255,7 @@ export default {
       progress_bar_height: "Progress Bar Height",
       display_timestamps: "Display Timestamps",
       swap_pause_stop: "Swap Pause with Stop",
+      show_album: "Show Album Name",
       adaptive_controls: "Adaptive Control Size",
       hide_active_entity: "Hide Active Entity Label",
       hide_active_entity_on_idle: "Hide Active Entity Label on Idle",
@@ -512,6 +514,7 @@ export default {
       audiobook: "Audiobook",
     },
     search_artist: "Search for this artist",
+    search_album: "Browse tracks from this album",
     browse_album: "Browse tracks from {album}",
     play_collection: "Play this collection",
     play_collection_error: "Unable to play this collection directly",

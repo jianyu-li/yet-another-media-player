@@ -2863,6 +2863,17 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
         <div class="form-row">
           <div>
             <ha-switch
+              id="show-album-toggle"
+              .checked=${this._config.show_album ?? true}
+              @change=${(e) => this._updateConfig("show_album", e.target.checked)}
+            ></ha-switch>
+            <span>${localize("editor.labels.show_album")}</span>
+          </div>
+          <div class="config-subtitle">${localize("editor.subtitles.show_album")}</div>
+        </div>
+        <div class="form-row">
+          <div>
+            <ha-switch
               id="hide-active-entity-label-toggle"
               .checked=${this._config.hide_active_entity_label ?? false}
               @change=${(e) => this._updateConfig("hide_active_entity_label", e.target.checked)}
