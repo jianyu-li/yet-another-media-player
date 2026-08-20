@@ -4619,6 +4619,52 @@ export const lyricsStyles = css`
     filter: none;
   }
 
+  .lyric-line.is-instrumental {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 32px;
+    filter: none;
+  }
+
+  .lyrics-playing-indicator {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    height: 24px;
+    padding: 4px 8px;
+    opacity: 0.4;
+    transition:
+      opacity 0.4s cubic-bezier(0.25, 1, 0.5, 1),
+      transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+  }
+
+  .lyrics-playing-indicator .bar {
+    width: 4px;
+    height: 6px;
+    background: currentColor;
+    border-radius: 2px;
+    transition: height 0.3s ease;
+  }
+
+  .lyric-line.active .lyrics-playing-indicator {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+
+  .lyric-line.active .lyrics-playing-indicator .bar:nth-child(1) {
+    animation: chipPlayingBar1 0.8s ease-in-out 0s infinite;
+  }
+
+  .lyric-line.active .lyrics-playing-indicator .bar:nth-child(2) {
+    animation: chipPlayingBar2 0.6s ease-in-out 0.15s infinite;
+  }
+
+  .lyric-line.active .lyrics-playing-indicator .bar:nth-child(3) {
+    animation: chipPlayingBar3 0.7s ease-in-out 0.3s infinite;
+  }
+
   .lyrics-loading,
   .lyrics-error,
   .lyrics-empty {

@@ -182,7 +182,21 @@ export class YampLyricsView extends LitElement {
             active: isActive && !isUnsynced,
             unsynced: isUnsynced || isUnsyncedMode,
             "scroll-mode": isScrollMode && !isUnsynced,
+            "is-instrumental": Boolean(lyric.isInstrumental),
           };
+
+          if (lyric.isInstrumental) {
+            return html`
+              <div class="${classMap(classes)}" aria-label="Instrumental Break">
+                <span class="lyrics-playing-indicator">
+                  <span class="bar"></span>
+                  <span class="bar"></span>
+                  <span class="bar"></span>
+                </span>
+              </div>
+            `;
+          }
+
           return html` <div class="${classMap(classes)}">${lyric.text}</div> `;
         })}
         ${

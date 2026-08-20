@@ -263,6 +263,7 @@ export interface MusicAssistantItem {
 }
 
 export interface LyricsLine {
-  time: number;
+  time: number | null;
   text: string;
+  isInstrumental?: boolean;
 }
