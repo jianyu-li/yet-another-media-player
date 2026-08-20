@@ -1199,7 +1199,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       processItem('card', rawConfigData);
     } else if (type === 'action_in_menu') {
       const actions = rawConfigData || [];
-      actions.forEach((act, idx) => processItem(idx, act?.in_menu));
+      actions.forEach((act, idx) => processItem(idx, getActionPlacement(act, idx)));
 
       // Clean up any stale subscriptions for indices beyond the current actions length
       let checkIdx = actions.length;
@@ -8025,16 +8025,23 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           inMenuVal = cached;
         } else {
           // Fallback for initial render before subscription resolves
-          if (!actionTemplateFallbackContext) {
-            actionTemplateFallbackContext = {
-              ...this._getTemplateContext(),
-              state: this.hass?.states[this.currentEntityId]?.state || "unknown",
-              attributes: this.hass?.states[this.currentEntityId]?.attributes || {}
-            };
-          }
-          const resolved = resolveStringTemplateSync(this.hass, inMenuVal, actionTemplateFallbackContext);
-          if (resolved !== null) {
-            inMenuVal = resolved;
+          if (inMenuVal.trim().startsWith("[[[")) {
+            const evaluated = this._evaluateJsTemplate(inMenuVal);
+            if (evaluated !== undefined) {
+              inMenuVal = evaluated;
+            }
+          } else {
+            if (!actionTemplateFallbackContext) {
+              actionTemplateFallbackContext = {
+                ...this._getTemplateContext(),
+                state: this.hass?.states[this.currentEntityId]?.state || "unknown",
+                attributes: this.hass?.states[this.currentEntityId]?.attributes || {}
+              };
+            }
+            const resolved = resolveStringTemplateSync(this.hass, inMenuVal, actionTemplateFallbackContext);
+            if (resolved !== null) {
+              inMenuVal = resolved;
+            }
           }
         }
       }

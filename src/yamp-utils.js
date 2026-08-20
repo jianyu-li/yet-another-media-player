@@ -673,6 +673,7 @@ export function getActionPlacement(action, index) {
     return action.placement;
   }
   // Legacy fallback
+  if (typeof action?.in_menu === "string") return action.in_menu;
   if (action?.in_menu === "hidden") return "hidden";
   if (action?.in_menu === true) return "menu";
   return "chip";
