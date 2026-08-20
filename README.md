@@ -102,6 +102,7 @@ Below you will find a list of all configuration options.
 | `adaptive_controls`        | boolean      | No           | `false`     | Control buttons expand to fill extra horizontal space, giving you larger tap targets when there’s room |
 | `control_layout`           | choice       | No           | `classic`   | `classic` keeps the legacy evenly sized controls, while `modern` adopts Home Assistant’s more-info layout (shuffle/prev/play/next/repeat) and moves the favorite and power buttons along the bottom of the card ([Supports Templates](#template-support)) |
 | `swap_pause_for_stop`      | boolean      | No           | `false`     | Only for `control_layout: modern`; when `true`, the center pause button is replaced with a stop button |
+| `show_album`               | boolean      | No           | `true`      | Display the album name next to the artist in player details (clickable to quick-browse album tracks) |
 | `adaptive_text`            | boolean/array| No           | `false`     | Set to `true` to scale all text, or supply a list of targets (`details`, `menu`, `action_chips`) to choose exactly which sections adapt |
 | `hide_active_entity_label` | boolean      | No           | `false`     | Hide the small entity name label shown at the bottom center when chips are placed in the menu |
 | `details_alignment`        | choice       | No           | `left`      | Align the track title and artist (`left`, `center`, `right`). Set to `none` to completely hide the details section. |
