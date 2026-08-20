@@ -128,6 +128,7 @@ export default {
       disable_mass:
         "Schakel de optionele Mass Queue integratie uit, zelfs als deze is geïnstalleerd.",
       swap_pause_stop: "Vervang de pauzeknop door stop bij gebruik van de moderne lay-out.",
+      show_album: "Toon de albumnaam naast de artiest in de spelerdetails.",
       adaptive_controls:
         "Laat de afspeelknoppen groeien of krimpen om in de beschikbare ruimte te passen.",
       hide_menu_player:
@@ -237,6 +238,7 @@ export default {
       progress_bar_height: "Hoogte voortgangsbalk",
       display_timestamps: "Tijdstempels Weergeven",
       swap_pause_stop: "Pauze vervangen door Stop",
+      show_album: "Toon albumnaam",
       adaptive_controls: "Adaptieve Knoppen Grootte",
       hide_active_entity: "Label van Actieve Entiteit verbergen",
       hide_active_entity_on_idle: "Actieve entiteitslabel verbergen bij inactiviteit",
@@ -498,6 +500,7 @@ export default {
       audiobook: "Luisterboek",
     },
     search_artist: "Zoek naar deze artiest",
+    search_album: "Blader door nummers van dit album",
     browse_album: "Tracks van {album} doorzoeken",
     play_collection: "Speel deze collectie af",
     play_collection_error: "Kan deze collectie niet direct afspelen",

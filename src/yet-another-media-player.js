@@ -8321,6 +8321,9 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const album = shouldShowDetails && showAlbum
       ? (displaySource?.attributes?.media_album_name || "")
       : "";
+    const hasSearchableArtist = !!(displaySource?.attributes?.media_artist || stateObj?.attributes?.media_artist);
+    const searchAlbumTitle = localize("search.search_album") || localize("search.browse_album", { "{album}": album });
+    const searchArtistTitle = hasSearchableArtist ? localize("search.search_artist") : "";
     this._lastTitleLength = title ? title.length : 0;
     if (this._adaptiveText) {
       this._updateAdaptiveTextScale(true);
@@ -8773,32 +8776,32 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
                       <span class="marquee-inner">${shouldShowDetails ? (
                         artist && album ? html`
                           <span
-                            class="artist-name ${displaySource?.attributes?.media_artist || stateObj?.attributes?.media_artist ? "clickable-artist" : ""}"
+                            class="artist-name ${hasSearchableArtist ? "clickable-artist" : ""}"
                             @click=${(e) => {
-                              if (displaySource?.attributes?.media_artist || stateObj?.attributes?.media_artist) {
+                              if (hasSearchableArtist) {
                                 e.stopPropagation();
                                 this._searchArtistFromNowPlaying();
                               }
                             }}
-                            title=${(displaySource?.attributes?.media_artist || stateObj?.attributes?.media_artist) ? localize("search.search_artist") : ""}
+                            title=${searchArtistTitle}
                           >${artist}</span><span class="artist-album-separator"> - </span><span
                             class="album-name clickable-album"
                             @click=${(e) => {
                               e.stopPropagation();
                               this._searchAlbumFromNowPlaying();
                             }}
-                            title=${localize("search.search_album") || localize("search.browse_album", { "{album}": album })}
+                            title=${searchAlbumTitle}
                           >${album}</span>
                         ` : artist ? html`
                           <span
-                            class="artist-name ${displaySource?.attributes?.media_artist || stateObj?.attributes?.media_artist ? "clickable-artist" : ""}"
+                            class="artist-name ${hasSearchableArtist ? "clickable-artist" : ""}"
                             @click=${(e) => {
-                              if (displaySource?.attributes?.media_artist || stateObj?.attributes?.media_artist) {
+                              if (hasSearchableArtist) {
                                 e.stopPropagation();
                                 this._searchArtistFromNowPlaying();
                               }
                             }}
-                            title=${(displaySource?.attributes?.media_artist || stateObj?.attributes?.media_artist) ? localize("search.search_artist") : ""}
+                            title=${searchArtistTitle}
                           >${artist}</span>
                         ` : album ? html`
                           <span
@@ -8807,7 +8810,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
                               e.stopPropagation();
                               this._searchAlbumFromNowPlaying();
                             }}
-                            title=${localize("search.search_album") || localize("search.browse_album", { "{album}": album })}
+                            title=${searchAlbumTitle}
                           >${album}</span>
                         ` : html`&nbsp;`
                       ) : html`&nbsp;`}</span>

@@ -115,6 +115,7 @@ export default {
       hide_search_headers_on_idle: "Nascondi la ricerca e i filtri quando inattivo.",
       disable_mass: "Disabilita integrazione Mass Queue.",
       swap_pause_stop: "Sostituisci pausa con stop nel design moderno.",
+      show_album: "Visualizza il nome dell'album accanto all'artista nei dettagli del lettore.",
       adaptive_controls: "Permetti ai pulsanti di adattarsi allo spazio.",
       hide_menu_player: "Nascondi nome entità quando è nel menu.",
       hide_reorder_progress:
@@ -211,6 +212,7 @@ export default {
       progress_bar_height: "Altezza barra di avanzamento",
       display_timestamps: "Mostra timestamp",
       swap_pause_stop: "Sostituisci Pausa con Stop",
+      show_album: "Mostra nome album",
       adaptive_controls: "Dimensione adattativa",
       hide_active_entity: "Nascondi nome entità attiva",
       hide_active_entity_on_idle: "Nascondi etichetta entità attiva quando inattivo",
@@ -472,6 +474,7 @@ export default {
       audiobook: "Audiolibro",
     },
     search_artist: "Cerca questo artista",
+    search_album: "Sfoglia i brani di questo album",
     browse_album: "Sfoglia i brani di {album}",
     play_collection: "Riproduci questa collezione",
     play_collection_error: "Impossibile riprodurre direttamente questa collezione",

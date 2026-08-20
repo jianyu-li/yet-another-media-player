@@ -121,6 +121,7 @@ export default {
       hide_search_headers_on_idle: "Masquer la recherche et les filtres en mode veille.",
       disable_mass: "Désactiver l'intégration Mass Queue.",
       swap_pause_stop: "Remplacer le bouton pause par stop en mode moderne.",
+      show_album: "Afficher le nom de l'album à côté de l'artiste dans les détails du lecteur.",
       adaptive_controls: "Laisser les boutons s'adapter à l'espace disponible.",
       hide_menu_player:
         "Masquer l'étiquette de l'entité en bas quand les jetons sont dans le menu.",
@@ -218,6 +219,7 @@ export default {
       progress_bar_height: "Hauteur de la barre de progression",
       display_timestamps: "Afficher les horodatages",
       swap_pause_stop: "Remplacer Pause par Stop",
+      show_album: "Afficher le nom de l'album",
       adaptive_controls: "Taille adaptative",
       hide_active_entity: "Masquer l'étiquette active",
       hide_active_entity_on_idle: "Masquer l'étiquette de l'entité active en mode veille",
@@ -479,6 +481,7 @@ export default {
       audiobook: "Livre audio",
     },
     search_artist: "Chercher cet artiste",
+    search_album: "Parcourir les pistes de cet album",
     browse_album: "Parcourir les titres de {album}",
     play_collection: "Lire cette collection",
     play_collection_error: "Impossible de lire cette collection directement",
