@@ -255,6 +255,15 @@ export function findAssociatedButtonEntities(hass, maEntityId) {
           reason: "name_similarity",
         });
       }
+      // Check for entity ID match (e.g., button.amzn_echo_show_5_favorite for media_player.amzn_echo_show_5)
+      else if (entityId.toLowerCase().includes(maEntityId.split(".")[1].toLowerCase())) {
+        buttonEntities.push({
+          entity_id: entityId,
+          friendly_name: buttonFriendlyName,
+          device_class: state.attributes.device_class,
+          reason: "entity_id_match",
+        });
+      }
     }
   }
 

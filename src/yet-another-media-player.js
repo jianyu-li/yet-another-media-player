@@ -270,13 +270,13 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const activeEntityId = this._getActivePlaybackEntityId(this._selectedIndex);
     if (!activeEntityId) return null;
 
-    // Check if the active entity is a Music Assistant entity
+    // Check if the active entity exists
     const activeState = this.hass?.states?.[activeEntityId];
-    if (!activeState || !isMusicAssistantEntity(activeState)) {
+    if (!activeState) {
       return null;
     }
 
-    // Active entity is Music Assistant, find its favorite button
+    // Find a favorite button associated with this entity
     const buttonEntities = this._findAssociatedButtonEntities(activeEntityId);
     const favoriteButton = buttonEntities.find(btn =>
       btn.friendly_name.toLowerCase().includes('favorite') ||
