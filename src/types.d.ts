@@ -127,7 +127,16 @@ export interface ActionConfig {
   icon?: string;
   name?: string;
   label?: string;
-  placement?: "chips" | "menu" | "both";
+  placement?:
+    | "chip"
+    | "menu"
+    | "hidden"
+    | "replace_search"
+    | "replace_power"
+    | "replace_mute"
+    | "replace_favorite"
+    | string;
+  in_menu?: boolean | "hidden" | string;
   alignment?: "left" | "right";
   hide_inactive?: boolean;
 }

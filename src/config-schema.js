@@ -186,6 +186,7 @@ export const TEMPLATE_SUPPORTED_FIELDS = Object.freeze(
     "name",
     "icon",
     "action_in_menu",
+    "placement",
     "hide_controls",
     "lyrics",
     "title",
