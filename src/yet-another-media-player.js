@@ -8604,11 +8604,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
             ` : nothing}
             ${(!useInsetArtwork && !artworkUrl && !idleImageUrl) ? html`
               <div class="media-artwork-placeholder"
-                @pointerdown=${this._onTapAreaPointerDown}
-                @pointermove=${this._onTapAreaPointerMove}
-                @pointerup=${this._onTapAreaPointerUp}
-                @pointercancel=${this._onTapAreaPointerCancel}
-                style="${this._getGestureStyles()}"
+                @pointerdown=${!this._lyricsActive ? this._onTapAreaPointerDown : nothing}
+                @pointermove=${!this._lyricsActive ? this._onTapAreaPointerMove : nothing}
+                @pointerup=${!this._lyricsActive ? this._onTapAreaPointerUp : nothing}
+                @pointercancel=${!this._lyricsActive ? this._onTapAreaPointerCancel : nothing}
+                style="${this._getGestureStyles(!this._lyricsActive)}"
               >
                 <svg
                   viewBox="0 0 184 184"
@@ -8633,14 +8633,9 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
                 .activeThemeColor=${this.config.match_theme === true ? "var(--custom-accent, var(--state-media_player-active-color, var(--primary-color, #ffffff)))" : "var(--custom-accent, #ffffff)"}
                 .mode=${this._isCurrentlyPlayingRadio() ? 'text' : (this.config.lyrics_mode || 'default')}
                 .preRoll=${this.config.lyrics_pre_roll ?? 0}
-                @pointerdown=${this._onTapAreaPointerDown}
-                @pointermove=${this._onTapAreaPointerMove}
-                @pointerup=${this._onTapAreaPointerUp}
-                @pointercancel=${this._onTapAreaPointerCancel}
                 style="${[
                   `--yamp-lyrics-top-offset: ${showChipsInline ? 48 : 0}px`,
-                  `--yamp-lyrics-bottom-offset: ${lyricsBottomOffset}px`,
-                  this._getGestureStyles()
+                  `--yamp-lyrics-bottom-offset: ${lyricsBottomOffset}px`
                 ].filter(Boolean).join('; ')}"
               ></yamp-lyrics-view>
             ` : nothing}
@@ -8679,15 +8674,15 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
                 ${collapsed && artworkUrl && collapsedArtworkSize > 0 && isValidArtworkUrl(artworkUrl) ? html`
                   <div
                     class="collapsed-artwork-container"
-                    @pointerdown=${this._onTapAreaPointerDown}
-                    @pointermove=${this._onTapAreaPointerMove}
-                    @pointerup=${this._onTapAreaPointerUp}
-                    @pointercancel=${this._onTapAreaPointerCancel}
+                    @pointerdown=${!this._lyricsActive ? this._onTapAreaPointerDown : nothing}
+                    @pointermove=${!this._lyricsActive ? this._onTapAreaPointerMove : nothing}
+                    @pointerup=${!this._lyricsActive ? this._onTapAreaPointerUp : nothing}
+                    @pointercancel=${!this._lyricsActive ? this._onTapAreaPointerCancel : nothing}
                     style="${[
           `background: linear-gradient(120deg, ${this._collapsedArtDominantColor}bb 60%, transparent 100%)`,
           collapsedExtraSpace > 0 ? `width:${Math.round(collapsedArtworkSize + 8)}px` : '',
           isCompact && collapsed ? 'top: -2px; height: auto !important; overflow: visible !important;' : '',
-          this._getGestureStyles()
+          this._getGestureStyles(!this._lyricsActive)
         ].filter(Boolean).join('; ')}"
                   >
                     <img
@@ -8703,13 +8698,13 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
                 ` : nothing}
                 ${this._lastSpacerRendered ? html`
                   <div class="card-artwork-spacer${showCollapsedPlaceholder ? ' show-placeholder' : ''}"
-                    @pointerdown=${this._onTapAreaPointerDown}
-                    @pointermove=${this._onTapAreaPointerMove}
-                    @pointerup=${this._onTapAreaPointerUp}
-                    @pointercancel=${this._onTapAreaPointerCancel}
+                    @pointerdown=${!this._lyricsActive ? this._onTapAreaPointerDown : nothing}
+                    @pointermove=${!this._lyricsActive ? this._onTapAreaPointerMove : nothing}
+                    @pointerup=${!this._lyricsActive ? this._onTapAreaPointerUp : nothing}
+                    @pointercancel=${!this._lyricsActive ? this._onTapAreaPointerCancel : nothing}
                     style="${[
-                      this._lyricsActive ? `height: ${lyricsSpacerHeight}px; min-height: ${lyricsSpacerHeight}px; max-height: ${lyricsSpacerHeight}px; flex: none;` : '',
-                      this._getGestureStyles()
+                      this._lyricsActive ? `height: ${lyricsSpacerHeight}px; min-height: ${lyricsSpacerHeight}px; max-height: ${lyricsSpacerHeight}px; flex: none; pointer-events: none;` : '',
+                      this._getGestureStyles(!this._lyricsActive)
                     ].filter(Boolean).join('; ')}"
                   >
                     ${useInsetArtwork && artworkUrl ? html`
@@ -8718,6 +8713,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
                           class="inset-artwork"
                           src="${artworkUrl}" 
                           style="max-width: 100%; max-height: 100%; object-fit: contain; pointer-events: none;" 
+                          onload="this.style.display='block'"
+                          onerror="this.style.display='none'"
                         />
                       </div>
                     ` : nothing}

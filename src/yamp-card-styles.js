@@ -1813,6 +1813,18 @@ export const yampCardStyles = css`
     height: 100%;
   }
 
+  .yamp-card-inner[data-lyrics-active="true"] .card-lower-content {
+    pointer-events: none;
+  }
+
+  .yamp-card-inner[data-lyrics-active="true"] .card-artwork-spacer {
+    pointer-events: none !important;
+  }
+
+  .yamp-card-inner[data-lyrics-active="true"] .card-lower-content > :not(.card-artwork-spacer) {
+    pointer-events: auto;
+  }
+
   .card-lower-content.transitioning .details,
   .card-lower-content.transitioning .card-artwork-spacer {
     transition: opacity 0.3s;
@@ -4507,6 +4519,7 @@ export const lyricsStyles = css`
     z-index: ${Z_LAYERS.LYRICS_OVERLAY};
     overflow: hidden;
     pointer-events: auto;
+    touch-action: pan-y;
     backdrop-filter: ${BLUR_5};
     -webkit-backdrop-filter: ${BLUR_5};
     background: var(--yamp-lyrics-bg, var(--yamp-overlay-bg));
@@ -4525,6 +4538,9 @@ export const lyricsStyles = css`
     padding-left: 12px;
     padding-right: 12px;
     scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+    overscroll-behavior-y: contain;
     mask-image: var(--yamp-lyrics-mask, ${LYRICS_MASK_GRADIENT});
     -webkit-mask-image: var(--yamp-lyrics-mask, ${LYRICS_MASK_GRADIENT});
     ${HIDE_SCROLLBAR}
@@ -4537,6 +4553,20 @@ export const lyricsStyles = css`
     flex: 0 0 50%;
     width: 100%;
     min-height: 50%;
+    pointer-events: none;
+  }
+
+  .plain-scroll-spacer-top {
+    flex: 0 0 24px;
+    width: 100%;
+    min-height: 24px;
+    pointer-events: none;
+  }
+
+  .plain-scroll-spacer-bottom {
+    flex: 0 0 32px;
+    width: 100%;
+    min-height: 32px;
     pointer-events: none;
   }
 

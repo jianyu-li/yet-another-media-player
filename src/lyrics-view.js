@@ -48,6 +48,11 @@ export class YampLyricsView extends LitElement {
     // Initial scroll position
     if (this._activeIndex !== -1) {
       this._scrollToActive("auto");
+    } else {
+      const container = this.renderRoot.querySelector(".lyrics-scroll-container");
+      if (container) {
+        container.scrollTop = 0;
+      }
     }
   }
 
@@ -56,8 +61,17 @@ export class YampLyricsView extends LitElement {
 
     if (changedProps.has("lyrics")) {
       this._activeIndex = -1;
-      // Re-scroll when lyrics change (new spacers or lines may have changed height)
-      requestAnimationFrame(() => this._scrollToActive("auto"));
+      const isUnsynced = !this.lyrics?.some((l) => l.time !== null);
+      const isUnsyncedMode = this.mode === "text";
+      if (isUnsynced || isUnsyncedMode) {
+        const container = this.renderRoot.querySelector(".lyrics-scroll-container");
+        if (container) {
+          container.scrollTo({ top: 0, behavior: "auto" });
+        }
+      } else {
+        // Re-scroll when lyrics change (new spacers or lines may have changed height)
+        requestAnimationFrame(() => this._scrollToActive("auto"));
+      }
     }
 
     if (changedProps.has("position") || changedProps.has("lyrics")) {
@@ -146,6 +160,7 @@ export class YampLyricsView extends LitElement {
     }
 
     const isUnsynced = !this.lyrics.some((l) => l.time !== null);
+    const isUnsyncedMode = this.mode === "text";
 
     return html`
       <div
@@ -153,10 +168,13 @@ export class YampLyricsView extends LitElement {
         @scroll=${this._handleScroll}
         style="--yamp-primary-color: ${this.activeThemeColor}"
       >
-        <div class="scroll-spacer"></div>
+        ${
+          !(isUnsynced || isUnsyncedMode)
+            ? html`<div class="scroll-spacer"></div>`
+            : html`<div class="plain-scroll-spacer-top"></div>`
+        }
         ${this.lyrics.map((lyric, index) => {
           const isActive = index === this._activeIndex;
-          const isUnsyncedMode = this.mode === "text";
           const isScrollMode = this.mode === "scroll";
 
           const classes = {
@@ -167,7 +185,11 @@ export class YampLyricsView extends LitElement {
           };
           return html` <div class="${classMap(classes)}">${lyric.text}</div> `;
         })}
-        <div class="scroll-spacer"></div>
+        ${
+          !(isUnsynced || isUnsyncedMode)
+            ? html`<div class="scroll-spacer"></div>`
+            : html`<div class="plain-scroll-spacer-bottom"></div>`
+        }
       </div>
     `;
   }
