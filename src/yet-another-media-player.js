@@ -1484,6 +1484,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const artist = activeObj?.attributes?.media_artist || "";
     if (!album) return;
 
+    this._openedSearchFromNowPlaying = true;
+
     // Open overlay + search sheet
     this._showEntityOptions = true;
     this._showSearchInSheet = true;
@@ -1634,6 +1636,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   _hideSearchSheetInOptions() {
     // In dedicated search mode, never close the search
     if (this._cardType === "search" || this._cardType === "up_next") return;
+    this._openedSearchFromNowPlaying = false;
     this._showSearchInSheet = false;
     this._searchError = "";
     this._searchResults = [];
@@ -2481,6 +2484,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._searchMediaClassFilter = previousLevel.filter || 'all';
 
     if (this._searchHierarchy.length === 0) {
+      if (this._openedSearchFromNowPlaying) {
+        this._openedSearchFromNowPlaying = false;
+        this._closeEntityOptions();
+        return;
+      }
       this._searchBreadcrumb = "";
       this._doSearch(this._searchMediaClassFilter === 'all' ? null : this._searchMediaClassFilter);
     } else {
@@ -10453,6 +10461,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         if (this._cardType !== "remote_control") {
           this._showRemoteControl = false;
         }
+        this._openedSearchFromNowPlaying = false;
         this._searchInputAutoFocused = false;
         this._searchHierarchy = [];
         this._searchBreadcrumb = "";
