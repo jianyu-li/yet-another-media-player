@@ -6613,26 +6613,31 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       }
     }
 
+    const lowerContentEl = this.shadowRoot?.querySelector('.card-lower-content');
     if (!this._lyricsActive) {
-      const lowerContentEl = this.shadowRoot?.querySelector('.card-lower-content');
       if (lowerContentEl && lowerContentEl.offsetHeight > 50) {
         this._lastNonLyricsLowerContentHeight = lowerContentEl.offsetHeight;
       }
-    } else {
-      const detailsEl = this.shadowRoot?.querySelector('.details');
-      if (detailsEl) {
-        let controlsH = detailsEl.offsetHeight;
-        const progressEl = this.shadowRoot?.querySelector('.progress-bar-container:not(.alternate)');
-        if (progressEl) controlsH += progressEl.offsetHeight;
-        const controlsRowEl = this.shadowRoot?.querySelector('.controls-row');
-        if (controlsRowEl) controlsH += controlsRowEl.offsetHeight;
-        const volumeRowEl = this.shadowRoot?.querySelector('.volume-row');
-        if (volumeRowEl) controlsH += volumeRowEl.offsetHeight;
-        
-        if (controlsH > 30 && this._lowerControlsHeight !== controlsH) {
-          this._lowerControlsHeight = controlsH;
-          this.requestUpdate();
-        }
+    }
+    const detailsEl = this.shadowRoot?.querySelector('.details');
+    const firstControlEl = detailsEl || this.shadowRoot?.querySelector('.progress-bar-container:not(.alternate)') || this.shadowRoot?.querySelector('.controls-row') || this.shadowRoot?.querySelector('.volume-row');
+    let controlsH = 0;
+    if (lowerContentEl && firstControlEl && lowerContentEl.contains(firstControlEl)) {
+      controlsH = lowerContentEl.offsetHeight - firstControlEl.offsetTop;
+    }
+    if (controlsH <= 0) {
+      if (detailsEl) controlsH += detailsEl.offsetHeight;
+      const progressEl = this.shadowRoot?.querySelector('.progress-bar-container:not(.alternate)');
+      if (progressEl) controlsH += progressEl.offsetHeight;
+      const controlsRowEl = this.shadowRoot?.querySelector('.controls-row');
+      if (controlsRowEl) controlsH += controlsRowEl.offsetHeight;
+      const volumeRowEl = this.shadowRoot?.querySelector('.volume-row');
+      if (volumeRowEl) controlsH += volumeRowEl.offsetHeight;
+    }
+    if (controlsH > 30 && this._lowerControlsHeight !== controlsH) {
+      this._lowerControlsHeight = controlsH;
+      if (this._lyricsActive) {
+        this.requestUpdate();
       }
     }
 
@@ -8589,10 +8594,6 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       (hideControlsNow ? 0 : 56) +
       (volumeRowWillCollapse ? 0 : 56)
     );
-    const spacerMarginBottom = 8; // details margin-top is 8px at scale 1.0
-    const lyricsSpacerHeight = this._lastNonLyricsLowerContentHeight != null
-      ? Math.max(48, Math.round(this._lastNonLyricsLowerContentHeight - lowerControlsH - spacerMarginBottom))
-      : 180;
     const lyricsBottomOffset = lowerControlsH;
 
     return html`
@@ -8683,10 +8684,10 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
               ></div>
               ${!(dimIdleFrame || this._isIdle) && (!useInsetArtwork || activeArtworkFit === "scaled-contain" || this._lyricsActive) ? html`<div class="card-lower-fade" style="--yamp-lyrics-bottom-offset: ${lyricsBottomOffset}px;"></div>` : nothing}
               <div class="card-lower-content${collapsed ? ' collapsed transitioning' : ' transitioning'}${collapsed && artworkUrl && collapsedArtworkSize > 0 ? ' has-artwork' : ''}" style="${(() => {
-        if (!hideControlsNow) return '';
+        if (!hideControlsNow && !this._lyricsActive) return '';
         return collapsed
           ? `min-height: ${this._collapsedBaselineHeight || 220}px;`
-          : `min-height: ${hasCustomCardHeight ? `${customCardHeight}px` : '350px'};`;
+          : `min-height: ${hasCustomCardHeight ? `${customCardHeight}px` : `${this._lastNonLyricsLowerContentHeight || 350}px`};`;
       })()}">
                 ${collapsed && artworkUrl && collapsedArtworkSize > 0 && isValidArtworkUrl(artworkUrl) ? html`
                   <div
@@ -8720,7 +8721,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
                     @pointerup=${!this._lyricsActive ? this._onTapAreaPointerUp : nothing}
                     @pointercancel=${!this._lyricsActive ? this._onTapAreaPointerCancel : nothing}
                     style="${[
-                      this._lyricsActive ? `height: ${lyricsSpacerHeight}px; min-height: ${lyricsSpacerHeight}px; max-height: ${lyricsSpacerHeight}px; flex: none; pointer-events: none;` : '',
+                      this._lyricsActive ? 'min-height: 0; pointer-events: none;' : '',
                       this._getGestureStyles(!this._lyricsActive)
                     ].filter(Boolean).join('; ')}"
                   >
