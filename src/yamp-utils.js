@@ -366,12 +366,43 @@ export function getSearchResultClickTitle(item) {
 function _findArtworkOverride(state, overrides, resolveOverrideSource, options = {}) {
   if (!overrides || !Array.isArray(overrides) || !overrides.length) return null;
 
-  const attrs = state.attributes;
-  const entityId = state.entity_id;
+  const attrs = state?.attributes || {};
+  const entityId = state?.entity_id;
+
+  if (options.isIdleImageActive) {
+    // When idle image is active, match idle_image overrides only (specific entity_id first, then general)
+    const idleOverride = overrides.find(
+      (item) =>
+        (item?.idle_image === true ||
+          item?.idle_image_url !== undefined ||
+          item?.match_type === "idle_image") &&
+        (!item?.entity_id || item.entity_id === entityId || item.entity_id === "*")
+    );
+    if (idleOverride) {
+      const overrideSource = idleOverride.idle_image_url || idleOverride.image_url || null;
+      let resolvedOverride = null;
+      if (overrideSource) {
+        resolvedOverride =
+          typeof resolveOverrideSource === "function"
+            ? resolveOverrideSource(idleOverride, overrideSource, "idle", state)
+            : overrideSource;
+      }
+      return {
+        url: resolvedOverride,
+        sizePercentage: idleOverride?.size_percentage,
+        objectFit: idleOverride?.object_fit ?? null,
+        objectPosition: idleOverride?.object_position ?? null,
+      };
+    }
+    return null;
+  }
 
   const findSpecificMatch = () =>
-    overrides.find((override) =>
-      ARTWORK_OVERRIDE_MATCH_KEYS.some((key) => {
+    overrides.find((override) => {
+      // Don't match idle_image rules when not in idle image mode
+      if (override?.idle_image === true || override?.match_type === "idle_image") return false;
+
+      return ARTWORK_OVERRIDE_MATCH_KEYS.some((key) => {
         const expected = override[key];
         if (expected === undefined || expected === null || expected === "") return false;
 
@@ -466,8 +497,8 @@ function _findArtworkOverride(state, overrides, resolveOverrideSource, options =
           return regex.test(String(value || ""));
         }
         return value === expected;
-      })
-    );
+      });
+    });
 
   const hasExistingArtwork =
     getValidArtworkAttr(attrs, "entity_picture_local") ||
@@ -483,9 +514,6 @@ function _findArtworkOverride(state, overrides, resolveOverrideSource, options =
   } else if (override?.missing_art_url && !hasExistingArtwork) {
     overrideSource = override.missing_art_url;
     overrideType = "missing";
-  } else if (override?.idle_image_url && options.isIdleImageActive) {
-    overrideSource = override.idle_image_url;
-    overrideType = "idle";
   } else if (override && hasExistingArtwork) {
     overrideSource =
       getValidArtworkAttr(attrs, "entity_picture_local") ||
@@ -499,17 +527,6 @@ function _findArtworkOverride(state, overrides, resolveOverrideSource, options =
       override = missingOverride;
       overrideSource = missingOverride.missing_art_url;
       overrideType = "missing";
-    }
-  }
-
-  if (!override && options.isIdleImageActive) {
-    const idleOverride = overrides.find(
-      (item) => item?.idle_image === true || item?.idle_image_url !== undefined
-    );
-    if (idleOverride) {
-      override = idleOverride;
-      overrideSource = idleOverride.idle_image_url || idleOverride.image_url;
-      overrideType = "idle";
     }
   }
 
@@ -584,8 +601,8 @@ export function getArtworkUrl(
     objectPosition = resolvedOverride.objectPosition;
   }
 
-  // If no override found, use standard artwork
-  if (!artworkUrl) {
+  // If no override found, use standard artwork (only when not in idle image mode)
+  if (!artworkUrl && !isIdleImageActive) {
     artworkUrl =
       getValidArtworkAttr(attrs, "entity_picture_local") ||
       getValidArtworkAttr(attrs, "entity_picture") ||
@@ -593,8 +610,8 @@ export function getArtworkUrl(
       null;
   }
 
-  // If still no artwork, check for configured fallback artwork
-  if (!artworkUrl && fallbackArtwork) {
+  // If still no artwork, check for configured fallback artwork (only when not in idle image mode)
+  if (!artworkUrl && fallbackArtwork && !isIdleImageActive) {
     if (fallbackArtwork === "smart") {
       const isTV =
         attrs.media_title === "TV" ||

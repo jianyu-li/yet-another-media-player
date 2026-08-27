@@ -196,6 +196,9 @@ export interface YampCardConfig {
   show_chip_row?: "always" | "in_menu" | "in_menu_on_idle" | "never" | "auto" | string;
   idle_timeout_ms?: number;
   idle_screen?: "default" | "artwork" | "blank" | "collapsed" | "transparent" | string;
+  idle_image?: string;
+  media_artwork_overrides?: ArtworkOverrideRule[];
+  artwork_position?: "top center" | "center center" | "bottom center" | string;
   artwork_object_fit?:
     | "cover"
     | "contain"

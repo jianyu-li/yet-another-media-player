@@ -85,6 +85,7 @@ export const yampCardStyles = css`
     --shadow-medium: 0 2px 8px rgba(0, 0, 0, 0.25);
     --shadow-heavy: 0 0 6px 1px rgba(0, 0, 0, 0.32), 0 0 1px 1px rgba(255, 255, 255, 0.13);
     --yamp-artwork-fit: cover;
+    --yamp-artwork-position: top center;
     --yamp-text-scale: 1;
     --yamp-text-scale-details: 1;
     --yamp-text-scale-menu: 1;
@@ -281,7 +282,7 @@ export const yampCardStyles = css`
     inset: -50px;
     z-index: ${Z_LAYERS.MEDIA_BACKGROUND};
     background-size: var(--yamp-artwork-bg-size, cover);
-    background-position: top center;
+    background-position: var(--yamp-artwork-position, top center);
     background-repeat: no-repeat;
     pointer-events: none;
     transform: translateZ(0);
@@ -1768,7 +1769,7 @@ export const yampCardStyles = css`
     inset: 0;
     z-index: ${Z_LAYERS.MEDIA_BACKGROUND};
     background-size: var(--yamp-artwork-bg-size, cover);
-    background-position: top center;
+    background-position: var(--yamp-artwork-position, top center);
     background-repeat: no-repeat;
     pointer-events: none;
     height: 100%;

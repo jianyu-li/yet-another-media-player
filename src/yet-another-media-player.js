@@ -8200,7 +8200,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         idleImageUrl =
           sensorState.attributes.entity_picture_local ||
           sensorState.attributes.entity_picture ||
-          (sensorState.state && sensorState.startsWith("http") ? sensorState.state : null);
+          (sensorState.state && typeof sensorState.state === "string" && sensorState.state.startsWith("http") ? sensorState.state : null);
       }
       // Check if it's a direct URL or file path
       else if (normalizedIdleImageInput.startsWith("http") || normalizedIdleImageInput.startsWith("/")) {
@@ -8312,6 +8312,9 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     }
     if (displayTitle && (!selectedArt || !selectedArt.url) && mainArtwork?.url && mainState?.attributes?.media_title === displayTitle) {
       selectedArt = mainArtwork;
+    }
+    if (!selectedArt) {
+      selectedArt = playbackArtwork || mainArtwork || null;
     }
 
 
@@ -8496,6 +8499,9 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     } else {
       // Even if idle, we apply layout properties from selectedArt, 
       // because _getArtworkUrl correctly finds idle_image overrides for us.
+      if (selectedArt?.url) {
+        idleImageUrl = selectedArt.url;
+      }
       if (selectedArt?.objectFit) {
         artworkObjectFit = selectedArt.objectFit;
       }
@@ -9100,7 +9106,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const playbackEntityId = this._getEntityForPurpose(this._selectedIndex, 'playback_control');
     const playbackStateObj = (this.hass && this.hass.states && playbackEntityId) ? this.hass.states[playbackEntityId] : undefined;
     const isCurrentPlayingForIdle = playbackStateObj ? this._isEntityPlaying(playbackStateObj) : false;
-    const normalizedIdleImageInput = config.idle_image ? resolveStringTemplateSync(this.hass, config.idle_image, this._getTemplateContext()) : null;
+    const isJsTemplate = typeof config.idle_image === "string" && config.idle_image.trim().startsWith("[[[");
+    const rawIdleImageInput = isJsTemplate
+      ? this._evaluateJsTemplate(config.idle_image)
+      : (this._idleImageTemplate ? this._idleImageTemplateResult : (config.idle_image ? resolveStringTemplateSync(this.hass, config.idle_image, this._getTemplateContext()) : null));
+    const normalizedIdleImageInput = this._normalizeImageSourceValue(rawIdleImageInput);
     const forceIdleImage = config.show_idle_artwork_when_not_playing === true && !isCurrentPlayingForIdle && normalizedIdleImageInput;
 
     const isActuallyPlaying = this._isCurrentEntityPlaying();
@@ -9290,6 +9300,9 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     if (displayTitle && (!selectedArt || !selectedArt.url) && mainArtwork?.url && mainState?.attributes?.media_title === displayTitle) {
       selectedArt = mainArtwork;
     }
+    if (!selectedArt) {
+      selectedArt = playbackArtwork || mainArtwork || null;
+    }
 
     let artworkObjectFit = this._artworkObjectFit;
     if (selectedArt?.objectFit) {
@@ -9300,6 +9313,13 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const backgroundSize = this._getBackgroundSizeForFit(activeArtworkFit);
     host.style.setProperty('--yamp-artwork-fit', activeArtworkFit);
     host.style.setProperty('--yamp-artwork-bg-size', backgroundSize);
+    if (selectedArt?.objectPosition) {
+      host.style.setProperty('--yamp-artwork-position', selectedArt.objectPosition);
+    } else if (this.config?.artwork_position) {
+      host.style.setProperty('--yamp-artwork-position', this.config.artwork_position);
+    } else {
+      host.style.setProperty('--yamp-artwork-position', 'top center');
+    }
   }
 
   _updateHostAttributes() {
