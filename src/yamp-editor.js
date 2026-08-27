@@ -151,6 +151,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           image_url: item.missing_art_url ?? "",
           size_percentage: sizePercentage,
           object_fit: item.object_fit,
+          object_position: item.object_position,
         };
       }
 
@@ -161,6 +162,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           image_url: item.idle_image_url ?? item.image_url ?? "",
           size_percentage: sizePercentage,
           object_fit: item.object_fit,
+          object_position: item.object_position,
         };
       }
 
