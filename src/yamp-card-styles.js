@@ -4586,13 +4586,11 @@ export const lyricsStyles = css`
     );
     width: 100%;
     max-width: 95%;
-    filter: blur(1px);
     text-align: center;
   }
 
   .lyric-line.active {
     opacity: 1;
-    filter: blur(0);
     color: var(
       --yamp-lyrics-active-color,
       var(--yamp-primary-color, var(--custom-accent, var(--accent-color, #ffffff)))
