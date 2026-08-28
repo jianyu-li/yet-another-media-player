@@ -701,7 +701,6 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._hideActiveEntityLabel = false;
     this._hideActiveEntityLabelOnIdle = false;
     this._currentDetailsScale = null;
-    this._lastTitleLength = 0;
     this._lastNonLyricsLowerContentHeight = null;
     this._lowerControlsHeight = null;
 
@@ -4227,7 +4226,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const heightFactor = height / 360;
     const blended = (widthFactor * 0.8) + (heightFactor * 0.2);
     const scale = Math.max(0.85, Math.min(1.4, blended));
-    const detailScale = this._calculateDetailsScale(width, height, scale, this._lastTitleLength || 0);
+    const detailScale = this._calculateDetailsScale(width, height);
     const textScaleChanged = this._currentTextScale === null || Math.abs(this._currentTextScale - scale) > 0.01;
     const detailScaleChanged = this._currentDetailsScale === null || Math.abs(this._currentDetailsScale - detailScale) > 0.02;
     if (!this._lyricsActive) {
@@ -4367,7 +4366,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     }
   }
 
-  _calculateDetailsScale(width, height, fallbackScale = 1) {
+  _calculateDetailsScale(width, height) {
     const targetSet = this._adaptiveTextTargets;
     if (!targetSet?.has("details")) return 1;
 
@@ -4407,14 +4406,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       baseScale = maxScaleByHeight;
     }
 
-    const titleLength = this._lastTitleLength || 0;
-    const lengthClamp = titleLength > 0
-      ? Math.max(0.62, Math.min(1, 30 / Math.min(titleLength, 72)))
-      : 1;
-
-    // Apply length clamp
-    const clampedScale = 1 + (baseScale - 1) * lengthClamp;
-    return Math.max(1, clampedScale);
+    return Math.max(1, baseScale);
   }
 
   _calculateDetailsLineHeight(scale) {
@@ -8344,7 +8336,6 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const hasSearchableArtist = !!(displaySource?.attributes?.media_artist || stateObj?.attributes?.media_artist);
     const searchAlbumTitle = localize("search.search_album") || localize("search.browse_album", { "{album}": album });
     const searchArtistTitle = hasSearchableArtist ? localize("search.search_artist") : "";
-    this._lastTitleLength = title ? title.length : 0;
     if (this._adaptiveText) {
       this._updateAdaptiveTextScale(true);
     }
