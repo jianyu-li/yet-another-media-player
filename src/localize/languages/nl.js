@@ -35,10 +35,20 @@ export default {
       actions: "Acties",
     },
     search_placeholder: "Configuratieopties zoeken...",
-    placeholders: {
-      search: "Zoek muziek...",
-    },
+    template_label: "Kaartsjabloon",
     templates: {
+      custom: {
+        label: "Aangepast (Originele configuratie)",
+        description: "Uw originele, volledig aangepaste configuratie.",
+      },
+      large_modern: {
+        label: "Grote moderne YAMP",
+        description: "Een iets groter modern ontwerp met adaptieve bedieningselementen.",
+      },
+      crisp_clean: {
+        label: "Strak",
+        description: "Een strakke indeling met geschaalde albumhoes en moderne bediening.",
+      },
       minimal_mini: {
         label: "MINImal",
         description: "Een compacte kaart zonder artwork.",
@@ -47,6 +57,27 @@ export default {
         label: "Mini Mode",
         description: "De standaard compacte kaart.",
       },
+      quick_and_easy: {
+        label: "Geen tijd te verliezen",
+        description: "Gemaakt voor snelheid met permanente chiprijen en snel groeperen.",
+      },
+      dedicated_search: {
+        label: "Alles over zoeken",
+        description: "Een zelfstandige zoekkaart zonder de hoofdmediaspeler.",
+      },
+      dedicated_grouping: {
+        label: "Groepstherapie",
+        description:
+          "Een zelfstandige spelers-groeperingskaart. Vereist meerdere geconfigureerde entiteiten.",
+      },
+      huge_yamp: {
+        label: "Dat is een enorme YAMP!",
+        description:
+          "Gemaximaliseerde bediening, grote tekst en een enorme voortgangsbalk voor weergave op afstand.",
+      },
+    },
+    placeholders: {
+      search: "Zoek muziek...",
     },
     sections: {
       artwork: {
@@ -145,6 +176,7 @@ export default {
         "Kies welk scherm automatisch wordt weergegeven wanneer de kaart inactief wordt.",
       hide_controls:
         "Selecteer welke knoppen je wilt verbergen voor deze entiteit (standaard worden ze allemaal getoond)",
+      hide_remote_buttons: "Selecteer knoppen om te verbergen in de afstandsbediening-overlay.",
       hide_search_chips: "Verberg specifieke zoekfilterchips voor deze entiteit",
       hide_active_entity_on_idle:
         "Verbergt het entiteitslabel onderaan de kaart alleen wanneer de speler inactief is.",

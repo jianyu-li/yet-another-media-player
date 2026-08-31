@@ -35,10 +35,20 @@ export default {
       actions: "Acciones",
     },
     search_placeholder: "Buscar opciones de configuración...",
-    placeholders: {
-      search: "Buscar música...",
-    },
+    template_label: "Plantilla de tarjeta",
     templates: {
+      custom: {
+        label: "Personalizado (Configuración original)",
+        description: "Tu configuración original totalmente personalizada.",
+      },
+      large_modern: {
+        label: "YAMP moderno y grande",
+        description: "Un diseño moderno ligeramente más grande con controles adaptables.",
+      },
+      crisp_clean: {
+        label: "Limpio",
+        description: "Un diseño limpio con portada escalada y controles modernos.",
+      },
       minimal_mini: {
         label: "MINImal",
         description: "Una tarjeta compacta sin carátula.",
@@ -47,6 +57,28 @@ export default {
         label: "Mini Mode",
         description: "La tarjeta compacta estándar.",
       },
+      quick_and_easy: {
+        label: "Sin tiempo que perder",
+        description: "Diseñado para rapidez con filas de chips persistentes y agrupación rápida.",
+      },
+      dedicated_search: {
+        label: "Todo sobre la búsqueda",
+        description:
+          "Una tarjeta de búsqueda independiente sin el reproductor multimedia principal.",
+      },
+      dedicated_grouping: {
+        label: "Terapia de grupo",
+        description:
+          "Una tarjeta de agrupación de reproductores independiente. Requiere múltiples entidades configuradas.",
+      },
+      huge_yamp: {
+        label: "¡Vaya pedazo de YAMP!",
+        description:
+          "Controles maximizados, texto grande y una barra de progreso enorme para ver desde lejos.",
+      },
+    },
+    placeholders: {
+      search: "Buscar música...",
     },
     sections: {
       artwork: {

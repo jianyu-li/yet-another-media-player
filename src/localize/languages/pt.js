@@ -35,10 +35,20 @@ export default {
       actions: "Ações",
     },
     search_placeholder: "Pesquisar opções de configuração...",
-    placeholders: {
-      search: "Procurar música...",
-    },
+    template_label: "Modelo de cartão",
     templates: {
+      custom: {
+        label: "Personalizado (Configuração original)",
+        description: "A sua configuração original totalmente personalizada.",
+      },
+      large_modern: {
+        label: "YAMP moderno e grande",
+        description: "Um design moderno ligeiramente maior com controlos adaptativos.",
+      },
+      crisp_clean: {
+        label: "Limpo",
+        description: "Um layout limpo com capa dimensionada e controlos modernos.",
+      },
       minimal_mini: {
         label: "MINImal",
         description: "Um cartão compacto sem capa.",
@@ -47,6 +57,28 @@ export default {
         label: "Mini Mode",
         description: "O cartão compacto padrão.",
       },
+      quick_and_easy: {
+        label: "Sem tempo a perder",
+        description:
+          "Concebido para rapidez com linhas de chips persistentes e agrupamento rápido.",
+      },
+      dedicated_search: {
+        label: "Tudo sobre pesquisa",
+        description: "Um cartão de pesquisa autónomo sem o leitor multimédia principal.",
+      },
+      dedicated_grouping: {
+        label: "Terapia de grupo",
+        description:
+          "Um cartão autónomo de agrupamento de leitores. Requer várias entidades configuradas.",
+      },
+      huge_yamp: {
+        label: "Isto é um enorme YAMP!",
+        description:
+          "Controlos maximizados, texto grande e barra de progresso maciça para visualização à distância.",
+      },
+    },
+    placeholders: {
+      search: "Procurar música...",
     },
     sections: {
       artwork: {

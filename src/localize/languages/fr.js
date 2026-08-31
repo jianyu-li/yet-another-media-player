@@ -35,10 +35,20 @@ export default {
       actions: "Actions",
     },
     search_placeholder: "Rechercher des options de configuration...",
-    placeholders: {
-      search: "Rechercher de la musique...",
-    },
+    template_label: "Modèle de carte",
     templates: {
+      custom: {
+        label: "Personnalisé (Configuration d'origine)",
+        description: "Votre configuration d'origine entièrement personnalisée.",
+      },
+      large_modern: {
+        label: "Grand YAMP moderne",
+        description: "Un design moderne légèrement plus grand avec des contrôles adaptatifs.",
+      },
+      crisp_clean: {
+        label: "Épuré",
+        description: "Une disposition épurée avec pochette mise à l'échelle et contrôles modernes.",
+      },
       minimal_mini: {
         label: "MINImal",
         description: "Une carte compacte sans pochette.",
@@ -47,6 +57,28 @@ export default {
         label: "Mini Mode",
         description: "La carte compacte standard.",
       },
+      quick_and_easy: {
+        label: "Pas le temps d'expliquer",
+        description:
+          "Conçu pour la rapidité avec des rangées de puces persistantes et un regroupement rapide.",
+      },
+      dedicated_search: {
+        label: "Tout sur la recherche",
+        description: "Une carte de recherche autonome sans le lecteur multimédia principal.",
+      },
+      dedicated_grouping: {
+        label: "Thérapie de groupe",
+        description:
+          "Une carte autonome de regroupement de lecteurs. Nécessite plusieurs entités configurées.",
+      },
+      huge_yamp: {
+        label: "C'est un énorme YAMP !",
+        description:
+          "Contrôles maximisés, grand texte et barre de progression imposante pour une visibilité à distance.",
+      },
+    },
+    placeholders: {
+      search: "Rechercher de la musique...",
     },
     sections: {
       artwork: {

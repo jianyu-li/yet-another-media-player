@@ -35,10 +35,20 @@ export default {
       actions: "Akcie",
     },
     search_placeholder: "Vyhľadať možnosti konfigurácie...",
-    placeholders: {
-      search: "Hľadať hudbu...",
-    },
+    template_label: "Šablóna karty",
     templates: {
+      custom: {
+        label: "Vlastné (Pôvodná konfigurácia)",
+        description: "Vaša pôvodná, plne prispôsobená konfigurácia.",
+      },
+      large_modern: {
+        label: "Veľký moderný YAMP",
+        description: "O niečo väčší moderný dizajn s adaptívnymi ovládacími prvkami.",
+      },
+      crisp_clean: {
+        label: "Čistý",
+        description: "Čisté rozloženie s prispôsobeným obalom a modernými ovládacími prvkami.",
+      },
       minimal_mini: {
         label: "MINImal",
         description: "Kompaktná karta bez obalu.",
@@ -47,6 +57,27 @@ export default {
         label: "Mini Mode",
         description: "Štandardná kompaktná karta.",
       },
+      quick_and_easy: {
+        label: "Niet času na vysvetľovanie",
+        description: "Navrhnuté pre rýchlosť s trvalými riadkami čipov a rýchlym zoskupovaním.",
+      },
+      dedicated_search: {
+        label: "Všetko o vyhľadávaní",
+        description: "Samostatná vyhľadávacia karta bez hlavného prehrávača médií.",
+      },
+      dedicated_grouping: {
+        label: "Skupinová terapia",
+        description:
+          "Samostatná karta na zoskupovanie prehrávačov. Vyžaduje viacero nakonfigurovaných entít.",
+      },
+      huge_yamp: {
+        label: "To je poriadny YAMP!",
+        description:
+          "Maximalizované ovládacie prvky, veľký text a masívny indikátor priebehu pre sledovanie z diaľky.",
+      },
+    },
+    placeholders: {
+      search: "Hľadať hudbu...",
     },
     sections: {
       artwork: {
@@ -139,6 +170,7 @@ export default {
       idle_screen: "Vyberte obrazovku, ktorá sa má automaticky zobraziť v režime nečinnosti.",
       hide_controls:
         "Vyberte ovládacie prvky, ktoré chcete pre túto entitu skryť (štandardne sú zobrazené všetky).",
+      hide_remote_buttons: "Vyberte tlačidlá, ktoré chcete skryť v prekrytí diaľkového ovládania.",
       hide_search_chips: "Skryť konkrétne čipy filtra vyhľadávania pre túto entitu.",
       hide_active_entity_on_idle:
         "Skryje štítok entity v dolnej časti karty iba vtedy, keď je prehrávač nečinný.",

@@ -35,10 +35,20 @@ export default {
       actions: "Dejanja",
     },
     search_placeholder: "Iskanje možnosti konfiguracije...",
-    placeholders: {
-      search: "Išči glasbo...",
-    },
+    template_label: "Predloga kartice",
     templates: {
+      custom: {
+        label: "Po meri (Izvirna konfiguracija)",
+        description: "Vaša izvirna, popolnoma prilagojena konfiguracija.",
+      },
+      large_modern: {
+        label: "Velik sodoben YAMP",
+        description: "Nekoliko večji sodoben dizajn s prilagodljivimi kontrolami.",
+      },
+      crisp_clean: {
+        label: "Čisto",
+        description: "Čista postavitev s prilagojeno sliko albuma in sodobnimi kontrolami.",
+      },
       minimal_mini: {
         label: "MINImal",
         description: "Kompaktna kartica brez naslovnice.",
@@ -47,6 +57,27 @@ export default {
         label: "Mini Mode",
         description: "Standardna kompaktna kartica.",
       },
+      quick_and_easy: {
+        label: "Ni časa za razlago",
+        description: "Zasnovano za hitrost s trajnimi vrsticami čipov in hitrim združevanjem.",
+      },
+      dedicated_search: {
+        label: "Vse o iskanju",
+        description: "Samostojna kartica za iskanje brez glavnega predvajalnika medijev.",
+      },
+      dedicated_grouping: {
+        label: "Skupinska terapija",
+        description:
+          "Samostojna kartica za združevanje predvajalnikov. Zahteva več konfiguriranih entitet.",
+      },
+      huge_yamp: {
+        label: "To je ogromen YAMP!",
+        description:
+          "Maksimizirane kontrole, veliko besedilo in masivna vrstica napredka za ogled od daleč.",
+      },
+    },
+    placeholders: {
+      search: "Išči glasbo...",
     },
     sections: {
       artwork: {

@@ -35,10 +35,20 @@ export default {
       actions: "Aktionen",
     },
     search_placeholder: "Konfigurationsoptionen suchen...",
-    placeholders: {
-      search: "Musik suchen...",
-    },
+    template_label: "Karten-Vorlage",
     templates: {
+      custom: {
+        label: "Benutzerdefiniert (Originalkonfiguration)",
+        description: "Ihre ursprüngliche, vollständig angepasste Konfiguration.",
+      },
+      large_modern: {
+        label: "Großes modernes YAMP",
+        description: "Ein etwas größeres, modernes Design mit adaptiver Steuerung.",
+      },
+      crisp_clean: {
+        label: "Klar & Aufgeräumt",
+        description: "Ein klares Layout mit skaliertem Artwork und modernen Bedienelementen.",
+      },
       minimal_mini: {
         label: "MINImal",
         description: "Eine kompakte Karte ohne Artwork.",
@@ -47,6 +57,27 @@ export default {
         label: "Mini Mode",
         description: "Die Standard-Kompaktkarte.",
       },
+      quick_and_easy: {
+        label: "Keine Zeit zu erklären",
+        description: "Für Schnelligkeit mit dauerhaften Chip-Zeilen und schneller Gruppierung.",
+      },
+      dedicated_search: {
+        label: "Alles rund um die Suche",
+        description: "Eine eigenständige Suchkarte ohne den Haupt-Mediaplayer.",
+      },
+      dedicated_grouping: {
+        label: "Gruppentherapie",
+        description:
+          "Eine eigenständige Player-Gruppierungskarte. Erfordert mehrere konfigurierte Entitäten.",
+      },
+      huge_yamp: {
+        label: "Das ist ein riesiges YAMP!",
+        description:
+          "Maximierte Steuerelemente, großer Text und ein massiver Fortschrittsbalken für die Betrachtung aus der Ferne.",
+      },
+    },
+    placeholders: {
+      search: "Musik suchen...",
     },
     sections: {
       artwork: {
@@ -140,6 +171,8 @@ export default {
       idle_screen: "Wählen Sie, welcher Bildschirm im Leerlauf automatisch angezeigt wird.",
       hide_controls:
         "Wählen Sie Steuerelemente aus, die für diese Entität ausgeblendet werden sollen.",
+      hide_remote_buttons:
+        "Wählen Sie die Tasten aus, die im Fernbedienungs-Overlay ausgeblendet werden sollen.",
       hide_search_chips: "Bestimmte Suchfilter-Chips für diese Entität ausblenden.",
       hide_active_entity_on_idle:
         "Blendet die Entitätsbeschriftung am unteren Rand der Karte nur aus, wenn der Player im Leerlauf ist.",

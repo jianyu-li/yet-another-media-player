@@ -437,6 +437,8 @@ export default {
       transfer_queue: "Transfer Queue",
       main_menu: "Main Menu",
       group_players: "Group Players",
+      up_next: "Up Next",
+      remote_control: "Remote Control",
       select_entity: "Select Entity for More Info",
       transfer_to: "Transfer Queue To",
       no_players: "No other Music Assistant players available.",

@@ -35,10 +35,20 @@ export default {
       actions: "Azioni",
     },
     search_placeholder: "Cerca opzioni di configurazione...",
-    placeholders: {
-      search: "Cerca musica...",
-    },
+    template_label: "Modello di scheda",
     templates: {
+      custom: {
+        label: "Personalizzato (Configurazione originale)",
+        description: "La tua configurazione originale completamente personalizzata.",
+      },
+      large_modern: {
+        label: "YAMP moderno e grande",
+        description: "Un design moderno leggermente più grande con controlli adattivi.",
+      },
+      crisp_clean: {
+        label: "Pulito",
+        description: "Un layout pulito con copertina ridimensionata e controlli moderni.",
+      },
       minimal_mini: {
         label: "MINImal",
         description: "Una scheda compatta senza copertina.",
@@ -47,6 +57,28 @@ export default {
         label: "Mini Mode",
         description: "La scheda compatta standard.",
       },
+      quick_and_easy: {
+        label: "Niente tempo da perdere",
+        description:
+          "Progettato per la velocità con righe di chip persistenti e raggruppamento rapido.",
+      },
+      dedicated_search: {
+        label: "Tutto sulla ricerca",
+        description: "Una scheda di ricerca autonoma senza il lettore multimediale principale.",
+      },
+      dedicated_grouping: {
+        label: "Terapia di gruppo",
+        description:
+          "Una scheda di raggruppamento lettori autonoma. Richiede più entità configurate.",
+      },
+      huge_yamp: {
+        label: "Questo è un enorme YAMP!",
+        description:
+          "Controlli ingranditi, testo grande e una barra di avanzamento massiccia per la visione a distanza.",
+      },
+    },
+    placeholders: {
+      search: "Cerca musica...",
     },
     sections: {
       artwork: {
