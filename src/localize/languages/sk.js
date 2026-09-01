@@ -35,10 +35,20 @@ export default {
       actions: "Akcie",
     },
     search_placeholder: "Vyhľadať možnosti konfigurácie...",
-    placeholders: {
-      search: "Hľadať hudbu...",
-    },
+    template_label: "Šablóna karty",
     templates: {
+      custom: {
+        label: "Vlastné (Pôvodná konfigurácia)",
+        description: "Vaša pôvodná, plne prispôsobená konfigurácia.",
+      },
+      large_modern: {
+        label: "Veľký moderný YAMP",
+        description: "O niečo väčší moderný dizajn s adaptívnymi ovládacími prvkami.",
+      },
+      crisp_clean: {
+        label: "Čistý",
+        description: "Čisté rozloženie s prispôsobeným obalom a modernými ovládacími prvkami.",
+      },
       minimal_mini: {
         label: "MINImal",
         description: "Kompaktná karta bez obalu.",
@@ -47,6 +57,27 @@ export default {
         label: "Mini Mode",
         description: "Štandardná kompaktná karta.",
       },
+      quick_and_easy: {
+        label: "Niet času na vysvetľovanie",
+        description: "Navrhnuté pre rýchlosť s trvalými riadkami čipov a rýchlym zoskupovaním.",
+      },
+      dedicated_search: {
+        label: "Všetko o vyhľadávaní",
+        description: "Samostatná vyhľadávacia karta bez hlavného prehrávača médií.",
+      },
+      dedicated_grouping: {
+        label: "Skupinová terapia",
+        description:
+          "Samostatná karta na zoskupovanie prehrávačov. Vyžaduje viacero nakonfigurovaných entít.",
+      },
+      huge_yamp: {
+        label: "To je poriadny YAMP!",
+        description:
+          "Maximalizované ovládacie prvky, veľký text a masívny indikátor priebehu pre sledovanie z diaľky.",
+      },
+    },
+    placeholders: {
+      search: "Hľadať hudbu...",
     },
     sections: {
       artwork: {
@@ -125,6 +156,7 @@ export default {
       disable_mass: "Deaktivovať voliteľnú integráciu Mass Queue, aj keď je nainštalovaná.",
       swap_pause_stop:
         "Nahradiť tlačidlo pauzy tlačidlom zastavenia pri použití moderného rozloženia.",
+      show_album: "Zobraziť názov albumu vedľa interpreta v podrobnostiach prehrávača.",
       adaptive_controls: "Umožniť tlačidlám prehrávania meniť veľkosť podľa dostupného priestoru.",
       hide_menu_player: "Keď sú čipy v menu, skryť názov entity v spodnej časti karty.",
       hide_reorder_progress:
@@ -133,9 +165,12 @@ export default {
         "Vyberte skupiny textu, ktoré sa majú škálovať podľa priestoru (nechajte prázdne pre vypnutie).",
       collapse_expand:
         '"Vždy zbalené" vytvorí režim mini prehrávača. "Rozbaliť pri hľadaní" kartu dočasne rozbalí pri vyhľadávaní.',
+      disable_mini_menu:
+        "Návrat k štandardným zoznamom namiesto použitia nových mini mriežkových ponúk v režime 'Vždy zbalené'.",
       idle_screen: "Vyberte obrazovku, ktorá sa má automaticky zobraziť v režime nečinnosti.",
       hide_controls:
         "Vyberte ovládacie prvky, ktoré chcete pre túto entitu skryť (štandardne sú zobrazené všetky).",
+      hide_remote_buttons: "Vyberte tlačidlá, ktoré chcete skryť v prekrytí diaľkového ovládania.",
       hide_search_chips: "Skryť konkrétne čipy filtra vyhľadávania pre túto entitu.",
       hide_active_entity_on_idle:
         "Skryje štítok entity v dolnej časti karty iba vtedy, keď je prehrávač nečinný.",
@@ -162,10 +197,14 @@ export default {
         "Zadajte Jinja šablónu, ktorá vráti jedno entity_id. Príklad prepínania MA na základe výberu zdroja:",
       jinja_template_vol_hint:
         "Zadajte Jinja šablónu, ktorá vráti entity_id (napr. media_player.obyvacka). Príklad prepínania hlasitosti podľa stavu:",
+      jinja_template_remote_hint:
+        "Zadajte Jinja šablónu, ktorá vráti entity_id diaľkového ovládača (napr. remote.obyvacka_tv):",
       not_available_alt_collapsed:
         "Nedostupné s alternatívnym indikátorom priebehu alebo v režime Vždy zbalené.",
       not_available_collapsed: "Nedostupné, keď je zapnuté Vždy zbalené.",
       only_available_collapsed: "Dostupné len pri zapnutom režime Vždy zbalené.",
+      only_available_mini_menu:
+        "K dispozícii iba vtedy, keď je 'Vždy zbalené' zapnuté a 'Rozbaliť pri vyhľadávaní' vypnuté",
       only_available_modern: "Dostupné len s moderným rozložením.",
       image_url_helper: "Zadajte priamu URL na obrázok alebo lokálnu cestu k súboru",
       selected_entity_helper:
@@ -222,6 +261,7 @@ export default {
       progress_bar_height: "Výška indikátora priebehu",
       display_timestamps: "Zobraziť časové údaje",
       swap_pause_stop: "Vymeniť pauzu za stop",
+      show_album: "Zobraziť názov albumu",
       adaptive_controls: "Adaptívna veľkosť ovládania",
       hide_active_entity: "Skryť štítok aktívnej entity",
       hide_active_entity_on_idle: "Skryť štítok aktívnej entity pri nečinnosti",
@@ -229,6 +269,7 @@ export default {
       hide_menu_player_toggle: "Skryť prehrávač v menu",
       hide_reorder_progress_toggle: "Skryť priebeh preusporiadania",
       always_collapsed: "Vždy zbalené",
+      disable_mini_menu: "Vypnúť mini mriežkové ponuky",
       expand_on_search: "Rozbaliť pri hľadaní",
       script_var: "Premenná skriptu (yamp_entity)",
       use_ma_template: "Použiť šablónu pre Music Assistant",
@@ -273,6 +314,7 @@ export default {
       idle_screen: "Obrazovka pri nečinnosti",
       name: "Názov",
       hidden_controls: "Skryté ovládacie prvky",
+      hide_remote_buttons: "Skryté tlačidlá diaľkového ovládania",
       ma_template: "Jinja šablóna pre Music Assistant",
       hidden_chips: "Skryté čipy filtrov hľadania",
       vol_template: "Jinja šablóna pre hlasitosť",
@@ -286,6 +328,8 @@ export default {
       match_entity: "Entita pre zhodu",
       ma_entity: "Entita Music Assistant",
       vol_entity: "Entita hlasitosti",
+      remote_entity: "Entita diaľkového ovládača",
+      remote_template: "Šablóna entity diaľkového ovládača (Jinja)",
       selected_entity_helper: "Pomocník vybratej entity",
       sync_entity_type: "Typ entity na synchronizáciu",
       placement: "Umiestnenie",
@@ -307,6 +351,7 @@ export default {
       sync_selected_entity: "Synchronizovať vybranú entitu",
       select_entity: "Vybrať entitu z pomocníka",
       toggle_lyrics: "Prepnúť prekrytie textov piesní",
+      remote_control: "Otvoriť prekrývanie diaľkového ovládania",
     },
     action_helpers: {
       sync_selected_entity: "Synchronizovať vybranú entitu →",
@@ -322,6 +367,10 @@ export default {
       chip: "Akčný čip",
       menu: "V menu",
       hidden: "Skryté (Ťuknutie na grafiku)",
+      replace_search: "Nahradiť Vyhľadávanie",
+      replace_power: "Nahradiť Napájanie",
+      replace_mute: "Nahradiť Stlmenie",
+      replace_favorite: "Nahradiť Obľúbené",
       not_triggerable: "Nespustiteľné",
     },
     triggers: {
@@ -345,6 +394,8 @@ export default {
       default: "Predvolené",
       search: "Hľadať",
       group_players: "Zoskupiť prehrávače",
+      up_next: "Nasleduje",
+      remote_control: "Diaľkové ovládanie",
     },
     appearance_options: {
       automatic: "Automaticky",
@@ -373,6 +424,7 @@ export default {
       details: "Detaily prehrávania",
       menu: "Menu a vyhľadávanie",
       action_chips: "Akčné čipy",
+      lyrics: "Texty piesní",
     },
     media_controls: {
       shuffle: "Náhodne",
@@ -386,14 +438,29 @@ export default {
       more_info: "Viac informácií",
       search: "Hľadať",
       source: "Zdroj",
+      remote_controls: "Diaľkové ovládanie",
       show_lyrics: "Zobraziť text piesne",
       hide_lyrics: "Skryť text piesne",
       transfer_queue: "Presunúť frontu",
       main_menu: "Hlavné menu",
       group_players: "Zoskupiť prehrávače",
+      up_next: "Nasleduje",
+      remote_control: "Diaľkové ovládanie",
       select_entity: "Vyberte entitu pre viac info",
       transfer_to: "Presunúť frontu do",
       no_players: "Žiadne iné prehrávače Music Assistant nie sú k dispozícii.",
+    },
+    remote: {
+      title: "Diaľkové ovládanie",
+      up: "Hore",
+      down: "Dole",
+      left: "Doľava",
+      right: "Doprava",
+      select: "Vybrať",
+      back: "Späť",
+      menu: "Menu",
+      home: "Domov",
+      power: "Napájanie",
     },
     grouping: {
       title: "Zoskupiť prehrávače",
@@ -456,6 +523,7 @@ export default {
       audiobook: "Audiokniha",
     },
     search_artist: "Hľadať tohto interpreta",
+    search_album: "Prehľadávať skladby z tohto albumu",
     browse_album: "Prehľadávať skladby z {album}",
     play_collection: "Prehrať túto kolekciu",
     play_collection_error: "Túto kolekciu nie je možné prehrať priamo",
@@ -466,6 +534,10 @@ export default {
     none_found: "Žiadny text piesne sa nenašiel",
     not_available: "Text piesne nie je k dispozícii",
     instrumental: "Inštrumentálna skladba",
+    admin_only_mass:
+      "Získavanie textov piesní cez Music Assistant je dostupné len pre administrátorov. Odporúča sa prepnúť na lrclib v konfigurácii karty.",
+    fallback_to_lrclib_non_admin:
+      "Zistený neadministrátorský používateľ. Prechod na lrclib pre získanie textov piesní.",
   },
   lyrics_sources: {
     mass_lrclib: "Music Assistant (Záloha na LRCLIB)",

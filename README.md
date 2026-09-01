@@ -49,15 +49,17 @@ Below you will find a list of all configuration options.
 |----------------------------|--------------|--------------|-------------|-------------------------------------------------------------------------------------------------|
 | **Entities**               |              |              |             |                                                                                                 |
 | `type`                     | string       | Yes          | —           | `custom:yet-another-media-player`                                                               |
-| `card_type`               | choice       | No           | `default`   | Card interface mode: `default` for the standard player, `search` for a dedicated search card, or `group_players` for a dedicated group management card |
+| `card_type`               | choice       | No           | `default`   | Card interface mode: `default` for standard player, `search` for search card, `group_players` for group management, `up_next` for upcoming queue, or `remote_control` for remote pad |
 | `entities`                 | string/array | Yes          | —           | List of your media player entities                                                              |
 | `volume_entity`            | string       | No           | —           | Separate entity for volume control ([Supports Templates](#template-support)) |
+| `remote_entity`            | string       | No           | —           | Explicit remote entity for remote controls overlay ([Supports Templates](#template-support)) |
 | `follow_active_volume`     | boolean      | No           | `false`     | Make volume entity follow the active playback entity                                            |
 | `music_assistant_entity`   | string       | No           | —           | Music Assistant entity for search/grouping ([Supports Templates](#template-support)) |
 | `prefer_ma_metadata`       | boolean      | No           | `false`     | Prioritize the Music Assistant entity for artwork and metadata resolution regardless of which device is playing |
 | `group_volume`             | boolean      | No           | `true`      | Isolate this entity's volume from group volume changes and vice versa (see [Group Volume Override](#group-volume-override-per-entity)) |
 | `sync_power`               | boolean      | No           | `false`     | Power on/off the volume entity with your main entity                                            |
 | `hidden_controls`          | array/template| No           | `[]`        | Array of control names to hide for this specific entity (Supports Templates) |
+| `hidden_remote_buttons`    | array/template| No           | `[]`        | Array of remote button names to hide for this specific entity's remote overlay (Supports Templates) |
 | `hidden_filter_chips`      | array        | No           | `[]`        | Hide specific search filter chips for this entity (UI only; does not change search results) |
 | `disable_auto_select`      | boolean      | No           | `false`     | Prevents the card from automatically switching to this entity when playback starts, even if it is a group master |
 | `entity_volume_mode`       | choice       | No           | —           | Override global `volume_mode` for this entity (`slider`, `stepper`, `hidden`) |
@@ -66,6 +68,7 @@ Below you will find a list of all configuration options.
 | **Behavior**               |              |              |             |                                                                                                 |
 | `collapse_on_idle`         | boolean      | No           | `false`     | Collapse the card when nothing is playing                                                       |
 | `always_collapsed`         | boolean      | No           | `false`     | Keep the card collapsed even when something is playing ([Supports Templates](#template-support))                                          |
+| `disable_mini_menu`        | boolean      | No           | `false`     | Fallback to standard full-width menus instead of the mini grid menu layout when in `always_collapsed` mode |
 | `expand_on_search`         | boolean      | No           | `false`     | Temporarily expand the card when search is open (only available when `always_collapsed` is `true`) |
 | `hide_menu_player`         | boolean      | No           | `false`     | Hide the persistent media controls in the bottom sheet menu to reclaim space (only available when `always_collapsed` is `false`) |
 | `hide_reorder_progress`   | boolean      | No           | `false`     | Hide the floating queue re-ordering progress indicator at the bottom (also hidden if `hide_menu_player` is `true`) |
@@ -99,6 +102,7 @@ Below you will find a list of all configuration options.
 | `adaptive_controls`        | boolean      | No           | `false`     | Control buttons expand to fill extra horizontal space, giving you larger tap targets when there’s room |
 | `control_layout`           | choice       | No           | `classic`   | `classic` keeps the legacy evenly sized controls, while `modern` adopts Home Assistant’s more-info layout (shuffle/prev/play/next/repeat) and moves the favorite and power buttons along the bottom of the card ([Supports Templates](#template-support)) |
 | `swap_pause_for_stop`      | boolean      | No           | `false`     | Only for `control_layout: modern`; when `true`, the center pause button is replaced with a stop button |
+| `show_album`               | boolean      | No           | `true`      | Display the album name next to the artist in player details (clickable to quick-browse album tracks) |
 | `adaptive_text`            | boolean/array| No           | `false`     | Set to `true` to scale all text, or supply a list of targets (`details`, `menu`, `action_chips`) to choose exactly which sections adapt |
 | `hide_active_entity_label` | boolean      | No           | `false`     | Hide the small entity name label shown at the bottom center when chips are placed in the menu |
 | `details_alignment`        | choice       | No           | `left`      | Align the track title and artist (`left`, `center`, `right`). Set to `none` to completely hide the details section. |
@@ -127,7 +131,7 @@ Below you will find a list of all configuration options.
 | `navigation_path`          | string       | No           | —           | Destination for navigation shortcuts (supports anchors like `#pop-up-menu`, relative paths, or full URLs) |
 | `navigation_new_tab`       | boolean      | No           | `false`     | When `true`, external URLs open in a new browser tab instead of replacing the current view      |
 | `menu_item`                | string       | No           | —           | Opens a card menu by type: `search`, `search-recently-played`, `search-next-up`, `source`, `more-info`, `group-players`, `transfer-queue`, `main-menu` |
-| `in_menu`                  | choice       | No           | `false`     | Placement of the action: `false` (Action Chip), `true` (In Menu), or `hidden` (Hidden - only triggerable via card gestures) ([Supports Templates](#template-support)) |
+| `placement`                | choice       | No           | `chip`      | Placement of the action: `chip` (Action Chip), `menu` (In Menu), `hidden` (Hidden - only triggerable via gestures), `replace_search`, `replace_power`, `replace_mute`, or `replace_favorite` ([Supports Templates](#template-support)) |
 | `card_trigger`             | choice       | No           | `none`      | Assign action to a card-level gesture: `none`, `tap`, `hold`, `double_tap`, `swipe_left`, or `swipe_right` (only for `hidden` actions) |
 | `script_variable`          | boolean      | No           | `false`     | Pass the currently selected entity as `yamp_entity` to a script                                 |
 | `sync_entity_helper`       | string       | No           | —           | `input_text` entity to sync the currently selected entity to (used with `action: sync_selected_entity`) |
@@ -397,6 +401,32 @@ entities:
 ```
 - All other controls will remain visible (if supported by the entity)
 
+### Hidden Remote Buttons Configuration
+
+You can hide specific remote control buttons on a per-entity basis using the `hidden_remote_buttons` option. This is useful when you want to simplify the interface for certain entities or hide buttons that aren't needed. **This field also supports templates (Jinja2 and JavaScript) for dynamic control visibility.**
+
+#### Available Control Names
+- `up` - Up directional button
+- `down` - Down directional button
+- `left` - Left directional button
+- `right` - Right directional button
+- `select` - Center select/ok button
+- `back` - Back/return button
+- `home` - Home button
+- `menu` - Menu button
+- `power` - Power button
+
+#### Example Configuration
+```yaml
+type: custom:yet-another-media-player
+entities:
+  - entity_id: media_player.living_room_apple_tv
+    name: Living Room
+    hidden_remote_buttons:
+      - power
+      - menu
+```
+
 
 # Behavior
 
@@ -444,7 +474,7 @@ You can configure the maximum number of search results to display using the `sea
 - **Default**: 20 results
 - **Range**: 0-1000 results
 - **Music Assistant default**: Set to `0` to defer to Music Assistant’s built-in limits (not unlimited)
-- **Note**: Higher limits may increase load time and memory usage when rendering large result sets.
+- **Note**: Higher limits may increase load time and memory usage when rendering large result sets. Additionally, streaming providers may enforce rate limits on concurrent API requests if this is set too high.
 - **Scope**: Global setting that applies to all entities and search types
 
 #### Example Configuration
@@ -558,6 +588,14 @@ Set `card_type: group_players` to lock YAMP to the group players menu.
 **Dedicated Mode Behavior:**
 - **Permanent View**: The Group Players menu is always visible as the primary view.
 - **Auto-Sync**: Quickly join or unjoin players and adjust individual volumes from a single, persistent screen.
+
+### Dedicated Up Next Mode
+
+Set `card_type: up_next` to turn YAMP into a permanent upcoming tracks queue card.
+
+### Dedicated Remote Control Mode
+
+Set `card_type: remote_control` to lock YAMP to the remote control pad.
 
 # Look and Feel
 
@@ -734,6 +772,7 @@ adaptive_text_targets:
   - details        # now playing title/artist
   - menu           # menu + search sheets
   - action_chips   # action chips on the card
+  - lyrics         # lyrics font size
 ```
 
 ### Card Mod Examples

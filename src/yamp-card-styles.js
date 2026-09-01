@@ -5,19 +5,19 @@ export const Z_LAYERS = Object.freeze({
   MEDIA_BACKGROUND: 0,
   MEDIA_OVERLAY: 0,
   LYRICS_OVERLAY: 1,
-  FLOATING_ELEMENT: 1,
-  STICKY_CHIPS: 1,
-  ACCENT_FOREGROUND: 1,
-  FLOATING_CONTROLS: 1,
-  OVERLAY_BASE: 2,
-  MODAL_BACKDROP: 2,
-  MODAL_TOAST: 2,
-  SEARCH_SLIDE_OUT: 1,
-  SEARCH_SUCCESS: 1,
-  VOLUME_OVERLAY: 3,
+  FLOATING_ELEMENT: 3,
+  STICKY_CHIPS: 3,
+  ACCENT_FOREGROUND: 3,
+  FLOATING_CONTROLS: 3,
+  OVERLAY_BASE: 4,
+  MODAL_BACKDROP: 4,
+  MODAL_TOAST: 4,
+  SEARCH_SLIDE_OUT: 3,
+  SEARCH_SUCCESS: 3,
+  VOLUME_OVERLAY: 5,
 });
 
-const LYRICS_MASK_GRADIENT = css`linear-gradient(to bottom, transparent, rgba(0,0,0,0.5) 10px, black 50px, black calc(100% - 50px), rgba(0,0,0,0.5) calc(100% - 10px), transparent)`;
+const LYRICS_MASK_GRADIENT = css`linear-gradient(to bottom, transparent 0px, black 30px, black calc(100% - 30px), transparent 100%)`;
 
 const HIDE_SCROLLBAR = css`
   scrollbar-width: none;
@@ -26,6 +26,7 @@ const HIDE_SCROLLBAR = css`
 
 const BLUR_5 = css`blur(5px)`;
 const BLUR_10 = css`blur(10px)`;
+
 const BLUR_20 = css`blur(20px)`;
 
 const CHIP_ROW_MASK = css`linear-gradient(to bottom, black 0%, black calc(100% - 12px), transparent 100%)`;
@@ -84,6 +85,7 @@ export const yampCardStyles = css`
     --shadow-medium: 0 2px 8px rgba(0, 0, 0, 0.25);
     --shadow-heavy: 0 0 6px 1px rgba(0, 0, 0, 0.32), 0 0 1px 1px rgba(255, 255, 255, 0.13);
     --yamp-artwork-fit: cover;
+    --yamp-artwork-position: top center;
     --yamp-text-scale: 1;
     --yamp-text-scale-details: 1;
     --yamp-text-scale-menu: 1;
@@ -91,6 +93,9 @@ export const yampCardStyles = css`
     --yamp-details-scale: var(--yamp-text-scale-details, 1);
     --yamp-details-line-height: 1.2;
     --yamp-details-max-lines: 3;
+    --yamp-details-line-clamp: 3;
+    --yamp-details-display: -webkit-box;
+    --yamp-details-white-space: normal;
     --yamp-section-bg: rgba(255, 255, 255, 0.02);
     --yamp-section-border: rgba(255, 255, 255, 0.1);
     --yamp-section-radius: 12px;
@@ -253,7 +258,7 @@ export const yampCardStyles = css`
     transform: translateZ(0);
   }
 
-  /* Add side padding only for scaled-contain modes where artwork doesn't fill the card edges */
+  /* Static background color fallback for inset artwork layouts */
   ha-card.yamp-card:has(> .yamp-card-inner[data-artwork-fit="scaled-contain"]),
   ha-card.yamp-card:has(> .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"]) {
     background: var(--card-bg);
@@ -277,7 +282,7 @@ export const yampCardStyles = css`
     inset: -50px;
     z-index: ${Z_LAYERS.MEDIA_BACKGROUND};
     background-size: var(--yamp-artwork-bg-size, cover);
-    background-position: top center;
+    background-position: var(--yamp-artwork-position, top center);
     background-repeat: no-repeat;
     pointer-events: none;
     transform: translateZ(0);
@@ -297,10 +302,26 @@ export const yampCardStyles = css`
     transform: translateZ(0);
   }
 
+  .yamp-card-inner[data-lyrics-active="true"] .full-bleed-artwork-fade {
+    z-index: ${Z_LAYERS.LYRICS_OVERLAY + 1};
+    background: linear-gradient(
+      to bottom,
+      transparent 0%,
+      color-mix(
+          in srgb,
+          var(--ha-card-background, var(--card-background-color, var(--card-bg, #000))) 40%,
+          transparent
+        )
+        55%,
+      var(--ha-card-background, var(--card-background-color, var(--card-bg, #000))) 100%
+    );
+  }
+
   /* Idle state dimming */
   .dim-idle .details,
   .dim-idle .controls-row,
   .dim-idle .volume-row,
+  .dim-idle .more-info-menu.volume-collapsed,
   .dim-idle:not(.no-chip-dim) .chip-row,
   .dim-idle:not(.no-chip-dim) .action-chip-row {
     opacity: 0.28;
@@ -322,7 +343,8 @@ export const yampCardStyles = css`
     z-index: ${Z_LAYERS.FLOATING_CONTROLS};
   }
 
-  .dim-idle .more-info-menu {
+  .dim-idle .more-info-menu,
+  .more-info-menu.volume-collapsed {
     position: absolute;
     bottom: 14px;
     right: 12px;
@@ -384,7 +406,7 @@ export const yampCardStyles = css`
     width: 100%;
     flex: 1 1 0;
     height: auto;
-    min-height: 180px;
+    min-height: 0;
     pointer-events: none;
     position: relative;
     display: flex;
@@ -392,8 +414,8 @@ export const yampCardStyles = css`
     justify-content: center;
   }
 
-  :host([data-has-custom-height="true"]) .card-artwork-spacer {
-    min-height: 48px;
+  :host(:not([data-has-custom-height="true"])) .card-artwork-spacer {
+    min-height: 180px;
   }
 
   /* Media background */
@@ -937,28 +959,32 @@ export const yampCardStyles = css`
     padding-left: calc(16px * var(--yamp-details-scale, 1));
     display: flex;
     flex-direction: column;
+    flex-shrink: 0;
     gap: calc(8px * var(--yamp-details-scale, 1));
     margin-top: calc(8px * var(--yamp-details-scale, 1));
     min-height: calc(48px * var(--yamp-details-scale, 1));
     font-size: calc(1em * var(--yamp-details-scale, 1));
     flex-shrink: 0;
+    position: relative;
+    z-index: ${Z_LAYERS.FLOATING_ELEMENT};
   }
 
   .details .title {
     font-size: 1.1em;
     font-weight: 600;
     line-height: var(--yamp-details-line-height, 1.2);
-    white-space: normal;
+    white-space: var(--yamp-details-white-space, normal);
     word-break: break-word;
-    overflow: visible;
-    text-overflow: unset;
-    display: -webkit-box;
-    -webkit-box-orient: vertical;
-    -webkit-line-clamp: var(--yamp-details-max-lines, 3);
     overflow: hidden;
+    text-overflow: ellipsis;
+    display: var(--yamp-details-display, -webkit-box);
+    -webkit-box-orient: vertical;
+    -webkit-line-clamp: var(--yamp-details-line-clamp, var(--yamp-details-max-lines, 3));
     padding-top: calc(8px * var(--yamp-details-scale, 1));
     padding-bottom: calc(4px * var(--yamp-details-scale, 1));
     margin-bottom: calc(-4px * var(--yamp-details-scale, 1));
+    max-width: 100%;
+    position: relative;
   }
 
   .details .artist {
@@ -966,6 +992,83 @@ export const yampCardStyles = css`
     line-height: var(--yamp-details-line-height, 1.2);
     padding-bottom: calc(4px * var(--yamp-details-scale, 1));
     margin-bottom: calc(-4px * var(--yamp-details-scale, 1));
+    max-width: 100%;
+    position: relative;
+  }
+
+  .marquee-inner {
+    display: inline-block;
+    white-space: inherit;
+    max-width: 100%;
+  }
+
+  [data-marquee="true"] {
+    overflow: hidden !important;
+    display: block !important;
+    text-overflow: clip !important;
+    -webkit-line-clamp: unset !important;
+    text-align: left !important;
+  }
+
+  /* Single marquee mode (infinite loop when only 1 element overflows) */
+  [data-marquee="true"]:not([data-marquee-sequential="true"]) > .marquee-inner {
+    max-width: none !important;
+    will-change: transform, opacity;
+    animation: yamp-marquee var(--yamp-marquee-duration, 8s) ease-in-out infinite;
+  }
+
+  /* Sequential marquee mode (when both elements overflow) */
+  [data-marquee="true"][data-marquee-sequential="true"] > .marquee-inner {
+    max-width: none !important;
+    transform: translateX(0);
+    opacity: 1;
+  }
+
+  [data-marquee="true"][data-marquee-sequential="true"][data-marquee-active="true"]
+    > .marquee-inner {
+    will-change: transform, opacity;
+    animation: yamp-marquee var(--yamp-marquee-duration, 8s) ease-in-out 1;
+  }
+
+  @media (hover: hover) {
+    [data-marquee="true"]:hover > .marquee-inner,
+    .details:hover [data-marquee="true"] > .marquee-inner {
+      animation-play-state: paused;
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    [data-marquee="true"] > .marquee-inner,
+    [data-marquee="true"][data-marquee-active="true"] > .marquee-inner {
+      animation: none !important;
+      transform: none !important;
+      opacity: 1 !important;
+    }
+  }
+
+  @keyframes yamp-marquee {
+    0%,
+    22% {
+      transform: translateX(0);
+      opacity: 1;
+    }
+    72%,
+    88% {
+      transform: translateX(var(--yamp-marquee-distance, 0px));
+      opacity: 1;
+    }
+    93% {
+      transform: translateX(var(--yamp-marquee-distance, 0px));
+      opacity: 0;
+    }
+    96% {
+      transform: translateX(0);
+      opacity: 0;
+    }
+    100% {
+      transform: translateX(0);
+      opacity: 1;
+    }
   }
 
   .track-options-row {
@@ -1074,6 +1177,9 @@ export const yampCardStyles = css`
     align-items: center;
     gap: 12px;
     padding: 4px 16px;
+    position: relative;
+    z-index: ${Z_LAYERS.FLOATING_CONTROLS};
+    flex-shrink: 0;
   }
 
   .controls-row.adaptive {
@@ -1115,8 +1221,8 @@ export const yampCardStyles = css`
 
   .controls-row.modern {
     justify-content: center;
-    gap: 14px;
-    padding: 10px 16px 2px 16px;
+    gap: var(--yamp-modern-gap, 14px);
+    padding: var(--yamp-modern-padding, 10px 16px 2px 16px);
     /* Grid layout for robust centering */
     display: grid;
     grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
@@ -1168,40 +1274,40 @@ export const yampCardStyles = css`
   }
 
   .modern-button.small {
-    width: 42px;
-    height: 42px;
+    width: var(--yamp-modern-small-size, 42px);
+    height: var(--yamp-modern-small-size, 42px);
     padding: 0;
   }
 
   .modern-button.medium {
-    width: 50px;
-    height: 50px;
+    width: var(--yamp-modern-medium-size, 50px);
+    height: var(--yamp-modern-medium-size, 50px);
     padding: 0;
   }
 
   .modern-button.primary {
-    width: 70px;
-    height: 70px;
+    width: var(--yamp-modern-primary-size, 70px);
+    height: var(--yamp-modern-primary-size, 70px);
     font-size: 1.9em;
     background: rgba(255, 255, 255, 0.1);
   }
 
   .modern-button ha-icon {
-    --mdc-icon-size: 24px;
-    width: 24px;
-    height: 24px;
+    --mdc-icon-size: var(--yamp-modern-small-icon-size, 24px);
+    width: var(--yamp-modern-small-icon-size, 24px);
+    height: var(--yamp-modern-small-icon-size, 24px);
   }
 
   .modern-button.medium ha-icon {
-    --mdc-icon-size: 28px;
-    width: 28px;
-    height: 28px;
+    --mdc-icon-size: var(--yamp-modern-medium-icon-size, 28px);
+    width: var(--yamp-modern-medium-icon-size, 28px);
+    height: var(--yamp-modern-medium-icon-size, 28px);
   }
 
   .modern-button.primary ha-icon {
-    --mdc-icon-size: 36px;
-    width: 36px;
-    height: 36px;
+    --mdc-icon-size: var(--yamp-modern-primary-icon-size, 36px);
+    width: var(--yamp-modern-primary-icon-size, 36px);
+    height: var(--yamp-modern-primary-icon-size, 36px);
   }
 
   @media (hover: hover) {
@@ -1253,12 +1359,14 @@ export const yampCardStyles = css`
     padding-left: 24px;
     padding-right: 24px;
     box-sizing: border-box;
+    position: relative;
+    z-index: ${Z_LAYERS.FLOATING_ELEMENT};
   }
 
   .progress-bar {
     width: 100%;
     height: 4px;
-    background: rgba(255, 255, 255, 0.22);
+    background: rgb(234, 234, 234);
     border-radius: var(--progress-radius, 2px);
     overflow: hidden;
     position: relative;
@@ -1269,7 +1377,6 @@ export const yampCardStyles = css`
     height: 100%;
     background: var(--custom-accent);
     border-radius: var(--progress-radius, 3px) 0 0 var(--progress-radius, 3px);
-    box-shadow: 0 0 8px 2px rgba(0, 0, 0, 0.24);
   }
 
   .timestamps-container {
@@ -1287,7 +1394,10 @@ export const yampCardStyles = css`
     display: grid;
     grid-template-columns: minmax(min-content, 1fr) auto minmax(min-content, 1fr);
     align-items: center;
-    padding: 10px 16px 14px 16px;
+    padding: var(--yamp-volume-row-padding, 10px 16px 14px 16px);
+    position: relative;
+    z-index: ${Z_LAYERS.FLOATING_CONTROLS};
+    flex-shrink: 0;
   }
 
   /* Remove flex:1 since we are using grid columns */
@@ -1392,8 +1502,17 @@ export const yampCardStyles = css`
     }
   }
 
-  .volume-icon-btn ha-icon {
-    font-size: 1.2em;
+  .volume-icon-btn ha-icon,
+  .custom-bottom-action ha-icon,
+  .vol-stepper .button ha-icon {
+    font-size: 22px;
+    --mdc-icon-size: 22px;
+    --ha-icon-size: 22px;
+    width: 22px;
+    height: 22px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     color: #fff;
   }
 
@@ -1574,7 +1693,6 @@ export const yampCardStyles = css`
   .vol-stepper .button {
     min-width: 36px;
     min-height: 36px;
-    font-size: 1.5em;
     padding: 6px 0;
     border-radius: 50%;
     display: flex;
@@ -1651,7 +1769,7 @@ export const yampCardStyles = css`
     inset: 0;
     z-index: ${Z_LAYERS.MEDIA_BACKGROUND};
     background-size: var(--yamp-artwork-bg-size, cover);
-    background-position: top center;
+    background-position: var(--yamp-artwork-position, top center);
     background-repeat: no-repeat;
     pointer-events: none;
     height: 100%;
@@ -1670,12 +1788,42 @@ export const yampCardStyles = css`
     );
   }
 
+  .yamp-card-inner[data-lyrics-active="true"] .card-lower-fade {
+    z-index: ${Z_LAYERS.LYRICS_OVERLAY + 1};
+    background: linear-gradient(
+      to bottom,
+      transparent 0%,
+      transparent calc(100% - var(--yamp-lyrics-bottom-offset, 180px)),
+      color-mix(
+          in srgb,
+          var(--ha-card-background, var(--card-background-color, var(--card-bg, #000))) 85%,
+          transparent
+        )
+        calc(100% - var(--yamp-lyrics-bottom-offset, 180px) + 30px),
+      var(--ha-card-background, var(--card-background-color, var(--card-bg, #000)))
+        calc(100% - var(--yamp-lyrics-bottom-offset, 180px) + 70px),
+      var(--ha-card-background, var(--card-background-color, var(--card-bg, #000))) 100%
+    );
+  }
+
   .card-lower-content {
     position: relative;
     z-index: ${Z_LAYERS.FLOATING_ELEMENT};
     display: flex;
     flex-direction: column;
     height: 100%;
+  }
+
+  .yamp-card-inner[data-lyrics-active="true"] .card-lower-content {
+    pointer-events: none;
+  }
+
+  .yamp-card-inner[data-lyrics-active="true"] .card-artwork-spacer {
+    pointer-events: none !important;
+  }
+
+  .yamp-card-inner[data-lyrics-active="true"] .card-lower-content > :not(.card-artwork-spacer) {
+    pointer-events: auto;
   }
 
   .card-lower-content.transitioning .details,
@@ -1735,7 +1883,23 @@ export const yampCardStyles = css`
     color: #fff;
   }
 
-  /* Scaled Contain Alternate mode - use theme colors since background is transparent */
+  /* Match Theme mode & Scaled Contain Alternate mode - use theme colors for high contrast in light/dark themes */
+  .yamp-card-inner[data-lyrics-active="true"] .details,
+  .yamp-card-inner[data-lyrics-active="true"] .title,
+  .yamp-card-inner[data-lyrics-active="true"] .artist,
+  .yamp-card-inner[data-lyrics-active="true"] .source-menu-btn,
+  .yamp-card-inner[data-lyrics-active="true"] .source-selected,
+  .yamp-card-inner[data-lyrics-active="true"] .controls-row,
+  .yamp-card-inner[data-lyrics-active="true"] .button,
+  .yamp-card-inner[data-lyrics-active="true"] .modern-button,
+  .yamp-card-inner[data-lyrics-active="true"] .vol-stepper span,
+  .yamp-card-inner[data-lyrics-active="true"] .vol-label,
+  .yamp-card-inner[data-lyrics-active="true"] .more-info-btn ha-icon,
+  .yamp-card-inner[data-lyrics-active="true"] .volume-icon-btn,
+  .yamp-card-inner[data-lyrics-active="true"] .volume-icon-btn ha-icon,
+  .yamp-card-inner[data-lyrics-active="true"] .radio-mode-button,
+  .yamp-card-inner[data-lyrics-active="true"] .volume-slider-icon,
+  .yamp-card-inner[data-lyrics-active="true"] .timestamps-container,
   .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .details,
   .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .title,
   .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .artist,
@@ -1755,68 +1919,28 @@ export const yampCardStyles = css`
     color: var(--primary-text);
   }
 
+  .yamp-card-inner[data-lyrics-active="true"] .modern-button,
   .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .modern-button {
     background: color-mix(in srgb, var(--primary-text), transparent 85%);
     box-shadow: none; /* Cleaner look on card background */
   }
 
   /* Hamburger icon (span) uses !important in base styles, so we override it here */
+  .yamp-card-inner[data-lyrics-active="true"] .more-info-icon,
   .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .more-info-icon {
     color: var(--primary-text) !important;
   }
 
   /* Ensure active buttons still use the accent color */
+  .yamp-card-inner[data-lyrics-active="true"] .button.active,
+  .yamp-card-inner[data-lyrics-active="true"] .button.active ha-icon,
+  .yamp-card-inner[data-lyrics-active="true"] .modern-button.active,
+  .yamp-card-inner[data-lyrics-active="true"] .modern-button.active ha-icon,
   .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .button.active,
   .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .button.active ha-icon,
   .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .modern-button.active,
   .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .modern-button.active ha-icon {
     color: var(--custom-accent);
-  }
-
-  /* Hover effects for primary playback controls using chip color variables (background + text) */
-  @media (hover: hover) {
-    .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .controls-row .button:hover,
-    .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .modern-button:hover {
-      background: var(--yamp-chip-selected-bg);
-      color: var(--yamp-chip-selected-text) !important;
-      border-radius: var(--button-border-radius, 8px);
-    }
-  }
-
-  /* Modern button hover specifically needs 999px radius to stay circular */
-  @media (hover: hover) {
-    .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .modern-button:hover {
-      border-radius: 999px;
-    }
-  }
-
-  @media (hover: hover) {
-    .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"]
-      .controls-row
-      .button:hover
-      ha-icon,
-    .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .modern-button:hover ha-icon {
-      color: var(--yamp-chip-selected-text) !important;
-    }
-  }
-
-  .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .inset-artwork {
-    border-radius: var(--ha-card-border-radius, 12px);
-    border: var(--ha-card-border-width, 1px) solid
-      var(--ha-card-border-color, var(--divider-color, #e0e0e0));
-  }
-
-  .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .vol-slider,
-  .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .progress-bar {
-    background: color-mix(in srgb, var(--primary-text), transparent 80%);
-  }
-
-  .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .vol-slider::-webkit-slider-thumb {
-    border-color: var(--primary-text);
-  }
-
-  .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .vol-slider::-moz-range-thumb {
-    border-color: var(--primary-text);
   }
 
   .vol-stepper span {
@@ -2290,12 +2414,14 @@ export const yampCardStyles = css`
     border-radius: var(--border-radius);
     box-shadow: none;
     width: 100%;
+    height: 100%;
     padding: 18px 8px 0px 8px;
     padding-top: clamp(12px, 6vh, 18px);
     display: flex;
     flex-direction: column;
     align-items: stretch;
     flex: 1;
+    min-height: 0;
     overflow-y: auto;
     overflow-x: hidden;
     overscroll-behavior: contain;
@@ -2435,6 +2561,147 @@ export const yampCardStyles = css`
     cursor: pointer;
     transition: color var(--transition-fast);
     text-align: center;
+  }
+
+  .entity-options-item[disabled] {
+    opacity: 0.5;
+    cursor: default;
+  }
+
+  .transfer-queue-item {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    gap: 12px;
+  }
+
+  /* Override entity-options-scroll display:flex (line ~3355) — !important needed because
+     .grid-menu appears earlier in source order than .entity-options-scroll */
+  .grid-menu {
+    display: grid !important;
+    grid-template-columns: repeat(5, 1fr); /* MINI_GRID_COLUMNS */
+    gap: 0;
+    padding: 0;
+    margin: 8px 0;
+  }
+
+  .grid-menu .entity-options-item {
+    margin: 0;
+    border-radius: 0;
+    border-bottom: 1px solid var(--divider-color, var(--yamp-overlay-divider));
+    border-right: 1px solid var(--divider-color, var(--yamp-overlay-divider));
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 12px 4px;
+    min-height: 64px;
+    gap: 6px;
+    font-size: 0.7em;
+  }
+
+  /* Remove right border on last column */
+  .grid-menu .entity-options-item:nth-child(5n) {
+    /* MINI_GRID_COLUMNS */
+    border-right: none;
+  }
+
+  .grid-menu .entity-options-item[disabled] {
+    cursor: default;
+    opacity: 0.5;
+  }
+
+  .grid-menu .entity-options-item.grid-active {
+    color: var(--custom-accent);
+  }
+
+  /* Wrapper for grid-menu children — display:contents lets items participate in the grid directly */
+  .grid-menu-items {
+    display: contents;
+  }
+
+  /* Non-grid transfer queue layout */
+  .transfer-queue-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  /* Give the icon a specific size in grid mode */
+  .grid-menu .menu-action-icon,
+  .grid-menu .entity-options-item > ha-icon {
+    --mdc-icon-size: 24px;
+    width: 24px;
+    height: 24px;
+    color: inherit;
+    --mdc-icon-color: currentColor;
+    --icon-color: currentColor;
+  }
+
+  .grid-menu .menu-action-label,
+  .grid-menu .entity-options-item > span,
+  .search-result-grid-mode .menu-action-label {
+    line-height: 1.1;
+    text-align: center;
+    color: inherit;
+  }
+
+  .search-result-grid-mode {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    margin: 0;
+    border-radius: 0;
+    border-bottom: 1px solid var(--divider-color, var(--yamp-overlay-divider));
+    border-right: 1px solid var(--divider-color, var(--yamp-overlay-divider));
+    padding: 12px 4px;
+    gap: 6px;
+    font-size: 0.7em;
+    width: 100%;
+    height: 100%;
+    background: transparent;
+    cursor: pointer;
+    box-sizing: border-box;
+  }
+
+  /* Remove right border on last column */
+  .search-result-grid-mode:nth-child(5n) {
+    /* MINI_GRID_COLUMNS */
+    border-right: none;
+  }
+
+  .search-result-grid-mode .yamp-search-result-thumb,
+  .search-result-grid-mode .yamp-search-result-thumb-placeholder {
+    width: 24px;
+    height: 24px;
+    border-radius: 4px;
+    object-fit: cover;
+    flex-shrink: 0;
+    margin: 0;
+  }
+
+  .search-result-grid-mode .yamp-search-result-thumb-placeholder {
+    background-color: var(--yamp-surface-variant);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .search-result-grid-mode .yamp-search-result-thumb-placeholder ha-icon {
+    --mdc-icon-size: 16px;
+    width: 16px;
+    height: 16px;
+  }
+
+  .search-result-grid-mode .menu-action-label {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    width: 100%;
+    word-break: break-word;
   }
 
   .entity-options-item.menu-action-item {
@@ -2661,7 +2928,7 @@ export const yampCardStyles = css`
 
   /* Search functionality */
   .entity-options-search {
-    padding: 0px 10px 80px 10px;
+    padding: 0px 10px 0px 10px;
   }
 
   .entity-options-search-row {
@@ -3134,10 +3401,10 @@ export const yampCardStyles = css`
     flex-shrink: 0;
   }
 
-  .entity-options-sheet .entity-options-search {
+  .entity-options-sheet:not([data-pin-search-headers="true"]) .entity-options-search {
     display: flex;
     flex-direction: column;
-    height: 100%;
+    flex-shrink: 0;
   }
 
   .entity-options-sheet .entity-options-search-row,
@@ -3219,6 +3486,8 @@ export const yampCardStyles = css`
   /* The scrollable area for all menus */
   .entity-options-scroll {
     flex: 1;
+    display: flex;
+    flex-direction: column;
     overflow-y: auto;
     min-height: 0;
     ${HIDE_SCROLLBAR}
@@ -3226,9 +3495,16 @@ export const yampCardStyles = css`
 
   /* Reserved space for persistent media controls when pinning is active */
   .entity-options-sheet[data-pin-search-headers="true"] .entity-options-scroll,
-  .entity-options-sheet[data-pin-search-headers="true"] .entity-options-search,
-  .entity-options-sheet[data-pin-search-headers="true"] .group-list-scroll {
-    margin-bottom: 80px;
+  .entity-options-sheet[data-pin-search-headers="true"] .group-list-scroll,
+  .entity-options-sheet[data-pin-search-headers="true"] .search-sheet-results,
+  .entity-options-sheet[data-pin-search-headers="true"] .entity-options-search-results {
+    margin-bottom: 0px;
+    padding-bottom: 80px;
+    background: none;
+  }
+
+  .entity-options-sheet[data-pin-search-headers="true"] .entity-options-search {
+    margin-bottom: 0px;
     padding-bottom: 0px;
     background: none;
   }
@@ -3240,7 +3516,6 @@ export const yampCardStyles = css`
     padding-bottom: 12px;
   }
 
-  /* Clean up legacy margin override rules since we now use padding on parent */
   :host([data-hide-persistent-controls="true"])
     .entity-options-sheet[data-pin-search-headers="true"]
     .entity-options-scroll,
@@ -3250,6 +3525,12 @@ export const yampCardStyles = css`
   :host([data-hide-persistent-controls="true"])
     .entity-options-sheet[data-pin-search-headers="true"]
     .group-list-scroll,
+  :host([data-hide-persistent-controls="true"])
+    .entity-options-sheet[data-pin-search-headers="true"]
+    .search-sheet-results,
+  :host([data-hide-persistent-controls="true"])
+    .entity-options-sheet[data-pin-search-headers="true"]
+    .entity-options-search-results,
   :host([data-hide-menu-player="true"])
     .entity-options-sheet[data-pin-search-headers="true"]
     .entity-options-scroll,
@@ -3258,8 +3539,31 @@ export const yampCardStyles = css`
     .entity-options-search,
   :host([data-hide-menu-player="true"])
     .entity-options-sheet[data-pin-search-headers="true"]
-    .group-list-scroll {
+    .group-list-scroll,
+  :host([data-hide-menu-player="true"])
+    .entity-options-sheet[data-pin-search-headers="true"]
+    .search-sheet-results,
+  :host([data-hide-menu-player="true"])
+    .entity-options-sheet[data-pin-search-headers="true"]
+    .entity-options-search-results {
     margin-bottom: 0px;
+    padding-bottom: 0px;
+  }
+
+  /* Remove bottom clearance for unpinned mode when persistent controls are hidden */
+  :host([data-hide-persistent-controls="true"])
+    .entity-options-sheet:not([data-pin-search-headers="true"])
+    .search-sheet-results,
+  :host([data-hide-persistent-controls="true"])
+    .entity-options-sheet:not([data-pin-search-headers="true"])
+    .entity-options-search-results,
+  :host([data-hide-menu-player="true"])
+    .entity-options-sheet:not([data-pin-search-headers="true"])
+    .search-sheet-results,
+  :host([data-hide-menu-player="true"])
+    .entity-options-sheet:not([data-pin-search-headers="true"])
+    .entity-options-search-results {
+    padding-bottom: 0px;
   }
   /* Hide scrollbars for Webkit browsers (Chrome, Safari, etc.) */
 
@@ -3287,7 +3591,7 @@ export const yampCardStyles = css`
     font-size: 1em;
     outline: none;
   }
-  .entity-options-resolved-entities .entity-options-item {
+  .entity-options-resolved-entities-list:not(.grid-menu) .entity-options-item {
     background: none;
     color: var(--yamp-overlay-text);
     border: none;
@@ -3306,24 +3610,26 @@ export const yampCardStyles = css`
   }
 
   @media (hover: hover) {
-    .entity-options-resolved-entities .entity-options-item:hover,
-    .entity-options-resolved-entities .entity-options-item:focus {
+    .entity-options-resolved-entities-list:not(.grid-menu) .entity-options-item:hover,
+    .entity-options-resolved-entities-list:not(.grid-menu) .entity-options-item:focus {
       color: var(--custom-accent);
       background: none;
     }
   }
 
-  .entity-options-resolved-entities .entity-options-item:last-child {
+  .entity-options-resolved-entities-list:not(.grid-menu) .entity-options-item:last-child {
     border-bottom: none;
   }
 
-  /* Clickable artist */
-  .clickable-artist {
+  /* Clickable artist and album */
+  .clickable-artist,
+  .clickable-album {
     cursor: pointer;
   }
 
   @media (hover: hover) {
-    .clickable-artist:hover {
+    .clickable-artist:hover,
+    .clickable-album:hover {
       text-decoration: underline;
     }
   }
@@ -3507,13 +3813,31 @@ export const yampCardStyles = css`
   .entity-options-sheet:not([data-pin-search-headers="true"]) .search-sheet-results,
   .entity-options-sheet:not([data-pin-search-headers="true"]) .entity-options-search-results {
     overflow-y: visible;
+    padding-bottom: 80px;
+    flex: none;
+    min-height: auto;
+  }
+
+  .queue-sortable-container {
+    padding-bottom: 24px;
   }
 
   .queue-sortable-container.is-card-layout {
     display: grid;
     grid-template-columns: repeat(var(--search-card-columns, 4), 1fr);
     gap: 12px;
-    padding: 12px;
+    padding: 12px 12px 24px 12px;
+  }
+
+  .queue-sortable-container.is-card-layout.grid-mode {
+    gap: 0;
+    padding: 0;
+  }
+
+  .queue-sortable-container.is-card-layout.grid-mode
+    > .queue-drag-wrapper:nth-child(5n) /* MINI_GRID_COLUMNS */
+    .search-result-grid-mode {
+    border-right: none;
   }
 
   .queue-sortable-container.is-card-layout .queue-drag-wrapper {
@@ -4192,38 +4516,34 @@ export const lyricsStyles = css`
   :host {
     display: block;
     position: absolute;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: -1px;
+    inset: 0;
     z-index: ${Z_LAYERS.LYRICS_OVERLAY};
     overflow: hidden;
     pointer-events: auto;
+    touch-action: pan-y;
     backdrop-filter: ${BLUR_5};
     -webkit-backdrop-filter: ${BLUR_5};
-    color: var(--yamp-lyrics-color, var(--yamp-overlay-text, #fff));
-  }
-
-  :host([data-artwork-fit="scaled-contain-alternate"]) {
-    background: var(--yamp-lyrics-bg, var(--yamp-overlay-bg, rgba(0, 0, 0, 0.82)));
-  }
-
-  :host(:not([data-artwork-fit="scaled-contain-alternate"])) {
-    background: var(--yamp-lyrics-bg, rgba(0, 0, 0, 0.3));
-    color: #fff;
-    mask-image: var(--yamp-lyrics-mask, ${LYRICS_MASK_GRADIENT});
-    -webkit-mask-image: var(--yamp-lyrics-mask, ${LYRICS_MASK_GRADIENT});
+    background: var(--yamp-lyrics-bg, var(--yamp-overlay-bg));
+    color: var(--yamp-lyrics-color, var(--primary-text-color, #fff));
   }
 
   .lyrics-scroll-container {
-    height: 100%;
-    width: 100%;
+    position: absolute;
+    top: var(--yamp-lyrics-top-offset, 0px);
+    left: 0;
+    right: 0;
+    bottom: var(--yamp-lyrics-bottom-offset, 180px);
     box-sizing: border-box;
     overflow-y: auto;
     overflow-x: hidden;
     padding-left: 12px;
     padding-right: 12px;
     scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    touch-action: pan-y;
+    overscroll-behavior-y: contain;
+    mask-image: var(--yamp-lyrics-mask, ${LYRICS_MASK_GRADIENT});
+    -webkit-mask-image: var(--yamp-lyrics-mask, ${LYRICS_MASK_GRADIENT});
     ${HIDE_SCROLLBAR}
     display: flex;
     flex-direction: column;
@@ -4237,28 +4557,49 @@ export const lyricsStyles = css`
     pointer-events: none;
   }
 
+  .plain-scroll-spacer-top {
+    flex: 0 0 24px;
+    width: 100%;
+    min-height: 24px;
+    pointer-events: none;
+  }
+
+  .plain-scroll-spacer-bottom {
+    flex: 0 0 32px;
+    width: 100%;
+    min-height: 32px;
+    pointer-events: none;
+  }
+
   .lyric-line {
-    font-size: var(--yamp-lyrics-font-size, 1.6rem);
+    font-size: calc(var(--yamp-lyrics-font-size, 1.6rem) * var(--yamp-text-scale-lyrics, 1));
     font-weight: 700;
     line-height: 1.3;
     margin-bottom: 24px;
-    opacity: 0.3;
+    opacity: 0.4;
     transition: all 0.4s cubic-bezier(0.25, 1, 0.5, 1);
     cursor: default;
     pointer-events: none;
-    color: inherit;
+    color: var(
+      --yamp-lyrics-inactive-color,
+      var(--secondary-text-color, var(--primary-text-color, #fff))
+    );
     width: 100%;
     max-width: 95%;
-    filter: blur(1px);
     text-align: center;
   }
 
   .lyric-line.active {
     opacity: 1;
-    filter: blur(0);
-    color: var(--yamp-lyrics-active-color, inherit);
-    font-size: var(--yamp-lyrics-active-font-size, var(--yamp-lyrics-font-size, 1.6rem));
-    text-shadow: var(--yamp-overlay-text-shadow, none);
+    color: var(
+      --yamp-lyrics-active-color,
+      var(--yamp-primary-color, var(--custom-accent, var(--accent-color, #ffffff)))
+    );
+    font-size: calc(
+      var(--yamp-lyrics-active-font-size, var(--yamp-lyrics-font-size, 1.6rem)) *
+        var(--yamp-text-scale-lyrics, 1)
+    );
+    text-shadow: var(--yamp-overlay-text-shadow, 0 2px 4px rgba(0, 0, 0, 0.5));
   }
 
   .lyric-line.scroll-mode {
@@ -4269,10 +4610,58 @@ export const lyricsStyles = css`
   }
 
   .lyric-line.unsynced {
-    font-size: var(--yamp-lyrics-unsynced-font-size, 1.1rem);
+    font-size: calc(
+      var(--yamp-lyrics-unsynced-font-size, 1.1rem) * var(--yamp-text-scale-lyrics, 1)
+    );
     opacity: 0.8;
     margin-bottom: 12px;
     filter: none;
+  }
+
+  .lyric-line.is-instrumental {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 32px;
+    filter: none;
+  }
+
+  .lyrics-playing-indicator {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    height: 24px;
+    padding: 4px 8px;
+    opacity: 0.4;
+    transition:
+      opacity 0.4s cubic-bezier(0.25, 1, 0.5, 1),
+      transform 0.4s cubic-bezier(0.25, 1, 0.5, 1);
+  }
+
+  .lyrics-playing-indicator .bar {
+    width: 4px;
+    height: 6px;
+    background: currentColor;
+    border-radius: 2px;
+    transition: height 0.3s ease;
+  }
+
+  .lyric-line.active .lyrics-playing-indicator {
+    opacity: 1;
+    transform: scale(1.15);
+  }
+
+  .lyric-line.active .lyrics-playing-indicator .bar:nth-child(1) {
+    animation: chipPlayingBar1 0.8s ease-in-out 0s infinite;
+  }
+
+  .lyric-line.active .lyrics-playing-indicator .bar:nth-child(2) {
+    animation: chipPlayingBar2 0.6s ease-in-out 0.15s infinite;
+  }
+
+  .lyric-line.active .lyrics-playing-indicator .bar:nth-child(3) {
+    animation: chipPlayingBar3 0.7s ease-in-out 0.3s infinite;
   }
 
   .lyrics-loading,

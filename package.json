@@ -1,6 +1,6 @@
 {
   "name": "yet-another-media-player",
-  "version": "2026.8.1",
+  "version": "2026.9.0",
   "description": "Home Assistant media card for controlling multiple entities with customizable actions.",
   "main": "rollup.config.js",
   "type": "module",
@@ -15,12 +15,13 @@
     "@rollup/plugin-commonjs": "^29.0.3",
     "@rollup/plugin-node-resolve": "^16.0.3",
     "esbuild": "^0.28.2",
-    "eslint": "^10.9.0",
+    "eslint": "^10.8.1",
     "eslint-plugin-lit": "^2.3.1",
     "globals": "^17.11.0",
     "prettier": "^3.9.6",
-    "rollup": "^4.62.5",
-    "rollup-plugin-esbuild": "^6.2.1"
+    "rollup": "^4.62.4",
+    "rollup-plugin-esbuild": "^6.2.1",
+    "typescript": "^7.0.2"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -29,7 +30,9 @@
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix",
     "format:check": "prettier --check src/",
-    "format:write": "prettier --write src/"
+    "format:write": "prettier --write src/",
+    "typecheck": "tsc --noEmit",
+    "validate": "npm run lint && npm run format:check && npm run typecheck && npm run build"
   },
   "repository": {
     "type": "git",

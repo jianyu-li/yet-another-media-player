@@ -3,13 +3,14 @@ import * as yaml from "js-yaml";
 import { localize } from "./localize/localize.js";
 
 import { SUPPORT_GROUPING, TEMPLATE_CONFIGS } from "./constants.js";
-import { isMusicAssistantEntity } from "./yamp-utils.js";
+import { isMusicAssistantEntity, getActionPlacement } from "./yamp-utils.js";
 import "./yamp-sortable.js";
 
 const ADAPTIVE_TEXT_SELECTOR_OPTIONS = Object.freeze([
   { value: "details", label: localize("card.sections.details") },
   { value: "menu", label: localize("card.sections.menu") },
   { value: "action_chips", label: localize("card.sections.action_chips") },
+  { value: "lyrics", label: localize("card.sections.lyrics") },
 ]);
 const ADAPTIVE_TEXT_SELECTOR_VALUES = ADAPTIVE_TEXT_SELECTOR_OPTIONS.map((opt) => opt.value);
 
@@ -150,6 +151,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           image_url: item.missing_art_url ?? "",
           size_percentage: sizePercentage,
           object_fit: item.object_fit,
+          object_position: item.object_position,
         };
       }
 
@@ -160,6 +162,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           image_url: item.idle_image_url ?? item.image_url ?? "",
           size_percentage: sizePercentage,
           object_fit: item.object_fit,
+          object_position: item.object_position,
         };
       }
 
@@ -657,12 +660,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
   }
 
   _updateEntityProperty(key, value) {
-    const entities = [...(this._config.entities ?? [])];
-    const idx = this._tempEntityIndex !== null ? this._tempEntityIndex : this._entityEditorIndex;
-    if (entities[idx]) {
-      entities[idx] = { ...entities[idx], [key]: value };
-      this._updateConfig("entities", entities);
-    }
+    this._updateEntityProperties({ [key]: value });
   }
 
   _updateEntityProperties(properties) {
@@ -675,28 +673,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
   }
 
   _updateActionProperty(key, value) {
-    const actions = [...(this._config.actions ?? [])];
-    const idx = this._tempActionIndex !== null ? this._tempActionIndex : this._actionEditorIndex;
-    if (actions[idx]) {
-      // Enforce single trigger per gesture (Tap, Hold, Double Tap)
-      if (key === "card_trigger" && value && value !== "none") {
-        actions.forEach((act, i) => {
-          if (i !== idx && act.card_trigger === value) {
-            actions[i] = { ...act, card_trigger: "none" };
-          }
-        });
-      }
-
-      const newAction = { ...actions[idx], [key]: value };
-
-      // If we're setting in_menu, remove the legacy placement property
-      if (key === "in_menu") {
-        delete newAction.placement;
-      }
-
-      actions[idx] = newAction;
-      this._updateConfig("actions", actions);
-    }
+    this._updateActionProperties({ [key]: value });
   }
 
   _updateActionProperties(properties) {
@@ -714,9 +691,14 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
 
       const newAction = { ...actions[idx], ...properties };
 
-      // If we're setting in_menu, remove the legacy placement property
+      // If we're setting in_menu, remove the placement property
       if ("in_menu" in properties) {
         delete newAction.placement;
+      }
+
+      // If we're setting placement, remove the legacy in_menu property
+      if ("placement" in properties) {
+        delete newAction.in_menu;
       }
 
       actions[idx] = newAction;
@@ -735,6 +717,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     const navPath = typeof action.navigation_path === "string" ? action.navigation_path.trim() : "";
     if (action.action === "navigate" || navPath) return "navigate";
     if (action.action === "toggle_lyrics") return "toggle_lyrics";
+    if (action.action === "remote_control") return "remote_control";
     return "service";
   }
 
@@ -2154,6 +2137,11 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                     value: "group_players",
                     label: localize("editor.card_type_options.group_players"),
                   },
+                  { value: "up_next", label: localize("editor.card_type_options.up_next") },
+                  {
+                    value: "remote_control",
+                    label: localize("editor.card_type_options.remote_control"),
+                  },
                 ],
               },
             }}
@@ -2877,6 +2865,17 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
         <div class="form-row">
           <div>
             <ha-switch
+              id="show-album-toggle"
+              .checked=${this._config.show_album ?? true}
+              @change=${(e) => this._updateConfig("show_album", e.target.checked)}
+            ></ha-switch>
+            <span>${localize("editor.labels.show_album")}</span>
+          </div>
+          <div class="config-subtitle">${localize("editor.subtitles.show_album")}</div>
+        </div>
+        <div class="form-row">
+          <div>
+            <ha-switch
               id="hide-active-entity-label-toggle"
               .checked=${this._config.hide_active_entity_label ?? false}
               @change=${(e) => this._updateConfig("hide_active_entity_label", e.target.checked)}
@@ -3084,6 +3083,29 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
         <div class="form-row">
           <div class="config-subtitle">${localize("editor.subtitles.collapse_expand")}</div>
         </div>
+        <div
+          data-search-keys="disable_mini_menu"
+          class="form-row"
+          style="${this._config.always_collapsed === true && !this._config.expand_on_search ? "" : "opacity: 0.5;"}"
+          title="${
+            this._config.always_collapsed === true && !this._config.expand_on_search
+              ? ""
+              : localize("editor.subtitles.only_available_mini_menu")
+          }"
+        >
+          <div style="display: flex; align-items: center; gap: 8px;">
+            <ha-switch
+              id="disable-mini-menu-toggle"
+              .checked=${this._config.disable_mini_menu === true}
+              @change=${(e) => this._updateConfig("disable_mini_menu", e.target.checked)}
+              .disabled=${!(this._config.always_collapsed === true && !this._config.expand_on_search)}
+            ></ha-switch>
+            <span>${localize("editor.labels.disable_mini_menu")}</span>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="config-subtitle">${localize("editor.subtitles.disable_mini_menu")}</div>
+        </div>
         <div class="form-row">
           <ha-selector
             .hass=${this.hass}
@@ -3159,41 +3181,80 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                         act?.action !== "sync_selected_entity" && act?.action !== "select_entity"
                           ? html`
                               <ha-icon
-                                class="icon-button icon-button-compact icon-button-toggle ${
-                                  act?.in_menu === "hidden"
-                                    ? "icon-button-disabled"
-                                    : act?.in_menu === true
-                                      ? "active"
-                                      : ""
-                                }"
-                                icon="${
-                                  act?.in_menu === true
-                                    ? "mdi:menu"
-                                    : act?.in_menu === "hidden"
-                                      ? act?.card_trigger && act.card_trigger !== "none"
-                                        ? "mdi:image-outline"
-                                        : "mdi:eye-off-outline"
-                                      : "mdi:view-grid-outline"
-                                }"
+                                class="icon-button icon-button-compact icon-button-toggle ${(() => {
+                                  const p =
+                                    act?.placement !== undefined ? act.placement : act?.in_menu;
+                                  if (p === "hidden") return "icon-button-disabled";
+                                  if (p === "menu" || p === true) return "active";
+                                  if (
+                                    p === "replace_search" ||
+                                    p === "replace_power" ||
+                                    p === "replace_mute" ||
+                                    p === "replace_favorite"
+                                  )
+                                    return "active";
+                                  return "";
+                                })()}"
+                                icon="${(() => {
+                                  const p =
+                                    act?.placement !== undefined ? act.placement : act?.in_menu;
+                                  if (p === "menu" || p === true) return "mdi:menu";
+                                  if (p === "hidden")
+                                    return act?.card_trigger && act.card_trigger !== "none"
+                                      ? "mdi:image-outline"
+                                      : "mdi:eye-off-outline";
+                                  if (
+                                    p === "replace_search" ||
+                                    p === "replace_power" ||
+                                    p === "replace_mute" ||
+                                    p === "replace_favorite"
+                                  )
+                                    return "mdi:dock-bottom";
+                                  return "mdi:view-grid-outline";
+                                })()}"
                                 title="${(() => {
-                                  const placementText =
-                                    act?.in_menu === "hidden"
-                                      ? act?.card_trigger && act.card_trigger !== "none"
-                                        ? localize("editor.placements.hidden")
-                                        : `${localize("editor.placements.hidden")} (${localize("editor.placements.not_triggerable")})`
-                                      : act?.in_menu
-                                        ? localize("editor.fields.move_to_main")
-                                        : localize("editor.fields.move_to_menu");
-                                  return placementText;
+                                  const p =
+                                    act?.placement !== undefined ? act.placement : act?.in_menu;
+                                  if (p === "hidden")
+                                    return act?.card_trigger && act.card_trigger !== "none"
+                                      ? localize("editor.placements.hidden")
+                                      : `${localize("editor.placements.hidden")} (${localize("editor.placements.not_triggerable")})`;
+                                  if (
+                                    p === "replace_search" ||
+                                    p === "replace_power" ||
+                                    p === "replace_mute" ||
+                                    p === "replace_favorite"
+                                  )
+                                    return localize(`editor.placements.${p}`);
+                                  return p === "menu" || p === true
+                                    ? localize("editor.fields.move_to_main")
+                                    : localize("editor.fields.move_to_menu");
                                 })()}"
                                 role="button"
-                                aria-label="${
-                                  act?.in_menu === true
+                                aria-label="${(() => {
+                                  const p =
+                                    act?.placement !== undefined ? act.placement : act?.in_menu;
+                                  if (
+                                    p === "replace_search" ||
+                                    p === "replace_power" ||
+                                    p === "replace_mute" ||
+                                    p === "replace_favorite"
+                                  )
+                                    return localize(`editor.placements.${p}`);
+                                  return p === "menu" || p === true
                                     ? localize("editor.fields.move_to_main")
-                                    : localize("editor.fields.move_to_menu")
-                                }"
+                                    : localize("editor.fields.move_to_menu");
+                                })()}"
                                 @click=${() => {
-                                  if (act?.in_menu !== "hidden") {
+                                  const p =
+                                    act?.placement !== undefined ? act.placement : act?.in_menu;
+                                  if (
+                                    p !== "hidden" &&
+                                    p !== "replace_search" &&
+                                    p !== "replace_power" &&
+                                    p !== "replace_mute" &&
+                                    p !== "replace_favorite"
+                                  ) {
                                     this._toggleActionInMenu(idx);
                                   }
                                 }}
@@ -3369,6 +3430,80 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                   `
             }
             ${this._renderTemplateToggle("hidden_controls", entity?.hidden_controls, (v) => this._updateEntityProperty("hidden_controls", v))}
+          </div>
+        </div>
+
+        <div class="form-row" data-search-keys="hide_remote_buttons back menu home power">
+          <div class="editor-field-wrapper">
+            ${
+              this._isTemplateMode("hide_remote_buttons", entity?.hide_remote_buttons)
+                ? html`
+                    <div class="grow-children">
+                      <div
+                        class=${
+                          this._yamlError &&
+                          typeof entity?.hide_remote_buttons === "string" &&
+                          entity.hide_remote_buttons.trim() !== ""
+                            ? "code-editor-wrapper error"
+                            : "code-editor-wrapper"
+                        }
+                        style="width: 100%;"
+                      >
+                        <span class="form-label"
+                          >${localize("editor.fields.hide_remote_buttons")}</span
+                        >
+                        <ha-code-editor
+                          lint
+                          id="hidden-remote-buttons-template-editor"
+                          label="${localize("editor.fields.hide_remote_buttons")}"
+                          .hass=${this.hass}
+                          mode="jinja2"
+                          autocomplete-entities
+                          .value=${typeof entity?.hide_remote_buttons === "string" ? entity.hide_remote_buttons : ""}
+                          @value-changed=${(e) => this._updateEntityProperty("hide_remote_buttons", e.detail.value)}
+                        ></ha-code-editor>
+                        <div class="help-text">
+                          ${localize("editor.subtitles.hide_remote_buttons")}
+                        </div>
+                      </div>
+                    </div>
+                  `
+                : html`
+                    <ha-selector
+                      .hass=${this.hass}
+                      .selector=${{
+                        select: {
+                          mode: "dropdown",
+                          multiple: true,
+                          options: [
+                            { value: "back", label: "Back" },
+                            { value: "menu", label: "Menu" },
+                            { value: "home", label: "Home" },
+                            { value: "power", label: "Power" },
+                          ],
+                        },
+                      }}
+                      .value=${(() => {
+                        let val = entity?.hide_remote_buttons;
+                        if (typeof val === "string") {
+                          try {
+                            val = JSON.parse(val.replace(/'/g, '"'));
+                          } catch (e) {
+                            val = val
+                              .split(",")
+                              .map((s) => s.trim())
+                              .filter((s) => s !== "");
+                          }
+                        }
+                        return Array.isArray(val) ? val : [];
+                      })()}
+                      label="${localize("editor.fields.hide_remote_buttons")}"
+                      helper="${localize("editor.subtitles.hide_remote_buttons")}"
+                      @value-changed=${(e) => this._updateEntityProperty("hide_remote_buttons", e.detail.value)}
+                    ></ha-selector>
+                  `
+            }
+            ${this._renderTemplateToggle("hide_remote_buttons", entity?.hide_remote_buttons, (v) => this._updateEntityProperty("hide_remote_buttons", v))}
           </div>
         </div>
 
@@ -3633,6 +3768,93 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             : nothing
         }
 
+        ${
+          entity
+            ? html`
+                <div class="form-row" data-search-keys="remote_entity">
+                  <div class="editor-field-wrapper">
+                    ${
+                      this._isTemplateMode("remote_entity", entity?.remote_entity)
+                        ? html`
+                            <div class="grow-children">
+                              <div
+                                class=${
+                                  this._yamlError && (entity?.remote_entity ?? "").trim() !== ""
+                                    ? "code-editor-wrapper error"
+                                    : "code-editor-wrapper"
+                                }
+                                style="width: 100%;"
+                              >
+                                <span class="form-label"
+                                  >${localize("editor.fields.remote_template")}</span
+                                >
+                                <ha-code-editor
+                                  lint
+                                  id="remote-template-editor"
+                                  label="${localize("editor.fields.remote_template")}"
+                                  .hass=${this.hass}
+                                  mode="jinja2"
+                                  autocomplete-entities
+                                  .value=${typeof entity?.remote_entity === "string" ? entity.remote_entity : ""}
+                                  @value-changed=${(e) =>
+                                    this._updateEntityProperty("remote_entity", e.detail.value)}
+                                ></ha-code-editor>
+                                <div class="help-text">
+                                  <ha-icon icon="mdi:information-outline"></ha-icon>
+                                  ${localize("editor.subtitles.jinja_template_remote_hint")}
+                                  <pre style="margin:6px 0; white-space:pre-wrap;">
+{% if is_state('input_boolean.living_room_tv','on') %}
+  remote.living_room_tv
+{% else %}
+  remote.bedroom_tv
+{% endif %}</pre>
+                                </div>
+                              </div>
+                            </div>
+                            <div class="field-actions">
+                              ${this._renderTemplateToggle(
+                                "remote_entity",
+                                entity?.remote_entity,
+                                (v) => this._updateEntityProperty("remote_entity", v)
+                              )}
+                            </div>
+                          `
+                        : html`
+                            <div class="grow-children">
+                              <ha-generic-picker
+                                .hass=${this.hass}
+                                .value=${
+                                  this._isEntityId(entity?.remote_entity)
+                                    ? entity.remote_entity
+                                    : ""
+                                }
+                                .label=${localize("editor.fields.remote_entity")}
+                                .valueRenderer=${(v) => this._entityValueRenderer(v)}
+                                .rowRenderer=${(item) => this._entityRowRenderer(item)}
+                                .getItems=${this._getEntityItems(["remote"])}
+                                @value-changed=${(e) =>
+                                  this._updateEntityProperty(
+                                    "remote_entity",
+                                    e.detail.value || undefined
+                                  )}
+                                allow-custom-value
+                              ></ha-generic-picker>
+                            </div>
+                            <div class="field-actions">
+                              ${this._renderTemplateToggle(
+                                "remote_entity",
+                                entity?.remote_entity,
+                                (v) => this._updateEntityProperty("remote_entity", v)
+                              )}
+                            </div>
+                          `
+                    }
+                  </div>
+                </div>
+              `
+            : nothing
+        }
+
         ${html`
           <div class="form-row form-row-multi-column">
             <div>
@@ -3715,7 +3937,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
 
   _renderActionEditor(action, idx = this._actionEditorIndex, isSearch = false) {
     const actionMode = this._actionMode ?? this._deriveActionMode(action);
-
+    const effectivePlacement = getActionPlacement(action, idx);
     return html`
         ${
           isSearch
@@ -3769,7 +3991,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           <div class="grow-children">
             <div class="editor-field-wrapper">
               ${
-                this._isTemplateMode("in_menu", action?.in_menu)
+                this._isTemplateMode("placement", effectivePlacement)
                   ? html`
                       <div class="grow-children" style="flex-direction: column;">
                         <span class="form-label">${localize("editor.fields.placement")}</span>
@@ -3780,23 +4002,28 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                           autocomplete-entities
                           label="${localize("editor.fields.placement")}"
                           .value=${
-                            typeof action?.in_menu === "string"
-                              ? action.in_menu
-                              : String(!!action?.in_menu)
+                            typeof action?.placement === "string"
+                              ? action.placement
+                              : typeof action?.in_menu === "string"
+                                ? action.in_menu
+                                : typeof effectivePlacement === "string"
+                                  ? effectivePlacement
+                                  : ""
                           }
                           @value-changed=${(e) =>
-                            this._updateActionProperty("in_menu", e.detail.value)}
+                            this._updateActionProperty("placement", e.detail.value)}
                         ></ha-code-editor>
                       </div>
                       <div class="field-actions">
                         ${this._renderTemplateToggle(
-                          "in_menu",
-                          action?.in_menu,
+                          "placement",
+                          effectivePlacement,
                           (v) => {
-                            this._updateActionProperty("in_menu", v);
+                            const updates = { placement: v };
                             if (v !== "hidden") {
-                              this._updateActionProperty("card_trigger", "none");
+                              updates.card_trigger = "none";
                             }
+                            this._updateActionProperties(updates);
                           },
                           actionMode === "sync_selected_entity" || actionMode === "select_entity"
                         )}
@@ -3817,37 +4044,46 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                 { value: "chip", label: localize("editor.placements.chip") },
                                 { value: "menu", label: localize("editor.placements.menu") },
                                 { value: "hidden", label: localize("editor.placements.hidden") },
+                                {
+                                  value: "replace_search",
+                                  label: localize("editor.placements.replace_search"),
+                                },
+                                {
+                                  value: "replace_power",
+                                  label: localize("editor.placements.replace_power"),
+                                },
+                                {
+                                  value: "replace_mute",
+                                  label: localize("editor.placements.replace_mute"),
+                                },
+                                {
+                                  value: "replace_favorite",
+                                  label: localize("editor.placements.replace_favorite"),
+                                },
                               ],
                             },
                           }}
-                          .value=${
-                            action?.in_menu === "hidden"
-                              ? "hidden"
-                              : action?.in_menu
-                                ? "menu"
-                                : "chip"
-                          }
+                          .value=${effectivePlacement}
                           @value-changed=${(e) => {
                             const val = e.detail.value;
-                            let inMenu = false;
-                            if (val === "menu") inMenu = true;
-                            else if (val === "hidden") inMenu = "hidden";
-                            this._updateActionProperty("in_menu", inMenu);
+                            const updates = { placement: val };
                             if (val !== "hidden") {
-                              this._updateActionProperty("card_trigger", "none");
+                              updates.card_trigger = "none";
                             }
+                            this._updateActionProperties(updates);
                           }}
                         ></ha-selector>
                       </div>
                       <div class="field-actions">
                         ${this._renderTemplateToggle(
-                          "in_menu",
-                          action?.in_menu,
+                          "placement",
+                          effectivePlacement,
                           (v) => {
-                            this._updateActionProperty("in_menu", v);
+                            const updates = { placement: v };
                             if (v !== "hidden") {
-                              this._updateActionProperty("card_trigger", "none");
+                              updates.card_trigger = "none";
                             }
+                            this._updateActionProperties(updates);
                           },
                           actionMode === "sync_selected_entity" || actionMode === "select_entity"
                         )}
@@ -3860,7 +4096,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             <ha-selector
               .hass=${this.hass}
               label="${localize("editor.fields.card_trigger")}"
-              .disabled=${actionMode === "sync_selected_entity" || actionMode === "select_entity" || (!this._isTemplateValue(action?.in_menu) && action?.in_menu !== "hidden")}
+              .disabled=${actionMode === "sync_selected_entity" || actionMode === "select_entity" || (!this._isTemplateValue(effectivePlacement) && effectivePlacement !== "hidden")}
               .selector=${{
                 select: {
                   mode: "dropdown",
@@ -3880,7 +4116,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           </div>
         </div>
         ${
-          action?.in_menu === "hidden" &&
+          effectivePlacement === "hidden" &&
           (!action?.card_trigger || action?.card_trigger === "none") &&
           actionMode !== "sync_selected_entity" &&
           actionMode !== "select_entity"
@@ -3922,6 +4158,12 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                     value: "toggle_lyrics",
                     label: localize("editor.action_types.toggle_lyrics") || "Toggle Lyrics Overlay",
                   },
+                  {
+                    value: "remote_control",
+                    label:
+                      localize("editor.action_types.remote_control") ||
+                      "Open Remote Controls Overlay",
+                  },
                 ],
               },
             }}
@@ -3930,72 +4172,89 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
               const mode = e.detail.value;
               this._actionMode = mode;
               if (mode === "service") {
-                this._updateActionProperty("menu_item", undefined);
-                this._updateActionProperty("navigation_path", undefined);
-                this._updateActionProperty("navigation_new_tab", undefined);
-                this._updateActionProperty("action", undefined);
-                // Initialize service to empty string so Service Data editor renders immediately
+                const updates = {
+                  menu_item: undefined,
+                  navigation_path: undefined,
+                  navigation_new_tab: undefined,
+                  action: undefined,
+                };
                 if (!this._config.actions?.[this._actionEditorIndex]?.service) {
-                  this._updateActionProperty("service", "");
+                  updates.service = "";
                 }
+                this._updateActionProperties(updates);
               } else if (mode === "menu") {
-                this._updateActionProperty("service", undefined);
-                this._updateActionProperty("service_data", undefined);
-                this._updateActionProperty("script_variable", undefined);
-                this._updateActionProperty("navigation_path", undefined);
-                this._updateActionProperty("navigation_new_tab", undefined);
-                this._updateActionProperty("action", undefined);
+                this._updateActionProperties({
+                  service: undefined,
+                  service_data: undefined,
+                  script_variable: undefined,
+                  navigation_path: undefined,
+                  navigation_new_tab: undefined,
+                  action: undefined,
+                });
               } else if (mode === "navigate") {
-                this._updateActionProperty("menu_item", undefined);
-                this._updateActionProperty("service", undefined);
-                this._updateActionProperty("service_data", undefined);
-                this._updateActionProperty("script_variable", undefined);
-                this._updateActionProperty("action", "navigate");
+                const updates = {
+                  menu_item: undefined,
+                  service: undefined,
+                  service_data: undefined,
+                  script_variable: undefined,
+                  action: "navigate",
+                };
                 if (!action?.navigation_path) {
-                  this._updateActionProperty("navigation_path", "");
+                  updates.navigation_path = "";
                 }
+                this._updateActionProperties(updates);
               } else if (mode === "sync_selected_entity") {
-                this._updateActionProperty("menu_item", undefined);
-                this._updateActionProperty("service", undefined);
-                this._updateActionProperty("service_data", undefined);
-                this._updateActionProperty("script_variable", undefined);
-                this._updateActionProperty("navigation_path", undefined);
-                this._updateActionProperty("navigation_new_tab", undefined);
-                this._updateActionProperty("action", "sync_selected_entity");
-                this._updateActionProperty("in_menu", "hidden");
-                this._updateActionProperty("card_trigger", "none");
+                const updates = {
+                  menu_item: undefined,
+                  service: undefined,
+                  service_data: undefined,
+                  script_variable: undefined,
+                  navigation_path: undefined,
+                  navigation_new_tab: undefined,
+                  action: "sync_selected_entity",
+                  in_menu: "hidden",
+                  card_trigger: "none",
+                };
                 if (!action?.sync_entity_type) {
-                  this._updateActionProperty("sync_entity_type", "yamp_entity");
+                  updates.sync_entity_type = "yamp_entity";
                 }
+                this._updateActionProperties(updates);
               } else if (mode === "select_entity") {
-                this._updateActionProperty("menu_item", undefined);
-                this._updateActionProperty("service", undefined);
-                this._updateActionProperty("service_data", undefined);
-                this._updateActionProperty("script_variable", undefined);
-                this._updateActionProperty("navigation_path", undefined);
-                this._updateActionProperty("navigation_new_tab", undefined);
-                this._updateActionProperty("action", "select_entity");
-                this._updateActionProperty("in_menu", "hidden");
-                this._updateActionProperty("card_trigger", "none");
+                const updates = {
+                  menu_item: undefined,
+                  service: undefined,
+                  service_data: undefined,
+                  script_variable: undefined,
+                  navigation_path: undefined,
+                  navigation_new_tab: undefined,
+                  action: "select_entity",
+                  in_menu: "hidden",
+                  card_trigger: "none",
+                };
                 if (!action?.sync_entity_type) {
-                  this._updateActionProperty("sync_entity_type", "yamp_entity");
+                  updates.sync_entity_type = "yamp_entity";
                 }
+                this._updateActionProperties(updates);
               } else if (mode === "prev_entity" || mode === "next_entity") {
-                this._updateActionProperty("menu_item", undefined);
-                this._updateActionProperty("service", undefined);
-                this._updateActionProperty("service_data", undefined);
-                this._updateActionProperty("script_variable", undefined);
-                this._updateActionProperty("navigation_path", undefined);
-                this._updateActionProperty("navigation_new_tab", undefined);
-                this._updateActionProperty("action", mode);
-              } else if (mode === "toggle_lyrics") {
-                this._updateActionProperty("menu_item", undefined);
-                this._updateActionProperty("service", undefined);
-                this._updateActionProperty("service_data", undefined);
-                this._updateActionProperty("script_variable", undefined);
-                this._updateActionProperty("navigation_path", undefined);
-                this._updateActionProperty("navigation_new_tab", undefined);
-                this._updateActionProperty("action", "toggle_lyrics");
+                this._updateActionProperties({
+                  menu_item: undefined,
+                  service: undefined,
+                  service_data: undefined,
+                  script_variable: undefined,
+                  navigation_path: undefined,
+                  navigation_new_tab: undefined,
+                  action: mode,
+                });
+              } else if (mode === "toggle_lyrics" || mode === "remote_control") {
+                this._updateActionProperties({
+                  menu_item: undefined,
+                  service: undefined,
+                  service_data: undefined,
+                  script_variable: undefined,
+                  navigation_path: undefined,
+                  navigation_new_tab: undefined,
+                  action: mode,
+                });
               }
             }}
           ></ha-selector>
@@ -4054,8 +4313,10 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                 label="${localize("editor.fields.nav_path")}"
                                 .value=${action?.navigation_path ?? ""}
                                 @value-changed=${(e) => {
-                                  this._updateActionProperty("navigation_path", e.detail.value);
-                                  this._updateActionProperty("action", "navigate");
+                                  this._updateActionProperties({
+                                    navigation_path: e.detail.value,
+                                    action: "navigate",
+                                  });
                                 }}
                               ></ha-code-editor>
                             </div>
@@ -4064,8 +4325,10 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                 "navigation_path",
                                 action?.navigation_path,
                                 (v) => {
-                                  this._updateActionProperty("navigation_path", v);
-                                  this._updateActionProperty("action", "navigate");
+                                  this._updateActionProperties({
+                                    navigation_path: v,
+                                    action: "navigate",
+                                  });
                                 }
                               )}
                             </div>
@@ -4081,8 +4344,10 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                 )} (/lovelace/music or #popup)"
                                 .value=${action?.navigation_path ?? ""}
                                 @value-changed=${(e) => {
-                                  this._updateActionProperty("navigation_path", e.detail.value);
-                                  this._updateActionProperty("action", "navigate");
+                                  this._updateActionProperties({
+                                    navigation_path: e.detail.value,
+                                    action: "navigate",
+                                  });
                                 }}
                               ></ha-selector>
                             </div>
@@ -4091,8 +4356,10 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                 "navigation_path",
                                 action?.navigation_path,
                                 (v) => {
-                                  this._updateActionProperty("navigation_path", v);
-                                  this._updateActionProperty("action", "navigate");
+                                  this._updateActionProperties({
+                                    navigation_path: v,
+                                    action: "navigate",
+                                  });
                                 }
                               )}
                             </div>
@@ -4305,8 +4572,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
   }
 
   _getActionHelperText(act) {
-    const inMenuVal = act?.in_menu;
-    const placement = inMenuVal === "hidden" ? "hidden" : inMenuVal === true ? "menu" : "chip";
+    const placement = getActionPlacement(act);
     const trigger = act?.card_trigger;
     let placementText = "";
     if (placement === "menu") placementText = " \u2022 In Menu";
@@ -4318,7 +4584,14 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           placementText = ` \u2022 ${localize("editor.placements.hidden")}`;
         }
       }
-    }
+    } else if (placement === "replace_search")
+      placementText = ` \u2022 ${localize("editor.placements.replace_search")}`;
+    else if (placement === "replace_power")
+      placementText = ` \u2022 ${localize("editor.placements.replace_power")}`;
+    else if (placement === "replace_mute")
+      placementText = ` \u2022 ${localize("editor.placements.replace_mute")}`;
+    else if (placement === "replace_favorite")
+      placementText = ` \u2022 ${localize("editor.placements.replace_favorite")}`;
     let triggerText = "";
     if (trigger && trigger !== "none") {
       triggerText = ` \u2022 Trigger: ${localize(`editor.triggers.${trigger}`)}`;

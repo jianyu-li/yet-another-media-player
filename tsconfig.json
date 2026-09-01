@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "target": "ES2022",
+    "module": "ESNext",
+    "moduleResolution": "bundler",
+    "allowJs": true,
+    "checkJs": false,
+    "noEmit": true,
+    "strict": false,
+    "noImplicitAny": false,
+    "skipLibCheck": true
+  },
+  "include": [
+    "src/**/*",
+    "src/types.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "yet-another-media-player.js"
+  ]
+}

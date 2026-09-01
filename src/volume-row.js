@@ -19,7 +19,9 @@ export function renderVolumeRow({
   reserveLeadingControlSpace = false,
   showRightPlaceholder = false,
   rightSlotTemplate = nothing,
+  muteSlotTemplate = nothing,
   hideVolume = false,
+  collapseRow = undefined,
   isDragging = false,
   dragVol = 0,
 }) {
@@ -37,14 +39,15 @@ export function renderVolumeRow({
     return "mdi:volume-high";
   };
 
+  const shouldCollapse =
+    typeof collapseRow === "boolean"
+      ? collapseRow
+      : hideVolume && moreInfoMenu === nothing && !hasLeadingControl && !showRightPlaceholder;
+
   return html`
     <div
       class="volume-row ${showSlider && !isRemoteVolumeEntity ? "has-slider" : ""}"
-      style="${
-        hideVolume && moreInfoMenu === nothing && !hasLeadingControl && !showRightPlaceholder
-          ? "display: none !important;"
-          : ""
-      }"
+      style="${shouldCollapse ? "display: none !important;" : ""}"
     >
       <div class="volume-left">
         ${
@@ -59,19 +62,25 @@ export function renderVolumeRow({
             hideVolume || isRemoteVolumeEntity
               ? "visibility:hidden; opacity:0; pointer-events:none;"
               : ""
-          }"
+          } display: flex; align-items: center; justify-content: center;"
         >
-          <button
-            class="volume-icon-btn"
-            @click=${onMuteToggle}
-            title=${
-              (supportsMute ? isMuted : vol === 0)
-                ? localize("common.unmute")
-                : localize("common.mute")
-            }
-          >
-            <ha-icon icon=${getVolumeIcon(vol, isMuted)}></ha-icon>
-          </button>
+          ${
+            muteSlotTemplate !== nothing
+              ? muteSlotTemplate
+              : html`
+                  <button
+                    class="volume-icon-btn"
+                    @click=${onMuteToggle}
+                    title=${
+                      (supportsMute ? isMuted : vol === 0)
+                        ? localize("common.unmute")
+                        : localize("common.mute")
+                    }
+                  >
+                    <ha-icon icon=${getVolumeIcon(vol, isMuted)}></ha-icon>
+                  </button>
+                `
+          }
         </div>
       </div>
 

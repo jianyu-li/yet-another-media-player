@@ -1,6 +1,7 @@
 /* global __VERSION__ */
 import { LitElement, html, nothing } from "lit";
 import { classMap } from "lit/directives/class-map.js";
+import { styleMap } from "lit/directives/style-map.js";
 import { virtualize } from "@lit-labs/virtualizer/virtualize.js";
 import { yampGrid } from "./yamp-grid-layout.js";
 
@@ -32,6 +33,7 @@ import {
   resolveTemplateAtActionTime,
   resolveStringTemplate,
   resolveStringTemplateSync,
+  getActionPlacement,
   findAssociatedButtonEntities,
   getMusicAssistantState,
   getSearchResultClickTitle,
@@ -58,7 +60,7 @@ const PLAYLIST_FETCH_LIMIT = 500;
 const SUCCESS_MESSAGE_TIMEOUT_MS = 3000;
 const MAX_LYRICS_CACHE_SIZE = 30;
 
-const ADAPTIVE_TEXT_TARGETS = Object.freeze(["details", "menu", "action_chips"]);
+const ADAPTIVE_TEXT_TARGETS = Object.freeze(["details", "menu", "action_chips", "lyrics"]);
 const DEFAULT_ADAPTIVE_TEXT_TARGETS = Object.freeze([...ADAPTIVE_TEXT_TARGETS]);
 const ADAPTIVE_TEXT_VAR_MAP = Object.freeze({
   details: "--yamp-text-scale-details",
@@ -268,13 +270,13 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const activeEntityId = this._getActivePlaybackEntityId(this._selectedIndex);
     if (!activeEntityId) return null;
 
-    // Check if the active entity is a Music Assistant entity
+    // Check if the active entity exists
     const activeState = this.hass?.states?.[activeEntityId];
-    if (!activeState || !isMusicAssistantEntity(activeState)) {
+    if (!activeState) {
       return null;
     }
 
-    // Active entity is Music Assistant, find its favorite button
+    // Find a favorite button associated with this entity
     const buttonEntities = this._findAssociatedButtonEntities(activeEntityId);
     const favoriteButton = buttonEntities.find(btn =>
       btn.friendly_name.toLowerCase().includes('favorite') ||
@@ -488,6 +490,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     _radioModeActive: { state: true },
     _showEntityOptions: { state: true },
     _showGrouping: { state: true },
+    _showRemoteControl: { state: true },
     _showTransferQueue: { state: true },
     _queueOpsTotal: { state: true },
     _queueOpsCompleted: { state: true },
@@ -522,6 +525,28 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     }
     const layoutPref = typeof val === "string" ? val.trim().toLowerCase() : "classic";
     return layoutPref === "modern" ? "modern" : "classic";
+  }
+
+  get _cardHeight() {
+    const raw = this.config?.card_height;
+    if (typeof raw === 'string' && (raw.includes('{{') || raw.includes('{%') || raw.trim().startsWith('[[['))) {
+      let resolved = this._cardHeightResolveCache?.['card']?.value;
+      
+      // Fallback for synchronous client-side JS template evaluation if not yet in cache
+      if (resolved === undefined && raw.trim().startsWith('[[[')) {
+        try {
+           resolved = resolveStringTemplateSync(this.hass, raw, this._getTemplateContext());
+        } catch(e) {
+           console.debug("YAMP template eval fallback error", e);
+        }
+      }
+      
+      if (resolved !== undefined && resolved !== null && resolved !== "") {
+        return resolved;
+      }
+      return null;
+    }
+    return raw;
   }
 
   get _alwaysCollapsed() {
@@ -591,6 +616,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._showSourceList = false;
     // Overlay state for transfer queue sheet
     this._showTransferQueue = false;
+    this._showRemoteControl = false;
     this._cardHeightTemplateValue = {};
     this._cardHeightResolveCache = {};
     this._lastCardHeightContextKey = null;
@@ -675,7 +701,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._hideActiveEntityLabel = false;
     this._hideActiveEntityLabelOnIdle = false;
     this._currentDetailsScale = null;
-    this._lastTitleLength = 0;
+    this._lastNonLyricsLowerContentHeight = null;
+    this._lowerControlsHeight = null;
 
     // Lyrics state
     this._massLyrics = []; // Array of parsed lyric objects { time, text }
@@ -690,6 +717,10 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._suspendAdaptiveScaling = false;
     this._pendingAdaptiveScaleUpdate = false;
     this._adaptiveScrollTimer = null;
+    this._marqueeSequentialTimer = null;
+    this._marqueeAnimationEndHandler = null;
+    this._marqueeObservedElements = null;
+    this._lastMarqueeKey = null;
     this._lyricsFetchTimeout = null;
     this._handleGlobalScroll = this._handleGlobalScroll.bind(this);
     this._handleViewportResize = this._handleViewportResize.bind(this);
@@ -703,6 +734,22 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         this._showEntityOptions = true;
         this._setIdleState(false);
         this._showSearchSheetInOptions();
+        this.requestUpdate();
+        return;
+      }
+      if (this._cardType === "up_next") {
+        // Dedicated up next mode: auto-open search filtered to up next
+        this._showEntityOptions = true;
+        this._setIdleState(false);
+        this._showSearchSheetInOptions("next-up");
+        this.requestUpdate();
+        return;
+      }
+      if (this._cardType === "remote_control") {
+        // Dedicated remote control mode
+        this._showEntityOptions = true;
+        this._showRemoteControl = true;
+        this._setIdleState(false);
         this.requestUpdate();
         return;
       }
@@ -778,6 +825,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     // Cache resolved Volume entity per index (template or static)
     this._volResolveCache = {}; // { [idx:number]: { id: string, ts: number } }
     this._volResolveTtlMs = 7000; // Used for static caching now
+    this._remoteResolveCache = {}; // { [idx:number]: { id: string, ts: number } }
+    this._remoteTemplateValues = {}; // { [idx]: { template: string, resolved: string } }
     // Track the last entity that was playing for better pause/resume behavior
     this._lastPlayingEntityId = null;
     // Control focus lock to prefer most-recently controlled entity in brief paused window
@@ -818,6 +867,10 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       currentCache = this._volTemplateValues[idx];
       templateVals = this._volTemplateValues;
       cache = this._volResolveCache;
+    } else if (type === 'remote') {
+      currentCache = this._remoteTemplateValues[idx];
+      templateVals = this._remoteTemplateValues;
+      cache = this._remoteResolveCache;
     } else if (type === 'action_in_menu') {
       currentCache = this._actionInMenuTemplateValues[idx];
       templateVals = this._actionInMenuTemplateValues;
@@ -873,7 +926,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         const resolved = (msg.result || '').toString().trim();
         let isValid = false;
 
-        if (type === 'ma' || type === 'vol') {
+        if (type === 'ma' || type === 'vol' || type === 'remote') {
           isValid = resolved && /^([a-z0-9_]+)\.[a-zA-Z0-9_]+$/.test(resolved);
         } else if (type === 'action_in_menu' || type === 'always_collapsed' || type === 'control_layout' || type === 'card_height' || type === 'hidden_controls') {
           isValid = true; // Any string result is valid
@@ -885,7 +938,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           templateVals[idx].resolved = isValid ? resolved : null;
         }
 
-        if (type === 'ma' || type === 'vol') {
+        if (type === 'ma' || type === 'vol' || type === 'remote') {
           const currentCached = cache[idx]?.id;
           if (isValid && currentCached !== resolved) {
             cache[idx] = { id: resolved, ts: Date.now() };
@@ -1021,6 +1074,12 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     return this._ensureResolvedTemplateForIndex(idx, 'vol', obj.volume_entity, this._volResolveCache, this._volTemplateValues, { cacheStaticString: true });
   }
 
+  async _ensureResolvedRemoteForIndex(idx) {
+    const obj = this.entityObjs?.[idx];
+    if (!obj) return;
+    return this._ensureResolvedTemplateForIndex(idx, 'remote', obj.remote_entity, this._remoteResolveCache, this._remoteTemplateValues, { cacheStaticString: true });
+  }
+
   // Resolve and cache the hidden_controls array for a given chip index
   async _ensureResolvedHiddenControlsForIndex(idx) {
     const obj = this.entityObjs?.[idx];
@@ -1139,7 +1198,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       processItem('card', rawConfigData);
     } else if (type === 'action_in_menu') {
       const actions = rawConfigData || [];
-      actions.forEach((act, idx) => processItem(idx, act?.in_menu));
+      actions.forEach((act, idx) => processItem(idx, getActionPlacement(act, idx)));
 
       // Clean up any stale subscriptions for indices beyond the current actions length
       let checkIdx = actions.length;
@@ -1171,6 +1230,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         this._ensureResolvedMaForIndex(idx);
       } else if (typeKey === 'vol') {
         this._ensureResolvedVolForIndex(idx);
+      } else if (typeKey === 'remote') {
+        this._ensureResolvedRemoteForIndex(idx);
       } else if (typeKey === 'hidden_controls') {
         this._ensureResolvedHiddenControlsForIndex(idx);
       }
@@ -1403,12 +1464,54 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._upcomingFilterActive = false;
     this._recommendationsFilterActive = false;
     this._initialFavoritesLoaded = false;
+    this._lastSearchUsedServerFavorites = false;
 
     // Render, then run search
     this.requestUpdate();
     // Kick off search immediately so results populate without requiring user interaction.
     this._doSearch().catch((error) => {
       console.error('yamp: artist quick-search failed:', error);
+    });
+  }
+
+  /**
+   * Open the search sheet and navigate directly to the current album's tracks
+   * in hierarchical search view (only when media_album_name is present).
+   */
+  _searchAlbumFromNowPlaying() {
+    const activeObj = this.currentActivePlaybackStateObj || this.currentPlaybackStateObj || this.currentStateObj;
+    const album = activeObj?.attributes?.media_album_name || "";
+    const artist = activeObj?.attributes?.media_artist || "";
+    if (!album) return;
+
+    this._openedSearchFromNowPlaying = true;
+
+    // Open overlay + search sheet
+    this._showEntityOptions = true;
+    this._showSearchInSheet = true;
+    this._searchInputAutoFocused = false;
+
+    // Reset search state
+    this._searchError = "";
+    this._searchResults = [];
+    this._searchQuery = "";
+    this._searchAttempted = false;
+    this._searchResultsByType = {};
+    this._currentSearchQuery = "";
+    this._searchHierarchy = [];
+    this._searchBreadcrumb = "";
+    this._usingMusicAssistant = false;
+    this._favoritesFilterActive = false;
+    this._recentlyPlayedFilterActive = false;
+    this._upcomingFilterActive = false;
+    this._recommendationsFilterActive = false;
+    this._initialFavoritesLoaded = false;
+    this._lastSearchUsedServerFavorites = false;
+
+    this.requestUpdate();
+
+    this._searchAlbumTracks(album, artist, null).catch((error) => {
+      console.error("yamp: album quick-search failed:", error);
     });
   }
   // Show search sheet inside entity options
@@ -1533,7 +1636,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
   _hideSearchSheetInOptions() {
     // In dedicated search mode, never close the search
-    if (this._cardType === "search") return;
+    if (this._cardType === "search" || this._cardType === "up_next") return;
+    this._openedSearchFromNowPlaying = false;
     this._showSearchInSheet = false;
     this._searchError = "";
     this._searchResults = [];
@@ -1549,6 +1653,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._addToPlaylistTarget = null; // Clear playlist target
     this._dismissMenuAfterPlaylistAdd = false; // Clear dismiss flag
     this._recommendationsFilterActive = false;
+    this._lastSearchUsedServerFavorites = false;
     if (this._quickMenuInvoke) {
       this._showEntityOptions = false;
       this._quickMenuInvoke = false;
@@ -1806,7 +1911,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       if (this._addToPlaylistTarget && mediaType === 'playlist' && this._massQueueAvailable) {
         this._initialFavoritesLoaded = false;
         try {
-          const mqConfigEntryId = await getMassQueueConfigEntryId(this.hass);
+          const mqConfigEntryId = await getMassQueueConfigEntryId(this.hass, searchEntityId);
           if (mqConfigEntryId) {
             // Fetch a generous amount so we don't truncate before filtering
             const apiData = { limit: PLAYLIST_FETCH_LIMIT };
@@ -1823,7 +1928,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
               domain: "mass_queue",
               service: "send_command",
               service_data: {
-                config_entry_id: mqConfigEntryId,
+                ...(mqConfigEntryId && mqConfigEntryId !== "auto" && { config_entry_id: mqConfigEntryId }),
                 command: "music/playlists/library_items",
                 data: apiData
               },
@@ -1880,7 +1985,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       } else if (isUpcoming) {
         // Load upcoming queue items
         this._initialFavoritesLoaded = false;
-        searchResponse = await this._getUpcomingQueue(this.hass, searchEntityId, this._getSearchResultsLimit());
+        const upcomingLimit = Math.min(250, this._getSearchResultsLimit());
+        searchResponse = await this._getUpcomingQueue(this.hass, searchEntityId, upcomingLimit);
         this._lastSearchUsedServerFavorites = false;
       } else if (isRecommendations) {
         this._initialFavoritesLoaded = false;
@@ -1992,6 +2098,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     }
     this._searchLoading = false;
     this.requestUpdate();
+    setTimeout(() => this._notifyResize(), 0);
   }
 
   async _playCurrentCollection() {
@@ -2379,6 +2486,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._searchMediaClassFilter = previousLevel.filter || 'all';
 
     if (this._searchHierarchy.length === 0) {
+      if (this._openedSearchFromNowPlaying) {
+        this._openedSearchFromNowPlaying = false;
+        this._closeEntityOptions();
+        return;
+      }
       this._searchBreadcrumb = "";
       this._doSearch(this._searchMediaClassFilter === 'all' ? null : this._searchMediaClassFilter);
     } else {
@@ -2605,10 +2717,13 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
   // Toggle upcoming queue filter
   async _toggleUpcomingFilter(forceState = null) {
-    const targetState = typeof forceState === "boolean"
-      ? forceState
-      : !this._upcomingFilterActive;
-    this._upcomingFilterActive = targetState;
+    if (!this.hass) return;
+
+    if (forceState !== null) {
+      this._upcomingFilterActive = forceState;
+    } else {
+      this._upcomingFilterActive = !this._upcomingFilterActive;
+    }
 
     // Make mutually exclusive with other filters
     if (this._upcomingFilterActive) {
@@ -2704,7 +2819,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   // Get next track from Music Assistant (limited by Music Assistant API)
-  async _getUpcomingQueue(hass, entityId, limit = 20) {
+  async _getUpcomingQueue(hass, entityId, limit = 250) {
     try {
       // Always check for mass_queue integration (don't cache this)
       const hasMassQueue = await this._isMassQueueIntegrationAvailable(hass);
@@ -2906,31 +3021,26 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   // Get queue using mass_queue integration
-  async _getUpcomingQueueWithMassQueue(hass, entityId, limit = 20) {
+  async _getUpcomingQueueWithMassQueue(hass, entityId, limit = 250) {
     try {
       // Get the currently playing track's media_content_id
       const playerState = hass.states[entityId];
       const currentTrackId = playerState?.attributes?.media_content_id;
 
       // Use limit_before and limit_after like the companion card does
-      // limit_before: 5 means get 5 items before the current track (to include current track)
-      // limit_after: limit means get up to 'limit' upcoming items
       const message = {
         type: "call_service",
         domain: "mass_queue",
         service: "get_queue_items",
         service_data: {
           entity: entityId,
-          limit_before: 0  // Start list at the currently active item
+          limit_before: 5  // Request some history to avoid falsy zero bugs in backend
         },
         return_response: true,
       };
-      const configLimit = this._getSearchResultsLimit();
-      const normalizedLimit = Number.isFinite(limit) ? limit : configLimit;
-      const limitAfter = Math.max(normalizedLimit || 0, configLimit || 0);
-      if (limitAfter > 0) {
-        message.service_data.limit_after = limitAfter;  // Use config search_results_limit
-      }
+      const limitAfter = Number.isFinite(limit) && limit > 0 ? limit : 250;
+      message.service_data.limit_after = limitAfter;  // Keep for backwards compatibility
+      message.service_data.limit = limitAfter + 6;    // Account for 5 history + 1 active + limitAfter upcoming items
 
       const response = await hass.connection.sendMessagePromise(message);
       const queueItems = response?.response?.[entityId];
@@ -2939,16 +3049,15 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         throw new Error('Invalid response from mass_queue');
       }
 
-      // Find the currently playing track's index in the queue
-      // 1. Prioritize Music Assistant's native "active" or playback state (near-instant)
+      // Find active item index
       let currentTrackIndex = queueItems.findIndex(item => item.active === true || item.state === 'playing');
-
-      // 2. Fallback to Home Assistant's media_content_id (slower sync)
+      
+      // Fallback to Home Assistant's media_content_id (slower sync but reliable)
       if (currentTrackIndex === -1 && currentTrackId) {
-        currentTrackIndex = queueItems.findIndex(item => item.media_content_id === currentTrackId);
+        currentTrackIndex = queueItems.findIndex(item => item.media_content_id === currentTrackId || item.queue_item_id === currentTrackId);
       }
 
-      // 3. Last resort: since we requested limit_before: 0, the first item SHOULD be the one
+      // Default to 0 if all else fails
       if (currentTrackIndex === -1 && queueItems.length > 0) {
         currentTrackIndex = 0;
       }
@@ -2957,22 +3066,19 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       const upcomingItems = currentTrackIndex >= 0 ? queueItems.slice(currentTrackIndex + 1) : queueItems;
 
       // Process the upcoming items like the companion card does
-      const itemsToRender = normalizedLimit > 0
-        ? upcomingItems.slice(0, normalizedLimit)
-        : upcomingItems;
+      const itemsToRender = limitAfter > 0 ? upcomingItems.slice(0, limitAfter) : upcomingItems;
       const results = itemsToRender.map((item, index) => ({
-        media_content_id: item.media_content_id || `queue_${index}`,
+        media_content_id: item.media_content_id || item.queue_item_id || `queue_${index}`,
         media_content_type: 'track',
         media_class: 'track',
-        title: item.media_title || 'Unknown Track',
-        artist: item.media_artist || 'Unknown Artist',
-        album: item.media_album_name || 'Unknown Album',
-        thumbnail: item.media_image || null,
-        duration: null,
+        title: item.media_title || item.name || 'Unknown Track',
+        artist: item.media_artist || item.artist || 'Unknown Artist',
+        album: item.media_album_name || item.album || 'Unknown Album',
+        thumbnail: item.media_image || item.image || null,
+        duration: item.duration || null,
         position: index + 1,
         queue_item_id: item.queue_item_id || null
       }));
-
 
       return {
         results,
@@ -3615,6 +3721,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       this._queueRefreshTimer = setTimeout(() => {
         this._queueRefreshTimer = null;
 
+        if (!this._upcomingFilterActive) return;
+
         // Capture a new token to protect against stale results from entry/heartbeat fetches
         const searchToken = Date.now();
         this._latestSearchToken = searchToken;
@@ -3767,17 +3875,22 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       this.requestUpdate();
 
       try {
-        const mqConfigEntryId = await getMassQueueConfigEntryId(this.hass);
+        const searchEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
+        const searchEntityId = await this._resolveTemplateAtActionTime(searchEntityIdTemplate, this.currentEntityId);
+        const mqConfigEntryId = await getMassQueueConfigEntryId(this.hass, searchEntityId);
         if (mqConfigEntryId) {
           const playlistId = item.item_id || item.media_content_id?.split('/').pop();
-          await this.hass.callService("mass_queue", "send_command", {
+          const servicePayload = {
             command: "music/playlists/add_playlist_tracks",
             data: {
               db_playlist_id: playlistId,
               uris: [this._addToPlaylistTarget.media_content_id]
-            },
-            config_entry_id: mqConfigEntryId
-          });
+            }
+          };
+          if (mqConfigEntryId && mqConfigEntryId !== "auto") {
+            servicePayload.config_entry_id = mqConfigEntryId;
+          }
+          await this.hass.callService("mass_queue", "send_command", servicePayload);
 
           this._showSearchSuccessToast(item.media_content_id, 'playlist');
         }
@@ -3946,7 +4059,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
             domain: "mass_queue",
             service: serviceName,
             service_data: {
-              config_entry_id: configEntryId,
+              ...(configEntryId && configEntryId !== "auto" && { config_entry_id: configEntryId }),
               uri: uri
             },
             return_response: true,
@@ -4046,14 +4159,19 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       const isActive = !!targetSet?.has(target);
       this.style.setProperty(varName, isActive ? scaleString : "1");
     }
-    const detailActive = !!targetSet?.has("details");
+    const detailActive = !!targetSet?.has("details") && !this._lyricsActive;
     const safeDetailsScale = Number.isFinite(detailsScale) ? detailsScale : safeScale;
     const detailScaleString = detailActive ? safeDetailsScale.toFixed(2) : "1";
     const detailLineHeight = detailActive ? this._calculateDetailsLineHeight(safeDetailsScale) : 1.2;
     this.style.setProperty("--yamp-details-scale", detailScaleString);
     this.style.setProperty("--yamp-details-line-height", detailLineHeight.toFixed(2));
-    const detailMaxLines = detailActive ? (safeDetailsScale >= 2 ? 3 : safeDetailsScale >= 1.3 ? 2 : 1) : 3;
+    const detailMaxLines = detailActive ? 1 : 3;
     this.style.setProperty("--yamp-details-max-lines", detailMaxLines.toString());
+    this.style.setProperty("--yamp-details-line-clamp", detailActive ? "unset" : "3");
+    this.style.setProperty("--yamp-details-display", detailActive ? "block" : "-webkit-box");
+    this.style.setProperty("--yamp-details-white-space", detailActive ? "nowrap" : "normal");
+    const lyricsActive = !!targetSet?.has("lyrics");
+    this.style.setProperty("--yamp-text-scale-lyrics", lyricsActive ? safeDetailsScale.toFixed(2) : "1");
   }
 
   _updateAdaptiveTextObserverState() {
@@ -4108,18 +4226,147 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const heightFactor = height / 360;
     const blended = (widthFactor * 0.8) + (heightFactor * 0.2);
     const scale = Math.max(0.85, Math.min(1.4, blended));
-    const detailScale = this._calculateDetailsScale(width, height, scale, this._lastTitleLength || 0);
+    const detailScale = this._calculateDetailsScale(width, height);
     const textScaleChanged = this._currentTextScale === null || Math.abs(this._currentTextScale - scale) > 0.01;
     const detailScaleChanged = this._currentDetailsScale === null || Math.abs(this._currentDetailsScale - detailScale) > 0.02;
+    if (!this._lyricsActive) {
+      const lowerContentEl = this.shadowRoot?.querySelector('.card-lower-content');
+      if (lowerContentEl && lowerContentEl.offsetHeight > 50) {
+        this._lastNonLyricsLowerContentHeight = lowerContentEl.offsetHeight;
+      }
+    }
     if (textScaleChanged || detailScaleChanged) {
       this._currentTextScale = scale;
       this._currentDetailsScale = detailScale;
       this._setAdaptiveTextVars(scale, undefined, detailScale);
       this.requestUpdate();
     }
+    this._updateMarquee();
   }
 
-  _calculateDetailsScale(width, height, fallbackScale = 1) {
+  _cleanupMarquee() {
+    if (this._marqueeSequentialTimer) {
+      clearTimeout(this._marqueeSequentialTimer);
+      this._marqueeSequentialTimer = null;
+    }
+    if (this._marqueeAnimationEndHandler && this._marqueeObservedElements) {
+      this._marqueeObservedElements.forEach((el) => {
+        el.removeEventListener("animationend", this._marqueeAnimationEndHandler);
+      });
+      this._marqueeObservedElements = null;
+    }
+    this._lastMarqueeKey = null;
+  }
+
+  _updateMarquee() {
+    if (!this.isConnected || !this.renderRoot) return;
+
+    const titleContainer = this.renderRoot.querySelector(".details .track-options-title");
+    const artistContainer = this.renderRoot.querySelector(".details .artist");
+
+    const getOverflowInfo = (container) => {
+      if (!container) return { container: null, inner: null, overflow: 0, text: "" };
+      const inner = container.querySelector(".marquee-inner");
+      if (!inner) return { container, inner: null, overflow: 0, text: "" };
+      const containerWidth = container.clientWidth;
+      const contentWidth = inner.scrollWidth;
+      const overflow = contentWidth - containerWidth;
+      const text = inner.textContent || "";
+      return { container, inner, overflow, text };
+    };
+
+    const titleInfo = getOverflowInfo(titleContainer);
+    const artistInfo = getOverflowInfo(artistContainer);
+
+    const titleOverflows = titleInfo.overflow > 4;
+    const artistOverflows = artistInfo.overflow > 4;
+
+    const marqueeKey = `${titleInfo.text}:${Math.round(titleInfo.overflow / 2) * 2}:${titleOverflows}|${artistInfo.text}:${Math.round(artistInfo.overflow / 2) * 2}:${artistOverflows}`;
+
+    if (this._lastMarqueeKey === marqueeKey) {
+      return;
+    }
+
+    this._cleanupMarquee();
+    this._lastMarqueeKey = marqueeKey;
+
+    const speed = 30; // pixels per second
+
+    const applyMarqueeVars = (info) => {
+      const scrollDuration = info.overflow / speed;
+      const totalDuration = Math.max(5, Math.round((scrollDuration + 4.3) * 10) / 10);
+      info.container.style.setProperty("--yamp-marquee-distance", `-${Math.ceil(info.overflow)}px`);
+      info.container.style.setProperty("--yamp-marquee-duration", `${totalDuration}s`);
+      info.container.setAttribute("data-marquee", "true");
+    };
+
+    const clearMarquee = (info) => {
+      if (!info.container) return;
+      info.container.removeAttribute("data-marquee");
+      info.container.removeAttribute("data-marquee-sequential");
+      info.container.removeAttribute("data-marquee-active");
+      info.container.style.removeProperty("--yamp-marquee-distance");
+      info.container.style.removeProperty("--yamp-marquee-duration");
+    };
+
+    if (titleOverflows && artistOverflows) {
+      // Both overflow: alternating sequential marquee mode
+      applyMarqueeVars(titleInfo);
+      applyMarqueeVars(artistInfo);
+      titleInfo.container.setAttribute("data-marquee-sequential", "true");
+      artistInfo.container.setAttribute("data-marquee-sequential", "true");
+
+      // Start sequential animation with title active first
+      titleInfo.container.setAttribute("data-marquee-active", "true");
+      artistInfo.container.removeAttribute("data-marquee-active");
+
+      const items = [titleInfo, artistInfo];
+      let activeIndex = 0;
+
+      this._marqueeAnimationEndHandler = (e) => {
+        if (e.animationName !== "yamp-marquee") return;
+        if (!this.isConnected || this._lastMarqueeKey !== marqueeKey) return;
+
+        const current = items[activeIndex];
+        if (current?.container) {
+          current.container.removeAttribute("data-marquee-active");
+        }
+
+        activeIndex = (activeIndex + 1) % items.length;
+        const next = items[activeIndex];
+
+        this._marqueeSequentialTimer = setTimeout(() => {
+          if (!this.isConnected || this._lastMarqueeKey !== marqueeKey) return;
+          if (next?.container) {
+            next.container.setAttribute("data-marquee-active", "true");
+          }
+        }, 600);
+      };
+
+      this._marqueeObservedElements = [titleInfo.inner, artistInfo.inner].filter(Boolean);
+      this._marqueeObservedElements.forEach((innerEl) => {
+        innerEl.addEventListener("animationend", this._marqueeAnimationEndHandler);
+      });
+    } else if (titleOverflows) {
+      // Only title overflows: single infinite marquee
+      applyMarqueeVars(titleInfo);
+      titleInfo.container.removeAttribute("data-marquee-sequential");
+      titleInfo.container.removeAttribute("data-marquee-active");
+      clearMarquee(artistInfo);
+    } else if (artistOverflows) {
+      // Only artist overflows: single infinite marquee
+      applyMarqueeVars(artistInfo);
+      artistInfo.container.removeAttribute("data-marquee-sequential");
+      artistInfo.container.removeAttribute("data-marquee-active");
+      clearMarquee(titleInfo);
+    } else {
+      // Neither overflows
+      clearMarquee(titleInfo);
+      clearMarquee(artistInfo);
+    }
+  }
+
+  _calculateDetailsScale(width, height) {
     const targetSet = this._adaptiveTextTargets;
     if (!targetSet?.has("details")) return 1;
 
@@ -4159,14 +4406,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       baseScale = maxScaleByHeight;
     }
 
-    const titleLength = this._lastTitleLength || 0;
-    const lengthClamp = titleLength > 0
-      ? Math.max(0.62, Math.min(1, 30 / Math.min(titleLength, 72)))
-      : 1;
-
-    // Apply length clamp
-    const clampedScale = 1 + (baseScale - 1) * lengthClamp;
-    return Math.max(1, clampedScale);
+    return Math.max(1, baseScale);
   }
 
   _calculateDetailsLineHeight(scale) {
@@ -4177,9 +4417,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _getAdaptiveBaselineHeight(collapsed = false) {
-    const raw = this._cardHeightTemplateValue?.card?.template
-      ? this._cardHeightResolveCache?.card?.value
-      : this.config?.card_height;
+    const raw = this._cardHeight;
     if (typeof raw === "number" && Number.isFinite(raw) && raw > 0) {
       return raw;
     }
@@ -4236,8 +4474,9 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
    * template updates.
    */
   _setIdleState(idle) {
-    if (this._isIdle === idle) return;
-    this._isIdle = idle;
+    const targetIdle = this._idleTimeoutMs === 0 ? false : idle;
+    if (this._isIdle === targetIdle) return;
+    this._isIdle = targetIdle;
     if (this._cardHeightTemplate) this._cardHeightTemplateNeedsResolve = true;
   }
   _ensureArtworkOverrideIndexMap() {
@@ -4606,7 +4845,12 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     // Handle card_height templates (similar to idle_image)
     // card_height now uses websocket template subscriptions
     // Set idle timeout ms
-    this._idleTimeoutMs = typeof config.idle_timeout_ms === "number" ? config.idle_timeout_ms : 60000;
+    let parsedIdle = 60000;
+    if (config.idle_timeout_ms !== undefined && config.idle_timeout_ms !== null && config.idle_timeout_ms !== "") {
+      const parsed = Number(config.idle_timeout_ms);
+      if (!isNaN(parsed)) parsedIdle = Math.max(0, parsed);
+    }
+    this._idleTimeoutMs = parsedIdle;
     if (this._idleTimeoutMs === 0) {
       if (this._idleTimeout) {
         clearTimeout(this._idleTimeout);
@@ -4631,6 +4875,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       const entity_id = typeof e === "string" ? e : e.entity_id;
       const name = typeof e === "string" ? "" : (e.name || "");
       const volume_entity = typeof e === "string" ? undefined : e.volume_entity;
+      const remote_entity = typeof e === "string" ? undefined : e.remote_entity;
       const music_assistant_entity = typeof e === "string" ? undefined : e.music_assistant_entity;
       const sync_power = typeof e === "string" ? false : !!e.sync_power;
       const follow_active_volume = typeof e === "string" ? false : !!e.follow_active_volume;
@@ -4661,11 +4906,13 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         entity_id,
         name,
         volume_entity,
+        remote_entity,
         music_assistant_entity,
         sync_power,
         follow_active_volume,
         hidden_controls,
         hidden_filter_chips: typeof e === "string" ? undefined : e.hidden_filter_chips,
+        hide_remote_buttons: typeof e === "string" ? undefined : e.hide_remote_buttons,
         disable_auto_select: this._isAutoSelectDisabled(index),
         prefer_ma_metadata: typeof e === "string" ? false : !!e.prefer_ma_metadata,
         ...(typeof group_volume !== "undefined" ? { group_volume } : {}),
@@ -4716,7 +4963,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     if (typeof entityTemplate === 'string' &&
       (entityTemplate.includes('{{') || entityTemplate.includes('{%') || entityTemplate.trim().startsWith('[[['))) {
       // For templates, use cached resolved entity
-      const cache = cacheType === 'vol' ? this._volResolveCache : this._maResolveCache;
+      const cache = cacheType === 'vol' ? this._volResolveCache : cacheType === 'remote' ? this._remoteResolveCache : this._maResolveCache;
       const cached = cache?.[idx]?.id;
       return cached || fallbackEntityId;
     }
@@ -4763,7 +5010,10 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       if (this._isEntityPlaying(mainState) && this._lastPlayingEntityIdByChip?.[idx] === mainId) {
         return resolve(mainId);
       }
-      return resolve(linger.entityId);
+      // Only resolve to linger entity if it actually exists in HA
+      if (this.hass?.states?.[linger.entityId]) {
+        return resolve(linger.entityId);
+      }
     }
     // Clear expired linger
     if (linger && linger.until <= now) {
@@ -4785,7 +5035,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
     // When neither is playing, check if one was recently controlled for this specific chip
     const lastPlayingForChip = this._lastPlayingEntityIdByChip?.[idx];
-    if (lastPlayingForChip === maId) return resolve(maId);
+    if (lastPlayingForChip === maId && maState) return resolve(maId);
     if (lastPlayingForChip === mainId) return resolve(mainId);
 
     // Default to Music Assistant entity if configured, otherwise main entity
@@ -4804,8 +5054,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         return resolve(maId);
       }
 
-      // Default to MA if both are candidate or no stickiness applies
-      return resolve(maId);
+      // Default to MA if it actually exists in HA, otherwise fall back to main entity
+      return resolve(maState ? maId : mainId);
     } else {
       return resolve(mainId);
     }
@@ -5220,7 +5470,27 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     return !!this._addToPlaylistTarget || !!this._searchHierarchy.some(h => h.type === 'select_track_for_playlist');
   }
 
+  /** Whether the mini grid menu layout is active (always_collapsed + no expand_on_search + mini menus enabled). */
+  get _isGridMode() {
+    return this._alwaysCollapsed && (!this._expandOnSearch || !this._showSearchInSheet) && !this.config.disable_mini_menu;
+  }
+
   _renderMainMenu(sourceList, menuOnlyActions, showChipsInMenu) {
+    const isGridMode = this._isGridMode;
+    const renderMenuItem = (label, icon, onClick) => {
+      if (isGridMode) {
+        return html`
+          <button class="entity-options-item menu-action-item" @click=${onClick}>
+            <ha-icon class="menu-action-icon" icon=${icon}></ha-icon>
+            <span class="menu-action-label">${label}</span>
+          </button>
+        `;
+      }
+      return html`
+        <button class="entity-options-item" @click=${onClick}>${label}</button>
+      `;
+    };
+
     return html`
       <div class="entity-options-header">
         <button class="entity-options-item close-item" @click=${() => this._closeEntityOptions()}>
@@ -5228,31 +5498,28 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         </button>
         <div class="entity-options-divider"></div>
       </div>
-      <div class="entity-options-menu ${showChipsInMenu ? 'chips-in-menu' : ''} entity-options-scroll" style="display:flex; flex-direction:column;">
-        <button class="entity-options-item" @click=${() => {
-        const resolvedEntities = this._getResolvedEntitiesForCurrentChip();
-        if (resolvedEntities.length === 1) {
-          this._openMoreInfoForEntity(resolvedEntities[0]);
-          this._showEntityOptions = false;
-        } else {
-          this._showResolvedEntities = true;
-        }
-        this.requestUpdate();
-      }}>${localize('card.menu.more_info')}</button>
-        <button class="entity-options-item" @click=${() => { this._showSearchSheetInOptions(); }}>${localize('common.search')}</button>
+      <div class="entity-options-menu ${showChipsInMenu ? 'chips-in-menu' : ''} ${isGridMode ? 'grid-menu' : 'entity-options-scroll'}" style="${!isGridMode ? 'display:flex; flex-direction:column;' : ''}">
+        ${renderMenuItem(localize('card.menu.more_info'), 'mdi:information-outline', () => {
+          const resolvedEntities = this._getResolvedEntitiesForCurrentChip();
+          if (resolvedEntities.length === 1) {
+            this._openMoreInfoForEntity(resolvedEntities[0]);
+            this._showEntityOptions = false;
+          } else {
+            this._showResolvedEntities = true;
+          }
+          this.requestUpdate();
+        })}
+        ${renderMenuItem(localize('common.search'), 'mdi:magnify', () => { this._showSearchSheetInOptions(); })}
 
-        ${Array.isArray(sourceList) && sourceList.length > 0 ? html`
-          <button class="entity-options-item" @click=${() => this._openSourceList()}>${localize('card.menu.source')}</button>
-        ` : nothing}
+        ${Array.isArray(sourceList) && sourceList.length > 0 ? renderMenuItem(localize('card.menu.source'), 'mdi:import', () => this._openSourceList()) : nothing}
         
-        ${this._canShowTransferQueueOption() ? html`
-          <button class="entity-options-item" @click=${() => this._openTransferQueue()}>${localize('card.menu.transfer_queue')}</button>
-        ` : nothing}
+        ${this._canShowTransferQueueOption() ? renderMenuItem(localize('card.menu.transfer_queue'), 'mdi:swap-horizontal', () => this._openTransferQueue()) : nothing}
         
-        ${this._renderGroupingMenuOption()}
+        ${this._renderGroupingMenuOption(isGridMode)}
         
-        ${!this._alwaysCollapsed ? html`
-          <button class="entity-options-item" @click=${() => {
+        ${this._hasRemoteControlSupport() ? renderMenuItem(localize('card.menu.remote_controls'), 'mdi:remote', () => this._openRemoteControl()) : nothing}
+        
+        ${!this._alwaysCollapsed ? renderMenuItem(localize(this._lyricsActive ? 'card.menu.hide_lyrics' : 'card.menu.show_lyrics'), 'mdi:script-text-outline', () => {
           this._lyricsActive = !this._lyricsActive;
           if (!this._lyricsActive) {
             this._lastLyricsTrackId = null;
@@ -5262,28 +5529,26 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           }
           this._showEntityOptions = false;
           this.requestUpdate();
-        }}>${localize(this._lyricsActive ? 'card.menu.hide_lyrics' : 'card.menu.show_lyrics')}</button>
-        ` : nothing}
-        
+        }) : nothing}
         
         ${menuOnlyActions.length ? html`
           ${menuOnlyActions.map(({ action, idx }) => {
-          const label = this._getActionLabel(action);
-          return html`
-              <button
-                class="entity-options-item menu-action-item"
-                @click=${() => this._onMenuActionClick(idx)}
-              >
-                ${action.icon ? html`
-                  <ha-icon
-                    class="menu-action-icon"
-                    .icon=${action.icon}
-                  ></ha-icon>
-                ` : nothing}
-                ${label ? html`<span class="menu-action-label">${label}</span>` : nothing}
-              </button>
-            `;
-        })}
+            const label = this._getActionLabel(action);
+            return html`
+                <button
+                  class="entity-options-item menu-action-item"
+                  @click=${() => this._onMenuActionClick(idx)}
+                >
+                  ${action.icon ? html`
+                    <ha-icon
+                      class="menu-action-icon"
+                      .icon=${action.icon}
+                    ></ha-icon>
+                  ` : nothing}
+                  ${label ? html`<span class="menu-action-label">${label}</span>` : nothing}
+                </button>
+              `;
+          })}
         ` : nothing}
       </div>
     `;
@@ -5412,7 +5677,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     `;
   }
 
-  _renderGroupingMenuOption() {
+  _renderGroupingMenuOption(isGridMode = false) {
     const totalEntities = this.entityIds.length;
     if (totalEntities <= 1) return nothing;
 
@@ -5431,6 +5696,14 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const isFollower = groupKey !== currentId;
 
     if (groupableCount > 1 && this._isGroupCapable(currGroupState) && !isFollower) {
+      if (isGridMode) {
+        return html`
+          <button class="entity-options-item menu-action-item" @click=${() => this._openGrouping()}>
+            <ha-icon class="menu-action-icon" icon="mdi:speaker-multiple"></ha-icon>
+            <span class="menu-action-label">${localize('card.menu.group_players')}</span>
+          </button>
+        `;
+      }
       return html`
         <button class="entity-options-item" @click=${() => this._openGrouping()}>${localize('card.menu.group_players')}</button>
       `;
@@ -5495,6 +5768,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _renderGroupingSheet() {
+    const isGridMode = this._isGridMode;
     const masterId = this._getGroupingMasterId();
     const masterIdx = masterId ? this.entityIds.indexOf(masterId) : -1;
     const masterGroupId = masterIdx >= 0 ? this._getGroupingEntityId(masterIdx) : masterId;
@@ -5529,7 +5803,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     if (!groupedAny && (!activeIsGroupCapable || activeIsBusy)) {
       return html`
         <div class="entity-options-header">
-          ${this._cardType !== "group_players" ? html`
+          ${this._cardType !== "group_players" && this._cardType !== "remote_control" ? html`
             <button class="entity-options-item close-item" @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._closeGrouping(); } }}>
               ${localize('common.back')}
             </button>
@@ -5557,7 +5831,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
     return html`
       <div class="entity-options-header grouping-header group-list-header">
-        ${this._cardType !== "group_players" ? html`
+        ${this._cardType !== "group_players" && this._cardType !== "remote_control" ? html`
           <button class="entity-options-item close-item" @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._closeGrouping(); } }}>
             ${localize('common.back')}
           </button>
@@ -5579,109 +5853,132 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           ${groupedAny ? localize('card.grouping.ungroup_all') : localize('card.grouping.group_all')}
         </button>
       </div>
-      <div class="group-list-scroll">
+      <div class="group-list-scroll ${isGridMode ? 'grid-menu' : ''}">
         ${sortedGroupIds.length === 0 ? html`
           <div class="entity-options-item" style="padding:12px; opacity:0.75; text-align:center;">
             ${localize('card.grouping.no_players')}
           </div>
-        ` : sortedGroupIds.map(item => {
-      const id = item.id;
-      const actualGroupId = item.groupId;
-      const filteredMembers = Array.isArray(masterState?.attributes?.group_members) ? masterState.attributes.group_members : [];
-      const grouped = filteredMembers.includes(actualGroupId);
-      const name = this.getChipName(id);
-      const isBusy = item.isBusy;
-      const busyLabel = item.busyLabel;
+        ` : html`
+          <div class="${isGridMode ? 'grid-menu-items' : ''}">
+            ${sortedGroupIds.map(item => {
+              const id = item.id;
+              const actualGroupId = item.groupId;
+              const filteredMembers = Array.isArray(masterState?.attributes?.group_members) ? masterState.attributes.group_members : [];
+              const grouped = filteredMembers.includes(actualGroupId);
+              const name = this.getChipName(id);
+              const isBusy = item.isBusy;
+              const busyLabel = item.busyLabel;
 
-      const entityIdx = this.entityIds.indexOf(id);
-      const volumeEntity = this._getVolumeEntity(entityIdx);
-      const displayEntity = volumeEntity || actualGroupId;
-      const displayVolumeState = this.hass.states[displayEntity];
+              const entityIdx = this.entityIds.indexOf(id);
+              const volumeEntity = this._getVolumeEntity(entityIdx);
+              const displayEntity = volumeEntity || actualGroupId;
+              const displayVolumeState = this.hass.states[displayEntity];
 
-      const isRemoteVol = displayEntity?.startsWith && displayEntity.startsWith("remote.");
-      const volVal = Number(displayVolumeState?.attributes?.volume_level || 0);
-      const isPrimaryRow = id === masterId;
-      const showToggleButton = !isPrimaryRow;
-      const isCurrent = id === activeId;
+              const isRemoteVol = displayEntity?.startsWith && displayEntity.startsWith("remote.");
+              const volVal = Number(displayVolumeState?.attributes?.volume_level || 0);
+              const isPrimaryRow = id === masterId;
+              const showToggleButton = !isPrimaryRow;
+              const isCurrent = id === activeId;
+              const masterName = masterId ? this.getChipName(masterId) : localize('card.grouping.master');
 
-      let stateLabel = groupedAny
-        ? (isPrimaryRow ? localize('card.grouping.master') : (grouped ? localize('card.grouping.joined') : localize('card.grouping.available')))
-        : (isCurrent ? localize('card.grouping.current') : localize('card.grouping.available'));
+              let stateLabel = groupedAny
+                ? (isPrimaryRow ? localize('card.grouping.master') : (grouped ? localize('card.grouping.joined') : localize('card.grouping.available')))
+                : (isCurrent ? localize('card.grouping.current') : localize('card.grouping.available'));
 
-      if (isBusy) {
-        stateLabel = busyLabel || "Unavailable";
-      }
+              if (isBusy) {
+                stateLabel = busyLabel || "Unavailable";
+              }
+              
+              if (isGridMode) {
+                const isDisabled = isBusy || !showToggleButton;
+                const toggleTooltip = grouped 
+                  ? localize('card.grouping.unjoin_from').replace('{master}', masterName)
+                  : localize('card.grouping.join_with').replace('{master}', masterName);
+                
+                return html`
+                  <button class="entity-options-item menu-action-item group-toggle-btn ${(!showToggleButton || grouped) ? 'grid-active' : ''}" 
+                    ?disabled=${isDisabled}
+                    @click=${() => !isDisabled && this._toggleGroup(id)}
+                    title=${isBusy ? localize('card.grouping.unavailable') : (!showToggleButton ? stateLabel : toggleTooltip)}>
+                    <ha-icon class="menu-action-icon" icon=${isPrimaryRow ? "mdi:star" : (grouped ? "mdi:speaker-multiple" : "mdi:speaker")}></ha-icon>
+                    <span class="menu-action-label">${name}</span>
+                  </button>
+                `;
+              }
 
-      return html`
-            <div class="entity-options-item group-player-row" style="
-              display:flex;
-              align-items:center;
-              gap:6px;
-              padding: 12px 8px 4px 8px;
-              margin-bottom: 1px;
-              ${isBusy ? "opacity: 0.5;" : ""}
-            ">
-              <div style="flex:1; min-width:120px;">
-                <div style="text-align:left;">${name}</div>
-                <div style="font-size:0.8em; opacity:0.7; text-align:left;">${stateLabel}</div>
-              </div>
-              <div style="flex:1.8;display:flex;align-items:center;gap:4px;margin:0 6px; min-width:160px;">
-                ${isRemoteVol
-          ? html`
-                    <div class="vol-stepper" style="display:flex;align-items:center;gap:4px;">
-                      <button @click=${() => this._onGroupVolumeStep(displayEntity, -1)} title="${localize('common.vol_down')}" style="background:none;border:none;padding:0;width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:inherit;">
-                        <ha-icon icon="mdi:minus"></ha-icon>
-                      </button>
-                      <button @click=${() => this._onGroupVolumeStep(displayEntity, 1)} title="${localize('common.vol_up')}" style="background:none;border:none;padding:0;width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:inherit;">
-                        <ha-icon icon="mdi:plus"></ha-icon>
-                      </button>
-                    </div>
-                  `
-          : html`
-                    <div class="volume-slider-container grouping-vol-slider-container" style="flex:1; padding: 0 4px; position: relative; display: flex; align-items: center;">
-                      <div class="volume-percentage-indicator ${this._volumeDraggingEntity === id ? 'visible' : ''}" style="left: calc(13px + ${this._dragVolume} * (100% - 26px))">
-                        ${Math.round(this._dragVolume * 100)}%
+              return html`
+                    <div class="entity-options-item group-player-row" style="
+                      display:flex;
+                      align-items:center;
+                      gap:6px;
+                      padding: 12px 8px 4px 8px;
+                      margin-bottom: 1px;
+                      ${isBusy ? "opacity: 0.5;" : ""}
+                    ">
+                      <div style="flex:1; min-width:120px;">
+                        <div style="text-align:left;">${name}</div>
+                        <div style="font-size:0.8em; opacity:0.7; text-align:left;">${stateLabel}</div>
                       </div>
-                      <input
-                        class="vol-slider"
-                        type="range"
-                        min="0"
-                        max="1"
-                        step="0.01"
-                        .value=${volVal}
-                        @mousedown=${(e) => this._onVolumeDragStart(e, id)}
-                        @touchstart=${(e) => this._onVolumeDragStart(e, id)}
-                        @input=${(e) => this._onVolumeInput(e)}
-                        @mouseup=${(e) => this._onVolumeDragEnd(e)}
-                        @touchend=${(e) => this._onVolumeDragEnd(e)}
-                        @change=${e => this._onGroupVolumeChange(id, displayEntity, e)}
-                        title="${localize('common.volume')}"
-                        style="width:100%;max-width:260px;"
-                      />
+                      <div style="flex:1.8;display:flex;align-items:center;gap:4px;margin:0 6px; min-width:160px;">
+                        ${isRemoteVol
+                  ? html`
+                            <div class="vol-stepper" style="display:flex;align-items:center;gap:4px;">
+                              <button @click=${() => this._onGroupVolumeStep(displayEntity, -1)} title="${localize('common.vol_down')}" style="background:none;border:none;padding:0;width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:inherit;">
+                                <ha-icon icon="mdi:minus"></ha-icon>
+                              </button>
+                              <button @click=${() => this._onGroupVolumeStep(displayEntity, 1)} title="${localize('common.vol_up')}" style="background:none;border:none;padding:0;width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:inherit;">
+                                <ha-icon icon="mdi:plus"></ha-icon>
+                              </button>
+                            </div>
+                          `
+                  : html`
+                            <div class="volume-slider-container grouping-vol-slider-container" style="flex:1; padding: 0 4px; position: relative; display: flex; align-items: center;">
+                              <div class="volume-percentage-indicator ${this._volumeDraggingEntity === id ? 'visible' : ''}" style="left: calc(13px + ${this._dragVolume} * (100% - 26px))">
+                                ${Math.round(this._dragVolume * 100)}%
+                              </div>
+                              <input
+                                class="vol-slider"
+                                type="range"
+                                min="0"
+                                max="1"
+                                step="0.01"
+                                .value=${volVal}
+                                @mousedown=${(e) => this._onVolumeDragStart(e, id)}
+                                @touchstart=${(e) => this._onVolumeDragStart(e, id)}
+                                @input=${(e) => this._onVolumeInput(e)}
+                                @mouseup=${(e) => this._onVolumeDragEnd(e)}
+                                @touchend=${(e) => this._onVolumeDragEnd(e)}
+                                @change=${e => this._onGroupVolumeChange(id, displayEntity, e)}
+                                title="${localize('common.volume')}"
+                                style="width:100%;max-width:260px;"
+                              />
+                            </div>
+                          `
+                }
+                        <span style="min-width:36px;display:inline-block;text-align:right;">${typeof volVal === "number" ? Math.round(volVal * 100) + "%" : "--"}</span>
+                      </div>
+                      ${showToggleButton
+                  ? html`
+                            <button class="group-toggle-btn"
+                                    @click=${() => !isBusy && this._toggleGroup(id)}
+                                    title=${isBusy ? localize('card.grouping.unavailable') : (grouped ? localize('card.grouping.unjoin_from').replace('{master}', masterName) : localize('card.grouping.join_with').replace('{master}', masterName))}
+                                    style="margin-left:4px; ${isBusy ? "cursor: not-allowed; opacity: 0.5;" : ""}">
+                              <ha-icon icon=${grouped ? "mdi:minus-circle-outline" : "mdi:plus-circle-outline"}></ha-icon>
+                            </button>
+                          `
+                  : html`<span style="margin-left:4px;margin-right:10px;width:32px;display:inline-block;"></span>`
+                }
                     </div>
-                  `
-        }
-                <span style="min-width:36px;display:inline-block;text-align:right;">${typeof volVal === "number" ? Math.round(volVal * 100) + "%" : "--"}</span>
-              </div>
-              ${showToggleButton
-          ? html`
-                    <button class="group-toggle-btn"
-                            @click=${() => !isBusy && this._toggleGroup(id)}
-                            title=${isBusy ? "Player is unavailable" : (grouped ? "Unjoin" : "Join")}
-                            style="margin-left:4px; ${isBusy ? "cursor: not-allowed; opacity: 0.5;" : ""}">
-                      <ha-icon icon=${grouped ? "mdi:minus-circle-outline" : "mdi:plus-circle-outline"}></ha-icon>
-                    </button>
-                  `
-          : html`<span style="margin-left:4px;margin-right:10px;width:32px;display:inline-block;"></span>`
-        }
-            </div>
-          `;
-    })}
+                  `;
+            })}
+          </div>
+        `}
       </div>
     `;
   }
 
   _renderTransferQueueSheet() {
+    const isGridMode = this._isGridMode;
     const targets = this._getTransferQueueTargets();
     return html`
       <div class="entity-options-header">
@@ -5689,27 +5986,38 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           ${localize('common.back')}
         </button>
         <div class="entity-options-divider"></div>
-        <div class="entity-options-title" style="margin-bottom:12px;">${localize('card.menu.transfer_to')}</div>
+        ${!isGridMode ? html`<div class="entity-options-title" style="margin-bottom:12px;">${localize('card.menu.transfer_to')}</div>` : nothing}
       </div>
-      <div class="entity-options-scroll">
+      <div class="entity-options-scroll ${isGridMode ? 'grid-menu' : ''}">
         ${!targets.length ? html`
           <div style="padding: 12px; opacity: 0.75;">${localize('card.menu.no_players')}</div>
         ` : html`
-          <div style="display:flex;flex-direction:column;gap:8px;">
-            ${targets.map(target => html`
-              <button
-                class="entity-options-item"
-                ?disabled=${this._transferQueuePendingTarget === target.maEntityId}
-                @click=${() => this._transferQueueTo(target)}
-                style="display:flex;align-items:center;justify-content:flex-start;gap:12px;${this._transferQueuePendingTarget === target.maEntityId ? 'opacity:0.6;' : ''}">
-                <ha-icon .icon=${target.icon} style="margin-right:4px;"></ha-icon>
-                <div style="display:flex;flex-direction:column;align-items:flex-start;">
-                  <div>${target.name}</div>
-                  <div style="font-size:0.82em;opacity:0.7;">${target.subtitle}</div>
-                </div>
-                ${target.state ? html`<div style="margin-left:auto;font-size:0.82em;opacity:0.7;text-transform:capitalize;">${target.state}</div>` : nothing}
-              </button>
-            `)}
+          <div class="${isGridMode ? 'grid-menu-items' : 'transfer-queue-list'}">
+            ${targets.map(target => {
+              if (isGridMode) {
+                return html`
+                  <button class="entity-options-item menu-action-item" 
+                    ?disabled=${this._transferQueuePendingTarget === target.maEntityId}
+                    @click=${() => this._transferQueueTo(target)}>
+                    <ha-icon class="menu-action-icon" .icon=${target.icon}></ha-icon>
+                    <span class="menu-action-label">${target.name}</span>
+                  </button>
+                `;
+              }
+              return html`
+                <button
+                  class="entity-options-item transfer-queue-item"
+                  ?disabled=${this._transferQueuePendingTarget === target.maEntityId}
+                  @click=${() => this._transferQueueTo(target)}>
+                  <ha-icon .icon=${target.icon} style="margin-right:4px;"></ha-icon>
+                  <div style="display:flex;flex-direction:column;align-items:flex-start;">
+                    <div>${target.name}</div>
+                    <div style="font-size:0.82em;opacity:0.7;">${target.subtitle}</div>
+                  </div>
+                  ${target.state ? html`<div style="margin-left:auto;font-size:0.82em;opacity:0.7;text-transform:capitalize;">${target.state}</div>` : nothing}
+                </button>
+              `;
+            })}
           </div>
         `}
         ${this._transferQueueStatus ? html`
@@ -5730,6 +6038,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _renderResolvedEntitiesSheet() {
+    const isGridMode = this._isGridMode;
+
     return html`
       <div class="entity-options-header">
         <button class="entity-options-item close-item" @click=${() => {
@@ -5740,8 +6050,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         </button>
         <div class="entity-options-divider"></div>
         <div class="entity-options-resolved-entities" style="margin-top:12px;">
-          <div class="entity-options-title">${localize('card.menu.select_entity')}</div>
-          <div class="entity-options-resolved-entities-list">
+          ${!isGridMode ? html`<div class="entity-options-title">${localize('card.menu.select_entity')}</div>` : nothing}
+          <div class="entity-options-resolved-entities-list ${isGridMode ? 'grid-menu' : ''}">
             ${this._getResolvedEntitiesForCurrentChip().map(entityId => {
         const state = this.hass?.states?.[entityId];
         const name = state?.attributes?.friendly_name || entityId;
@@ -5763,6 +6073,20 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           } else if (entityId === volEntity && volEntity !== obj.entity_id && volEntity !== maEntity) {
             role = "Volume Entity";
           }
+        }
+
+        if (isGridMode) {
+          return html`
+            <button class="entity-options-item menu-action-item" @click=${() => {
+              this._openMoreInfoForEntity(entityId);
+              this._showEntityOptions = false;
+              this._showResolvedEntities = false;
+              this.requestUpdate();
+            }}>
+              <ha-icon class="menu-action-icon" .icon=${icon}></ha-icon>
+              <span class="menu-action-label">${isActive ? `${name} (Active)` : name}</span>
+            </button>
+          `;
         }
 
         return html`
@@ -5798,7 +6122,26 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     }
 
     this._lyricsError = false;
-    const configSource = this.config.lyrics_source || "mass_lrclib";
+    let configSource = this.config.lyrics_source || "mass_lrclib";
+
+    const isAdmin = this.hass?.user?.is_admin === true;
+    if (!isAdmin && configSource !== "lrclib") {
+      if (configSource === "mass") {
+        console.warn(`YAMP: ${this.localize('lyrics.admin_only_mass')}`);
+
+        const event = new Event("hass-notification", { bubbles: true, composed: true });
+        event.detail = { message: this.localize('lyrics.admin_only_mass') };
+        this.dispatchEvent(event);
+
+        this._fetchingLyrics = false;
+        this._lyricsError = true;
+        this.requestUpdate();
+        return;
+      } else {
+        console.log(`YAMP: ${this.localize('lyrics.fallback_to_lrclib_non_admin')}`);
+        configSource = "lrclib";
+      }
+    }
 
     const activeState = this.metadataStateObj || this.currentActivePlaybackStateObj || this.currentPlaybackStateObj || this.currentStateObj;
     if (!activeState) {
@@ -5932,7 +6275,9 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     }
 
     try {
-      const mqConfigEntryId = await getMassQueueConfigEntryId(this.hass);
+      const searchEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
+      const searchEntityId = await this._resolveTemplateAtActionTime(searchEntityIdTemplate, this.currentEntityId);
+      const mqConfigEntryId = await getMassQueueConfigEntryId(this.hass, searchEntityId);
       if (!mqConfigEntryId) return [];
 
       const trackUri = activeState.attributes.media_content_id;
@@ -5945,7 +6290,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         service_data: {
           command: "music/item_by_uri",
           data: { uri: trackUri },
-          config_entry_id: mqConfigEntryId
+          ...(mqConfigEntryId && mqConfigEntryId !== "auto" && { config_entry_id: mqConfigEntryId })
         },
         return_response: true
       };
@@ -5963,7 +6308,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         service_data: {
           command: "metadata/get_track_lyrics",
           data: { track: validTrack },
-          config_entry_id: mqConfigEntryId
+          ...(mqConfigEntryId && mqConfigEntryId !== "auto" && { config_entry_id: mqConfigEntryId })
         },
         return_response: true
       };
@@ -6001,7 +6346,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
     try {
       const headers = {
-        "User-Agent": `yet-another-media-player/${__VERSION__} (https://github.com/jianyu-li/yet-another-media-player)`
+        "Lrclib-Client": `yet-another-media-player/${__VERSION__} (https://github.com/jianyu-li/yet-another-media-player)`
       };
 
       // 1. Try precise get first
@@ -6059,7 +6404,16 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._syncTemplateSubscriptions('card_height', currentContext, this.config?.card_height);
     this._syncEntityTemplateSubscriptions('ma', currentContext);
     this._syncEntityTemplateSubscriptions('vol', currentContext);
+    this._syncEntityTemplateSubscriptions('remote', currentContext);
     this._syncEntityTemplateSubscriptions('hidden_controls', currentContext);
+    if (changedProps.has("_selectedIndex")) {
+      this._lastMediaTitle = null;
+      this._searchResultsByType = {};
+      if (this._upcomingFilterActive) {
+        this._searchResults = [];
+        this._refreshQueue({ delayMs: 50 });
+      }
+    }
     if (changedProps.has("_selectedIndex") || changedProps.has("hass")) {
       void this._updateTransferQueueAvailability({ refresh: false });
     }
@@ -6094,9 +6448,10 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           const currentState = this.hass.states[metadataEntityId];
           const currentMediaTitle = currentState?.attributes?.media_title;
           if (currentMediaTitle && currentMediaTitle !== this._lastMediaTitle) {
+            const isEntitySwitch = changedProps.has("_selectedIndex");
             this._lastMediaTitle = currentMediaTitle;
             // Shift UI immediately if we're looking at the queue and haven't already
-            if (this._upcomingFilterActive) {
+            if (this._upcomingFilterActive && !isEntitySwitch) {
               // Check if we already advanced the UI manually (indicated by _latestManualShiftTime)
               const now = Date.now();
               // Increase tolerance to 4s to handle slow HA updates
@@ -6242,6 +6597,41 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     }
     // Volume overlay detection (Issue #252)
     this._handleVolumeOverlayDetection(changedProps);
+
+    if (changedProps.has("_lyricsActive")) {
+      if (this._adaptiveText) {
+        this._setAdaptiveTextVars(this._currentTextScale, undefined, this._currentDetailsScale);
+        this._updateMarquee();
+      }
+    }
+
+    const lowerContentEl = this.shadowRoot?.querySelector('.card-lower-content');
+    if (!this._lyricsActive) {
+      if (lowerContentEl && lowerContentEl.offsetHeight > 50) {
+        this._lastNonLyricsLowerContentHeight = lowerContentEl.offsetHeight;
+      }
+    }
+    const detailsEl = this.shadowRoot?.querySelector('.details');
+    const firstControlEl = detailsEl || this.shadowRoot?.querySelector('.progress-bar-container:not(.alternate)') || this.shadowRoot?.querySelector('.controls-row') || this.shadowRoot?.querySelector('.volume-row');
+    let controlsH = 0;
+    if (lowerContentEl && firstControlEl && lowerContentEl.contains(firstControlEl)) {
+      controlsH = lowerContentEl.offsetHeight - firstControlEl.offsetTop;
+    }
+    if (controlsH <= 0) {
+      if (detailsEl) controlsH += detailsEl.offsetHeight;
+      const progressEl = this.shadowRoot?.querySelector('.progress-bar-container:not(.alternate)');
+      if (progressEl) controlsH += progressEl.offsetHeight;
+      const controlsRowEl = this.shadowRoot?.querySelector('.controls-row');
+      if (controlsRowEl) controlsH += controlsRowEl.offsetHeight;
+      const volumeRowEl = this.shadowRoot?.querySelector('.volume-row');
+      if (volumeRowEl) controlsH += volumeRowEl.offsetHeight;
+    }
+    if (controlsH > 30 && this._lowerControlsHeight !== controlsH) {
+      this._lowerControlsHeight = controlsH;
+      if (this._lyricsActive) {
+        this.requestUpdate();
+      }
+    }
 
     // Lyrics fetch trigger
     if (this._lyricsActive) {
@@ -6419,6 +6809,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         if (overlayEl) overlayEl.scrollTop = 0;
       }, 0);
     }
+    this.updateComplete.then(() => this._updateMarquee());
   }
 
   _toggleSourceMenu() {
@@ -6654,6 +7045,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       return;
     }
 
+    if (action.action === "remote_control") {
+      this._openRemoteControl();
+      return;
+    }
+
     if (action.action === "prev_entity" || action.action === "next_entity") {
       const sortedIds = this.sortedEntityIds;
       if (sortedIds && sortedIds.length > 0) {
@@ -6866,11 +7262,16 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
    */
   _showGestureFeedback(type, clientX, clientY) {
     // Find the gesture feedback container in the shadow DOM
-    const tapArea = this._gestureTapArea || this.shadowRoot?.querySelector('.card-artwork-spacer') || this.shadowRoot?.querySelector('.collapsed-artwork-container') || this.shadowRoot?.querySelector('.media-artwork-placeholder');
+    const cardInner = this.shadowRoot?.querySelector('.yamp-card-inner');
+    const tapArea = this._gestureTapArea || this.shadowRoot?.querySelector('.card-artwork-spacer') || this.shadowRoot?.querySelector('.collapsed-artwork-container') || this.shadowRoot?.querySelector('.media-artwork-placeholder') || cardInner;
     if (!tapArea) return;
 
+    const feedbackHost = (tapArea.shadowRoot || tapArea.tagName === 'YAMP-LYRICS-VIEW')
+      ? (cardInner || tapArea)
+      : tapArea;
+
     // Get the bounding rect of the tap area to calculate relative position
-    const rect = tapArea.getBoundingClientRect();
+    const rect = feedbackHost.getBoundingClientRect();
     const x = clientX - rect.left;
     const y = clientY - rect.top;
 
@@ -6881,11 +7282,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     ripple.style.top = `${y}px`;
 
     // Find or create the feedback container
-    let container = tapArea.querySelector('.gesture-feedback-container');
+    let container = feedbackHost.querySelector('.gesture-feedback-container');
     if (!container) {
       container = document.createElement('div');
       container.className = 'gesture-feedback-container';
-      tapArea.appendChild(container);
+      feedbackHost.appendChild(container);
     }
 
     // Remove the ripple when the animation ends
@@ -7610,47 +8011,55 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const chipsHiddenInline = showChipRow === "in_menu_on_idle" && this._isIdle && hasMultipleEntities;
     // Always reserve space in menu for chips when in_menu_on_idle, even when playing (to prevent menu jump)
     const reserveChipSpaceInMenu = showChipRow === "in_menu_on_idle" && hasMultipleEntities && !this._showSearchInSheet;
-    const decoratedActions = (this.config.actions ?? []).map((action, idx) => ({ action, idx }));
+    const allActions = (this.config.actions ?? []).map((action, idx) => ({ action, idx }));
     // Filter out sync_selected_entity / select_entity actions entirely - they don't render as chips
-    const visibleActions = decoratedActions.filter(({ action }) => action?.action !== "sync_selected_entity" && action?.action !== "select_entity");
+    const visibleActions = allActions.filter(({ action }) => action?.action !== "sync_selected_entity" && action?.action !== "select_entity");
 
     // Shared context for synchronous template fallback
     let actionTemplateFallbackContext = null;
 
     // Action placement logic
-    const getPlacement = (act, actIdx) => {
-      if (act?.placement) return act.placement;
-
-      let inMenuVal = act?.in_menu;
+    const localPlacement = (act, actIdx) => {
+      let inMenuVal = getActionPlacement(act, actIdx);
       if (typeof inMenuVal === "string" && (inMenuVal.includes("{{") || inMenuVal.includes("{%") || inMenuVal.trim().startsWith("[[["))) {
         const cached = this._actionInMenuResolveCache?.[actIdx]?.value;
         if (cached !== undefined) {
           inMenuVal = cached;
         } else {
           // Fallback for initial render before subscription resolves
-          if (!actionTemplateFallbackContext) {
-            actionTemplateFallbackContext = {
-              ...this._getTemplateContext(),
-              state: this.hass?.states[this.currentEntityId]?.state || "unknown",
-              attributes: this.hass?.states[this.currentEntityId]?.attributes || {}
-            };
-          }
-          const resolved = resolveStringTemplateSync(this.hass, inMenuVal, actionTemplateFallbackContext);
-          if (resolved !== null) {
-            inMenuVal = resolved;
+          if (inMenuVal.trim().startsWith("[[[")) {
+            const evaluated = this._evaluateJsTemplate(inMenuVal);
+            if (evaluated !== undefined) {
+              inMenuVal = evaluated;
+            }
+          } else {
+            if (!actionTemplateFallbackContext) {
+              actionTemplateFallbackContext = {
+                ...this._getTemplateContext(),
+                state: this.hass?.states[this.currentEntityId]?.state || "unknown",
+                attributes: this.hass?.states[this.currentEntityId]?.attributes || {}
+              };
+            }
+            const resolved = resolveStringTemplateSync(this.hass, inMenuVal, actionTemplateFallbackContext);
+            if (resolved !== null) {
+              inMenuVal = resolved;
+            }
           }
         }
       }
 
-      if (typeof inMenuVal === "string") inMenuVal = inMenuVal.trim();
-      if (inMenuVal === "true") inMenuVal = true;
-      if (inMenuVal === "false") inMenuVal = false;
-      if (inMenuVal === "hidden") return "hidden";
-      return inMenuVal === true ? "menu" : "chip";
+      if (typeof inMenuVal === "string") {
+        inMenuVal = inMenuVal.trim();
+        const validPlacements = ["chip", "menu", "hidden", "replace_search", "replace_power", "replace_mute", "replace_favorite"];
+        if (validPlacements.includes(inMenuVal)) return inMenuVal;
+        return inMenuVal;
+      }
+      if (inMenuVal === true) return "menu";
+      return "chip";
     };
 
-    const rowActions = visibleActions.filter(({ action, idx }) => getPlacement(action, idx) === "chip");
-    const menuOnlyActions = visibleActions.filter(({ action, idx }) => getPlacement(action, idx) === "menu");
+    const rowActions = visibleActions.filter(({ action, idx }) => localPlacement(action, idx) === "chip");
+    const menuOnlyActions = visibleActions.filter(({ action, idx }) => localPlacement(action, idx) === "menu");
 
     // Gesture trigger logic
     const tapAction = visibleActions.find(({ action }) => action?.card_trigger === "tap");
@@ -7676,9 +8085,35 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const powerSupported = !currentHiddenControls.power && (this._supportsFeature(stateObj, SUPPORT_TURN_OFF) || this._supportsFeature(stateObj, SUPPORT_TURN_ON));
     const showModernPowerButton = this._controlLayout === "modern" && powerSupported;
     const showModernFavoriteButton = this._controlLayout === "modern" && showFavoriteButton;
+    const replaceSearchAction = visibleActions.find(({ action, idx }) => localPlacement(action, idx) === "replace_search");
+    const replacePowerAction = visibleActions.find(({ action, idx }) => localPlacement(action, idx) === "replace_power");
+    const replaceMuteAction = visibleActions.find(({ action, idx }) => localPlacement(action, idx) === "replace_mute");
+    const replaceFavoriteAction = visibleActions.find(({ action, idx }) => localPlacement(action, idx) === "replace_favorite");
+
+    const renderCustomBottomAction = ({ action, idx }) => {
+      if (!action) return nothing;
+      const label = this._getActionLabel(action);
+      let iconColor = action.icon_color || "";
+      if (typeof iconColor === "string" && (iconColor.includes("{{") || iconColor.includes("{%") || iconColor.trim().startsWith("[[["))) {
+        iconColor = resolveStringTemplateSync(this.hass, iconColor, this._getTemplateContext()) || "";
+      }
+      return html`
+        <button
+          class="volume-icon-btn favorite-volume-btn custom-bottom-action"
+          @click=${(e) => { e.stopPropagation(); this._onActionChipClick(idx); }}
+          title="${label}"
+        >
+          <ha-icon style=${styleMap({ color: iconColor || undefined })} .icon=${action.icon || "mdi:rhombus-outline"}></ha-icon>
+        </button>
+      `;
+    };
+
     let leadingVolumeControl = nothing;
     if (showModernPowerButton) {
-      leadingVolumeControl = html`
+      if (replacePowerAction) {
+        leadingVolumeControl = renderCustomBottomAction(replacePowerAction);
+      } else {
+        leadingVolumeControl = html`
           <button
             class="volume-icon-btn favorite-volume-btn${stateObj?.state !== "off" ? " active" : ""}"
             @click=${() => this._onControlClick("power")}
@@ -7687,8 +8122,12 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
             <ha-icon .icon=${"mdi:power"}></ha-icon>
           </button>
         `;
+      }
     } else if (this._controlLayout === "modern") {
-      leadingVolumeControl = html`
+      if (replaceSearchAction) {
+        leadingVolumeControl = renderCustomBottomAction(replaceSearchAction);
+      } else {
+        leadingVolumeControl = html`
           <button
             class="volume-icon-btn favorite-volume-btn"
             @click=${() => this._openQuickSearchOverlay()}
@@ -7697,8 +8136,14 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
             <ha-icon .icon=${"mdi:magnify"}></ha-icon>
           </button>
         `;
+      }
     }
-    const rightSlotTemplate = showModernFavoriteButton ? html`
+
+    let rightSlotTemplate = nothing;
+    if (replaceFavoriteAction) {
+      rightSlotTemplate = renderCustomBottomAction(replaceFavoriteAction);
+    } else if (showModernFavoriteButton) {
+      rightSlotTemplate = html`
         <button
           class="volume-icon-btn favorite-volume-btn${favoriteActive ? " active" : ""}"
           @click=${() => this._onControlClick("favorite")}
@@ -7709,7 +8154,13 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
             .icon=${favoriteActive ? "mdi:heart" : "mdi:heart-outline"}
           ></ha-icon>
         </button>
-      ` : nothing;
+      `;
+    }
+
+    let muteSlotTemplate = nothing;
+    if (replaceMuteAction) {
+      muteSlotTemplate = renderCustomBottomAction(replaceMuteAction);
+    }
 
     // Collect unique, sorted first letters of source names
     const sourceList = stateObj.attributes.source_list || [];
@@ -7741,7 +8192,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         idleImageUrl =
           sensorState.attributes.entity_picture_local ||
           sensorState.attributes.entity_picture ||
-          (sensorState.state && sensorState.startsWith("http") ? sensorState.state : null);
+          (sensorState.state && typeof sensorState.state === "string" && sensorState.state.startsWith("http") ? sensorState.state : null);
       }
       // Check if it's a direct URL or file path
       else if (normalizedIdleImageInput.startsWith("http") || normalizedIdleImageInput.startsWith("/")) {
@@ -7749,14 +8200,14 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       }
     }
     const dimIdleFrame = !!idleImageUrl;
-    const hideControlsNow = this._isIdle;
-    const shouldDimIdle = this._isIdle;
+    const hideControlsNow = this._idleTimeoutMs === 0 ? false : this._isIdle;
+    const shouldDimIdle = this._idleTimeoutMs === 0 ? false : this._isIdle;
     // Calculate useInsetArtwork early for artworkFullBleed unification
     // Note: collapsed and _alwaysCollapsed will be defined/checked later, so we can't use them here.
     // We'll set useInsetArtwork again later with full collapsed context for rendering.
     const preCalcInsetArtwork = this._artworkObjectFit === "scaled-contain" || this._artworkObjectFit === "scaled-contain-alternate";
     // Extend artwork when configured, when chips are hidden inline (in_menu_on_idle + idle), or when using scaled-contain
-    const artworkFullBleed = this.config.extend_artwork === true || chipsHiddenInline || preCalcInsetArtwork;
+    const artworkFullBleed = this.config.extend_artwork === true || chipsHiddenInline || preCalcInsetArtwork || this._lyricsActive;
 
     // Calculate shuffle/repeat state from the active playback entity when available
     const mainStateForPlayback = this.currentStateObj;
@@ -7854,6 +8305,9 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     if (displayTitle && (!selectedArt || !selectedArt.url) && mainArtwork?.url && mainState?.attributes?.media_title === displayTitle) {
       selectedArt = mainArtwork;
     }
+    if (!selectedArt) {
+      selectedArt = playbackArtwork || mainArtwork || null;
+    }
 
 
 
@@ -7875,7 +8329,13 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         ""
       )
       : "";
-    this._lastTitleLength = title ? title.length : 0;
+    const showAlbum = this.config.show_album !== false;
+    const album = shouldShowDetails && showAlbum
+      ? (displaySource?.attributes?.media_album_name || "")
+      : "";
+    const hasSearchableArtist = !!(displaySource?.attributes?.media_artist || stateObj?.attributes?.media_artist);
+    const searchAlbumTitle = localize("search.search_album") || localize("search.browse_album", { "{album}": album });
+    const searchArtistTitle = hasSearchableArtist ? localize("search.search_artist") : "";
     if (this._adaptiveText) {
       this._updateAdaptiveTextScale(true);
     }
@@ -7992,7 +8452,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const collapsedDetailsMinHeight = effectiveExtraSpace > 0
       ? Math.round(baseDetailsMinHeight + detailGrowth)
       : (effectiveExtraSpace < -20 ? 36 : baseDetailsMinHeight);
-    const detailsScale = (this._adaptiveTextTargets?.has("details")) ? (this._currentDetailsScale || 1) : 1;
+    const detailsScale = (this._adaptiveTextTargets?.has("details") && !this._lyricsActive) ? (this._currentDetailsScale || 1) : 1;
     const detailsMinHeight = Math.round((collapsed ? collapsedDetailsMinHeight : baseDetailsMinHeight) * detailsScale);
     let showCollapsedPlaceholder;
     const expandedHeightBaseline = 350;
@@ -8030,6 +8490,9 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     } else {
       // Even if idle, we apply layout properties from selectedArt, 
       // because _getArtworkUrl correctly finds idle_image overrides for us.
+      if (selectedArt?.url) {
+        idleImageUrl = selectedArt.url;
+      }
       if (selectedArt?.objectFit) {
         artworkObjectFit = selectedArt.objectFit;
       }
@@ -8061,11 +8524,10 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
     const activeArtworkFit = artworkObjectFit || this._artworkObjectFit;
     const isAlternateFit = activeArtworkFit === "scaled-contain-alternate";
-    const useInsetArtwork = (activeArtworkFit === "scaled-contain" || isAlternateFit) && !collapsed && !this._alwaysCollapsed;
+    const useInsetArtwork = (activeArtworkFit === "scaled-contain" || isAlternateFit) && !collapsed && !this._alwaysCollapsed && !this._lyricsActive;
     const hasSpacerContent =
       (useInsetArtwork && artworkUrl) ||
-      (!useInsetArtwork && !artworkUrl && !idleImageUrl) ||
-      (this._lyricsActive && !this._isIdle);
+      (!useInsetArtwork && !artworkUrl && !idleImageUrl);
     // Add top padding to artwork spacer when scaled-contain and chips are not shown inline
     const needsArtworkTopPadding = (activeArtworkFit === "scaled-contain" || isAlternateFit) &&
       (showChipRow === "in_menu" || (hasSingleEntity && showChipRow !== "always"));
@@ -8078,13 +8540,13 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
     const backgroundImageValue = (activeArtworkFit === "no_artwork")
       ? "none"
-      : (idleImageUrl || isAlternateFit)
+      : (idleImageUrl || (isAlternateFit && !this._lyricsActive))
         ? (idleImageUrl ? `url('${idleImageUrl}')` : "none")
         : artworkUrl
           ? `url('${artworkUrl}')`
           : "none";
     const hasBackgroundImage = backgroundImageValue !== "none";
-    const backgroundFilter = (artworkUrl && (this.config.blurred_artwork === true || (this.config.blurred_artwork !== false && (collapsed || (useInsetArtwork && activeArtworkFit === "scaled-contain")))))
+    const backgroundFilter = (artworkUrl && (this._lyricsActive || this.config.blurred_artwork === true || (this.config.blurred_artwork !== false && (collapsed || (useInsetArtwork && activeArtworkFit === "scaled-contain")))))
       ? "blur(18px) brightness(0.7) saturate(1.15)"
       : "none";
     let artworkPos = (typeof artworkObjectPosition !== 'undefined' ? artworkObjectPosition : null) || this.config.artwork_position || "top center";
@@ -8104,20 +8566,32 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
 
 
+    const isVolumeHiddenByConfig =
+      hideControlsNow ||
+      this._getEffectiveVolumeMode() === "hidden" ||
+      isCompactVolume ||
+      (hasCustomCardHeight && customCardHeight < 260 && collapsed);
+
     const isVolumeHidden =
       shouldHideVolumeControls ||
-      this._getEffectiveVolumeMode() === "hidden" ||
-      (hasCustomCardHeight && customCardHeight < 260 && collapsed && !this._showEntityOptions);
+      isVolumeHiddenByConfig;
 
-    const hasMoreInfoMenu = (!this._showEntityOptions && !isCompactVolume);
     const hasRightPlaceholder = this._controlLayout === "modern";
     const hasLeadingControl = leadingVolumeControl !== nothing && leadingVolumeControl !== undefined && leadingVolumeControl !== null;
 
-    const volumeRowWillCollapse = isVolumeHidden && !hasMoreInfoMenu && !hasLeadingControl && !hasRightPlaceholder;
+    const volumeRowWillCollapse = isVolumeHiddenByConfig && !isCompactVolume && !hasLeadingControl && !hasRightPlaceholder;
 
-    const detailsHasAdaptiveText = this._adaptiveTextTargets?.has("details");
+    const detailsHasAdaptiveText = this._adaptiveTextTargets?.has("details") && !this._lyricsActive;
     this._lastSpacerRendered = !!(showCollapsedPlaceholder || (!collapsed && (!detailsHasAdaptiveText || hasSpacerContent)));
     this._lastVolumeRendered = !volumeRowWillCollapse;
+
+    const lowerControlsH = this._lowerControlsHeight || (
+      72 + // average unscaled details height
+      (!this._alternateProgressBar ? 24 : 0) +
+      (hideControlsNow ? 0 : 56) +
+      (volumeRowWillCollapse ? 0 : 56)
+    );
+    const lyricsBottomOffset = lowerControlsH;
 
     return html`
         <ha-card class="yamp-card" 
@@ -8125,6 +8599,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           <div
             data-match-theme="${String(this.config.match_theme === true)}"
             data-artwork-fit="${activeArtworkFit}"
+            data-lyrics-active="${String(this._lyricsActive === true)}"
             class=${classMap({
       "yamp-card-inner": true,
       "compact-collapsed": isCompact && collapsed,
@@ -8135,7 +8610,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           >
             ${artworkFullBleed && hasBackgroundImage ? html`
               <div class="full-bleed-artwork-bg" style="${sharedBackgroundStyle}"></div>
-              ${!(dimIdleFrame || isAlternateFit || this._isIdle) ? html`<div class="full-bleed-artwork-fade"></div>` : nothing}
+              ${!(dimIdleFrame || this._isIdle) ? html`<div class="full-bleed-artwork-fade"></div>` : nothing}
             ` : nothing}
             ${(!useInsetArtwork && !artworkUrl && !idleImageUrl) ? html`
               <div class="media-artwork-placeholder"
@@ -8155,6 +8630,29 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
                   <rect x="132" y="74" width="22" height="74" rx="8" fill="currentColor"></rect>
                 </svg>
               </div>
+            ` : nothing}
+            ${(this._lyricsActive && !this._isIdle) ? html`
+              <yamp-lyrics-view
+                data-match-theme="${String(this.config.match_theme === true)}"
+                data-artwork-fit="${activeArtworkFit}"
+                .hass=${this.hass}
+                .lyrics=${this._massLyrics}
+                .position=${pos}
+                .loading=${this._fetchingLyrics}
+                .error=${this._lyricsError}
+                .activeThemeColor=${this.config.match_theme === true ? "var(--custom-accent, var(--state-media_player-active-color, var(--primary-color, #ffffff)))" : "var(--custom-accent, #ffffff)"}
+                .mode=${this._isCurrentlyPlayingRadio() ? 'text' : (this.config.lyrics_mode || 'default')}
+                .preRoll=${this.config.lyrics_pre_roll ?? 0}
+                @pointerdown=${this._onTapAreaPointerDown}
+                @pointermove=${this._onTapAreaPointerMove}
+                @pointerup=${this._onTapAreaPointerUp}
+                @pointercancel=${this._onTapAreaPointerCancel}
+                style="${[
+                  `--yamp-lyrics-top-offset: ${showChipsInline ? 48 : 0}px`,
+                  `--yamp-lyrics-bottom-offset: ${lyricsBottomOffset}px`,
+                  this._getGestureStyles()
+                ].filter(Boolean).join('; ')}"
+              ></yamp-lyrics-view>
             ` : nothing}
             ${chipsHiddenInline
         ? html`${this._renderInlineActionRow(rowActions)}${this._renderInlineChipRow(showChipsInline, chipsHiddenInline)}`
@@ -8181,12 +8679,12 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         return styles.join('; ');
       })()}"
               ></div>
-              ${!(dimIdleFrame || isAlternateFit || this._isIdle) ? html`<div class="card-lower-fade"></div>` : nothing}
+              ${!(dimIdleFrame || this._isIdle) && (!useInsetArtwork || activeArtworkFit === "scaled-contain" || this._lyricsActive) ? html`<div class="card-lower-fade" style="--yamp-lyrics-bottom-offset: ${lyricsBottomOffset}px;"></div>` : nothing}
               <div class="card-lower-content${collapsed ? ' collapsed transitioning' : ' transitioning'}${collapsed && artworkUrl && collapsedArtworkSize > 0 ? ' has-artwork' : ''}" style="${(() => {
-        if (!hideControlsNow) return '';
+        if (!hideControlsNow && !this._lyricsActive) return '';
         return collapsed
           ? `min-height: ${this._collapsedBaselineHeight || 220}px;`
-          : `min-height: ${hasCustomCardHeight ? `${customCardHeight}px` : '350px'};`;
+          : `min-height: ${hasCustomCardHeight ? `${customCardHeight}px` : `${this._lastNonLyricsLowerContentHeight || 350}px`};`;
       })()}">
                 ${collapsed && artworkUrl && collapsedArtworkSize > 0 && isValidArtworkUrl(artworkUrl) ? html`
                   <div
@@ -8215,11 +8713,14 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
                 ` : nothing}
                 ${this._lastSpacerRendered ? html`
                   <div class="card-artwork-spacer${showCollapsedPlaceholder ? ' show-placeholder' : ''}"
-                    @pointerdown=${this._onTapAreaPointerDown}
-                    @pointermove=${this._onTapAreaPointerMove}
-                    @pointerup=${this._onTapAreaPointerUp}
-                    @pointercancel=${this._onTapAreaPointerCancel}
-                    style="${this._getGestureStyles()}"
+                    @pointerdown=${!this._lyricsActive ? this._onTapAreaPointerDown : nothing}
+                    @pointermove=${!this._lyricsActive ? this._onTapAreaPointerMove : nothing}
+                    @pointerup=${!this._lyricsActive ? this._onTapAreaPointerUp : nothing}
+                    @pointercancel=${!this._lyricsActive ? this._onTapAreaPointerCancel : nothing}
+                    style="${[
+                      this._lyricsActive ? 'min-height: 0; pointer-events: none;' : '',
+                      this._getGestureStyles(!this._lyricsActive)
+                    ].filter(Boolean).join('; ')}"
                   >
                     ${useInsetArtwork && artworkUrl ? html`
                       <div style="position: absolute; ${needsArtworkTopPadding ? 'top: 20px; right: 0; bottom: 0; left: 0;' : 'inset: 0;'} display: flex; align-items: center; justify-content: center; pointer-events: none; box-sizing: border-box; padding: 0 5px;">
@@ -8227,23 +8728,10 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
                           class="inset-artwork"
                           src="${artworkUrl}" 
                           style="max-width: 100%; max-height: 100%; object-fit: contain; pointer-events: none;" 
+                          onload="this.style.display='block'"
+                          onerror="this.style.display='none'"
                         />
                       </div>
-                    ` : nothing}
-
-
-                    ${(this._lyricsActive && !this._isIdle) ? html`
-                      <yamp-lyrics-view
-                        data-artwork-fit="${activeArtworkFit}"
-                        .hass=${this.hass}
-                        .lyrics=${this._massLyrics}
-                        .position=${pos}
-                        .loading=${this._fetchingLyrics}
-                        .error=${this._lyricsError}
-                        .activeThemeColor=${this.config.match_theme === true ? "var(--state-media_player-active-color, var(--primary-color, #ffffff))" : "var(--custom-accent, #ffffff)"}
-                        .mode=${this._isCurrentlyPlayingRadio() ? 'text' : (this.config.lyrics_mode || 'default')}
-                        .preRoll=${this.config.lyrics_pre_roll ?? 0}
-                      ></yamp-lyrics-view>
                     ` : nothing}
                   </div>
                 ` : nothing}
@@ -8262,7 +8750,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           detailStyleParts.push(`min-height:${detailsMinHeight}px`);
           if (!shouldShowDetails) detailStyleParts.push('opacity:0');
           if (!this._lastSpacerRendered) {
-            detailStyleParts.push('flex: 1');
+            if (!this._lyricsActive) {
+              detailStyleParts.push('flex: 1');
+            } else {
+              detailStyleParts.push('margin-top: auto');
+            }
             detailStyleParts.push('justify-content: flex-end');
           }
           const gestureStyles = this._getGestureStyles(this._isIdle);
@@ -8289,16 +8781,52 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
                       </div>
                     ` : html`
                       <div class="title track-options-title" @click=${(e) => { if (shouldShowDetails && title) { e.stopPropagation(); this._showMediaTitleOptions = true; } }} style="${shouldShowDetails && title ? 'cursor: pointer;' : ''}" title="${shouldShowDetails && title ? localize('search.show_track_options') : ''}">
-                        ${shouldShowDetails && title ? title : html`&nbsp;`}
+                        <span class="marquee-inner">${shouldShowDetails && title ? title : html`&nbsp;`}</span>
                       </div>
                     `}
-                    <div
-                        class="artist ${shouldShowDetails && stateObj.attributes.media_artist ? 'clickable-artist' : ''}"
-                        @click=${() => {
-          if (shouldShowDetails && stateObj.attributes.media_artist) this._searchArtistFromNowPlaying();
-        }}
-                        title=${shouldShowDetails && stateObj.attributes.media_artist ? localize('search.search_artist') : ""}
-                      >${shouldShowDetails && artist ? artist : html`&nbsp;`}</div>
+                    <div class="artist">
+                      <span class="marquee-inner">${shouldShowDetails ? (
+                        artist && album ? html`
+                          <span
+                            class="artist-name ${hasSearchableArtist ? "clickable-artist" : ""}"
+                            @click=${(e) => {
+                              if (hasSearchableArtist) {
+                                e.stopPropagation();
+                                this._searchArtistFromNowPlaying();
+                              }
+                            }}
+                            title=${searchArtistTitle}
+                          >${artist}</span><span class="artist-album-separator"> - </span><span
+                            class="album-name clickable-album"
+                            @click=${(e) => {
+                              e.stopPropagation();
+                              this._searchAlbumFromNowPlaying();
+                            }}
+                            title=${searchAlbumTitle}
+                          >${album}</span>
+                        ` : artist ? html`
+                          <span
+                            class="artist-name ${hasSearchableArtist ? "clickable-artist" : ""}"
+                            @click=${(e) => {
+                              if (hasSearchableArtist) {
+                                e.stopPropagation();
+                                this._searchArtistFromNowPlaying();
+                              }
+                            }}
+                            title=${searchArtistTitle}
+                          >${artist}</span>
+                        ` : album ? html`
+                          <span
+                            class="album-name clickable-album"
+                            @click=${(e) => {
+                              e.stopPropagation();
+                              this._searchAlbumFromNowPlaying();
+                            }}
+                            title=${searchAlbumTitle}
+                          >${album}</span>
+                        ` : html`&nbsp;`
+                      ) : html`&nbsp;`}</span>
+                    </div>
                   </div>
                 ` : nothing}
                 ${(!collapsed && !this._alternateProgressBar)
@@ -8379,8 +8907,10 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         reserveLeadingControlSpace: this._controlLayout === "modern",
         showRightPlaceholder: this._controlLayout === "modern",
         rightSlotTemplate: shouldHideVolumeControls ? (rightSlotTemplate !== nothing ? html`<div style="visibility:hidden; opacity:0; pointer-events:none;">${rightSlotTemplate}</div>` : nothing) : rightSlotTemplate,
+        muteSlotTemplate: shouldHideVolumeControls ? (muteSlotTemplate !== nothing ? html`<div style="visibility:hidden; opacity:0; pointer-events:none;">${muteSlotTemplate}</div>` : nothing) : muteSlotTemplate,
         hideVolume: isVolumeHidden,
-        moreInfoMenu: (!this._showEntityOptions && !isCompactVolume) ? html`
+        collapseRow: volumeRowWillCollapse,
+        moreInfoMenu: (!this._showEntityOptions && !isCompactVolume && !volumeRowWillCollapse) ? html`
           <div class="more-info-menu">
             <button class="more-info-btn" @click=${async () => await this._openEntityOptions()}>
               <span class="more-info-icon">&#9776;</span>
@@ -8388,8 +8918,15 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           </div>
         ` : nothing,
       })}
-            ${showChipsInMenu && !this._showEntityOptions && !this._hideActiveEntityLabel && !(this._hideActiveEntityLabelOnIdle && this._isIdle) ? html`
-              <div class="in-menu-active-label">${activeChipName}</div>
+            ${(volumeRowWillCollapse && !this._showEntityOptions && !isCompactVolume) ? html`
+              <div class="more-info-menu volume-collapsed">
+                <button class="more-info-btn" @click=${async () => await this._openEntityOptions()}>
+                  <span class="more-info-icon">&#9776;</span>
+                </button>
+              </div>
+            ` : nothing}
+            ${showChipsInMenu && !this._hideActiveEntityLabel && !(this._hideActiveEntityLabelOnIdle && this._isIdle) ? html`
+              <div class="in-menu-active-label" style="${this._showEntityOptions ? 'visibility:hidden; opacity:0; pointer-events:none;' : ''}">${activeChipName}</div>
             ` : nothing}
           </div>
         </div>
@@ -8397,7 +8934,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
       ${this._showEntityOptions ? html`
       <div class="entity-options-overlay entity-options-overlay-opening" @click=${(e) => this._closeEntityOptions(e)}>
-        <div class="entity-options-container entity-options-container-opening">
+        <div class="entity-options-container entity-options-container-opening" style="${this._showSearchInSheet ? 'height:100%;' : ''}">
           <div class="entity-options-sheet${(showChipsInMenu || reserveChipSpaceInMenu) ? ' chips-mode' : ''} entity-options-sheet-opening" 
                @click=${e => e.stopPropagation()}
                data-pin-search-headers="${effectivePinHeaders}">
@@ -8408,12 +8945,13 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
                 </div>
               </div>
             ` : nothing}
-              ${(!this._showGrouping && !this._showSourceList && !this._showSearchInSheet && !this._showResolvedEntities && !this._showTransferQueue) ? this._renderMainMenu(sourceList, menuOnlyActions, showChipsInMenu) :
-          this._showGrouping ? this._renderGroupingSheet() :
-            this._showTransferQueue ? this._renderTransferQueueSheet() :
-              this._showResolvedEntities ? this._renderResolvedEntitiesSheet() :
-                this._showSearchInSheet ? this._renderSearchInOptions(showSearchHeaders, effectivePinHeaders) :
-                  this._renderSourceListSheet(sourceList, sourceLetters, availableSourceFirstLetters)}
+              ${(!this._showGrouping && !this._showSourceList && !this._showSearchInSheet && !this._showResolvedEntities && !this._showTransferQueue && !this._showRemoteControl) ? this._renderMainMenu(sourceList, menuOnlyActions, showChipsInMenu) :
+          this._showRemoteControl ? this._renderRemoteControlSheet() :
+            this._showGrouping ? this._renderGroupingSheet() :
+              this._showTransferQueue ? this._renderTransferQueueSheet() :
+                this._showResolvedEntities ? this._renderResolvedEntitiesSheet() :
+                  this._showSearchInSheet ? this._renderSearchInOptions(showSearchHeaders, effectivePinHeaders) :
+                    this._renderSourceListSheet(sourceList, sourceLetters, availableSourceFirstLetters)}
               </div>
             </div>
             <!-- Persistent Media Controls Section - Outside Scrollable Area -->
@@ -8445,6 +8983,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
                   ${!this.config.hide_reorder_progress && !this.config.hide_menu_player && this._queueOpsTotal > 0 ? html`
                     <div class="queue-ops-progress" style="position: absolute !important; bottom: -20px !important; left: 50% !important; transform: translate(-50%, 0) !important; z-index: 1000 !important; width: max-content !important; pointer-events: none !important; color: var(--search-text-secondary) !important;">
                       Re-ordering ${this._queueOpsCompleted} / ${this._queueOpsTotal}
+                    </div>
+                  ` : nothing}
+                  ${this._lyricsActive && !this._isIdle && this._fetchingLyrics ? html`
+                    <div class="queue-ops-progress" style="position: absolute !important; bottom: -20px !important; left: 50% !important; transform: translate(-50%, 0) !important; z-index: 1000 !important; width: max-content !important; pointer-events: none !important; color: var(--search-text-secondary) !important;">
+                      ${localize("lyrics.finding")}
                     </div>
                   ` : nothing}
                 </div>
@@ -8488,20 +9031,23 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
               Re-ordering ${this._queueOpsCompleted} / ${this._queueOpsTotal}
             </div>
           ` : ""}
+          ${(!this._showEntityOptions || !shouldShowPersistentControls) && this._lyricsActive && !this._isIdle && this._fetchingLyrics ? html`
+            <div class="queue-ops-progress" style="position: absolute !important; bottom: 2px !important; left: 50% !important; transform: translate(-50%, 0) !important; z-index: 1000 !important; width: max-content !important; pointer-events: none !important; color: var(--search-text-secondary) !important;">
+              ${localize("lyrics.finding")}
+            </div>
+          ` : ""}
           </div>
     </ha-card>
   `;
   }
 
   _getCardHeightMetrics(config) {
-    const customCardHeightInput = this._cardHeightTemplateValue?.card?.template
-      ? this._cardHeightResolveCache?.card?.value
-      : config.card_height;
+    const customCardHeightInput = this._cardHeight;
     const customCardHeight = typeof customCardHeightInput === "string"
       ? parseFloat(customCardHeightInput)
       : Number(customCardHeightInput);
     const isValidCardHeightNumber = typeof customCardHeight === "number" && Number.isFinite(customCardHeight) && customCardHeight > 0;
-    const hasCustomCardHeight = isValidCardHeightNumber || (typeof customCardHeight === "string" && customCardHeight.trim() !== "");
+    const hasCustomCardHeight = isValidCardHeightNumber;
     return { customCardHeight, hasCustomCardHeight };
   }
 
@@ -8551,7 +9097,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const playbackEntityId = this._getEntityForPurpose(this._selectedIndex, 'playback_control');
     const playbackStateObj = (this.hass && this.hass.states && playbackEntityId) ? this.hass.states[playbackEntityId] : undefined;
     const isCurrentPlayingForIdle = playbackStateObj ? this._isEntityPlaying(playbackStateObj) : false;
-    const normalizedIdleImageInput = config.idle_image ? resolveStringTemplateSync(this.hass, config.idle_image) : null;
+    const isJsTemplate = typeof config.idle_image === "string" && config.idle_image.trim().startsWith("[[[");
+    const rawIdleImageInput = isJsTemplate
+      ? this._evaluateJsTemplate(config.idle_image)
+      : (this._idleImageTemplate ? this._idleImageTemplateResult : (config.idle_image ? resolveStringTemplateSync(this.hass, config.idle_image, this._getTemplateContext()) : null));
+    const normalizedIdleImageInput = this._normalizeImageSourceValue(rawIdleImageInput);
     const forceIdleImage = config.show_idle_artwork_when_not_playing === true && !isCurrentPlayingForIdle && normalizedIdleImageInput;
 
     const isActuallyPlaying = this._isCurrentEntityPlaying();
@@ -8585,60 +9135,137 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const hasMultipleEntities = (this.entityObjs || []).length > 1;
     const showChipsInMenu = (showChipRow === "in_menu" || (showChipRow === "in_menu_on_idle" && this._isIdle)) && hasMultipleEntities;
     const renderChipRowSeparately = showChipRow !== "hidden" && !showChipsInMenu && hasMultipleEntities;
+    const renderActionChipRow = config.action_chips && config.action_chips.length > 0;
 
-    let baseMinHeight = 240;
-    let collapsedArtworkSize = 0;
     const cardWidth = this.offsetWidth || 0;
+    const topChipReserve = renderChipRowSeparately ? 58 : 0;
+    const topActionReserve = renderActionChipRow ? 42 : 0;
+    const totalTopReserve = topChipReserve + topActionReserve;
+    const effectiveHeight = hasCustomCardHeight ? Math.max(0, customCardHeight - totalTopReserve) : 0;
 
-    // Layout artwork size for CSS variable offsets — uses 95% of (height − padding)
-    // as the base, then clamps to a width-safe maximum (see _getMaxCollapsedArtworkWidth).
-    // This differs from the render-method value which targets visual proportion (48% of height).
+    const layoutStateKey = [
+      cardWidth,
+      customCardHeight,
+      collapsed,
+      showChipRow,
+      hasMultipleEntities,
+      this._isIdle,
+      renderActionChipRow,
+      this._artworkObjectFit,
+      this._collapsedBaselineHeight,
+      this._alwaysCollapsed,
+      this._getEffectiveVolumeMode(),
+      this._showEntityOptions
+    ].join('_');
+
+    if (this._lastLayoutStateKey === layoutStateKey) {
+      return;
+    }
+    this._lastLayoutStateKey = layoutStateKey;
+
     if (collapsed) {
+      let collapsedArtworkSize;
       if (hasCustomCardHeight) {
         const maxSize = this._getMaxCollapsedArtworkWidth(cardWidth);
         collapsedArtworkSize = Math.max(0, Math.min(maxSize, Math.round((customCardHeight - (isCompact ? 90 : 130)) * 0.95)));
       } else {
         collapsedArtworkSize = (this._artworkObjectFit === "no_artwork") ? 0 : 64;
       }
-    }
 
-    const baseExtraSpace = hasCustomCardHeight ? (customCardHeight - baseMinHeight) : 0;
-    const chipRowSpacing = renderChipRowSeparately ? 58 : 0;
-    const effectiveExtraSpace = Math.max(0, baseExtraSpace - chipRowSpacing);
-    const detailGrowth = Math.min(90, effectiveExtraSpace * 0.45);
-    const controlSpacerSize = effectiveExtraSpace > 0 ? Math.max(0, effectiveExtraSpace - detailGrowth) : 0;
-    const releaseControlsRow = controlSpacerSize >= 48;
-    const collapsedBaselineHeight = this._collapsedBaselineHeight || 220;
-    const collapsedExtraSpace = hasCustomCardHeight ? (customCardHeight - collapsedBaselineHeight) : 0;
+      const collapsedBaselineHeight = this._collapsedBaselineHeight || 220;
+      const collapsedExtraSpace = hasCustomCardHeight ? (customCardHeight - collapsedBaselineHeight) : 0;
 
-    const collapsedDetailsOffset = (collapsed && collapsedArtworkSize > 0)
-      ? Math.round(collapsedArtworkSize + (isCompact ? 12 : 24) + Math.min(40, Math.max(0, collapsedExtraSpace) * 0.12))
-      : (collapsed && collapsedArtworkSize === 0 ? 0 : null);
+      const collapsedDetailsOffset = (collapsedArtworkSize > 0)
+        ? Math.round(collapsedArtworkSize + (isCompact ? 12 : 24) + Math.min(40, Math.max(0, collapsedExtraSpace) * 0.12))
+        : 0;
 
-    const collapsedControlsOffset = releaseControlsRow ? 0 : (collapsedDetailsOffset ?? 0);
-    const widthScale = cardWidth > 380 ? Math.min(1.6, 1 + (cardWidth - 380) / 520) : 1;
-    const heightScale = collapsedExtraSpace > 0
-      ? Math.min(1.45, 1 + effectiveExtraSpace / 180)
-      : (isCompact ? 0.9 : 1);
-    const titleScale = (heightScale > 1 || widthScale > 1)
-      ? Math.min(1.6, Math.max(heightScale, widthScale))
-      : (isCompact ? 0.95 : 1);
-    const artistScale = isCompact ? 0.85 : Math.min(1.5, Math.max(heightScale * 0.92, widthScale * 0.92));
+      const baseExtraSpace = hasCustomCardHeight ? (customCardHeight - 240) : 0;
+      const effectiveExtraSpace = Math.max(0, baseExtraSpace - topChipReserve);
+      const detailGrowth = Math.min(90, effectiveExtraSpace * 0.45);
+      const controlSpacerSize = effectiveExtraSpace > 0 ? Math.max(0, effectiveExtraSpace - detailGrowth) : 0;
+      const releaseControlsRow = controlSpacerSize >= 48;
+      const collapsedControlsOffset = releaseControlsRow ? 0 : collapsedDetailsOffset;
 
-    const isCompactVolume = hasCustomCardHeight && customCardHeight < 320 && !this._alwaysCollapsed;
-    const hideVolume = this._getEffectiveVolumeMode() === "hidden" || isCompactVolume || (hasCustomCardHeight && customCardHeight < 260 && collapsed && !this._showEntityOptions);
-    const artworkClearance = hideVolume ? 54 : 100;
+      const widthScale = cardWidth > 380 ? Math.min(1.6, 1 + (cardWidth - 380) / 520) : 1;
+      const heightScale = collapsedExtraSpace > 0
+        ? Math.min(1.45, 1 + effectiveExtraSpace / 180)
+        : (isCompact ? 0.9 : 1);
+      const titleScale = (heightScale > 1 || widthScale > 1)
+        ? Math.min(1.6, Math.max(heightScale, widthScale))
+        : (isCompact ? 0.95 : 1);
+      const artistScale = isCompact ? 0.85 : Math.min(1.5, Math.max(heightScale * 0.92, widthScale * 0.92));
 
-    if (collapsedExtraSpace !== 0 || isCompact) {
-      if (collapsedDetailsOffset != null) {
+      const isCompactVolume = hasCustomCardHeight && customCardHeight < 320 && !this._alwaysCollapsed;
+      const hideVolume = this._getEffectiveVolumeMode() === "hidden" || isCompactVolume || (hasCustomCardHeight && customCardHeight < 260 && !this._showEntityOptions);
+      const artworkClearance = hideVolume ? 54 : 100;
+
+      if (collapsedExtraSpace !== 0 || isCompact) {
         host.style.setProperty('--yamp-collapsed-details-offset', `${collapsedDetailsOffset}px`);
+        host.style.setProperty('--yamp-collapsed-controls-offset', `${collapsedControlsOffset}px`);
+        host.style.setProperty('--yamp-collapsed-title-scale', titleScale.toFixed(3));
+        host.style.setProperty('--yamp-collapsed-artist-scale', artistScale.toFixed(3));
+        host.style.setProperty('--yamp-collapsed-artwork-size', `${collapsedArtworkSize}px`);
+        host.style.setProperty('--yamp-collapsed-artwork-clearance', `${artworkClearance}px`);
+      } else {
+        host.style.removeProperty('--yamp-collapsed-controls-offset');
+        host.style.removeProperty('--yamp-collapsed-details-offset');
+        host.style.removeProperty('--yamp-collapsed-artwork-size');
+        host.style.removeProperty('--yamp-collapsed-title-scale');
+        host.style.removeProperty('--yamp-collapsed-artist-scale');
+        host.style.removeProperty('--yamp-collapsed-artwork-clearance');
       }
-      host.style.setProperty('--yamp-collapsed-controls-offset', `${collapsedControlsOffset}px`);
-      host.style.setProperty('--yamp-collapsed-title-scale', titleScale.toFixed(3));
-      host.style.setProperty('--yamp-collapsed-artist-scale', artistScale.toFixed(3));
-      host.style.setProperty('--yamp-collapsed-artwork-size', `${collapsedArtworkSize}px`);
-      host.style.setProperty('--yamp-collapsed-artwork-clearance', `${artworkClearance}px`);
     } else {
+      // Expanded mode scaling
+      if (hasCustomCardHeight) {
+        // Adjust button sizes and padding based on available height
+        // Base expanded stack minimums: spacer 180 + details 60 + controls 82 + volume 64 = 386px
+        let primarySize = 70;
+        let mediumSize = 50;
+        let smallSize = 42;
+        let primaryIcon = 36;
+        let mediumIcon = 28;
+        let smallIcon = 24;
+        let controlsPadding = "16px";
+        let controlsGap = "20px";
+        let volumePadding = "10px 16px 14px 16px";
+
+        if (effectiveHeight < 380) {
+          const heightRatio = Math.max(0.6, effectiveHeight / 380);
+          
+          primarySize = Math.max(48, Math.round(70 * heightRatio));
+          mediumSize = Math.max(36, Math.round(50 * heightRatio));
+          smallSize = Math.max(32, Math.round(42 * heightRatio));
+          
+          primaryIcon = Math.max(24, Math.round(36 * heightRatio));
+          mediumIcon = Math.max(20, Math.round(28 * heightRatio));
+          smallIcon = Math.max(18, Math.round(24 * heightRatio));
+          
+          controlsPadding = `${Math.max(4, Math.round(16 * heightRatio))}px 16px`;
+          controlsGap = `${Math.max(8, Math.round(20 * heightRatio))}px`;
+          volumePadding = `${Math.max(4, Math.round(10 * heightRatio))}px 16px ${Math.max(8, Math.round(14 * heightRatio))}px 16px`;
+        }
+
+        host.style.setProperty('--yamp-modern-primary-size', `${primarySize}px`);
+        host.style.setProperty('--yamp-modern-medium-size', `${mediumSize}px`);
+        host.style.setProperty('--yamp-modern-small-size', `${smallSize}px`);
+        host.style.setProperty('--yamp-modern-primary-icon-size', `${primaryIcon}px`);
+        host.style.setProperty('--yamp-modern-medium-icon-size', `${mediumIcon}px`);
+        host.style.setProperty('--yamp-modern-small-icon-size', `${smallIcon}px`);
+        host.style.setProperty('--yamp-modern-padding', controlsPadding);
+        host.style.setProperty('--yamp-modern-gap', controlsGap);
+        host.style.setProperty('--yamp-volume-row-padding', volumePadding);
+      } else {
+        host.style.removeProperty('--yamp-modern-primary-size');
+        host.style.removeProperty('--yamp-modern-medium-size');
+        host.style.removeProperty('--yamp-modern-small-size');
+        host.style.removeProperty('--yamp-modern-primary-icon-size');
+        host.style.removeProperty('--yamp-modern-medium-icon-size');
+        host.style.removeProperty('--yamp-modern-small-icon-size');
+        host.style.removeProperty('--yamp-modern-padding');
+        host.style.removeProperty('--yamp-modern-gap');
+        host.style.removeProperty('--yamp-volume-row-padding');
+      }
+
       host.style.removeProperty('--yamp-collapsed-controls-offset');
       host.style.removeProperty('--yamp-collapsed-details-offset');
       host.style.removeProperty('--yamp-collapsed-artwork-size');
@@ -8664,6 +9291,9 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     if (displayTitle && (!selectedArt || !selectedArt.url) && mainArtwork?.url && mainState?.attributes?.media_title === displayTitle) {
       selectedArt = mainArtwork;
     }
+    if (!selectedArt) {
+      selectedArt = playbackArtwork || mainArtwork || null;
+    }
 
     let artworkObjectFit = this._artworkObjectFit;
     if (selectedArt?.objectFit) {
@@ -8674,6 +9304,13 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const backgroundSize = this._getBackgroundSizeForFit(activeArtworkFit);
     host.style.setProperty('--yamp-artwork-fit', activeArtworkFit);
     host.style.setProperty('--yamp-artwork-bg-size', backgroundSize);
+    if (selectedArt?.objectPosition) {
+      host.style.setProperty('--yamp-artwork-position', selectedArt.objectPosition);
+    } else if (this.config?.artwork_position) {
+      host.style.setProperty('--yamp-artwork-position', this.config.artwork_position);
+    } else {
+      host.style.setProperty('--yamp-artwork-position', 'top center');
+    }
   }
 
   _updateHostAttributes() {
@@ -8701,6 +9338,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     return html`
       <div class="search-sub-filters" style="display: flex; align-items: center; margin-bottom: 2px; margin-top: 4px; padding-left: 3px; width: 100%; gap: 8px;">
         <div style="display: flex; align-items: center; flex-wrap: wrap; flex: 1; min-width: 0;">
+          ${this._cardType !== 'up_next' ? html`
           <button
             class="button${this._initialFavoritesLoaded || this._favoritesFilterActive ? ' active' : ''}"
             style="
@@ -8716,8 +9354,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
               opacity: ${this._searchAttempted ? '1' : '0.5'};
             "
             @click=${this._searchAttempted ? () => {
-        this._toggleFavoritesFilter();
-      } : () => { }}
+          this._toggleFavoritesFilter();
+        } : () => { }}
             title="${localize('search.favorites')}"
           >
             <ha-icon .icon=${this._initialFavoritesLoaded || this._favoritesFilterActive ? 'mdi:cards-heart' : 'mdi:cards-heart-outline'}></ha-icon>
@@ -8742,8 +9380,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
               opacity: ${this._searchAttempted ? '1' : '0.5'};
             "
             @click=${this._searchAttempted ? () => {
-        this._toggleRecentlyPlayedFilter();
-      } : () => { }}
+          this._toggleRecentlyPlayedFilter();
+        } : () => { }}
             title="${localize('search.recently_played')}"
           >
             <ha-icon .icon=${this._recentlyPlayedFilterActive ? 'mdi:clock' : 'mdi:clock-outline'}></ha-icon>
@@ -8769,8 +9407,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
                 opacity: ${this._searchAttempted ? '1' : '0.5'};
               "
               @click=${this._searchAttempted ? () => {
-          this._toggleUpcomingFilter();
-        } : () => { }}
+            this._toggleUpcomingFilter();
+          } : () => { }}
               title="${localize('search.next_up')}"
             >
               <ha-icon .icon=${this._upcomingFilterActive ? 'mdi:playlist-music' : 'mdi:playlist-music-outline'}></ha-icon>
@@ -8796,8 +9434,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
                   opacity: ${this._searchAttempted ? '1' : '0.5'};
                 "
                 @click=${this._searchAttempted ? () => {
-            this._toggleRecommendationsFilter();
-          } : () => { }}
+              this._toggleRecommendationsFilter();
+            } : () => { }}
                 title="${localize('search.recommendations')}"
               >
                 <ha-icon .icon=${this._recommendationsFilterActive ? 'mdi:creation' : 'mdi:creation-outline'}></ha-icon>
@@ -8837,8 +9475,9 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
               <ha-icon .icon=${this._getSearchSortToggleIcon()}></ha-icon>
             </button>
           ` : nothing}
+          ` : nothing}
           ${this._shouldShowSearchResultsCount() ? html`
-            <span class="search-results-count">
+            <span class="search-results-count" style="${this._cardType === 'up_next' ? 'padding-top: 15px; display: inline-block;' : ''}">
               ${this._getSearchResultsCountLabel()}
             </span>
           ` : nothing}
@@ -8849,7 +9488,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
   _renderSearchInOptions(showSearchHeaders, pinSearchHeaders = false) {
     return html`
-      <div class="entity-options-search" style="margin-top:12px;">
+      <div class="entity-options-search" style="margin-top:${this._cardType === 'up_next' ? '0' : '12px'};">
         ${this._searchHierarchy.length > 0 ? html`
             <button class="entity-options-item close-item" @click=${() => this._goBackInSearch()}>
               ${localize('common.back')}
@@ -8866,9 +9505,9 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
                 </button>
               ` : nothing}
             </div>
-          ` : (showSearchHeaders ? html`<div class="entity-options-search-skeleton"></div>` : nothing)
+          ` : (showSearchHeaders && this._cardType !== 'up_next' ? html`<div class="entity-options-search-skeleton"></div>` : nothing)
       }
-        ${showSearchHeaders ? html`
+        ${showSearchHeaders && this._cardType !== 'up_next' ? html`
           <div class="entity-options-search-row">
             <div class="search-input-wrapper">
               <input
@@ -8905,7 +9544,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
               ?disabled=${this._searchLoading}>
               <ha-icon icon="mdi:magnify"></ha-icon>
             </button>
-            ${this._cardType !== "search" ? html`
+            ${this._cardType !== "search" && this._cardType !== "up_next" ? html`
             <button
               class="entity-options-item icon-only"
               style="min-width:48px; padding: 0;"
@@ -8918,7 +9557,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           </div>
         ` : nothing}
         <!--FILTER CHIPS-->
-        ${showSearchHeaders ? (() => {
+        ${showSearchHeaders && this._cardType !== 'up_next' ? (() => {
         const classes = this._getVisibleSearchFilterClasses();
         const filter = this._searchMediaClassFilter || "all";
 
@@ -8950,96 +9589,109 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         
         ${this._renderSearchSubFilters(showSearchHeaders)}
  
-        <div class="${this._showSearchInSheet ? 'search-sheet-results' : 'entity-options-search-results'}" 
-             style="${(this.config.search_view === 'card' || this.config.search_view === 'card_minimal') ? `--search-card-columns: ${this.config.search_card_columns || 4};` : ''}">
-          ${(() => {
-        const currentResults = this._getDisplaySearchResults();
-        const isCard = this.config.search_view === 'card' || this.config.search_view === 'card_minimal';
-        const isMinimal = this.config.search_view === 'card_minimal';
-        const totalRows = Math.max(15, this._searchTotalRows || currentResults.length);
-        const paddedResults = [
-          ...currentResults,
-          ...Array.from({ length: Math.max(0, totalRows - currentResults.length) }, () => null)
-        ];
-        const renderItemFn = (item) => renderSearchResultItem({
-          item,
-          isCard,
-          isMinimal,
-          activeSearchRowMenuId: this._activeSearchRowMenuId,
-          loadingSearchRowMenuId: this._loadingSearchRowMenuId,
-          errorSearchRowMenuId: this._errorSearchRowMenuId,
-          successSearchRowMenuId: this._successSearchRowMenuId,
-          successSearchRowType: this._successSearchRowType,
-          isSelectionFlow: this._isSelectionFlow,
-          massQueueAvailable: this._massQueueAvailable,
-          upcomingFilterActive: !!this._upcomingFilterActive,
-          recentlyPlayedFilterActive: !!this._recentlyPlayedFilterActive,
-          recommendationsFilterActive: !!this._recommendationsFilterActive,
-          searchMediaClassFilter: this._searchMediaClassFilter,
-          queueControlsStyle: this.config.queue_controls_style || "drag_handle",
-          onPlay: (it, e) => this._playMediaFromSearch(it, e),
-          onResultClick: (it, e) => this._handleSearchResultClick(it, e),
-          onResultTouch: (it, e) => this._handleSearchResultTouch(it, e),
-          onOptionsToggle: (it) => { this._activeSearchRowMenuId = it?.media_content_id || null; this.requestUpdate(); },
-          onPlayOption: (it, mode) => this._performSearchOptionAction(it, mode),
-          onMoveUp: (it) => this._moveQueueItemUp(it.queue_item_id),
-          onMoveDown: (it) => this._moveQueueItemDown(it.queue_item_id),
-          onMoveNext: (it) => this._moveQueueItemNext(it.queue_item_id),
-          onRemove: (it) => this._removeQueueItem(it.queue_item_id),
-          isMusicAssistant: this._isMusicAssistantEntity(),
-          isValidArtwork: (url) => isValidArtworkUrl(url),
-          getClickTitle: (it) => this._getSearchResultClickTitle(it),
-          artworkHostname: this.config?.artwork_hostname || ""
-        });
+        ${(() => {
+          const isQueueDragAndDrop = this._upcomingFilterActive && this._massQueueAvailable;
+          const currentResults = this._getDisplaySearchResults();
+          const isCard = this.config.search_view === 'card' || this.config.search_view === 'card_minimal';
+          const isMinimal = this.config.search_view === 'card_minimal';
+          const isGridMode = this._isGridMode;
+          
+          const renderItemFn = (item) => renderSearchResultItem({
+            item,
+            isCard,
+            isMinimal,
+            isGridMode,
+            activeSearchRowMenuId: this._activeSearchRowMenuId,
+            loadingSearchRowMenuId: this._loadingSearchRowMenuId,
+            errorSearchRowMenuId: this._errorSearchRowMenuId,
+            successSearchRowMenuId: this._successSearchRowMenuId,
+            successSearchRowType: this._successSearchRowType,
+            isSelectionFlow: this._isSelectionFlow,
+            massQueueAvailable: this._massQueueAvailable,
+            upcomingFilterActive: !!this._upcomingFilterActive,
+            recentlyPlayedFilterActive: !!this._recentlyPlayedFilterActive,
+            recommendationsFilterActive: !!this._recommendationsFilterActive,
+            searchMediaClassFilter: this._searchMediaClassFilter,
+            queueControlsStyle: this.config.queue_controls_style || "drag_handle",
+            onPlay: (it, e) => this._playMediaFromSearch(it, e),
+            onResultClick: (it, e) => this._handleSearchResultClick(it, e),
+            onResultTouch: (it, e) => this._handleSearchResultTouch(it, e),
+            onOptionsToggle: (it) => { this._activeSearchRowMenuId = it?.media_content_id || null; this.requestUpdate(); },
+            onPlayOption: (it, mode) => this._performSearchOptionAction(it, mode),
+            onMoveUp: (it) => this._moveQueueItemUp(it.queue_item_id),
+            onMoveDown: (it) => this._moveQueueItemDown(it.queue_item_id),
+            onMoveNext: (it) => this._moveQueueItemNext(it.queue_item_id),
+            onRemove: (it) => this._removeQueueItem(it.queue_item_id),
+            isMusicAssistant: this._isMusicAssistantEntity(),
+            isValidArtwork: (url) => isValidArtworkUrl(url),
+            getClickTitle: (it) => this._getSearchResultClickTitle(it),
+            artworkHostname: this.config?.artwork_hostname || ""
+          });
 
-        if (this._searchAttempted && currentResults.length === 0 && !this._searchLoading) {
-          return html`<div class="entity-options-search-empty">${localize('common.no_results')}</div>`;
-        }
+          if (this._searchAttempted && currentResults.length === 0 && !this._searchLoading) {
+            return html`
+              <div class="${this._showSearchInSheet ? 'search-sheet-results' : 'entity-options-search-results'}">
+                <div class="entity-options-search-empty">${localize('common.no_results')}</div>
+              </div>
+            `;
+          }
 
-        const isQueueDragAndDrop = this._upcomingFilterActive && this._massQueueAvailable;
-
-        if (isQueueDragAndDrop) {
-          return html`
-            <div class="queue-sortable-container ${isCard ? 'is-card-layout' : ''}"
-              @pointerdown=${(e) => this._onQueueDragStart(e)}
-            >
-              ${currentResults.map((item, idx) => html`
-                <div class="queue-drag-wrapper" data-queue-idx="${idx}">
-                  ${renderItemFn(item)}
+          if (isQueueDragAndDrop) {
+            return html`
+              <div class="${this._showSearchInSheet ? 'search-sheet-results' : 'entity-options-search-results'} queue-results-wrapper ${isGridMode ? 'grid-mode' : ''}"
+                   style="${(this.config.search_view === 'card' || this.config.search_view === 'card_minimal' || isGridMode) ? `--search-card-columns: ${isGridMode ? 5 /* MINI_GRID_COLUMNS */ : (this.config.search_card_columns || 4)};` : ''}">
+                <div class="queue-sortable-container ${(isCard || isGridMode) ? 'is-card-layout' : ''} ${isGridMode ? 'grid-mode' : ''}"
+                  @pointerdown=${(e) => this._onQueueDragStart(e)}
+                >
+                  ${currentResults.map((item, idx) => html`
+                    <div class="queue-drag-wrapper" data-queue-idx="${idx}">
+                      ${renderItemFn(item)}
+                    </div>
+                  `)}
                 </div>
-              `)}
+              </div>
+            `;
+          }
+
+          if (!this._cachedSearchGridLayout || this._cachedSearchGridLayoutColumns !== (isGridMode ? 5 /* MINI_GRID_COLUMNS */ : (this.config.search_card_columns || 4)) || this._cachedSearchGridLayoutIsMinimal !== isMinimal || this._cachedSearchGridLayoutIsGridMode !== isGridMode) {
+            const columns = isGridMode ? 5 /* MINI_GRID_COLUMNS */ : (this.config.search_card_columns || 4);
+            this._cachedSearchGridLayoutColumns = columns;
+            this._cachedSearchGridLayoutIsMinimal = isMinimal;
+            this._cachedSearchGridLayoutIsGridMode = isGridMode;
+            this._cachedSearchGridLayout = yampGrid({
+              columns: columns,
+              gap: isGridMode ? '0px' : '12px',
+              padding: isGridMode ? '0px' : '12px',
+              itemSize: isGridMode 
+                ? { width: 70, height: 85 } 
+                : (isMinimal
+                  ? { width: 150, height: 150 }
+                  : { width: 150, height: 244 })
+            });
+          }
+
+          return html`
+            <div class="${this._showSearchInSheet ? 'search-sheet-results' : 'entity-options-search-results'} virtualized-results-wrapper ${isGridMode ? 'grid-mode' : ''}"
+                 style="${(this.config.search_view === 'card' || this.config.search_view === 'card_minimal' || isGridMode) ? `--search-card-columns: ${isGridMode ? 5 /* MINI_GRID_COLUMNS */ : (this.config.search_card_columns || 4)};` : ''}">
+              ${(isCard || isGridMode)
+                ? virtualize({
+                  items: currentResults,
+                  renderItem: renderItemFn,
+                  layout: this._cachedSearchGridLayout,
+                  scroller: pinSearchHeaders
+                })
+                : virtualize({ items: currentResults, renderItem: renderItemFn, scroller: pinSearchHeaders })}
             </div>
           `;
-        }
-
-        if (!this._cachedSearchGridLayout || this._cachedSearchGridLayoutColumns !== (this.config.search_card_columns || 4) || this._cachedSearchGridLayoutIsMinimal !== isMinimal) {
-          this._cachedSearchGridLayoutColumns = this.config.search_card_columns || 4;
-          this._cachedSearchGridLayoutIsMinimal = isMinimal;
-          this._cachedSearchGridLayout = yampGrid({
-            columns: this._cachedSearchGridLayoutColumns,
-            gap: '12px',
-            padding: '12px',
-            itemSize: isMinimal
-              ? { width: 150, height: 150 }
-              : { width: 150, height: 244 }
-          });
-        }
-
-        return isCard
-          ? virtualize({
-            items: paddedResults,
-            renderItem: renderItemFn,
-            layout: this._cachedSearchGridLayout,
-            scroller: pinSearchHeaders
-          })
-          : virtualize({ items: paddedResults, renderItem: renderItemFn, scroller: pinSearchHeaders });
-      })()}
+        })()}
         </div>
       </div>
     `;
   }
 
   _renderSourceListSheet(sourceList, sourceLetters, availableSourceFirstLetters) {
+    const isGridMode = this._isGridMode;
+
     return html`
       <div class="entity-options-header">
         <button class="entity-options-item close-item" @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._closeSourceList(); } }}>
@@ -9049,38 +9701,50 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       </div>
       <div class="entity-options-scroll source-list-centering-wrapper">
         <div class="source-list-sheet">
-          <div class="source-list-scroll">
-            ${sourceList.map(src => html`
-              <div class="entity-options-item" data-source-name="${src}" @click=${() => this._selectSource(src)}>${src}</div>
-            `)}
+          <div class="source-list-scroll ${isGridMode ? 'grid-menu' : ''}">
+            ${sourceList.map(src => {
+              if (isGridMode) {
+                return html`
+                  <button class="entity-options-item menu-action-item" @click=${() => this._selectSource(src)}>
+                    <ha-icon class="menu-action-icon" icon="mdi:login"></ha-icon>
+                    <span class="menu-action-label">${src}</span>
+                  </button>
+                `;
+              }
+              return html`
+                <div class="entity-options-item" data-source-name="${src}" @click=${() => this._selectSource(src)}>${src}</div>
+              `;
+            })}
           </div>
         </div>
       </div>
-      <div class="floating-source-index">
-        ${sourceLetters.map((letter, i) => {
-      const isAvailable = availableSourceFirstLetters.has(letter);
-      const hovered = this._hoveredSourceLetterIndex;
-      let scale = "";
-      if (isAvailable && hovered !== null && hovered !== undefined) {
-        const dist = Math.abs(hovered - i);
-        if (dist === 0) scale = "max";
-        else if (dist === 1) scale = "large";
-        else if (dist === 2) scale = "med";
-      }
-      return html`
-            <button
-              class="source-index-letter"
-              ?disabled=${!isAvailable}
-              data-scale=${scale}
-              @mouseenter=${isAvailable ? () => { this._hoveredSourceLetterIndex = i; this.requestUpdate(); } : nothing}
-              @mouseleave=${() => { this._hoveredSourceLetterIndex = null; this.requestUpdate(); }}
-              @click=${isAvailable ? () => this._scrollToSourceLetter(letter) : nothing}
-            >
-              ${letter}
-            </button>
-          `;
-    })}
-      </div>
+      ${!isGridMode ? html`
+        <div class="floating-source-index">
+          ${sourceLetters.map((letter, i) => {
+        const isAvailable = availableSourceFirstLetters.has(letter);
+        const hovered = this._hoveredSourceLetterIndex;
+        let scale = "";
+        if (isAvailable && hovered !== null && hovered !== undefined) {
+          const dist = Math.abs(hovered - i);
+          if (dist === 0) scale = "max";
+          else if (dist === 1) scale = "large";
+          else if (dist === 2) scale = "med";
+        }
+        return html`
+              <button
+                class="source-index-letter"
+                ?disabled=${!isAvailable}
+                data-scale=${scale}
+                @mouseenter=${isAvailable ? () => { this._hoveredSourceLetterIndex = i; this.requestUpdate(); } : nothing}
+                @mouseleave=${() => { this._hoveredSourceLetterIndex = null; this.requestUpdate(); }}
+                @click=${isAvailable ? () => this._scrollToSourceLetter(letter) : nothing}
+              >
+                ${letter}
+              </button>
+            `;
+      })}
+        </div>
+      ` : nothing}
     `;
   }
 
@@ -9160,7 +9824,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
             this._idleTimeout = null;
           }
 
-          if (!isAnyUnrestrictedPlaying) {
+          if (!isAnyUnrestrictedPlaying && this._idleTimeoutMs > 0) {
             // Bypass grace period if we just switched away from the only thing keeping the card awake (a playing disabled entity)
             this._setIdleState(true);
             this._idleScreenApplied = false;
@@ -9196,7 +9860,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
   _handleIdleTimeoutCallback() {
     // In search card mode: reset drill-down instead of going idle
-    if (this._cardType === "search") {
+    if (this._cardType === "search" || this._cardType === "up_next") {
       this._idleTimeout = null;
       if (this._searchHierarchy.length > 0) {
         this._searchHierarchy = [];
@@ -9711,6 +10375,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       clearTimeout(this._adaptiveScrollTimer);
       this._adaptiveScrollTimer = null;
     }
+    this._cleanupMarquee();
     // Clear tracking properties
     this._lastPlayingEntityId = null;
     this._controlFocusEntityId = null;
@@ -9739,7 +10404,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   // Helper method for immediate dismissals with animation
   _dismissWithAnimation() {
     // In dedicated search mode, don't dismiss the search — just close other menus
-    if (this._cardType === "search") {
+    if (this._cardType === "search" || this._cardType === "up_next") {
       this._showGrouping = false;
       this._showSourceList = false;
       this._showResolvedEntities = false;
@@ -9782,7 +10447,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       return;
     }
     // In dedicated search mode, don't close the entity options / search
-    if (this._cardType === "search") {
+    if (this._cardType === "search" || this._cardType === "up_next") {
       // Just close any sub-menus that might be open
       this._showGrouping = false;
       this._showSourceList = false;
@@ -9825,10 +10490,15 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         this._showSourceList = false;
         this._showSearchInSheet = false;
         this._showResolvedEntities = false;
+        if (this._cardType !== "remote_control") {
+          this._showRemoteControl = false;
+        }
+        this._openedSearchFromNowPlaying = false;
         this._searchInputAutoFocused = false;
         this._searchHierarchy = [];
         this._searchBreadcrumb = "";
         this._addToPlaylistTarget = null;
+        this._lastSearchUsedServerFavorites = false;
         this.requestUpdate();
       }
       // Clear quick menu flag on any overlay close
@@ -9841,6 +10511,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     for (let i = 0; i < this.entityObjs.length; i++) {
       await this._ensureResolvedMaForIndex(i);
       await this._ensureResolvedVolForIndex(i);
+      await this._ensureResolvedRemoteForIndex(i);
       await this._ensureResolvedHiddenControlsForIndex(i);
     }
 
@@ -9882,6 +10553,364 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     }
     this._lastGroupingMasterId = masterId;
     this.requestUpdate();
+  }
+
+  // Remote Controls Overlay Helper Methods
+  _hasRemoteControlSupport() {
+    const idx = this._selectedIndex;
+    const obj = (this.entityObjs || [])[idx];
+
+    if (obj?.remote_entity === false) return false;
+
+    return !!this._getRemoteControlEntity(true);
+  }
+
+  _getRemoteControlEntity(strict = false) {
+    const idx = this._selectedIndex;
+    const obj = (this.entityObjs || [])[idx];
+
+    if (obj?.remote_entity) {
+      const resolved = this._resolveEntity(obj.remote_entity, null, idx, 'remote') || resolveStringTemplateSync(this.hass, obj.remote_entity, this._getTemplateContext());
+      if (resolved && typeof resolved === "string" && resolved.trim() !== "") return resolved.trim();
+    }
+
+    const currentId = this.currentEntityId;
+    if (!currentId) return null;
+
+    if (currentId.startsWith("remote.")) return currentId;
+
+    if (currentId.startsWith("media_player.")) {
+      const name = currentId.replace("media_player.", "");
+      const candidate = `remote.${name}`;
+      if (this.hass?.states?.[candidate]) {
+        return candidate;
+      }
+    }
+
+    return strict ? null : currentId;
+  }
+
+  _sendRemoteCommand(command) {
+    const targetEntity = this._getRemoteControlEntity();
+    if (!targetEntity) return;
+
+    if (targetEntity.startsWith("remote.")) {
+      this.hass.callService("remote", "send_command", {
+        entity_id: targetEntity,
+        command: command
+      });
+      return;
+    }
+
+    switch (command) {
+      case "up":
+      case "down":
+      case "left":
+      case "right":
+      case "select":
+      case "back":
+      case "menu":
+      case "home":
+        this.hass.callService("remote", "send_command", {
+          entity_id: targetEntity,
+          command: command
+        });
+        break;
+      case "play_pause":
+        this.hass.callService("media_player", "media_play_pause", { entity_id: targetEntity });
+        break;
+      case "previous":
+      case "rewind":
+        this.hass.callService("media_player", "media_previous_track", { entity_id: targetEntity });
+        break;
+      case "next":
+      case "fast_forward":
+        this.hass.callService("media_player", "media_next_track", { entity_id: targetEntity });
+        break;
+      case "volume_up":
+        this.hass.callService("media_player", "volume_up", { entity_id: targetEntity });
+        break;
+      case "volume_down":
+        this.hass.callService("media_player", "volume_down", { entity_id: targetEntity });
+        break;
+      case "mute":
+        this.hass.callService("media_player", "volume_mute", {
+          entity_id: targetEntity,
+          is_volume_muted: !(this.currentVolumeStateObj?.attributes?.is_volume_muted)
+        });
+        break;
+      case "power":
+        this.hass.callService("media_player", "toggle", { entity_id: targetEntity });
+        break;
+      default:
+        this.hass.callService("remote", "send_command", {
+          entity_id: targetEntity,
+          command: command
+        });
+    }
+  }
+
+  _openRemoteControl() {
+    this._showEntityOptions = true;
+    this._showRemoteControl = true;
+    this._showGrouping = false;
+    this._showSourceList = false;
+    this._showTransferQueue = false;
+    this._showSearchInSheet = false;
+    this._showResolvedEntities = false;
+    this.requestUpdate();
+  }
+
+  _closeRemoteControl() {
+    if (this._cardType === "remote_control") return;
+    this._showRemoteControl = false;
+    this.requestUpdate();
+  }
+
+  _getHiddenRemoteButtons() {
+    const idx = this._selectedIndex;
+    const obj = (this.entityObjs || [])[idx];
+    let raw = obj?.hide_remote_buttons ?? this.config.hide_remote_buttons;
+
+    if (typeof raw === "string" && (raw.includes("{{") || raw.includes("{%") || raw.includes("[[["))) {
+      raw = resolveStringTemplateSync(this.hass, raw, this._getTemplateContext());
+    }
+
+    if (typeof raw === "string") {
+      try {
+        raw = JSON.parse(raw.replace(/'/g, '"'));
+      } catch (e) {
+        raw = raw.split(",").map(s => s.trim()).filter(s => s !== "");
+      }
+    }
+    return Array.isArray(raw) ? raw : [];
+  }
+
+  _renderRemoteControlSheet() {
+    const hiddenButtons = this._getHiddenRemoteButtons();
+
+    return html`
+      <style>
+        .remote-control-container {
+          display: flex !important;
+          flex-direction: column !important;
+          align-items: center !important;
+          justify-content: flex-start !important;
+          padding: 12px 16px 24px 16px !important;
+          gap: 16px !important;
+          box-sizing: border-box !important;
+          width: 100% !important;
+          flex: 1 !important;
+          margin: 0 auto !important;
+        }
+        .remote-dpad-wrapper {
+          position: relative !important;
+          width: 200px !important;
+          height: 200px !important;
+          flex-shrink: 0 !important;
+          margin: 4px auto 12px auto !important;
+        }
+        .remote-dpad-cross {
+          position: relative !important;
+          width: 100% !important;
+          height: 100% !important;
+          border-radius: 50% !important;
+          background: var(--yamp-overlay-divider, rgba(255, 255, 255, 0.08)) !important;
+          border: 1px solid var(--yamp-overlay-divider, rgba(255, 255, 255, 0.18)) !important;
+          backdrop-filter: blur(14px) !important;
+          -webkit-backdrop-filter: blur(14px) !important;
+          box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.3), 0 6px 18px rgba(0, 0, 0, 0.25) !important;
+          overflow: hidden !important;
+          box-sizing: border-box !important;
+        }
+        .dpad-btn {
+          appearance: none !important;
+          -webkit-appearance: none !important;
+          position: absolute !important;
+          display: flex !important;
+          align-items: center !important;
+          justify-content: center !important;
+          background: transparent !important;
+          border: none !important;
+          color: var(--yamp-overlay-text, var(--primary-text-color, #fff)) !important;
+          cursor: pointer !important;
+          transition: background 0.15s ease, transform 0.1s ease, color 0.15s ease !important;
+          padding: 0 !important;
+          margin: 0 !important;
+          outline: none !important;
+          box-sizing: border-box !important;
+          -webkit-tap-highlight-color: transparent !important;
+        }
+        .dpad-btn:not(.dpad-center) {
+          -webkit-mask-image: radial-gradient(closest-side circle at 50% 50%, transparent 47%, black 49%) !important;
+          mask-image: radial-gradient(closest-side circle at 50% 50%, transparent 47%, black 49%) !important;
+        }
+        .dpad-btn:hover {
+          background: rgba(255, 255, 255, 0.16) !important;
+          color: var(--custom-accent, var(--accent-color, #ff9800)) !important;
+        }
+        .dpad-btn:active {
+          background: rgba(255, 255, 255, 0.28) !important;
+          transform: scale(0.92) !important;
+        }
+        .dpad-btn ha-icon {
+          --mdc-icon-size: 28px !important;
+          pointer-events: none !important;
+        }
+        .dpad-btn.dpad-up {
+          top: 0 !important;
+          left: 0 !important;
+          width: 100% !important;
+          height: 100% !important;
+          clip-path: polygon(0 0, 100% 0, 50% 50%) !important;
+          align-items: flex-start !important;
+          padding-top: 12% !important;
+        }
+        .dpad-btn.dpad-down {
+          top: 0 !important;
+          left: 0 !important;
+          width: 100% !important;
+          height: 100% !important;
+          clip-path: polygon(100% 100%, 0 100%, 50% 50%) !important;
+          align-items: flex-end !important;
+          padding-bottom: 12% !important;
+        }
+        .dpad-btn.dpad-left {
+          top: 0 !important;
+          left: 0 !important;
+          width: 100% !important;
+          height: 100% !important;
+          clip-path: polygon(0 100%, 0 0, 50% 50%) !important;
+          justify-content: flex-start !important;
+          padding-left: 12% !important;
+        }
+        .dpad-btn.dpad-right {
+          top: 0 !important;
+          left: 0 !important;
+          width: 100% !important;
+          height: 100% !important;
+          clip-path: polygon(100% 0, 100% 100%, 50% 50%) !important;
+          justify-content: flex-end !important;
+          padding-right: 12% !important;
+        }
+        .dpad-btn.dpad-center {
+          top: 28% !important;
+          left: 28% !important;
+          width: 44% !important;
+          height: 44% !important;
+          border-radius: 50% !important;
+          background: rgba(255, 255, 255, 0.12) !important;
+          border: 1px solid var(--yamp-overlay-divider, rgba(255, 255, 255, 0.25)) !important;
+          font-weight: 600 !important;
+          font-size: 0.88rem !important;
+          letter-spacing: 0.03em !important;
+          box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3) !important;
+          z-index: 3 !important;
+        }
+        .dpad-btn.dpad-center:hover {
+          background: rgba(255, 255, 255, 0.25) !important;
+          color: var(--custom-accent, var(--accent-color, #ff9800)) !important;
+        }
+        .remote-control-row {
+          display: flex !important;
+          align-items: center !important;
+          justify-content: space-around !important;
+          gap: 12px !important;
+          width: 100% !important;
+          max-width: 320px !important;
+          margin: 0 auto !important;
+        }
+        .remote-control-btn {
+          appearance: none !important;
+          -webkit-appearance: none !important;
+          display: flex !important;
+          flex: 1 !important;
+          flex-direction: column !important;
+          align-items: center !important;
+          justify-content: center !important;
+          height: 48px !important;
+          max-width: 72px !important;
+          border-radius: 14px !important;
+          background: var(--yamp-overlay-divider, rgba(255, 255, 255, 0.08)) !important;
+          border: 1px solid var(--yamp-overlay-divider, rgba(255, 255, 255, 0.15)) !important;
+          color: var(--yamp-overlay-text, var(--primary-text-color, #fff)) !important;
+          cursor: pointer !important;
+          transition: all 0.15s ease !important;
+          outline: none !important;
+          margin: 0 !important;
+          padding: 0 !important;
+          box-sizing: border-box !important;
+          -webkit-tap-highlight-color: transparent !important;
+        }
+        .remote-control-btn:hover {
+          background: rgba(255, 255, 255, 0.18) !important;
+          border-color: var(--custom-accent, var(--accent-color, #ff9800)) !important;
+          color: var(--custom-accent, var(--accent-color, #ff9800)) !important;
+          transform: translateY(-1px) !important;
+        }
+        .remote-control-btn:active {
+          transform: scale(0.93) !important;
+        }
+        .remote-control-btn ha-icon {
+          --mdc-icon-size: 22px !important;
+          pointer-events: none !important;
+        }
+      </style>
+      ${this._cardType !== 'remote_control' ? html`
+        <div class="entity-options-header">
+          <button class="entity-options-item close-item" @click=${() => this._closeRemoteControl()}>
+            ${localize('common.back')}
+          </button>
+        </div>
+        <div class="entity-options-divider"></div>
+      ` : nothing}
+      <div class="entity-options-scroll remote-control-container">
+        <!-- D-Pad Directional Pad -->
+        <div class="remote-dpad-wrapper">
+          <div class="remote-dpad-cross">
+            <button class="dpad-btn dpad-up" @click=${() => this._sendRemoteCommand('up')} title="${localize('card.remote.up')}">
+              <ha-icon icon="mdi:chevron-up"></ha-icon>
+            </button>
+            <button class="dpad-btn dpad-down" @click=${() => this._sendRemoteCommand('down')} title="${localize('card.remote.down')}">
+              <ha-icon icon="mdi:chevron-down"></ha-icon>
+            </button>
+            <button class="dpad-btn dpad-left" @click=${() => this._sendRemoteCommand('left')} title="${localize('card.remote.left')}">
+              <ha-icon icon="mdi:chevron-left"></ha-icon>
+            </button>
+            <button class="dpad-btn dpad-right" @click=${() => this._sendRemoteCommand('right')} title="${localize('card.remote.right')}">
+              <ha-icon icon="mdi:chevron-right"></ha-icon>
+            </button>
+            <button class="dpad-btn dpad-center" @click=${() => this._sendRemoteCommand('select')} title="${localize('card.remote.select')}">
+              ${localize('card.remote.select')}
+            </button>
+          </div>
+        </div>
+
+        <!-- Navigation Row -->
+        <div class="remote-control-row">
+          ${!hiddenButtons.includes('back') ? html`
+            <button class="remote-control-btn" @click=${() => this._sendRemoteCommand('back')} title="${localize('card.remote.back')}">
+              <ha-icon icon="mdi:arrow-left"></ha-icon>
+            </button>
+          ` : nothing}
+          ${!hiddenButtons.includes('menu') ? html`
+            <button class="remote-control-btn" @click=${() => this._sendRemoteCommand('menu')} title="${localize('card.remote.menu')}">
+              <ha-icon icon="mdi:menu"></ha-icon>
+            </button>
+          ` : nothing}
+          ${!hiddenButtons.includes('home') ? html`
+            <button class="remote-control-btn" @click=${() => this._sendRemoteCommand('home')} title="${localize('card.remote.home')}">
+              <ha-icon icon="mdi:home"></ha-icon>
+            </button>
+          ` : nothing}
+          ${!hiddenButtons.includes('power') ? html`
+            <button class="remote-control-btn" @click=${() => this._onControlClick('power')} title="${localize('card.remote.power')}">
+              <ha-icon icon="mdi:power"></ha-icon>
+            </button>
+          ` : nothing}
+        </div>
+      </div>
+    `;
   }
 
   // Source List Helper Methods

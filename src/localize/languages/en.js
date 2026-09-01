@@ -152,6 +152,7 @@ export default {
       hide_search_headers_on_idle: "Hide search input and filters when the player is idle.",
       disable_mass: "Disable the optional Mass Queue integration even if it is installed.",
       swap_pause_stop: "Replace the pause button with stop while using the modern layout.",
+      show_album: "Display the album name next to the artist in the player details.",
       adaptive_controls: "Let the playback buttons grow or shrink to fit the available space.",
       hide_menu_player:
         "When chips live in the menu, hide the entity label at the bottom of the card.",
@@ -161,8 +162,11 @@ export default {
         "Choose which text groups should scale with available space (leave empty to disable adaptive text).",
       collapse_expand:
         "Always Collapsed creates mini player mode. Expand on Search temporarily expands when searching.",
+      disable_mini_menu:
+        "Revert to standard lists instead of using the new mini grid menus in Always Collapsed mode.",
       idle_screen: "Choose which screen to display automatically when the card becomes idle.",
-      hide_controls: "Select which controls to hide for this entity (all are shown by default)",
+      hide_controls: "Select buttons to hide from the persistent playback controls row.",
+      hide_remote_buttons: "Select buttons to hide from the Remote Control overlay.",
       hide_search_chips: "Hide specific search filter chips for this entity",
       hide_active_entity_on_idle:
         "Hide the entity label at the bottom of the card only when the player is idle.",
@@ -188,10 +192,14 @@ export default {
         "Enter a Jinja template that resolves to a single entity_id. Example switching MA based on a source selector:",
       jinja_template_vol_hint:
         "Enter a Jinja template that resolves to an entity_id (e.g. media_player.office_homepod or remote.soundbar). Example switching volume entity based on a boolean:",
+      jinja_template_remote_hint:
+        "Enter a Jinja template that resolves to a remote entity_id (e.g. remote.living_room_tv):",
       not_available_alt_collapsed:
         "Not available with Alternate Progress Bar or Always Collapsed mode",
       not_available_collapsed: "Not available when Always Collapsed is enabled",
       only_available_collapsed: "Only available when Always Collapsed is enabled",
+      only_available_mini_menu:
+        "Only available when Always Collapsed is true and Expand on Search is false",
       only_available_modern: "Only available with Modern layout",
       image_url_helper: "Enter a direct URL to an image or a local file path",
       selected_entity_helper:
@@ -247,6 +255,7 @@ export default {
       progress_bar_height: "Progress Bar Height",
       display_timestamps: "Display Timestamps",
       swap_pause_stop: "Swap Pause with Stop",
+      show_album: "Show Album Name",
       adaptive_controls: "Adaptive Control Size",
       hide_active_entity: "Hide Active Entity Label",
       hide_active_entity_on_idle: "Hide Active Entity Label on Idle",
@@ -254,6 +263,7 @@ export default {
       hide_menu_player_toggle: "Hide Menu Player",
       hide_reorder_progress_toggle: "Hide Re-ordering Progress",
       always_collapsed: "Always Collapsed",
+      disable_mini_menu: "Disable mini grid menus",
       expand_on_search: "Expand on Search",
       script_var: "Script Variable (yamp_entity)",
       use_ma_template: "Use template for Music Assistant Entity",
@@ -297,6 +307,7 @@ export default {
       idle_screen: "Idle Screen",
       name: "Name",
       hidden_controls: "Hidden Controls",
+      hide_remote_buttons: "Hidden Remote Buttons",
       ma_template: "Music Assistant Entity Template (Jinja)",
       hidden_chips: "Hidden Search Filter Chips",
       vol_template: "Volume Entity Template (Jinja)",
@@ -310,6 +321,8 @@ export default {
       match_entity: "Match Entity",
       ma_entity: "Music Assistant Entity",
       vol_entity: "Volume Entity",
+      remote_entity: "Remote Entity",
+      remote_template: "Remote Entity Template (Jinja)",
       selected_entity_helper: "Selected Entity Helper",
       sync_entity_type: "Sync Entity Type",
       placement: "Placement",
@@ -331,6 +344,7 @@ export default {
       sync_selected_entity: "Sync Selected Entity",
       select_entity: "Select Entity from Helper",
       toggle_lyrics: "Toggle Lyrics Overlay",
+      remote_control: "Open Remote Controls Overlay",
     },
     action_helpers: {
       sync_selected_entity: "Sync Selected Entity →",
@@ -346,6 +360,10 @@ export default {
       chip: "Action Chip",
       menu: "In Menu",
       hidden: "Hidden (Artwork Tap)",
+      replace_search: "Replace Search",
+      replace_power: "Replace Power",
+      replace_mute: "Replace Mute",
+      replace_favorite: "Replace Favorite",
       not_triggerable: "Not Triggerable",
     },
     triggers: {
@@ -365,6 +383,8 @@ export default {
       default: "Default",
       search: "Search",
       group_players: "Group Players",
+      up_next: "Up Next",
+      remote_control: "Remote Control",
     },
     queue_controls_style_options: {
       drag_handle: "Drag Handle",
@@ -397,6 +417,7 @@ export default {
       details: "Now Playing Details",
       menu: "Menu & Search Sheets",
       action_chips: "Action Chips",
+      lyrics: "Lyrics",
     },
     media_controls: {
       shuffle: "Shuffle",
@@ -410,14 +431,29 @@ export default {
       more_info: "More Info",
       search: "Search",
       source: "Source",
+      remote_controls: "Remote Control",
       show_lyrics: "Show Lyrics",
       hide_lyrics: "Hide Lyrics",
       transfer_queue: "Transfer Queue",
       main_menu: "Main Menu",
       group_players: "Group Players",
+      up_next: "Up Next",
+      remote_control: "Remote Control",
       select_entity: "Select Entity for More Info",
       transfer_to: "Transfer Queue To",
       no_players: "No other Music Assistant players available.",
+    },
+    remote: {
+      title: "Remote Control",
+      up: "Up",
+      down: "Down",
+      left: "Left",
+      right: "Right",
+      select: "Select",
+      back: "Back",
+      menu: "Menu",
+      home: "Home",
+      power: "Power",
     },
     grouping: {
       title: "Group Players",
@@ -480,6 +516,7 @@ export default {
       audiobook: "Audiobook",
     },
     search_artist: "Search for this artist",
+    search_album: "Browse tracks from this album",
     browse_album: "Browse tracks from {album}",
     play_collection: "Play this collection",
     play_collection_error: "Unable to play this collection directly",
@@ -490,6 +527,10 @@ export default {
     none_found: "No lyrics found",
     not_available: "Lyrics not available",
     instrumental: "Instrumental Track",
+    admin_only_mass:
+      "Music Assistant lyrics fetch is for admin users only. It is recommended to switch to lrclib in the card configuration.",
+    fallback_to_lrclib_non_admin:
+      "Non-admin user detected. Falling back to lrclib for lyrics fetch.",
   },
   lyrics_sources: {
     mass_lrclib: "Music Assistant (Fallback to LRCLIB)",

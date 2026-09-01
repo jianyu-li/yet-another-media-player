@@ -35,10 +35,20 @@ export default {
       actions: "Aktionen",
     },
     search_placeholder: "Konfigurationsoptionen suchen...",
-    placeholders: {
-      search: "Musik suchen...",
-    },
+    template_label: "Karten-Vorlage",
     templates: {
+      custom: {
+        label: "Benutzerdefiniert (Originalkonfiguration)",
+        description: "Ihre ursprüngliche, vollständig angepasste Konfiguration.",
+      },
+      large_modern: {
+        label: "Großes modernes YAMP",
+        description: "Ein etwas größeres, modernes Design mit adaptiver Steuerung.",
+      },
+      crisp_clean: {
+        label: "Klar & Aufgeräumt",
+        description: "Ein klares Layout mit skaliertem Artwork und modernen Bedienelementen.",
+      },
       minimal_mini: {
         label: "MINImal",
         description: "Eine kompakte Karte ohne Artwork.",
@@ -47,6 +57,27 @@ export default {
         label: "Mini Mode",
         description: "Die Standard-Kompaktkarte.",
       },
+      quick_and_easy: {
+        label: "Keine Zeit zu erklären",
+        description: "Für Schnelligkeit mit dauerhaften Chip-Zeilen und schneller Gruppierung.",
+      },
+      dedicated_search: {
+        label: "Alles rund um die Suche",
+        description: "Eine eigenständige Suchkarte ohne den Haupt-Mediaplayer.",
+      },
+      dedicated_grouping: {
+        label: "Gruppentherapie",
+        description:
+          "Eine eigenständige Player-Gruppierungskarte. Erfordert mehrere konfigurierte Entitäten.",
+      },
+      huge_yamp: {
+        label: "Das ist ein riesiges YAMP!",
+        description:
+          "Maximierte Steuerelemente, großer Text und ein massiver Fortschrittsbalken für die Betrachtung aus der Ferne.",
+      },
+    },
+    placeholders: {
+      search: "Musik suchen...",
     },
     sections: {
       artwork: {
@@ -126,6 +157,7 @@ export default {
       hide_search_headers_on_idle: "Sucheingabe und Filter im Leerlauf ausblenden.",
       disable_mass: "Optionale Mass Queue Integration deaktivieren, auch wenn sie installiert ist.",
       swap_pause_stop: "Pause-Taste durch Stop-Taste im modernen Layout ersetzen.",
+      show_album: "Den Albumnamen neben dem Interpreten in den Player-Details anzeigen.",
       adaptive_controls: "Wiedergabetasten an verfügbaren Platz anpassen.",
       hide_menu_player: "Entitäts-Label unten ausblenden, wenn Chips im Menü sind.",
       hide_reorder_progress:
@@ -134,9 +166,13 @@ export default {
         "Textgruppen wählen, die mit dem Platz skalieren (leer lassen zum Deaktivieren).",
       collapse_expand:
         "Immer eingeklappt aktiviert den Mini-Player-Modus. Bei Suche ausklappen aktiviert ihn temporär.",
+      disable_mini_menu:
+        "Kehrt zu Standardlisten zurück, anstatt die neuen Mini-Grid-Menüs im Modus 'Immer eingeklappt' zu verwenden.",
       idle_screen: "Wählen Sie, welcher Bildschirm im Leerlauf automatisch angezeigt wird.",
       hide_controls:
         "Wählen Sie Steuerelemente aus, die für diese Entität ausgeblendet werden sollen.",
+      hide_remote_buttons:
+        "Wählen Sie die Tasten aus, die im Fernbedienungs-Overlay ausgeblendet werden sollen.",
       hide_search_chips: "Bestimmte Suchfilter-Chips für diese Entität ausblenden.",
       hide_active_entity_on_idle:
         "Blendet die Entitätsbeschriftung am unteren Rand der Karte nur aus, wenn der Player im Leerlauf ist.",
@@ -159,10 +195,14 @@ export default {
         "'entity_id: current' verwenden, um den aktuell ausgewählten Mediaplayer anzusteuern.",
       jinja_template_hint: "Jinja-Template eingeben, das eine entity_id ergibt.",
       jinja_template_vol_hint: "Jinja-Template eingeben, das eine Lautstärke-entity_id ergibt.",
+      jinja_template_remote_hint:
+        "Jinja-Template eingeben, das eine Remote-entity_id ergibt (z.B. remote.wohnzimmer_tv):",
       not_available_alt_collapsed:
         "Nicht verfügbar mit alternativem Fortschrittsbalken oder im Modus 'Immer eingeklappt'.",
       not_available_collapsed: "Nicht verfügbar, wenn 'Immer eingeklappt' aktiviert ist.",
       only_available_collapsed: "Nur verfügbar, wenn 'Immer eingeklappt' aktiviert ist.",
+      only_available_mini_menu:
+        "Nur verfügbar, wenn 'Immer eingeklappt' aktiviert und 'Bei Suche erweitern' deaktiviert ist",
       only_available_modern: "Nur verfügbar im modernen Layout.",
       image_url_helper: "Direkte Bild-URL oder lokalen Dateipfad eingeben.",
       selected_entity_helper:
@@ -220,6 +260,7 @@ export default {
       progress_bar_height: "Fortschrittsbalkenhöhe",
       display_timestamps: "Zeitstempel anzeigen",
       swap_pause_stop: "Pause durch Stop ersetzen",
+      show_album: "Albumname anzeigen",
       adaptive_controls: "Adaptive Tastengröße",
       hide_active_entity: "Aktives Entitäts-Label ausblenden",
       hide_active_entity_on_idle: "Aktive Entitätsbeschriftung im Leerlauf ausblenden",
@@ -227,6 +268,7 @@ export default {
       hide_menu_player_toggle: "Menü-Player ausblenden",
       hide_reorder_progress_toggle: "Neusortierungs-Fortschritt ausblenden",
       always_collapsed: "Immer eingeklappt",
+      disable_mini_menu: "Mini-Grid-Menüs deaktivieren",
       expand_on_search: "Bei Suche ausklappen",
       script_var: "Skript-Variable (yamp_entity)",
       use_ma_template: "Template für Music Assistant Entität verwenden",
@@ -271,6 +313,7 @@ export default {
       idle_screen: "Leerlauf-Bildschirm",
       name: "Name",
       hidden_controls: "Ausgeblendete Steuerungen",
+      hide_remote_buttons: "Ausgeblendete Fernbedienungstasten",
       ma_template: "Music Assistant Entitäts-Template (Jinja)",
       hidden_chips: "Ausgeblendete Suchfilter-Chips",
       vol_template: "Lautstärke-Entitäts-Template (Jinja)",
@@ -284,6 +327,8 @@ export default {
       match_entity: "Match-Entität",
       ma_entity: "Music Assistant Entität",
       vol_entity: "Lautstärke-Entität",
+      remote_entity: "Fernbedienungs-Entität",
+      remote_template: "Fernbedienungs-Entität Template (Jinja)",
       selected_entity_helper: "Ausgewählter Entitäts-Helper",
       sync_entity_type: "Synchronisierungs-Entitätstyp",
       placement: "Platzierung",
@@ -305,6 +350,7 @@ export default {
       sync_selected_entity: "Ausgewählte Entität synchronisieren",
       select_entity: "Entität aus Helper auswählen",
       toggle_lyrics: "Liedtext-Overlay ein-/ausschalten",
+      remote_control: "Fernbedienungs-Overlay öffnen",
     },
     action_helpers: {
       sync_selected_entity: "Entität synchronisieren →",
@@ -320,6 +366,10 @@ export default {
       chip: "Aktions-Chip",
       menu: "Im Menü",
       hidden: "Ausgeblendet (Artwork-Tippen)",
+      replace_search: "Suche ersetzen",
+      replace_power: "Ein/Aus ersetzen",
+      replace_mute: "Stummschaltung ersetzen",
+      replace_favorite: "Favorit ersetzen",
       not_triggerable: "Nicht triggerbar",
     },
     triggers: {
@@ -343,6 +393,8 @@ export default {
       default: "Standard",
       search: "Suche",
       group_players: "Player gruppieren",
+      up_next: "Als Nächstes",
+      remote_control: "Fernbedienung",
     },
     appearance_options: {
       automatic: "Automatisch",
@@ -371,6 +423,7 @@ export default {
       details: "Details zur Wiedergabe",
       menu: "Menü & Suchblätter",
       action_chips: "Aktions-Chips",
+      lyrics: "Songtext",
     },
     media_controls: {
       shuffle: "Zufall",
@@ -384,14 +437,29 @@ export default {
       more_info: "Mehr Info",
       search: "Suche",
       source: "Quelle",
+      remote_controls: "Fernbedienung",
       show_lyrics: "Songtext anzeigen",
       hide_lyrics: "Songtext ausblenden",
       transfer_queue: "Warteschlange übertragen",
       main_menu: "Hauptmenü",
       group_players: "Player gruppieren",
+      up_next: "Als Nächstes",
+      remote_control: "Fernbedienung",
       select_entity: "Entität für mehr Info wählen",
       transfer_to: "Warteschlange übertragen zu",
       no_players: "Keine anderen Music Assistant Player verfügbar.",
+    },
+    remote: {
+      title: "Fernbedienung",
+      up: "Nach oben",
+      down: "Nach unten",
+      left: "Nach links",
+      right: "Nach rechts",
+      select: "Auswählen",
+      back: "Zurück",
+      menu: "Menü",
+      home: "Startseite",
+      power: "Ein/Aus",
     },
     grouping: {
       title: "Player gruppieren",
@@ -454,6 +522,7 @@ export default {
       audiobook: "Hörbuch",
     },
     search_artist: "Nach diesem Künstler suchen",
+    search_album: "Titel von diesem Album durchsuchen",
     browse_album: "Albentitel von {album} durchsuchen",
     play_collection: "Diese Sammlung abspielen",
     play_collection_error: "Diese Sammlung kann nicht direkt abgespielt werden",
@@ -464,6 +533,10 @@ export default {
     none_found: "Kein Songtext gefunden",
     not_available: "Songtext nicht verfügbar",
     instrumental: "Instrumental-Titel",
+    admin_only_mass:
+      "Das Abrufen von Songtexten über Music Assistant ist nur für Administratoren verfügbar. Es wird empfohlen, in der Kartenkonfiguration auf lrclib zu wechseln.",
+    fallback_to_lrclib_non_admin:
+      "Kein Administratorbenutzer erkannt. Rückgriff auf lrclib für den Abruf von Songtexten.",
   },
   lyrics_sources: {
     mass_lrclib: "Music Assistant (Fallback zu LRCLIB)",

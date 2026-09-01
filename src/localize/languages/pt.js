@@ -35,10 +35,20 @@ export default {
       actions: "Ações",
     },
     search_placeholder: "Pesquisar opções de configuração...",
-    placeholders: {
-      search: "Procurar música...",
-    },
+    template_label: "Modelo de cartão",
     templates: {
+      custom: {
+        label: "Personalizado (Configuração original)",
+        description: "A sua configuração original totalmente personalizada.",
+      },
+      large_modern: {
+        label: "YAMP moderno e grande",
+        description: "Um design moderno ligeiramente maior com controlos adaptativos.",
+      },
+      crisp_clean: {
+        label: "Limpo",
+        description: "Um layout limpo com capa dimensionada e controlos modernos.",
+      },
       minimal_mini: {
         label: "MINImal",
         description: "Um cartão compacto sem capa.",
@@ -47,6 +57,28 @@ export default {
         label: "Mini Mode",
         description: "O cartão compacto padrão.",
       },
+      quick_and_easy: {
+        label: "Sem tempo a perder",
+        description:
+          "Concebido para rapidez com linhas de chips persistentes e agrupamento rápido.",
+      },
+      dedicated_search: {
+        label: "Tudo sobre pesquisa",
+        description: "Um cartão de pesquisa autónomo sem o leitor multimédia principal.",
+      },
+      dedicated_grouping: {
+        label: "Terapia de grupo",
+        description:
+          "Um cartão autónomo de agrupamento de leitores. Requer várias entidades configuradas.",
+      },
+      huge_yamp: {
+        label: "Isto é um enorme YAMP!",
+        description:
+          "Controlos maximizados, texto grande e barra de progresso maciça para visualização à distância.",
+      },
+    },
+    placeholders: {
+      search: "Procurar música...",
     },
     sections: {
       artwork: {
@@ -115,6 +147,7 @@ export default {
       hide_search_headers_on_idle: "Ocultar pesquisa e filtros quando inativo.",
       disable_mass: "Desativar integração Mass Queue.",
       swap_pause_stop: "Substituir pausa por stop no design moderno.",
+      show_album: "Exibir o nome do álbum ao lado do artista nos detalhes do reprodutor.",
       adaptive_controls: "Permitir que os botões se adaptem ao espaço.",
       hide_menu_player: "Ocultar nome da entidade quando no menu.",
       hide_reorder_progress:
@@ -122,8 +155,11 @@ export default {
       adaptive_text: "Escolher que textos se adaptam ao espaço.",
       collapse_expand:
         "Sempre contraído ativa modo mini. Expandir ao procurar expande temporariamente.",
+      disable_mini_menu:
+        "Reverter para listas padrão em vez de usar os novos mini menus em grade no modo 'Sempre recolhido'.",
       idle_screen: "Escolher ecrã a mostrar em repouso.",
       hide_controls: "Selecionar controlos a ocultar.",
+      hide_remote_buttons: "Selecione botões para ocultar do controle remoto.",
       hide_search_chips: "Ocultar chips de filtro de procura.",
       hide_active_entity_on_idle:
         "Oculta a etiqueta da entidade na parte inferior do cartão apenas quando o reprodutor está inativo.",
@@ -144,9 +180,13 @@ export default {
       entity_current_hint: "Use 'entity_id: current' para o leitor atual.",
       jinja_template_hint: "Modelo Jinja para entity_id.",
       jinja_template_vol_hint: "Modelo para entidade volume.",
+      jinja_template_remote_hint:
+        "Modelo Jinja que resolve um entity_id de controlo remoto (ex. remote.sala_tv):",
       not_available_alt_collapsed: "Não disponível em modo contraído.",
       not_available_collapsed: "Não disponível se contraído.",
       only_available_collapsed: "Apenas disponível se contraído.",
+      only_available_mini_menu:
+        "Disponível apenas quando 'Sempre recolhido' é verdadeiro e 'Expandir na pesquisa' é falso",
       only_available_modern: "Apenas disponível com layout Moderno.",
       image_url_helper: "Insira um URL direto para uma imagem ou um caminho de arquivo local",
       selected_entity_helper:
@@ -205,6 +245,7 @@ export default {
       progress_bar_height: "Altura da barra de progresso",
       display_timestamps: "Mostrar carimbos de tempo",
       swap_pause_stop: "Substituir Pausa por Stop",
+      show_album: "Mostrar nome do álbum",
       adaptive_controls: "Tamanho adaptativo",
       hide_active_entity: "Ocultar nome da entidade ativa",
       hide_active_entity_on_idle: "Ocultar etiqueta de entidade ativa quando inativo",
@@ -212,6 +253,7 @@ export default {
       hide_menu_player_toggle: "Ocultar leitor do menu",
       hide_reorder_progress_toggle: "Ocultar progresso de reordenação",
       always_collapsed: "Sempre contraído",
+      disable_mini_menu: "Desativar mini menus em grade",
       expand_on_search: "Expandir ao procurar",
       script_var: "Variável script (yamp_entity)",
       use_ma_template: "Usar modelo MA",
@@ -256,6 +298,7 @@ export default {
       idle_screen: "Ecrã de repouso",
       name: "Nome",
       hidden_controls: "Controlos ocultos",
+      hide_remote_buttons: "Botões do controle remoto ocultos",
       ma_template: "Modelo MA (Jinja)",
       hidden_chips: "Chips ocultos",
       vol_template: "Modelo Volume (Jinja)",
@@ -269,6 +312,8 @@ export default {
       match_entity: "Entidade",
       ma_entity: "Entidade Music Assistant",
       vol_entity: "Entidade de volume",
+      remote_entity: "Entidade de controlo remoto",
+      remote_template: "Modelo de entidade remota (Jinja)",
       selected_entity_helper: "Helper de entidade selecionada",
       sync_entity_type: "Tipo de entidade a sincronizar",
       placement: "Posicionamento",
@@ -290,6 +335,7 @@ export default {
       sync_selected_entity: "Sincronizar entidade selecionada",
       select_entity: "Selecionar entidade do helper",
       toggle_lyrics: "Alternar sobreposição de letras",
+      remote_control: "Abrir sobreposição do controlo remoto",
     },
     action_helpers: {
       sync_selected_entity: "Sincronizar entidade selecionada →",
@@ -305,6 +351,10 @@ export default {
       chip: "Chip de ação",
       menu: "No menu",
       hidden: "Oculto (Toque no Artwork)",
+      replace_search: "Substituir Pesquisa",
+      replace_power: "Substituir Energia",
+      replace_mute: "Substituir Mudo",
+      replace_favorite: "Substituir Favorito",
       not_triggerable: "Não acionável",
     },
     triggers: {
@@ -328,6 +378,8 @@ export default {
       default: "Padrão",
       search: "Procurar",
       group_players: "Agrupar",
+      up_next: "A seguir",
+      remote_control: "Controle Remoto",
     },
     appearance_options: {
       automatic: "Automático",
@@ -356,6 +408,7 @@ export default {
       details: "Detalhes de reprodução",
       menu: "Menu e Procura",
       action_chips: "Chips de ação",
+      lyrics: "Letras",
     },
     media_controls: {
       shuffle: "Aleatório",
@@ -369,14 +422,29 @@ export default {
       more_info: "Mais info",
       search: "Procurar",
       source: "Fonte",
+      remote_controls: "Controlo remoto",
       show_lyrics: "Mostrar letras",
       hide_lyrics: "Ocultar letras",
       transfer_queue: "Transferir fila",
       main_menu: "Menu Principal",
       group_players: "Agrupar",
+      up_next: "A seguir",
+      remote_control: "Controle Remoto",
       select_entity: "Selecionar",
       transfer_to: "Transferir para",
       no_players: "Sem leitores MA.",
+    },
+    remote: {
+      title: "Controlo remoto",
+      up: "Para cima",
+      down: "Para baixo",
+      left: "Esquerda",
+      right: "Direita",
+      select: "Selecionar",
+      back: "Voltar",
+      menu: "Menu",
+      home: "Início",
+      power: "Ligar/Desligar",
     },
     grouping: {
       title: "Agrupar",
@@ -439,6 +507,7 @@ export default {
       audiobook: "Audiolivro",
     },
     search_artist: "Procurar este artista",
+    search_album: "Navegar pelas faixas deste álbum",
     browse_album: "Explorar faixas de {album}",
     play_collection: "Reproduzir esta coleção",
     play_collection_error: "Não é possível reproduzir esta coleção diretamente",
@@ -448,7 +517,11 @@ export default {
     finding: "Procurando letra...",
     none_found: "Nenhuma letra encontrada",
     not_available: "Letra não disponível",
-    instrumental: "Faixa instrumental",
+    instrumental: "Faixa Instrumental",
+    admin_only_mass:
+      "A busca de letras pelo Music Assistant é apenas para usuários administradores. Recomenda-se mudar para lrclib na configuração do cartão.",
+    fallback_to_lrclib_non_admin:
+      "Usuário não administrador detectado. Usando lrclib como alternativa para buscar as letras.",
   },
   lyrics_sources: {
     mass_lrclib: "Music Assistant (Alternativa para LRCLIB)",

@@ -35,10 +35,20 @@ export default {
       actions: "Dejanja",
     },
     search_placeholder: "Iskanje možnosti konfiguracije...",
-    placeholders: {
-      search: "Išči glasbo...",
-    },
+    template_label: "Predloga kartice",
     templates: {
+      custom: {
+        label: "Po meri (Izvirna konfiguracija)",
+        description: "Vaša izvirna, popolnoma prilagojena konfiguracija.",
+      },
+      large_modern: {
+        label: "Velik sodoben YAMP",
+        description: "Nekoliko večji sodoben dizajn s prilagodljivimi kontrolami.",
+      },
+      crisp_clean: {
+        label: "Čisto",
+        description: "Čista postavitev s prilagojeno sliko albuma in sodobnimi kontrolami.",
+      },
       minimal_mini: {
         label: "MINImal",
         description: "Kompaktna kartica brez naslovnice.",
@@ -47,6 +57,27 @@ export default {
         label: "Mini Mode",
         description: "Standardna kompaktna kartica.",
       },
+      quick_and_easy: {
+        label: "Ni časa za razlago",
+        description: "Zasnovano za hitrost s trajnimi vrsticami čipov in hitrim združevanjem.",
+      },
+      dedicated_search: {
+        label: "Vse o iskanju",
+        description: "Samostojna kartica za iskanje brez glavnega predvajalnika medijev.",
+      },
+      dedicated_grouping: {
+        label: "Skupinska terapija",
+        description:
+          "Samostojna kartica za združevanje predvajalnikov. Zahteva več konfiguriranih entitet.",
+      },
+      huge_yamp: {
+        label: "To je ogromen YAMP!",
+        description:
+          "Maksimizirane kontrole, veliko besedilo in masivna vrstica napredka za ogled od daleč.",
+      },
+    },
+    placeholders: {
+      search: "Išči glasbo...",
     },
     sections: {
       artwork: {
@@ -119,14 +150,18 @@ export default {
       hide_search_headers_on_idle: "Skrij iskalno polje in filtre med mirovanjem.",
       disable_mass: "Onemogoči integracijo Mass Queue.",
       swap_pause_stop: "Zamenjaj gumb pavze z gumbom zaustavitve med uporabo moderne postavitve.",
+      show_album: "Prikaži ime albuma zraven izvajalca v podrobnostih predvajalnika.",
       adaptive_controls: "Prilagodi velikost gumbov glede na prostor.",
       hide_menu_player: "Skrij oznako entitete v meniju.",
       hide_reorder_progress:
         "Skrij lebdeči indikator napredka prerazvrščanja čakalne vrste na dnu.",
       adaptive_text: "Izberi skupine besedila za prilagajanje velikosti.",
       collapse_expand: "Vedno skrčeno ustvari mini predvajalnik.",
+      disable_mini_menu:
+        "Vrnite se na standardne sezname namesto uporabe novih mini mrežnih menijev v načinu 'Vedno strnjeno'.",
       idle_screen: "Izberi zaslon, prikazan v mirovanju.",
       hide_controls: "Izberi kontrolnike za skrivanje.",
+      hide_remote_buttons: "Izberite gumbe za skrivanje na daljinskem upravljalniku.",
       hide_search_chips: "Skrij določene iskalne filtre.",
       hide_active_entity_on_idle:
         "Skrije oznako entitete na dnu kartice le, ko je predvajalnik v stanju mirovanja.",
@@ -146,9 +181,13 @@ export default {
       entity_current_hint: "Uporabi entity_id: current za trenutno izbrano entiteto.",
       jinja_template_hint: "Vnesite Jinja predlogo, ki vrne en entity_id.",
       jinja_template_vol_hint: "Vnesite Jinja predlogo za entiteto glasnosti.",
+      jinja_template_remote_hint:
+        "Vnesite Jinja predlogo, ki vrne entity_id daljinskega upravljalnika (npr. remote.dnevna_soba_tv):",
       not_available_alt_collapsed: "Ni na voljo z alternativno vrstico napredka.",
       not_available_collapsed: "Ni na voljo v vedno skrčenem načinu.",
       only_available_collapsed: "Na voljo le v vedno skrčenem načinu.",
+      only_available_mini_menu:
+        "Na voljo samo, ko je 'Vedno strnjeno' omogočeno in 'Razširi ob iskanju' onemogočeno",
       only_available_modern: "Na voljo le v moderni postavitvi.",
       image_url_helper: "Vnesite neposredni URL do slike ali lokalno pot do datoteke",
       selected_entity_helper:
@@ -203,6 +242,7 @@ export default {
       progress_bar_height: "Višina vrstice napredka",
       display_timestamps: "Prikaži časovne oznake",
       swap_pause_stop: "Zamenjaj pavzo z zaustavitvijo",
+      show_album: "Prikaži ime albuma",
       adaptive_controls: "Prilagodljiva velikost gumbov",
       hide_active_entity: "Skrij oznako aktivne entitete",
       hide_active_entity_on_idle: "Skrij oznako aktivne entitete ob mirovanju",
@@ -210,6 +250,7 @@ export default {
       hide_menu_player_toggle: "Skrij predvajalnik v meniju",
       hide_reorder_progress_toggle: "Skrij napredek prerazvrščanja",
       always_collapsed: "Vedno skrčeno",
+      disable_mini_menu: "Onemogoči mini mrežne menije",
       expand_on_search: "Razširi ob iskanju",
       script_var: "Skriptna spremenljivka",
       use_ma_template: "Uporabi predlogo za entiteto Music Assistant",
@@ -254,6 +295,7 @@ export default {
       idle_screen: "Zaslon v mirovanju",
       name: "Ime",
       hidden_controls: "Skriti kontrolniki",
+      hide_remote_buttons: "Skriti gumbi daljinskega upravljalnika",
       ma_template: "Predloga Music Assistant (Jinja)",
       hidden_chips: "Skriti iskalni čipi",
       vol_template: "Predloga entitete glasnosti (Jinja)",
@@ -267,6 +309,8 @@ export default {
       match_entity: "Ujemajoča entiteta",
       ma_entity: "Entiteta Music Assistant",
       vol_entity: "Entiteta glasnosti",
+      remote_entity: "Entiteta daljinskega upravljalnika",
+      remote_template: "Predloga entitete daljinca (Jinja)",
       selected_entity_helper: "Pomočnik izbrane entitete",
       sync_entity_type: "Vrsta entitete za sinhronizacijo",
       placement: "Namestitev",
@@ -288,6 +332,7 @@ export default {
       sync_selected_entity: "Sinhroniziraj izbrano entiteto",
       select_entity: "Izberi entiteto iz pomočnika",
       toggle_lyrics: "Preklopi prekrivanje besedila",
+      remote_control: "Odpri prekrivanje daljinskega upravljalnika",
     },
     action_helpers: {
       sync_selected_entity: "Sinhroniziraj izbrano entiteto →",
@@ -303,6 +348,10 @@ export default {
       chip: "Čip dejanja",
       menu: "V meniju",
       hidden: "Skrito (dotik grafike)",
+      replace_search: "Zamenjaj Iskanje",
+      replace_power: "Zamenjaj Vklop/Izklop",
+      replace_mute: "Zamenjaj Utišaj",
+      replace_favorite: "Zamenjaj Priljubljeno",
       not_triggerable: "Ni mogoče sprožiti",
     },
     triggers: {
@@ -326,6 +375,8 @@ export default {
       default: "Privzeto",
       search: "Iskanje",
       group_players: "Zoskupi predvajalnike",
+      up_next: "Sledi",
+      remote_control: "Daljinski upravljalnik",
     },
     appearance_options: {
       automatic: "Samodejno",
@@ -354,6 +405,7 @@ export default {
       details: "Podrobnosti predvajanja",
       menu: "Meni in iskanje",
       action_chips: "Čipi dejanj",
+      lyrics: "Besedilo",
     },
     media_controls: {
       shuffle: "Naključno",
@@ -367,14 +419,29 @@ export default {
       more_info: "Več informacij",
       search: "Išči",
       source: "Vir",
+      remote_controls: "Daljinski upravljalnik",
       show_lyrics: "Pokaži besedilo",
       hide_lyrics: "Skrij besedilo",
       transfer_queue: "Prenesi čakalno vrsto",
       main_menu: "Glavni meni",
       group_players: "Združi predvajalnike",
+      up_next: "Sledi",
+      remote_control: "Daljinski upravljalnik",
       select_entity: "Izberi entiteto za več informacij",
       transfer_to: "Prenesi čakalno vrsto na",
       no_players: "Ni drugih razpoložljivih predvajalnikov Music Assistant.",
+    },
+    remote: {
+      title: "Daljinski upravljalnik",
+      up: "Gor",
+      down: "Dol",
+      left: "Levo",
+      right: "Desno",
+      select: "Izberi",
+      back: "Nazaj",
+      menu: "Meni",
+      home: "Domov",
+      power: "Vklop/Izklop",
     },
     grouping: {
       title: "Združi predvajalnike",
@@ -437,6 +504,7 @@ export default {
       audiobook: "Zvočna knjiga",
     },
     search_artist: "Išči tega izvajalca",
+    search_album: "Prebrskaj skladbe iz tega albuma",
     browse_album: "Prebrskaj skladbe iz {album}",
     play_collection: "Predvajaj to zbirko",
     play_collection_error: "Te zbirke ni mogoče predvajati neposredno",
@@ -447,6 +515,10 @@ export default {
     none_found: "Besedila ni bilo mogoče najti",
     not_available: "Besedilo ni na voljo",
     instrumental: "Instrumentalna skladba",
+    admin_only_mass:
+      "Pridobivanje besedil preko Music Assistant je na voljo samo administratorjem. Priporočljivo je, da v konfiguraciji kartice preklopite na lrclib.",
+    fallback_to_lrclib_non_admin:
+      "Zaznan je ne-administratorski uporabnik. Preklop na lrclib za pridobivanje besedil.",
   },
   lyrics_sources: {
     mass_lrclib: "Music Assistant (Rezerva na LRCLIB)",

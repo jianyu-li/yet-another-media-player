@@ -35,10 +35,20 @@ export default {
       actions: "Acties",
     },
     search_placeholder: "Configuratieopties zoeken...",
-    placeholders: {
-      search: "Zoek muziek...",
-    },
+    template_label: "Kaartsjabloon",
     templates: {
+      custom: {
+        label: "Aangepast (Originele configuratie)",
+        description: "Uw originele, volledig aangepaste configuratie.",
+      },
+      large_modern: {
+        label: "Grote moderne YAMP",
+        description: "Een iets groter modern ontwerp met adaptieve bedieningselementen.",
+      },
+      crisp_clean: {
+        label: "Strak",
+        description: "Een strakke indeling met geschaalde albumhoes en moderne bediening.",
+      },
       minimal_mini: {
         label: "MINImal",
         description: "Een compacte kaart zonder artwork.",
@@ -47,6 +57,27 @@ export default {
         label: "Mini Mode",
         description: "De standaard compacte kaart.",
       },
+      quick_and_easy: {
+        label: "Geen tijd te verliezen",
+        description: "Gemaakt voor snelheid met permanente chiprijen en snel groeperen.",
+      },
+      dedicated_search: {
+        label: "Alles over zoeken",
+        description: "Een zelfstandige zoekkaart zonder de hoofdmediaspeler.",
+      },
+      dedicated_grouping: {
+        label: "Groepstherapie",
+        description:
+          "Een zelfstandige spelers-groeperingskaart. Vereist meerdere geconfigureerde entiteiten.",
+      },
+      huge_yamp: {
+        label: "Dat is een enorme YAMP!",
+        description:
+          "Gemaximaliseerde bediening, grote tekst en een enorme voortgangsbalk voor weergave op afstand.",
+      },
+    },
+    placeholders: {
+      search: "Zoek muziek...",
     },
     sections: {
       artwork: {
@@ -128,6 +159,7 @@ export default {
       disable_mass:
         "Schakel de optionele Mass Queue integratie uit, zelfs als deze is geïnstalleerd.",
       swap_pause_stop: "Vervang de pauzeknop door stop bij gebruik van de moderne lay-out.",
+      show_album: "Toon de albumnaam naast de artiest in de spelerdetails.",
       adaptive_controls:
         "Laat de afspeelknoppen groeien of krimpen om in de beschikbare ruimte te passen.",
       hide_menu_player:
@@ -138,10 +170,13 @@ export default {
         "Kies welke tekstgroepen moeten schalen met de beschikbare ruimte (laat leeg om adaptieve tekst uit te schakelen).",
       collapse_expand:
         "Altijd Ingeklapt creëert de mini-spelermodus. Uitklappen bij Zoeken klapt tijdelijk uit tijdens het zoeken.",
+      disable_mini_menu:
+        "Keer terug naar standaardlijsten in plaats van de nieuwe mini rastermenu's te gebruiken in de modus 'Altijd ingeklapt'.",
       idle_screen:
         "Kies welk scherm automatisch wordt weergegeven wanneer de kaart inactief wordt.",
       hide_controls:
         "Selecteer welke knoppen je wilt verbergen voor deze entiteit (standaard worden ze allemaal getoond)",
+      hide_remote_buttons: "Selecteer knoppen om te verbergen in de afstandsbediening-overlay.",
       hide_search_chips: "Verberg specifieke zoekfilterchips voor deze entiteit",
       hide_active_entity_on_idle:
         "Verbergt het entiteitslabel onderaan de kaart alleen wanneer de speler inactief is.",
@@ -170,10 +205,14 @@ export default {
         "Voer een Jinja-sjabloon in dat resulteert in een enkele entity_id. Voorbeeld voor het wisselen van MA op basis van een bronselectie:",
       jinja_template_vol_hint:
         "Voer een Jinja-sjabloon in dat resulteert in een entity_id (bijv. media_player.kantoor). Voorbeeld voor het wisselen van volume-entiteit op basis van een boolean:",
+      jinja_template_remote_hint:
+        "Voer een Jinja-sjabloon in dat resulteert in een afstandsbediening entity_id (bijv. remote.woonkamer_tv):",
       not_available_alt_collapsed:
         "Niet beschikbaar met Alternatieve Voortgangsbalk of Altijd Ingeklapte modus",
       not_available_collapsed: "Niet beschikbaar wanneer Altijd Ingeklapt is ingeschakeld",
       only_available_collapsed: "Alleen beschikbaar wanneer Altijd Ingeklapt is ingeschakeld",
+      only_available_mini_menu:
+        "Alleen beschikbaar wanneer 'Altijd ingeklapt' waar is en 'Uitvouwen bij zoeken' onwaar is",
       only_available_modern: "Alleen beschikbaar met de Moderne lay-out",
       image_url_helper: "Voer een directe URL naar een afbeelding of een lokaal bestandspad in",
       selected_entity_helper:
@@ -231,6 +270,7 @@ export default {
       progress_bar_height: "Hoogte voortgangsbalk",
       display_timestamps: "Tijdstempels Weergeven",
       swap_pause_stop: "Pauze vervangen door Stop",
+      show_album: "Toon albumnaam",
       adaptive_controls: "Adaptieve Knoppen Grootte",
       hide_active_entity: "Label van Actieve Entiteit verbergen",
       hide_active_entity_on_idle: "Actieve entiteitslabel verbergen bij inactiviteit",
@@ -238,6 +278,7 @@ export default {
       hide_menu_player_toggle: "Menu-speler Verbergen",
       hide_reorder_progress_toggle: "Wachtrijsortering Verbergen",
       always_collapsed: "Altijd Ingeklapt",
+      disable_mini_menu: "Mini rastermenu's uitschakelen",
       expand_on_search: "Uitklappen bij Zoeken",
       script_var: "Script Variabele (yamp_entity)",
       use_ma_template: "Sjabloon gebruiken voor Music Assistant Entiteit",
@@ -282,6 +323,7 @@ export default {
       idle_screen: "Inactief Scherm",
       name: "Naam",
       hidden_controls: "Verborgen Knoppen",
+      hide_remote_buttons: "Verborgen afstandsbediening knoppen",
       ma_template: "Music Assistant Entiteit Sjabloon (Jinja)",
       hidden_chips: "Verborgen Zoekfilterchips",
       vol_template: "Volume Entiteit Sjabloon (Jinja)",
@@ -295,6 +337,8 @@ export default {
       match_entity: "Match Entiteit",
       ma_entity: "Music Assistant-entiteit",
       vol_entity: "Volume-entiteit",
+      remote_entity: "Afstandsbediening-entiteit",
+      remote_template: "Afstandsbediening entiteit template (Jinja)",
       selected_entity_helper: "Geselecteerde entiteitshelper",
       sync_entity_type: "Synchronisatie entiteitstype",
       placement: "Plaatsing",
@@ -316,6 +360,7 @@ export default {
       sync_selected_entity: "Synchroniseer geselecteerde entiteit",
       select_entity: "Selecteer entiteit uit helper",
       toggle_lyrics: "Wisselen tussen songtekst-overlay",
+      remote_control: "Afstandsbediening overlay openen",
     },
     action_helpers: {
       sync_selected_entity: "Geselecteerde entiteit synchroniseren",
@@ -331,6 +376,10 @@ export default {
       chip: "Actiechip",
       menu: "In menu",
       hidden: "Verborgen (Artwork-tik)",
+      replace_search: "Vervang Zoeken",
+      replace_power: "Vervang Aan/Uit",
+      replace_mute: "Vervang Dempen",
+      replace_favorite: "Vervang Favoriet",
       not_triggerable: "Niet triggerbaar",
     },
     triggers: {
@@ -354,6 +403,8 @@ export default {
       default: "Standaard",
       search: "Zoeken",
       group_players: "Spelers groeperen",
+      up_next: "Hierna",
+      remote_control: "Afstandsbediening",
     },
     appearance_options: {
       automatic: "Automatisch",
@@ -382,6 +433,7 @@ export default {
       details: "Details van 'Nu Spelen'",
       menu: "Menu & Zoekschermen",
       action_chips: "Actie Chips",
+      lyrics: "Songtekst",
     },
     media_controls: {
       shuffle: "Shuffle",
@@ -395,14 +447,29 @@ export default {
       more_info: "Meer Info",
       search: "Zoeken",
       source: "Bron",
+      remote_controls: "Afstandsbediening",
       show_lyrics: "Songtekst weergeven",
       hide_lyrics: "Songtekst verbergen",
       transfer_queue: "Wachtrij Overdragen",
       main_menu: "Hoofdmenu",
       group_players: "Spelers Groeperen",
+      up_next: "Hierna",
+      remote_control: "Afstandsbediening",
       select_entity: "Selecteer Entiteit voor Meer Info",
       transfer_to: "Wachtrij Overdragen Naar",
       no_players: "Geen andere Music Assistant spelers beschikbaar.",
+    },
+    remote: {
+      title: "Afstandsbediening",
+      up: "Omhoog",
+      down: "Omlaag",
+      left: "Links",
+      right: "Rechts",
+      select: "Selecteren",
+      back: "Terug",
+      menu: "Menu",
+      home: "Startscherm",
+      power: "AAN/UIT",
     },
     grouping: {
       title: "Spelers Groeperen",
@@ -465,6 +532,7 @@ export default {
       audiobook: "Luisterboek",
     },
     search_artist: "Zoek naar deze artiest",
+    search_album: "Blader door nummers van dit album",
     browse_album: "Tracks van {album} doorzoeken",
     play_collection: "Speel deze collectie af",
     play_collection_error: "Kan deze collectie niet direct afspelen",
@@ -474,7 +542,11 @@ export default {
     finding: "Songteksten zoeken...",
     none_found: "Geen songteksten gevonden",
     not_available: "Songtekst niet beschikbaar",
-    instrumental: "Instrumentaal nummer",
+    instrumental: "Instrumentale Track",
+    admin_only_mass:
+      "Songteksten ophalen via Music Assistant is alleen voor beheerders. Het wordt aanbevolen om in de kaartconfiguratie over te schakelen naar lrclib.",
+    fallback_to_lrclib_non_admin:
+      "Niet-beheerder gebruiker gedetecteerd. Terugvallen op lrclib voor het ophalen van songteksten.",
   },
   lyrics_sources: {
     mass_lrclib: "Music Assistant (Terugval naar LRCLIB)",

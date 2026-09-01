@@ -35,10 +35,20 @@ export default {
       actions: "Acciones",
     },
     search_placeholder: "Buscar opciones de configuración...",
-    placeholders: {
-      search: "Buscar música...",
-    },
+    template_label: "Plantilla de tarjeta",
     templates: {
+      custom: {
+        label: "Personalizado (Configuración original)",
+        description: "Tu configuración original totalmente personalizada.",
+      },
+      large_modern: {
+        label: "YAMP moderno y grande",
+        description: "Un diseño moderno ligeramente más grande con controles adaptables.",
+      },
+      crisp_clean: {
+        label: "Limpio",
+        description: "Un diseño limpio con portada escalada y controles modernos.",
+      },
       minimal_mini: {
         label: "MINImal",
         description: "Una tarjeta compacta sin carátula.",
@@ -47,6 +57,28 @@ export default {
         label: "Mini Mode",
         description: "La tarjeta compacta estándar.",
       },
+      quick_and_easy: {
+        label: "Sin tiempo que perder",
+        description: "Diseñado para rapidez con filas de chips persistentes y agrupación rápida.",
+      },
+      dedicated_search: {
+        label: "Todo sobre la búsqueda",
+        description:
+          "Una tarjeta de búsqueda independiente sin el reproductor multimedia principal.",
+      },
+      dedicated_grouping: {
+        label: "Terapia de grupo",
+        description:
+          "Una tarjeta de agrupación de reproductores independiente. Requiere múltiples entidades configuradas.",
+      },
+      huge_yamp: {
+        label: "¡Vaya pedazo de YAMP!",
+        description:
+          "Controles maximizados, texto grande y una barra de progreso enorme para ver desde lejos.",
+      },
+    },
+    placeholders: {
+      search: "Buscar música...",
     },
     sections: {
       artwork: {
@@ -116,6 +148,7 @@ export default {
       hide_search_headers_on_idle: "Ocultar encabezados de búsqueda en inactividad.",
       disable_mass: "Desactivar integración con Mass Queue.",
       swap_pause_stop: "Cambiar pausa por stop en diseño moderno.",
+      show_album: "Mostrar el nombre del álbum junto al artista en los detalles del reproductor.",
       adaptive_controls: "Permitir que los botones se adapten al espacio.",
       hide_menu_player: "Ocultar nombre de entidad cuando está en el menú.",
       hide_reorder_progress:
@@ -123,8 +156,12 @@ export default {
       adaptive_text: "Elegir qué textos se adaptan al espacio.",
       collapse_expand:
         "Siempre contraído activa el modo mini. Expandir al buscar expande temporalmente.",
+      disable_mini_menu:
+        "Vuelve a las listas estándar en lugar de usar los nuevos menús de cuadrícula mini en el modo 'Siempre contraído'.",
       idle_screen: "Elegir pantalla a mostrar en reposo.",
       hide_controls: "Seleccionar controles a ocultar.",
+      hide_remote_buttons:
+        "Seleccione botones para ocultar de la superposición del mando a distancia.",
       hide_search_chips: "Ocultar chips de filtro de búsqueda.",
       hide_active_entity_on_idle:
         "Oculta la etiqueta de la entidad en la parte inferior de la tarjeta solo cuando el reproductor está inactivo.",
@@ -145,9 +182,13 @@ export default {
       entity_current_hint: "Use 'entity_id: current' para el reproductor actual.",
       jinja_template_hint: "Plantilla Jinja para entity_id.",
       jinja_template_vol_hint: "Plantilla para entidad de volumen.",
+      jinja_template_remote_hint:
+        "Plantilla Jinja que resuelve un entity_id remoto (p.ej. remote.salon_tv):",
       not_available_alt_collapsed: "No disponible en modo contraído.",
       not_available_collapsed: "No disponible si está contraído.",
       only_available_collapsed: "Solo disponible si está contraído.",
+      only_available_mini_menu:
+        "Solo disponible cuando 'Siempre contraído' es verdadero y 'Expandir en la búsqueda' es falso",
       only_available_modern: "Solo disponible con diseño Moderno.",
       image_url_helper: "Ingrese una URL directa a una imagen o una ruta de archivo local",
       selected_entity_helper:
@@ -205,6 +246,7 @@ export default {
       progress_bar_height: "Altura de la barra de progreso",
       display_timestamps: "Mostrar sellos de tiempo",
       swap_pause_stop: "Cambiar Pausa por Stop",
+      show_album: "Mostrar nombre del álbum",
       adaptive_controls: "Tamaño adaptativo",
       hide_active_entity: "Ocultar nombre de entidad activa",
       hide_active_entity_on_idle: "Ocultar etiqueta de entidad activa al estar inactivo",
@@ -212,6 +254,7 @@ export default {
       hide_menu_player_toggle: "Ocultar reproductor del menú",
       hide_reorder_progress_toggle: "Ocultar progreso de reordenación",
       always_collapsed: "Siempre contraído",
+      disable_mini_menu: "Desactivar menús de cuadrícula mini",
       expand_on_search: "Expandir al buscar",
       script_var: "Variable script (yamp_entity)",
       use_ma_template: "Usar plantilla MA",
@@ -256,6 +299,7 @@ export default {
       idle_screen: "Pantalla reposo",
       name: "Nombre",
       hidden_controls: "Controles ocultos",
+      hide_remote_buttons: "Botones del mando a distancia ocultos",
       ma_template: "Plantilla MA (Jinja)",
       hidden_chips: "Chips ocultos",
       vol_template: "Plantilla Volumen (Jinja)",
@@ -269,6 +313,8 @@ export default {
       match_entity: "Entidad",
       ma_entity: "Entidad de Music Assistant",
       vol_entity: "Entidad de volumen",
+      remote_entity: "Entidad de control remoto",
+      remote_template: "Plantilla de entidad remota (Jinja)",
       selected_entity_helper: "Helper de entidad seleccionada",
       sync_entity_type: "Tipo de entidad a sincronizar",
       placement: "Colocación",
@@ -290,6 +336,7 @@ export default {
       sync_selected_entity: "Sincronizar entidad seleccionada",
       select_entity: "Seleccionar entidad desde helper",
       toggle_lyrics: "Alternar superposición de letras",
+      remote_control: "Abrir superposición de mando a distancia",
     },
     action_helpers: {
       sync_selected_entity: "Sincronizar entidad seleccionada →",
@@ -305,6 +352,10 @@ export default {
       chip: "Chip de acción",
       menu: "En el menú",
       hidden: "Oculto (Toque en el arte)",
+      replace_search: "Reemplazar Búsqueda",
+      replace_power: "Reemplazar Encendido",
+      replace_mute: "Reemplazar Silencio",
+      replace_favorite: "Reemplazar Favorito",
       not_triggerable: "No activable",
     },
     triggers: {
@@ -328,6 +379,8 @@ export default {
       default: "Por defecto",
       search: "Buscar",
       group_players: "Agrupar",
+      up_next: "A continuación",
+      remote_control: "Control remoto",
     },
     appearance_options: {
       automatic: "Automático",
@@ -356,6 +409,7 @@ export default {
       details: "Detalles de reproducción",
       menu: "Menú y Búsqueda",
       action_chips: "Chips de acción",
+      lyrics: "Letra",
     },
     media_controls: {
       shuffle: "Aleatorio",
@@ -369,14 +423,29 @@ export default {
       more_info: "Más info",
       search: "Buscar",
       source: "Fuente",
+      remote_controls: "Mando a distancia",
       show_lyrics: "Mostrar letra",
       hide_lyrics: "Ocultar letra",
       transfer_queue: "Transferir cola",
       main_menu: "Menú Principal",
       group_players: "Agrupar",
+      up_next: "A continuación",
+      remote_control: "Control remoto",
       select_entity: "Seleccionar",
       transfer_to: "Transferir a",
       no_players: "Sin reproductores MA.",
+    },
+    remote: {
+      title: "Mando a distancia",
+      up: "Arriba",
+      down: "Abajo",
+      left: "Izquierda",
+      right: "Derecha",
+      select: "Seleccionar",
+      back: "Atrás",
+      menu: "Menú",
+      home: "Inicio",
+      power: "Encendido",
     },
     grouping: {
       title: "Agrupar",
@@ -439,6 +508,7 @@ export default {
       audiobook: "Audiolibro",
     },
     search_artist: "Buscar este artista",
+    search_album: "Explorar pistas de este álbum",
     browse_album: "Explorar pistas de {album}",
     play_collection: "Reproducir esta colección",
     play_collection_error: "No se puede reproducir esta colección directamente",
@@ -449,6 +519,10 @@ export default {
     none_found: "No se encontró letra",
     not_available: "Letra no disponible",
     instrumental: "Pista instrumental",
+    admin_only_mass:
+      "La obtención de letras de Music Assistant es solo para usuarios administradores. Se recomienda cambiar a lrclib en la configuración de la tarjeta.",
+    fallback_to_lrclib_non_admin:
+      "Usuario no administrador detectado. Se utilizará lrclib como respaldo para obtener las letras.",
   },
   lyrics_sources: {
     mass_lrclib: "Music Assistant (Respaldo en LRCLIB)",

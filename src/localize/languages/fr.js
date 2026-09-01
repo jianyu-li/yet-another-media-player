@@ -35,10 +35,20 @@ export default {
       actions: "Actions",
     },
     search_placeholder: "Rechercher des options de configuration...",
-    placeholders: {
-      search: "Rechercher de la musique...",
-    },
+    template_label: "Modèle de carte",
     templates: {
+      custom: {
+        label: "Personnalisé (Configuration d'origine)",
+        description: "Votre configuration d'origine entièrement personnalisée.",
+      },
+      large_modern: {
+        label: "Grand YAMP moderne",
+        description: "Un design moderne légèrement plus grand avec des contrôles adaptatifs.",
+      },
+      crisp_clean: {
+        label: "Épuré",
+        description: "Une disposition épurée avec pochette mise à l'échelle et contrôles modernes.",
+      },
       minimal_mini: {
         label: "MINImal",
         description: "Une carte compacte sans pochette.",
@@ -47,6 +57,28 @@ export default {
         label: "Mini Mode",
         description: "La carte compacte standard.",
       },
+      quick_and_easy: {
+        label: "Pas le temps d'expliquer",
+        description:
+          "Conçu pour la rapidité avec des rangées de puces persistantes et un regroupement rapide.",
+      },
+      dedicated_search: {
+        label: "Tout sur la recherche",
+        description: "Une carte de recherche autonome sans le lecteur multimédia principal.",
+      },
+      dedicated_grouping: {
+        label: "Thérapie de groupe",
+        description:
+          "Une carte autonome de regroupement de lecteurs. Nécessite plusieurs entités configurées.",
+      },
+      huge_yamp: {
+        label: "C'est un énorme YAMP !",
+        description:
+          "Contrôles maximisés, grand texte et barre de progression imposante pour une visibilité à distance.",
+      },
+    },
+    placeholders: {
+      search: "Rechercher de la musique...",
     },
     sections: {
       artwork: {
@@ -121,6 +153,7 @@ export default {
       hide_search_headers_on_idle: "Masquer la recherche et les filtres en mode veille.",
       disable_mass: "Désactiver l'intégration Mass Queue.",
       swap_pause_stop: "Remplacer le bouton pause par stop en mode moderne.",
+      show_album: "Afficher le nom de l'album à côté de l'artiste dans les détails du lecteur.",
       adaptive_controls: "Laisser les boutons s'adapter à l'espace disponible.",
       hide_menu_player:
         "Masquer l'étiquette de l'entité en bas quand les jetons sont dans le menu.",
@@ -129,8 +162,11 @@ export default {
       adaptive_text: "Choisir quels textes doivent s'adapter à l'espace.",
       collapse_expand:
         "Toujours réduit crée un mini lecteur. Agrandir à la Recherche agrandit temporairement.",
+      disable_mini_menu:
+        "Revenir aux listes standards au lieu d'utiliser les nouveaux mini menus en grille en mode 'Toujours réduit'.",
       idle_screen: "Choisir l'écran à afficher automatiquement en veille.",
       hide_controls: "Sélectionner les commandes à masquer pour cette entité.",
+      hide_remote_buttons: "Sélectionnez les boutons à masquer de la télécommande.",
       hide_search_chips: "Masquer des jetons de filtrage spécifiques.",
       hide_active_entity_on_idle:
         "Masque l'étiquette de l'entité au bas de la carte uniquement lorsque le lecteur est en veille.",
@@ -151,9 +187,13 @@ export default {
       entity_current_hint: "Utilisez 'entity_id: current' pour cibler le lecteur actuel.",
       jinja_template_hint: "Entrez un modèle Jinja qui renvoie un entity_id.",
       jinja_template_vol_hint: "Modèle pour l'entité de volume.",
+      jinja_template_remote_hint:
+        "Modèle Jinja résolvant un entity_id de télécommande (ex. remote.salon_tv) :",
       not_available_alt_collapsed: "Non disponible en mode 'Toujours réduit'.",
       not_available_collapsed: "Non disponible si 'Toujours réduit' est activé.",
       only_available_collapsed: "Uniquement disponible si 'Toujours réduit' est activé.",
+      only_available_mini_menu:
+        "Uniquement disponible lorsque 'Toujours réduit' est vrai et 'Développer lors de la recherche' est faux",
       only_available_modern: "Uniquement disponible avec la mise en page Moderne.",
       image_url_helper: "Entrez une URL directe vers une image ou un chemin de fichier local",
       selected_entity_helper:
@@ -211,6 +251,7 @@ export default {
       progress_bar_height: "Hauteur de la barre de progression",
       display_timestamps: "Afficher les horodatages",
       swap_pause_stop: "Remplacer Pause par Stop",
+      show_album: "Afficher le nom de l'album",
       adaptive_controls: "Taille adaptative",
       hide_active_entity: "Masquer l'étiquette active",
       hide_active_entity_on_idle: "Masquer l'étiquette de l'entité active en mode veille",
@@ -218,6 +259,7 @@ export default {
       hide_menu_player_toggle: "Masquer le lecteur menu",
       hide_reorder_progress_toggle: "Masquer la progression de réorganisation",
       always_collapsed: "Toujours réduit",
+      disable_mini_menu: "Désactiver les mini menus en grille",
       expand_on_search: "Agrandir en recherche",
       script_var: "Variable script (yamp_entity)",
       use_ma_template: "Utiliser modèle MA",
@@ -262,6 +304,7 @@ export default {
       idle_screen: "Écran de veille",
       name: "Nom",
       hidden_controls: "Commandes masquées",
+      hide_remote_buttons: "Boutons de télécommande masqués",
       ma_template: "Modèle MA (Jinja)",
       hidden_chips: "Jetons masqués",
       vol_template: "Modèle Volume (Jinja)",
@@ -275,6 +318,8 @@ export default {
       match_entity: "Entité de correspondance",
       ma_entity: "Entité Music Assistant",
       vol_entity: "Entité de volume",
+      remote_entity: "Entité de télécommande",
+      remote_template: "Modèle d'entité de télécommande (Jinja)",
       selected_entity_helper: "Helper d'entité sélectionnée",
       sync_entity_type: "Type d'entité à synchroniser",
       placement: "Placement",
@@ -296,6 +341,7 @@ export default {
       sync_selected_entity: "Synchroniser l'entité sélectionnée",
       select_entity: "Sélectionner l'entité depuis le helper",
       toggle_lyrics: "Activer/Désactiver la superposition des paroles",
+      remote_control: "Ouvrir l'overlay télécommande",
     },
     action_helpers: {
       sync_selected_entity: "Synchroniser l'entité sélectionnée →",
@@ -311,6 +357,10 @@ export default {
       chip: "Puce d'action",
       menu: "Dans le menu",
       hidden: "Masqué (Appui sur l'image)",
+      replace_search: "Remplacer Recherche",
+      replace_power: "Remplacer Alimentation",
+      replace_mute: "Remplacer Muet",
+      replace_favorite: "Remplacer Favori",
       not_triggerable: "Non déclenchable",
     },
     triggers: {
@@ -334,6 +384,8 @@ export default {
       default: "Par défaut",
       search: "Rechercher",
       group_players: "Grouper les lecteurs",
+      up_next: "À suivre",
+      remote_control: "Télécommande",
     },
     appearance_options: {
       automatic: "Automatique",
@@ -362,6 +414,7 @@ export default {
       details: "Détails lecture",
       menu: "Menu & Recherche",
       action_chips: "Jetons d'action",
+      lyrics: "Paroles",
     },
     media_controls: {
       shuffle: "Aléatoire",
@@ -375,14 +428,29 @@ export default {
       more_info: "Plus d'infos",
       search: "Rechercher",
       source: "Source",
+      remote_controls: "Télécommande",
       show_lyrics: "Afficher les paroles",
       hide_lyrics: "Masquer les paroles",
       transfer_queue: "Transférer la file",
       main_menu: "Menu Principal",
       group_players: "Grouper les lecteurs",
+      up_next: "À suivre",
+      remote_control: "Télécommande",
       select_entity: "Choisir pour plus d'infos",
       transfer_to: "Transférer vers",
       no_players: "Aucun lecteur MA disponible.",
+    },
+    remote: {
+      title: "Télécommande",
+      up: "Haut",
+      down: "Bas",
+      left: "Gauche",
+      right: "Droite",
+      select: "Sélectionner",
+      back: "Retour",
+      menu: "Menu",
+      home: "Accueil",
+      power: "Alimentation",
     },
     grouping: {
       title: "Grouper les lecteurs",
@@ -445,6 +513,7 @@ export default {
       audiobook: "Livre audio",
     },
     search_artist: "Chercher cet artiste",
+    search_album: "Parcourir les pistes de cet album",
     browse_album: "Parcourir les titres de {album}",
     play_collection: "Lire cette collection",
     play_collection_error: "Impossible de lire cette collection directement",
@@ -455,6 +524,10 @@ export default {
     none_found: "Aucune parole trouvée",
     not_available: "Paroles non disponibles",
     instrumental: "Piste instrumentale",
+    admin_only_mass:
+      "La récupération des paroles via Music Assistant est réservée aux administrateurs. Il est recommandé de passer à lrclib dans la configuration de la carte.",
+    fallback_to_lrclib_non_admin:
+      "Utilisateur non administrateur détecté. Utilisation de lrclib pour la récupération des paroles.",
   },
   lyrics_sources: {
     mass_lrclib: "Music Assistant (Repli sur LRCLIB)",
