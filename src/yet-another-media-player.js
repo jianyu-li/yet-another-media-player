@@ -2549,45 +2549,6 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     return !!item.is_browsable;
   }
 
-  // Handle touch events to prevent accidental clicks during scrolling
-  _handleSearchResultTouch(item, event) {
-    // Only handle touch events on mobile
-    if (!('ontouchstart' in window)) {
-      return;
-    }
-
-    const touch = event.touches[0];
-    const startX = touch.clientX;
-    const startY = touch.clientY;
-    let hasMoved = false;
-    const moveThreshold = 10; // pixels
-
-    const handleTouchMove = (moveEvent) => {
-      const moveTouch = moveEvent.touches[0];
-      const deltaX = Math.abs(moveTouch.clientX - startX);
-      const deltaY = Math.abs(moveTouch.clientY - startY);
-
-      if (deltaX > moveThreshold || deltaY > moveThreshold) {
-        hasMoved = true;
-      }
-    };
-
-    const handleTouchEnd = (endEvent) => {
-      // Remove event listeners
-      document.removeEventListener('touchmove', handleTouchMove, { passive: true });
-      document.removeEventListener('touchend', handleTouchEnd, { passive: true });
-
-      // Only trigger click if finger didn't move significantly (not scrolling)
-      if (!hasMoved) {
-        this._handleSearchResultClick(item);
-      }
-    };
-
-    // Add event listeners
-    document.addEventListener('touchmove', handleTouchMove, { passive: true });
-    document.addEventListener('touchend', handleTouchEnd, { passive: true });
-  }
-
 
 
   // Get the tooltip title for clickable search results
@@ -3856,11 +3817,6 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     }
     if (!this._isClickableSearchResult(item)) return;
 
-    // If this is a touch device and we have a touch event, ignore the click
-    // (touch events are handled by _handleSearchResultTouch)
-    if ('ontouchstart' in window && event && event.sourceCapabilities && event.sourceCapabilities.firesTouchEvents) {
-      return;
-    }
 
     // Radio flow: user is picking a track to resolve from search results
     const currentHierarchyLevel = this._searchHierarchy[this._searchHierarchy.length - 1];
@@ -9615,7 +9571,6 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
             queueControlsStyle: this.config.queue_controls_style || "drag_handle",
             onPlay: (it, e) => this._playMediaFromSearch(it, e),
             onResultClick: (it, e) => this._handleSearchResultClick(it, e),
-            onResultTouch: (it, e) => this._handleSearchResultTouch(it, e),
             onOptionsToggle: (it) => { this._activeSearchRowMenuId = it?.media_content_id || null; this.requestUpdate(); },
             onPlayOption: (it, mode) => this._performSearchOptionAction(it, mode),
             onMoveUp: (it) => this._moveQueueItemUp(it.queue_item_id),

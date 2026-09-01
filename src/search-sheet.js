@@ -539,7 +539,6 @@ export function renderSearchResultItem({
   queueControlsStyle = "drag_handle",
   onPlay,
   onResultClick,
-  onResultTouch,
   onOptionsToggle,
   onPlayOption,
   onMoveUp,
@@ -662,7 +661,6 @@ export function renderSearchResultItem({
               <div class="yamp-search-result-info">
                 <span
                   class="yamp-search-result-title ${isClickable ? "clickable-search-result" : ""}"
-                  @touchstart=${(e) => onResultTouch && onResultTouch(item, e)}
                   @click=${(e) => {
                     if (isClickable || isSelectionFlow) {
                       e.stopPropagation();
@@ -675,7 +673,6 @@ export function renderSearchResultItem({
                 </span>
                 <span
                   class="yamp-search-result-subtitle ${isClickable ? "clickable-search-result" : ""}"
-                  @touchstart=${(e) => onResultTouch && onResultTouch(item, e)}
                   @click=${(e) => {
                     if (isClickable || isSelectionFlow) {
                       e.stopPropagation();
