@@ -15,7 +15,7 @@ YAMP is a full-featured Home Assistant media card for controlling multiple entit
 - **Music Assistant Integration** — Full search and queue management
 - **Configuration Search** — Search the configuration editor to quickly find what you're looking for. 
 - **Lyrics** - Synced lyric support
-- **mass_queue Support** — Advanced queue controls and integrated Music Assistant lyrics with the optional [mass_queue](https://github.com/droans/mass_queue) integration
+- **mass_queue Support** — Advanced queue controls, album tracklists, and integrated Music Assistant lyrics with the optional [mass_queue](https://github.com/droans/mass_queue) integration
 - **Adaptive Visual Theming** — Customize artwork scaling with various fit modes and add custom artwork overrides
 - **Many Layouts** — Collapse the card when idle or keep it compact while playing, change text sizing, and more to match your dashboard style
 - **Custom Actions** — Add action chips or menu items that call any Home Assistant action or script, with full access to the currently selected entity
@@ -102,7 +102,7 @@ Below you will find a list of all configuration options.
 | `adaptive_controls`        | boolean      | No           | `false`     | Control buttons expand to fill extra horizontal space, giving you larger tap targets when there’s room |
 | `control_layout`           | choice       | No           | `classic`   | `classic` keeps the legacy evenly sized controls, while `modern` adopts Home Assistant’s more-info layout (shuffle/prev/play/next/repeat) and moves the favorite and power buttons along the bottom of the card ([Supports Templates](#template-support)) |
 | `swap_pause_for_stop`      | boolean      | No           | `false`     | Only for `control_layout: modern`; when `true`, the center pause button is replaced with a stop button |
-| `show_album`               | boolean      | No           | `true`      | Display the album name next to the artist in player details (clickable to quick-browse album tracks) |
+| `show_album`               | boolean      | No           | `true`      | Display the album name next to the artist in player details (clickable to quick-browse album tracks; most accurate with [mass_queue](#optional-music-assistant-queue-actions-mass_queue)) |
 | `adaptive_text`            | boolean/array| No           | `false`     | Set to `true` to scale all text, or supply a list of targets (`details`, `menu`, `action_chips`) to choose exactly which sections adapt |
 | `hide_active_entity_label` | boolean      | No           | `false`     | Hide the small entity name label shown at the bottom center when chips are placed in the menu |
 | `details_alignment`        | choice       | No           | `left`      | Align the track title and artist (`left`, `center`, `right`). Set to `none` to completely hide the details section. |
@@ -523,11 +523,12 @@ For enhanced queue controls in the Search sheet (e.g., viewing and reordering th
 
 Once installed and configured, YAMP will automatically detect the integration and enable:
 - Fetching the upcoming queue with `mass_queue.get_queue_items` (the existing ```search_results_limit``` will be used for this)
+- **Accurate Album Tracklists**: Fetching complete, sequentially ordered album tracklists via `mass_queue.get_album_tracks` when clicking the album name in Now Playing or browsing an album from search results. While YAMP includes fallbacks for browsing without `mass_queue`, installing `mass_queue` guarantees the most complete and accurate tracklists.
 - Browsing playlist tracks
 - Queue item reordering: move up, move down, move next
 - Queue item removal
 
-These features are optional. Without the integration, YAMP will fall back to a basic “next up” preview when available.
+These features are optional. Without the integration, YAMP will fall back to Home Assistant's built-in `browse_media` or search-based navigation, though album tracklists may be less comprehensive or ordered differently.
 
 #### Queue Drag-and-Drop Reordering
 
