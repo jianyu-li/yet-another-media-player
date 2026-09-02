@@ -902,7 +902,9 @@ export async function searchMedia(
         (!query || query.trim() === "") &&
         mediaType &&
         mediaType !== "all" &&
-        !searchParams.favorites
+        !searchParams.favorites &&
+        !searchParams.album &&
+        !searchParams.artist
       ) {
         // Validate media type strictly
         if (!ALLOWED_MEDIA_TYPES.includes(mediaType)) {
@@ -952,8 +954,10 @@ export async function searchMedia(
         }
       }
 
+      const searchQuery =
+        query && query.trim() !== "" ? query : searchParams.album || searchParams.artist || "";
       const serviceData = {
-        name: query,
+        name: searchQuery,
         ...(configEntryId && configEntryId !== "auto" && { config_entry_id: configEntryId }),
       };
       const searchLimit = resolveLimitValue(searchResultsLimit, {
@@ -1157,9 +1161,11 @@ export async function getFavorites(
 
 // Fallback function for media_player search
 async function fallbackToMediaPlayerSearch(hass, entityId, query, mediaType, searchParams = {}) {
+  const searchQuery =
+    query && query.trim() !== "" ? query : searchParams.album || searchParams.artist || "";
   const fallbackData = {
     entity_id: entityId,
-    search_query: query,
+    search_query: searchQuery,
   };
 
   if (mediaType && mediaType !== "all") {

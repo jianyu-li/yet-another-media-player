@@ -22,6 +22,7 @@ import {
   getRecentlyPlayed,
   isTrackFavorited,
   getMassQueueConfigEntryId,
+  getMusicAssistantConfigEntryId,
   renderSearchResultItem,
   ALLOWED_MEDIA_TYPES,
   transformMusicAssistantItem
@@ -1475,10 +1476,73 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   /**
+   * Resolve an album URI from album name and artist name via Music Assistant
+   * @param {string} albumName
+   * @param {string} artistName
+   * @param {string} entityId
+   * @returns {Promise<string|null>}
+   */
+  async _resolveAlbumUri(albumName, artistName, entityId) {
+    if (!albumName || !this.hass) return null;
+    try {
+      const configEntryId = await getMusicAssistantConfigEntryId(this.hass, entityId);
+      if (!configEntryId) return null;
+
+      const serviceData = {
+        name: albumName,
+        media_type: ["album"],
+        ...(configEntryId && configEntryId !== "auto" && { config_entry_id: configEntryId }),
+      };
+      if (artistName) {
+        serviceData.artist = artistName;
+      }
+
+      const msg = {
+        type: "call_service",
+        domain: "music_assistant",
+        service: "search",
+        service_data: serviceData,
+        return_response: true,
+      };
+
+      const res = await this.hass.connection.sendMessagePromise(msg);
+      const albums = res?.response?.albums || [];
+      if (!albums.length) return null;
+
+      const normAlbum = albumName.trim().toLowerCase();
+      const normArtist = (artistName || "").trim().toLowerCase();
+
+      // Priority 1: Match both album name and artist
+      const matchBoth = albums.find((a) => {
+        const aName = (a.name || "").toLowerCase();
+        const aArtistMatch = normArtist ? a.artists?.some(ar => {
+          const arName = (ar.name || "").toLowerCase();
+          return arName.includes(normArtist) || normArtist.includes(arName);
+        }) : true;
+        return (aName === normAlbum || aName.includes(normAlbum) || normAlbum.includes(aName)) && aArtistMatch;
+      });
+      if (matchBoth?.uri) return matchBoth.uri;
+
+      // Priority 2: Match album name
+      const matchName = albums.find((a) => {
+        const aName = (a.name || "").toLowerCase();
+        return aName === normAlbum || aName.includes(normAlbum) || normAlbum.includes(aName);
+      });
+      if (matchName?.uri) return matchName.uri;
+
+      // Priority 3: First returned album
+      return albums[0]?.uri || null;
+    } catch (e) {
+      console.warn("yamp: Failed to resolve album URI:", e);
+      return null;
+    }
+  }
+
+  /**
    * Open the search sheet and navigate directly to the current album's tracks
    * in hierarchical search view (only when media_album_name is present).
    */
-  _searchAlbumFromNowPlaying() {
+  async _searchAlbumFromNowPlaying() {
     const activeObj = this.currentActivePlaybackStateObj || this.currentPlaybackStateObj || this.currentStateObj;
     const album = activeObj?.attributes?.media_album_name || "";
     const artist = activeObj?.attributes?.media_artist || "";
@@ -1510,7 +1574,18 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
     this.requestUpdate();
 
-    this._searchAlbumTracks(album, artist, null).catch((error) => {
+    let albumUri = null;
+    if (this._isMusicAssistantEntity()) {
+      try {
+        const searchEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
+        const searchEntityId = await this._resolveTemplateAtActionTime(searchEntityIdTemplate, this.currentEntityId);
+        albumUri = await this._resolveAlbumUri(album, artist, searchEntityId);
+      } catch (e) {
+        console.warn("yamp: error resolving album URI:", e);
+      }
+    }
+
+    this._searchAlbumTracks(album, artist, albumUri).catch((error) => {
       console.error("yamp: album quick-search failed:", error);
     });
   }
@@ -1787,7 +1862,19 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _getDisplaySearchResults() {
-    return Array.isArray(this._searchResults) ? this._searchResults : [];
+    const results = Array.isArray(this._searchResults) ? this._searchResults : [];
+    const isInHierarchy = this._searchHierarchy.some(
+      (h) => h.type === "album" || h.type === "playlist"
+    );
+    if (isInHierarchy && this._searchQuery && this._searchQuery.trim() !== "") {
+      const q = this._searchQuery.trim().toLowerCase();
+      return results.filter((item) => {
+        const title = (item.title || item.name || "").toLowerCase();
+        const artist = (item.artist || "").toLowerCase();
+        return title.includes(q) || artist.includes(q);
+      });
+    }
+    return results;
   }
 
   _getSearchResultsLimit() {
@@ -1802,7 +1889,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _getSearchResultsCount() {
-    return Array.isArray(this._searchResults) ? this._searchResults.length : 0;
+    return this._getDisplaySearchResults().length;
   }
 
   _shouldShowSearchResultsCount() {
@@ -2120,6 +2207,10 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
   // Handle explicit search submission from UI (Enter key or Search Button)
   _handleSearchSubmit() {
+    if (this._searchHierarchy.some((h) => h.type === "album" || h.type === "playlist")) {
+      // In hierarchy mode, filtering is already live in real-time
+      return;
+    }
     const keepFilters = this._keepFiltersOnSearch;
     if (!keepFilters) {
       this._favoritesFilterActive = false;
@@ -3900,19 +3991,22 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._searchHierarchy.push({ type: 'album', name: albumName, query: this._searchQuery, uri: albumUri, filter: this._searchMediaClassFilter });
     this._searchBreadcrumb = `Tracks from ${albumName}`;
     this._searchResultsByType = {}; // Clear cache for new search
-    this._currentSearchQuery = albumName;
+    this._currentSearchQuery = "";
     this._searchMediaClassFilter = 'track';
 
     // Immediate loading state
     this._searchResults = [];
     this._searchLoading = true;
+    this._searchQuery = "";
     this.requestUpdate();
 
     // Priority 1: Use mass_queue integration if available (preferred for Music Assistant)
-    const mqTracks = await this._fetchMassQueueTracks(albumUri, "get_album_tracks");
-    if (mqTracks && mqTracks.length > 0) {
-      this._setSearchResultsFromMassQueue(mqTracks, albumName);
-      return;
+    if (albumUri && (await this._isMassQueueIntegrationAvailable(this.hass))) {
+      const mqTracks = await this._fetchMassQueueTracks(albumUri, "get_album_tracks");
+      if (mqTracks && mqTracks.length > 0) {
+        this._setSearchResultsFromMassQueue(mqTracks, "");
+        return;
+      }
     }
 
     // Priority 2: Use browse_media (fallback for non-mass_queue MA or other integration)
@@ -3937,9 +4031,10 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         const tracks = browseResult.children || [];
 
         if (tracks.length > 0) {
-          this._searchQuery = albumName;
+          this._searchQuery = "";
           this._searchResults = this._sortSearchResults(tracks);
           this._searchTotalRows = Math.max(15, tracks.length);
+          this._searchAttempted = true;
           this._searchLoading = false;
           this.requestUpdate();
           return;
@@ -3950,11 +4045,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     }
 
     // Fallback to search-based navigation
-    let searchQuery = albumName;
-    if (artistName) {
-      searchQuery = `${artistName} ${albumName}`;
-    }
-    this._searchQuery = searchQuery;
+    this._searchQuery = "";
 
     // Clear filter states to ensure accurate album search results
     this._favoritesFilterActive = false;
@@ -4076,6 +4167,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     }));
     this._searchQuery = queryName;
     this._searchTotalRows = Math.max(15, tracks.length);
+    this._searchAttempted = true;
     this._searchLoading = false;
     this.requestUpdate();
   }
@@ -9485,7 +9577,14 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
               ${this._searchQuery ? html`
                 <button
                   class="search-input-clear"
-                  @click=${() => { this._showSearchSheetInOptions(); }}
+                  @click=${() => {
+                    if (this._searchHierarchy.length > 0) {
+                      this._searchQuery = "";
+                      this.requestUpdate();
+                    } else {
+                      this._showSearchSheetInOptions();
+                    }
+                  }}
                   title="${localize('common.clear')}">
                   <ha-icon icon="mdi:close"></ha-icon>
                 </button>
