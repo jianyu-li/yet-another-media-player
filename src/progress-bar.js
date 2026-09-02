@@ -3,10 +3,32 @@ import { html, nothing } from "lit";
 import { localize } from "./localize/localize.js";
 import { DEFAULT_PROGRESS_BAR_HEIGHT } from "./constants.js";
 
-function formatTime(seconds) {
-  if (seconds === undefined || seconds === null || isNaN(seconds)) return "0:00";
-  const m = Math.floor(seconds / 60);
-  const s = Math.floor(seconds % 60);
+/**
+ * Formats a duration in seconds into a human-readable time string.
+ * Uses 'h:mm:ss' format when duration is an hour or longer, or when seconds exceed an hour.
+ * Otherwise uses standard 'm:ss' format.
+ *
+ * @param {number} seconds - The time in seconds to format.
+ * @param {boolean|number} [showHoursOrDuration=false] - If boolean true or a duration >= 3600, forces hours display ('h:mm:ss').
+ * @returns {string} Formatted time string (e.g. "1:05", "1:01:05", "0:01:05").
+ */
+export function formatTime(seconds, showHoursOrDuration = false) {
+  const forceHours =
+    typeof showHoursOrDuration === "boolean"
+      ? showHoursOrDuration
+      : Boolean(showHoursOrDuration && Number(showHoursOrDuration) >= 3600);
+
+  if (seconds === undefined || seconds === null || !Number.isFinite(Number(seconds))) {
+    return forceHours ? "0:00:00" : "0:00";
+  }
+  const totalSeconds = Math.max(0, Math.floor(seconds));
+  const h = Math.floor(totalSeconds / 3600);
+  const m = Math.floor((totalSeconds % 3600) / 60);
+  const s = totalSeconds % 60;
+
+  if (h > 0 || forceHours) {
+    return `${h}:${m < 10 ? "0" : ""}${m}:${s < 10 ? "0" : ""}${s}`;
+  }
   return `${m}:${s < 10 ? "0" : ""}${s}`;
 }
 
@@ -62,8 +84,8 @@ export function renderProgressBar({
         displayTimestamps
           ? html`
               <div class="timestamps-container">
-                <span>${formatTime(currentTime)}</span>
-                <span>-${formatTime(Math.max(0, duration - currentTime))}</span>
+                <span>${formatTime(currentTime, duration)}</span>
+                <span>-${formatTime(Math.max(0, duration - currentTime), duration)}</span>
               </div>
             `
           : nothing
