@@ -955,7 +955,9 @@ export async function searchMedia(
       }
 
       const searchQuery =
-        query && query.trim() !== "" ? query : searchParams.album || searchParams.artist || "";
+        query && query.trim() !== ""
+          ? query
+          : searchParams.album || (mediaType === "album" ? "" : searchParams.artist || "");
       const serviceData = {
         name: searchQuery,
         ...(configEntryId && configEntryId !== "auto" && { config_entry_id: configEntryId }),

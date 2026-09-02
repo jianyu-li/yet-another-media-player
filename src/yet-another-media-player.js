@@ -1437,29 +1437,30 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   /**
-   * Open the search sheet pre‑filled with the current track's artist and
-   * launch the search immediately (only when media_artist is present).
+   * Open the search sheet and navigate directly to the current artist's albums
+   * in hierarchical search view (only when media_artist is present).
    */
-  _searchArtistFromNowPlaying() {
+  async _searchArtistFromNowPlaying() {
     const artist = (this.currentActivePlaybackStateObj || this.currentPlaybackStateObj || this.currentStateObj)?.attributes?.media_artist || "";
-    if (!artist) return;                // nothing to search
+    if (!artist) return;
+
+    this._openedSearchFromNowPlaying = true;
 
     // Open overlay + search sheet
     this._showEntityOptions = true;
     this._showSearchInSheet = true;
     this._searchInputAutoFocused = false;
 
-    // Prefill search state
-    this._searchQuery = artist;
+    // Reset search state
     this._searchError = "";
+    this._searchResults = [];
+    this._searchQuery = "";
     this._searchAttempted = false;
-    this._searchLoading = false;
-    this._searchResultsByType = {}; // Clear cache for new search
-    this._currentSearchQuery = artist; // Set current search query
-    this._searchHierarchy = []; // Clear search hierarchy
-    this._searchBreadcrumb = ""; // Clear breadcrumb
-
-    // Clear filter states to ensure accurate artist search results
+    this._searchResultsByType = {};
+    this._currentSearchQuery = "";
+    this._searchHierarchy = [];
+    this._searchBreadcrumb = "";
+    this._usingMusicAssistant = false;
     this._favoritesFilterActive = false;
     this._recentlyPlayedFilterActive = false;
     this._upcomingFilterActive = false;
@@ -1467,35 +1468,44 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._initialFavoritesLoaded = false;
     this._lastSearchUsedServerFavorites = false;
 
-    // Render, then run search
     this.requestUpdate();
-    // Kick off search immediately so results populate without requiring user interaction.
-    this._doSearch().catch((error) => {
-      console.error('yamp: artist quick-search failed:', error);
+
+    let artistUri = null;
+    if (this._isMusicAssistantEntity()) {
+      try {
+        const searchEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
+        const searchEntityId = await this._resolveTemplateAtActionTime(searchEntityIdTemplate, this.currentEntityId);
+        artistUri = await this._resolveArtistUri(artist, searchEntityId);
+      } catch (e) {
+        console.warn("yamp: error resolving artist URI:", e);
+      }
+    }
+
+    this._searchArtistAlbums(artist, artistUri).catch((error) => {
+      console.error("yamp: artist quick-search failed:", error);
     });
   }
 
   /**
-   * Resolve an album URI from album name and artist name via Music Assistant
-   * @param {string} albumName
-   * @param {string} artistName
+   * Resolve a media URI (album or artist) from Music Assistant
+   * @param {"album"|"artist"} mediaType
+   * @param {string} name
+   * @param {Record<string, any>} extraParams
    * @param {string} entityId
    * @returns {Promise<string|null>}
    */
-  async _resolveAlbumUri(albumName, artistName, entityId) {
-    if (!albumName || !this.hass) return null;
+  async _resolveMediaUri(mediaType, name, extraParams = {}, entityId) {
+    if (!name || !this.hass) return null;
     try {
       const configEntryId = await getMusicAssistantConfigEntryId(this.hass, entityId);
       if (!configEntryId) return null;
 
       const serviceData = {
-        name: albumName,
-        media_type: ["album"],
+        name,
+        media_type: [mediaType],
         ...(configEntryId && configEntryId !== "auto" && { config_entry_id: configEntryId }),
+        ...extraParams,
       };
-      if (artistName) {
-        serviceData.artist = artistName;
-      }
 
       const msg = {
         type: "call_service",
@@ -1506,36 +1516,54 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       };
 
       const res = await this.hass.connection.sendMessagePromise(msg);
-      const albums = res?.response?.albums || [];
-      if (!albums.length) return null;
+      const items = res?.response?.[`${mediaType}s`] || [];
+      if (!items.length) return null;
 
-      const normAlbum = albumName.trim().toLowerCase();
-      const normArtist = (artistName || "").trim().toLowerCase();
+      const normName = name.trim().toLowerCase();
+      const normArtist = (extraParams.artist || "").trim().toLowerCase();
 
-      // Priority 1: Match both album name and artist
-      const matchBoth = albums.find((a) => {
-        const aName = (a.name || "").toLowerCase();
-        const aArtistMatch = normArtist ? a.artists?.some(ar => {
-          const arName = (ar.name || "").toLowerCase();
-          return arName.includes(normArtist) || normArtist.includes(arName);
-        }) : true;
-        return (aName === normAlbum || aName.includes(normAlbum) || normAlbum.includes(aName)) && aArtistMatch;
-      });
-      if (matchBoth?.uri) return matchBoth.uri;
+      if (mediaType === "album") {
+        // Priority 1: Match both album name and artist
+        const matchBoth = items.find((a) => {
+          const aName = (a.name || "").toLowerCase();
+          const aArtistMatch = normArtist
+            ? a.artists?.some((ar) => {
+                const arName = (ar.name || "").toLowerCase();
+                return arName.includes(normArtist) || normArtist.includes(arName);
+              })
+            : true;
+          return (
+            (aName === normName || aName.includes(normName) || normName.includes(aName)) &&
+            aArtistMatch
+          );
+        });
+        if (matchBoth?.uri) return matchBoth.uri;
+      }
 
-      // Priority 2: Match album name
-      const matchName = albums.find((a) => {
-        const aName = (a.name || "").toLowerCase();
-        return aName === normAlbum || aName.includes(normAlbum) || normAlbum.includes(aName);
+      // Match item name
+      const exactMatch = items.find((it) => (it.name || "").toLowerCase() === normName);
+      if (exactMatch?.uri) return exactMatch.uri;
+
+      const matchName = items.find((it) => {
+        const itName = (it.name || "").toLowerCase();
+        return itName === normName || itName.includes(normName) || normName.includes(itName);
       });
       if (matchName?.uri) return matchName.uri;
 
-      // Priority 3: First returned album
-      return albums[0]?.uri || null;
+      // Fallback: First returned item
+      return items[0]?.uri || null;
     } catch (e) {
-      console.warn("yamp: Failed to resolve album URI:", e);
+      console.warn(`yamp: Failed to resolve ${mediaType} URI:`, e);
       return null;
     }
+  }
+
+  _resolveAlbumUri(albumName, artistName, entityId) {
+    return this._resolveMediaUri("album", albumName, artistName ? { artist: artistName } : {}, entityId);
+  }
+
+  _resolveArtistUri(artistName, entityId) {
+    return this._resolveMediaUri("artist", artistName, {}, entityId);
   }
 
   /**
@@ -1864,7 +1892,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   _getDisplaySearchResults() {
     const results = Array.isArray(this._searchResults) ? this._searchResults : [];
     const isInHierarchy = this._searchHierarchy.some(
-      (h) => h.type === "album" || h.type === "playlist"
+      (h) => h.type === "album" || h.type === "playlist" || h.type === "artist"
     );
     if (isInHierarchy && this._searchQuery && this._searchQuery.trim() !== "") {
       const q = this._searchQuery.trim().toLowerCase();
@@ -2207,7 +2235,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
   // Handle explicit search submission from UI (Enter key or Search Button)
   _handleSearchSubmit() {
-    if (this._searchHierarchy.some((h) => h.type === "album" || h.type === "playlist")) {
+    if (this._searchHierarchy.some((h) => h.type === "album" || h.type === "playlist" || h.type === "artist")) {
       // In hierarchy mode, filtering is already live in real-time
       return;
     }
@@ -2530,10 +2558,15 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   async _searchArtistAlbums(artistName, artistUri = null) {
     this._searchHierarchy.push({ type: 'artist', name: artistName, query: this._searchQuery, uri: artistUri, filter: this._searchMediaClassFilter });
     this._searchBreadcrumb = `Albums by ${artistName}`;
-    this._searchQuery = artistName;
     this._searchResultsByType = {}; // Clear cache for new search
-    this._currentSearchQuery = artistName;
+    this._currentSearchQuery = "";
     this._searchMediaClassFilter = 'album';
+
+    // Immediate loading state
+    this._searchResults = [];
+    this._searchLoading = true;
+    this._searchQuery = "";
+    this.requestUpdate();
 
     // Clear filter states to ensure accurate artist search results
     this._favoritesFilterActive = false;
@@ -2544,8 +2577,44 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     // Remove swipe handlers when entering hierarchy
     this._removeSearchSwipeHandlers();
 
-    // Use Music Assistant search with artist name for albums (explicitly clear filters)
-    await this._doSearch('album', { clearFilters: true });
+    // Priority 1: Use browse_media if artistUri is available and entity is Music Assistant
+    if (artistUri && this._isMusicAssistantEntity()) {
+      try {
+        const searchEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
+        const searchEntityId = await this._resolveTemplateAtActionTime(searchEntityIdTemplate, this.currentEntityId);
+
+        const browseMsg = {
+          type: "call_service",
+          domain: "media_player",
+          service: "browse_media",
+          service_data: {
+            entity_id: searchEntityId,
+            media_content_id: artistUri,
+          },
+          return_response: true,
+        };
+
+        const browseRes = await this.hass.connection.sendMessagePromise(browseMsg);
+        const browseResult = browseRes?.response?.[searchEntityId]?.result || browseRes?.result || {};
+        const children = browseResult.children || [];
+        const albums = children.filter(c => c.media_class === 'album' || c.media_content_type === 'album');
+
+        if (albums.length > 0) {
+          this._searchQuery = "";
+          this._searchResults = this._sortSearchResults(albums);
+          this._searchTotalRows = Math.max(15, albums.length);
+          this._searchAttempted = true;
+          this._searchLoading = false;
+          this.requestUpdate();
+          return;
+        }
+      } catch (e) {
+        // Fall back to search
+      }
+    }
+
+    // Priority 2: Use Music Assistant search with artist parameter for albums (explicitly clear filters)
+    await this._doSearch('album', { artist: artistName, clearFilters: true });
   }
 
 
@@ -8383,7 +8452,9 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       : "";
     const hasSearchableArtist = !!(displaySource?.attributes?.media_artist || stateObj?.attributes?.media_artist);
     const searchAlbumTitle = localize("search.search_album") || localize("search.browse_album", { "{album}": album });
-    const searchArtistTitle = hasSearchableArtist ? localize("search.search_artist") : "";
+    const searchArtistTitle = hasSearchableArtist
+      ? localize("search.browse_artist", { "{artist}": artist }) || localize("search.search_artist")
+      : "";
     if (this._adaptiveText) {
       this._updateAdaptiveTextScale(true);
     }
