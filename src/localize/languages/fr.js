@@ -516,6 +516,7 @@ export default {
     browse_artist: "Parcourir les albums de {artist}",
     search_album: "Parcourir les pistes de cet album",
     browse_album: "Parcourir les titres de {album}",
+    browse_playlist: "Parcourir les pistes de {playlist}",
     play_collection: "Lire cette collection",
     play_collection_error: "Impossible de lire cette collection directement",
     play_item: "Lire {item}",

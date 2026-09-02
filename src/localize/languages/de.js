@@ -525,6 +525,7 @@ export default {
     browse_artist: "Alben von {artist} durchsuchen",
     search_album: "Titel von diesem Album durchsuchen",
     browse_album: "Albentitel von {album} durchsuchen",
+    browse_playlist: "Titel von {playlist} durchsuchen",
     play_collection: "Diese Sammlung abspielen",
     play_collection_error: "Diese Sammlung kann nicht direkt abgespielt werden",
     play_item: "{item} abspielen",

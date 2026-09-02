@@ -519,6 +519,7 @@ export default {
     browse_artist: "Browse albums by {artist}",
     search_album: "Browse tracks from this album",
     browse_album: "Browse tracks from {album}",
+    browse_playlist: "Browse tracks from {playlist}",
     play_collection: "Play this collection",
     play_collection_error: "Unable to play this collection directly",
     play_item: "Play {item}",

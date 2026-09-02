@@ -535,6 +535,7 @@ export default {
     browse_artist: "Albums van {artist} doorzoeken",
     search_album: "Blader door nummers van dit album",
     browse_album: "Tracks van {album} doorzoeken",
+    browse_playlist: "Tracks van {playlist} doorzoeken",
     play_collection: "Speel deze collectie af",
     play_collection_error: "Kan deze collectie niet direct afspelen",
     play_item: "{item} afspelen",

@@ -510,6 +510,7 @@ export default {
     browse_artist: "Explorar álbuns de {artist}",
     search_album: "Navegar pelas faixas deste álbum",
     browse_album: "Explorar faixas de {album}",
+    browse_playlist: "Explorar faixas de {playlist}",
     play_collection: "Reproduzir esta coleção",
     play_collection_error: "Não é possível reproduzir esta coleção diretamente",
     play_item: "Reproduzir {item}",

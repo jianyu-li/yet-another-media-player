@@ -526,6 +526,7 @@ export default {
     browse_artist: "Prehľadávať albumy od {artist}",
     search_album: "Prehľadávať skladby z tohto albumu",
     browse_album: "Prehľadávať skladby z {album}",
+    browse_playlist: "Prehľadávať skladby z {playlist}",
     play_collection: "Prehrať túto kolekciu",
     play_collection_error: "Túto kolekciu nie je možné prehrať priamo",
     play_item: "Prehrať {item}",

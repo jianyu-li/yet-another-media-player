@@ -1566,6 +1566,10 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     return this._resolveMediaUri("artist", artistName, {}, entityId);
   }
 
+  _resolvePlaylistUri(playlistName, entityId) {
+    return this._resolveMediaUri("playlist", playlistName, {}, entityId);
+  }
+
   /**
    * Open the search sheet and navigate directly to the current album's tracks
    * in hierarchical search view (only when media_album_name is present).
@@ -2675,20 +2679,15 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         }
         this._doSearch('track', searchParams);
       } else if (currentLevel.type === 'playlist') {
-        this._searchBreadcrumb = `Tracks in ${currentLevel.name}`;
+        this._searchBreadcrumb = `Tracks from ${currentLevel.name}`;
         this._searchMediaClassFilter = 'track';
         if (currentLevel.uri && this._isMusicAssistantEntity()) {
-          this._searchQuery = currentLevel.name;
-          // _searchPlaylistTracks pushes to the hierarchy, so we just call _fetchMassQueueTracks directly
-          this._currentSearchQuery = currentLevel.name;
+          this._searchQuery = "";
+          this._currentSearchQuery = "";
           this._searchResults = [];
           this._searchLoading = true;
           this.requestUpdate();
-          this._fetchMassQueueTracks(currentLevel.uri, "get_playlist_tracks").then(mqTracks => {
-            this._searchResultsByType['track'] = mqTracks;
-            this._searchResults = [...mqTracks];
-            this._searchLoading = false;
-            this.requestUpdate();
+          this._loadPlaylistTracks(currentLevel.uri, currentLevel.name).then(() => {
             this._scrollToTop();
           });
           return;
@@ -4051,7 +4050,17 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         await this._searchAlbumTracks(item.album, item.artist, item.album_uri);
       }
     } else if (item.media_class === 'playlist') {
-      await this._searchPlaylistTracks(item.title, item.media_content_id);
+      let playlistUri = item.media_content_id || item.uri || null;
+      if (!playlistUri && this._isMusicAssistantEntity()) {
+        try {
+          const searchEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
+          const searchEntityId = await this._resolveTemplateAtActionTime(searchEntityIdTemplate, this.currentEntityId);
+          playlistUri = await this._resolvePlaylistUri(item.title, searchEntityId);
+        } catch (e) {
+          console.warn("yamp: error resolving playlist URI:", e);
+        }
+      }
+      await this._searchPlaylistTracks(item.title, playlistUri);
     }
   }
 
@@ -4134,30 +4143,78 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     await this._doSearch('track', searchParams);
   }
 
+  // Helper to load tracks for a playlist via mass_queue or browse_media
+  async _loadPlaylistTracks(playlistUri, playlistName) {
+    // Priority 1: Use mass_queue integration if available (preferred for Music Assistant)
+    if (playlistUri && (await this._isMassQueueIntegrationAvailable(this.hass))) {
+      const mqTracks = await this._fetchMassQueueTracks(playlistUri, "get_playlist_tracks");
+      if (mqTracks && mqTracks.length > 0) {
+        this._setSearchResultsFromMassQueue(mqTracks, "");
+        return true;
+      }
+    }
+
+    // Priority 2: Use browse_media (fallback for non-mass_queue MA or other integration)
+    if (playlistUri && this._isMusicAssistantEntity()) {
+      try {
+        const searchEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
+        const searchEntityId = await this._resolveTemplateAtActionTime(searchEntityIdTemplate, this.currentEntityId);
+
+        const browseMsg = {
+          type: "call_service",
+          domain: "media_player",
+          service: "browse_media",
+          service_data: {
+            entity_id: searchEntityId,
+            media_content_id: playlistUri,
+          },
+          return_response: true,
+        };
+
+        const browseRes = await this.hass.connection.sendMessagePromise(browseMsg);
+        const browseResult = browseRes?.response?.[searchEntityId]?.result || browseRes?.result || {};
+        const tracks = browseResult.children || [];
+
+        if (tracks.length > 0) {
+          this._searchQuery = "";
+          this._searchResults = this._sortSearchResults(tracks);
+          this._searchTotalRows = Math.max(15, tracks.length);
+          this._searchAttempted = true;
+          this._searchLoading = false;
+          this.requestUpdate();
+          return true;
+        }
+      } catch (e) {
+        console.error("yamp: Failed to browse playlist tracks:", e);
+      }
+    }
+
+    this._searchQuery = "";
+    this._searchResults = [];
+    this._searchAttempted = true;
+    this._searchLoading = false;
+    this.requestUpdate();
+    return false;
+  }
+
   // Handle hierarchical search - search for tracks in a playlist
   async _searchPlaylistTracks(playlistName, playlistUri) {
     this._searchHierarchy.push({ type: 'playlist', name: playlistName, query: this._searchQuery, uri: playlistUri, filter: this._searchMediaClassFilter });
     this._searchBreadcrumb = `Tracks from ${playlistName}`;
     this._searchResultsByType = {}; // Clear cache for new search
-    this._currentSearchQuery = playlistName;
+    this._currentSearchQuery = "";
     this._searchMediaClassFilter = 'track';
 
     // Immediate loading state
     this._searchResults = [];
     this._searchLoading = true;
+    this._searchQuery = "";
     this.requestUpdate();
 
-    const mqTracks = await this._fetchMassQueueTracks(playlistUri, "get_playlist_tracks");
-    if (mqTracks && mqTracks.length > 0) {
-      this._setSearchResultsFromMassQueue(mqTracks, playlistName);
-      return;
-    }
+    // Remove swipe handlers when entering hierarchy
+    this._removeSearchSwipeHandlers();
 
-    // Handled user request to not fall back to browse_media for playlists
-    this._searchQuery = playlistName;
-    this._searchResults = [];
-    this._searchLoading = false;
-    this.requestUpdate();
+    await this._loadPlaylistTracks(playlistUri, playlistName);
   }
 
   async _fetchMassQueueTracks(uri, serviceName) {

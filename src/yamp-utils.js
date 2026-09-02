@@ -346,9 +346,9 @@ export function getSearchResultClickTitle(item) {
     return title;
   }
 
-  // For playlists, show the name
+  // For playlists, show "Browse tracks from [Playlist]"
   if (mediaType === "playlist") {
-    return title;
+    return localize("search.browse_playlist", "{playlist}", title) || title;
   }
 
   // Default fallback

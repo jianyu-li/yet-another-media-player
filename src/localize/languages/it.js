@@ -509,6 +509,7 @@ export default {
     browse_artist: "Sfoglia gli album di {artist}",
     search_album: "Sfoglia i brani di questo album",
     browse_album: "Sfoglia i brani di {album}",
+    browse_playlist: "Sfoglia i brani di {playlist}",
     play_collection: "Riproduci questa collezione",
     play_collection_error: "Impossibile riprodurre direttamente questa collezione",
     play_item: "Riproduci {item}",

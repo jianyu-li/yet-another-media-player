@@ -507,6 +507,7 @@ export default {
     browse_artist: "Prebrskaj albume izvajalca {artist}",
     search_album: "Prebrskaj skladbe iz tega albuma",
     browse_album: "Prebrskaj skladbe iz {album}",
+    browse_playlist: "Prebrskaj skladbe iz {playlist}",
     play_collection: "Predvajaj to zbirko",
     play_collection_error: "Te zbirke ni mogoče predvajati neposredno",
     play_item: "Predvajaj {item}",
