@@ -67,9 +67,38 @@ export interface HassEntity {
   };
 }
 
+export interface DeviceRegistryEntry {
+  id: string;
+  config_entry_id?: string | null;
+  config_subentry_id?: string | null;
+  config_entries?: string[];
+  parent_device_id?: string | null;
+  area_id?: string | null;
+  name?: string | null;
+  name_by_user?: string | null;
+  disabled_by?: string | null;
+  labels?: string[];
+  identifiers?: [string, string][];
+  [key: string]: any;
+}
+
+export interface EntityRegistryEntry {
+  id: string;
+  entity_id: string;
+  platform?: string;
+  config_entry_id?: string | null;
+  device_id?: string | null;
+  area_id?: string | null;
+  disabled_by?: string | null;
+  hidden_by?: string | null;
+  [key: string]: any;
+}
+
 export interface HomeAssistant {
   states: Record<string, HassEntity>;
   services: Record<string, Record<string, any>>;
+  entities?: Record<string, EntityRegistryEntry>;
+  devices?: Record<string, DeviceRegistryEntry>;
   user: {
     id: string;
     name: string;
