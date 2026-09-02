@@ -10271,7 +10271,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       clearTimeout(this._manualSelectTimeout);
       this._manualSelectTimeout = null;
     }
-    if (this._searchTimeoutHandle) {
+    if (this._searchTimeoutHandle && !this._searchLoading) {
       clearTimeout(this._searchTimeoutHandle);
       this._searchTimeoutHandle = null;
     }
@@ -10305,8 +10305,6 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       clearTimeout(this._queueOpsTimeout);
       this._queueOpsTimeout = null;
     }
-
-    this._latestSearchToken = 0;
 
     this._removeSourceDropdownOutsideHandler();
     this._removeGrabScrollHandlers();
