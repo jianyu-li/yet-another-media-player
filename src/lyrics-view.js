@@ -1,4 +1,4 @@
-import { LitElement, html } from "lit";
+import { LitElement, html, nothing } from "lit";
 import { classMap } from "lit/directives/class-map.js";
 import { lyricsStyles } from "./yamp-card-styles.js";
 import { localize } from "./localize/localize.js";
@@ -11,6 +11,7 @@ export class YampLyricsView extends LitElement {
       position: { type: Number },
       loading: { type: Boolean },
       error: { type: Boolean },
+      playing: { type: Boolean },
       activeThemeColor: { type: String },
       mode: { type: String },
       preRoll: { type: Number },
@@ -28,6 +29,7 @@ export class YampLyricsView extends LitElement {
     this.position = 0;
     this.loading = false;
     this.error = false;
+    this.playing = true;
     this.activeThemeColor = "#ffffff";
     this.mode = "default";
     this.preRoll = 0;
@@ -45,6 +47,10 @@ export class YampLyricsView extends LitElement {
   }
 
   firstUpdated() {
+    const isInstrumentalTrack = this.lyrics?.length === 1 && Boolean(this.lyrics[0].isInstrumental);
+    if (isInstrumentalTrack) {
+      this._activeIndex = 0;
+    }
     // Initial scroll position
     if (this._activeIndex !== -1) {
       this._scrollToActive("auto");
@@ -61,8 +67,10 @@ export class YampLyricsView extends LitElement {
 
     if (changedProps.has("lyrics")) {
       this._activeIndex = -1;
-      const isUnsynced = !this.lyrics?.some((l) => l.time !== null);
-      const isUnsyncedMode = this.mode === "text";
+      const isInstrumentalTrack =
+        this.lyrics?.length === 1 && Boolean(this.lyrics[0].isInstrumental);
+      const isUnsynced = !isInstrumentalTrack && !this.lyrics?.some((l) => l.time !== null);
+      const isUnsyncedMode = !isInstrumentalTrack && this.mode === "text";
       if (isUnsynced || isUnsyncedMode) {
         const container = this.renderRoot.querySelector(".lyrics-scroll-container");
         if (container) {
@@ -80,7 +88,17 @@ export class YampLyricsView extends LitElement {
   }
 
   _updateActiveLyric() {
-    if (!this.lyrics || this.lyrics.length === 0 || this.mode === "text") return;
+    if (!this.lyrics || this.lyrics.length === 0) return;
+
+    if (this.lyrics.length === 1 && Boolean(this.lyrics[0].isInstrumental)) {
+      if (this._activeIndex !== 0) {
+        this._activeIndex = 0;
+        this.updateComplete.then(() => this._scrollToActive());
+      }
+      return;
+    }
+
+    if (this.mode === "text") return;
 
     // If not a single line has a time, treat as unsynced
     const isUnsynced = !this.lyrics.some((l) => l.time !== null);
@@ -159,8 +177,9 @@ export class YampLyricsView extends LitElement {
       `;
     }
 
-    const isUnsynced = !this.lyrics.some((l) => l.time !== null);
-    const isUnsyncedMode = this.mode === "text";
+    const isInstrumentalTrack = this.lyrics.length === 1 && Boolean(this.lyrics[0].isInstrumental);
+    const isUnsynced = !isInstrumentalTrack && !this.lyrics.some((l) => l.time !== null);
+    const isUnsyncedMode = !isInstrumentalTrack && this.mode === "text";
 
     return html`
       <div
@@ -174,7 +193,7 @@ export class YampLyricsView extends LitElement {
             : html`<div class="plain-scroll-spacer-top"></div>`
         }
         ${this.lyrics.map((lyric, index) => {
-          const isActive = index === this._activeIndex;
+          const isActive = index === this._activeIndex || isInstrumentalTrack;
           const isScrollMode = this.mode === "scroll";
 
           const classes = {
@@ -187,8 +206,9 @@ export class YampLyricsView extends LitElement {
 
           if (lyric.isInstrumental) {
             return html`
-              <div class="${classMap(classes)}" aria-label="Instrumental Break">
-                <span class="lyrics-playing-indicator">
+              <div class="${classMap(classes)}" aria-label=${lyric.text || "Instrumental Break"}>
+                ${lyric.text ? html`<div class="lyric-instrumental-text">${lyric.text}</div>` : nothing}
+                <span class="lyrics-playing-indicator ${this.playing === false ? "paused" : ""}">
                   <span class="bar"></span>
                   <span class="bar"></span>
                   <span class="bar"></span>
