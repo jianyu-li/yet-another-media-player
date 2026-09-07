@@ -8435,7 +8435,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     // We'll set useInsetArtwork again later with full collapsed context for rendering.
     const preCalcInsetArtwork = this._artworkObjectFit === "scaled-contain" || this._artworkObjectFit === "scaled-contain-alternate";
     // Extend artwork when configured, when chips are hidden inline (in_menu_on_idle + idle), or when using scaled-contain
-    const artworkFullBleed = this.config.extend_artwork === true || chipsHiddenInline || preCalcInsetArtwork || this._lyricsActive;
+    const artworkFullBleed = this.config.extend_artwork === true || chipsHiddenInline || preCalcInsetArtwork;
 
     // Calculate shuffle/repeat state from the active playback entity when available
     const mainStateForPlayback = this.currentStateObj;
@@ -8754,7 +8754,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
     const activeArtworkFit = artworkObjectFit || this._artworkObjectFit;
     const isAlternateFit = activeArtworkFit === "scaled-contain-alternate";
-    const useInsetArtwork = (activeArtworkFit === "scaled-contain" || isAlternateFit) && !collapsed && !this._alwaysCollapsed && !this._lyricsActive;
+    const useInsetArtwork = (activeArtworkFit === "scaled-contain" || isAlternateFit) && !collapsed && !this._alwaysCollapsed;
     const hasSpacerContent =
       (useInsetArtwork && artworkUrl) ||
       (!useInsetArtwork && !artworkUrl && !idleImageUrl);
@@ -8770,7 +8770,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
     const backgroundImageValue = (activeArtworkFit === "no_artwork")
       ? "none"
-      : (idleImageUrl || (isAlternateFit && !this._lyricsActive))
+      : (idleImageUrl || isAlternateFit)
         ? (idleImageUrl ? `url('${idleImageUrl}')` : "none")
         : artworkUrl
           ? `url('${artworkUrl}')`
@@ -8919,7 +8919,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
               ></div>
               ${!(dimIdleFrame || this._isIdle || this._lyricsActive) && (!useInsetArtwork || activeArtworkFit === "scaled-contain") ? html`<div class="card-lower-fade" style="--yamp-lyrics-bottom-offset: ${lyricsBottomOffset}px;"></div>` : nothing}
               <div class="card-lower-content${collapsed ? ' collapsed transitioning' : ' transitioning'}${collapsed && artworkUrl && collapsedArtworkSize > 0 ? ' has-artwork' : ''}" style="${(() => {
-        if (!hideControlsNow && !this._lyricsActive) return '';
+        if (!hideControlsNow) return '';
         return collapsed
           ? `min-height: ${this._collapsedBaselineHeight || 220}px;`
           : `min-height: ${hasCustomCardHeight ? `${customCardHeight}px` : `${this._lastNonLyricsLowerContentHeight || 350}px`};`;
@@ -8956,7 +8956,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
                     @pointerup=${!this._lyricsActive ? this._onTapAreaPointerUp : nothing}
                     @pointercancel=${!this._lyricsActive ? this._onTapAreaPointerCancel : nothing}
                     style="${[
-                      this._lyricsActive ? 'min-height: 0; pointer-events: none;' : '',
+                      this._lyricsActive ? 'pointer-events: none;' : '',
                       this._getGestureStyles(!this._lyricsActive)
                     ].filter(Boolean).join('; ')}"
                   >

@@ -1789,14 +1789,18 @@ export const yampCardStyles = css`
   }
 
   .yamp-card-inner[data-lyrics-active="true"] .card-lower-content {
+    z-index: auto;
     pointer-events: none;
   }
 
   .yamp-card-inner[data-lyrics-active="true"] .card-artwork-spacer {
     pointer-events: none !important;
+    z-index: ${Z_LAYERS.MEDIA_BACKGROUND};
   }
 
   .yamp-card-inner[data-lyrics-active="true"] .card-lower-content > :not(.card-artwork-spacer) {
+    position: relative;
+    z-index: ${Z_LAYERS.FLOATING_CONTROLS};
     pointer-events: auto;
   }
 
