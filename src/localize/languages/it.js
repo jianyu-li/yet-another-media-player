@@ -209,6 +209,8 @@ export default {
         "Music Assistant richiede l'integrazione mass_queue per recuperare i testi dal suo motore di metadati interno.",
       lyrics_pre_roll:
         "Sposta il tempismo dell'evidenziazione dei testi. I valori positivi lo accelerano, quelli negativi lo ritardano (predefinito: 0).",
+      lyrics_background_fade:
+        "Regola la dissolvenza dello sfondo e l'opacità di attenuazione della sovrapposizione dei testi (0% per grafica trasparente, 100% per sfondo solido).",
       blurred_artwork: "Sfoca sempre l'immagine di sfondo",
       hide_collapsed_artwork: "Nascondi l'immagine piccola a destra quando la scheda è compressa",
       show_idle_artwork_when_not_playing:
@@ -265,6 +267,7 @@ export default {
       lyrics_mode: "Modalità testi",
       lyrics_source: "Sorgente testi",
       lyrics_pre_roll: "Pre-roll testi (secondi)",
+      lyrics_background_fade: "Dissolvenza sfondo testi",
       blurred_artwork: "Immagine sfocata",
       hide_collapsed_artwork: "Nascondi immagine contratta",
       show_idle_artwork_when_not_playing: "Mostra immagine inattiva quando non in riproduzione",
@@ -323,6 +326,7 @@ export default {
       appearance: "Aspetto",
       no_artwork_option: "Nessuna copertina",
       details_alignment: "Allineamento dei dettagli",
+      lyrics_background_fade: "Dissolvenza sfondo testi (%)",
       queue_controls_style: "Stile controlli coda",
     },
     action_types: {

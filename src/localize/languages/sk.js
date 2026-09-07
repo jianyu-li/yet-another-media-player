@@ -226,6 +226,8 @@ export default {
         "Music Assistant vyžaduje integráciu mass_queue na načítanie textov z jeho interného metadátového modulu.",
       lyrics_pre_roll:
         "Posunutie načasovania zvýraznenia textu piesne. Kladné hodnoty ho zrýchľujú, záporné spomaľujú (predvolené: 0).",
+      lyrics_background_fade:
+        "Upravte prelínanie pozadia a nepriehľadnosť stmavenia prekrytia textu piesne (0% pre priehľadný obrázok, 100% pre plné pozadie).",
       blurred_artwork: "Vždy rozmazať obrázok na pozadí",
       hide_collapsed_artwork: "Skryť malý obrázok vpravo, keď je karta zbalená",
       show_idle_artwork_when_not_playing:
@@ -282,6 +284,7 @@ export default {
       lyrics_mode: "Režim textov piesní",
       lyrics_source: "Zdroj textov",
       lyrics_pre_roll: "Pre-roll textu piesne (sekundy)",
+      lyrics_background_fade: "Prelínanie pozadia textu piesne",
       blurred_artwork: "Rozmazaný obrázok",
       hide_collapsed_artwork: "Skryť zmenšený obrázok",
       show_idle_artwork_when_not_playing: "Zobraziť obrázok nečinnosti, keď sa neprehráva",
@@ -340,6 +343,7 @@ export default {
       appearance: "Vzhľad",
       no_artwork_option: "Žiadny obrázok",
       details_alignment: "Zarovnanie detailov",
+      lyrics_background_fade: "Prelínanie pozadia textu piesne (%)",
       queue_controls_style: "Štýl ovládacích prvkov fronty",
     },
     action_types: {

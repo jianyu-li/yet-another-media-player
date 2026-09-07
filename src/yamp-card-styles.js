@@ -42,6 +42,7 @@ const lightModeVariables = css`
   --card-bg: #fff;
   --primary-text: #222;
   --secondary-text: #666;
+  --yamp-overlay-base: #fff;
   --yamp-overlay-bg: rgba(255, 255, 255, 0.95);
   --yamp-overlay-text: #222;
   --yamp-overlay-divider: rgba(0, 0, 0, 0.1);
@@ -106,6 +107,7 @@ export const yampCardStyles = css`
     --yamp-section-description-color: #888;
 
     /* Universal theme-aware variables (default to dark) */
+    --yamp-overlay-base: #000;
     --yamp-overlay-bg: rgba(0, 0, 0, 0.82);
     --yamp-overlay-text: #fff;
     --yamp-overlay-text-shadow: none;
@@ -189,11 +191,8 @@ export const yampCardStyles = css`
     --search-queue-hover-border: var(--divider-color, #777);
 
     /* Universal theme-aware variables mapped to HA theme - used when appearance is automatic */
-    --yamp-overlay-bg: color-mix(
-      in srgb,
-      var(--ha-card-background, var(--card-background-color, #000)),
-      transparent 18%
-    );
+    --yamp-overlay-base: var(--ha-card-background, var(--card-background-color, #000));
+    --yamp-overlay-bg: color-mix(in srgb, var(--yamp-overlay-base), transparent 18%);
     --yamp-overlay-text: var(--primary-text-color, #fff);
     --yamp-overlay-text-shadow: none;
     --yamp-overlay-divider: var(--divider-color, rgba(255, 255, 255, 0.1));
@@ -303,18 +302,7 @@ export const yampCardStyles = css`
   }
 
   .yamp-card-inner[data-lyrics-active="true"] .full-bleed-artwork-fade {
-    z-index: ${Z_LAYERS.LYRICS_OVERLAY + 1};
-    background: linear-gradient(
-      to bottom,
-      transparent 0%,
-      color-mix(
-          in srgb,
-          var(--ha-card-background, var(--card-background-color, var(--card-bg, #000))) 40%,
-          transparent
-        )
-        55%,
-      var(--ha-card-background, var(--card-background-color, var(--card-bg, #000))) 100%
-    );
+    display: none !important;
   }
 
   /* Idle state dimming */
@@ -1789,21 +1777,7 @@ export const yampCardStyles = css`
   }
 
   .yamp-card-inner[data-lyrics-active="true"] .card-lower-fade {
-    z-index: ${Z_LAYERS.LYRICS_OVERLAY + 1};
-    background: linear-gradient(
-      to bottom,
-      transparent 0%,
-      transparent calc(100% - var(--yamp-lyrics-bottom-offset, 180px)),
-      color-mix(
-          in srgb,
-          var(--ha-card-background, var(--card-background-color, var(--card-bg, #000))) 85%,
-          transparent
-        )
-        calc(100% - var(--yamp-lyrics-bottom-offset, 180px) + 30px),
-      var(--ha-card-background, var(--card-background-color, var(--card-bg, #000)))
-        calc(100% - var(--yamp-lyrics-bottom-offset, 180px) + 70px),
-      var(--ha-card-background, var(--card-background-color, var(--card-bg, #000))) 100%
-    );
+    display: none !important;
   }
 
   .card-lower-content {
@@ -1815,15 +1789,37 @@ export const yampCardStyles = css`
   }
 
   .yamp-card-inner[data-lyrics-active="true"] .card-lower-content {
+    z-index: auto;
     pointer-events: none;
   }
 
   .yamp-card-inner[data-lyrics-active="true"] .card-artwork-spacer {
     pointer-events: none !important;
+    z-index: ${Z_LAYERS.MEDIA_BACKGROUND};
   }
 
   .yamp-card-inner[data-lyrics-active="true"] .card-lower-content > :not(.card-artwork-spacer) {
+    z-index: ${Z_LAYERS.FLOATING_CONTROLS};
     pointer-events: auto;
+  }
+
+  .yamp-card-inner[data-lyrics-active="true"]
+    .card-lower-content
+    > :not(.card-artwork-spacer):not(.in-menu-active-label):not(.more-info-menu):not(
+      .collapsed-artwork-container
+    ) {
+    position: relative;
+  }
+
+  .yamp-card-inner[data-lyrics-active="true"] .in-menu-active-label,
+  .yamp-card-inner[data-lyrics-active="true"] .more-info-menu.volume-collapsed,
+  .yamp-card-inner[data-lyrics-active="true"] .collapsed-artwork-container {
+    position: absolute !important;
+    z-index: ${Z_LAYERS.FLOATING_CONTROLS};
+  }
+
+  .yamp-card-inner[data-lyrics-active="true"] .in-menu-active-label {
+    pointer-events: none !important;
   }
 
   .card-lower-content.transitioning .details,
@@ -2439,7 +2435,7 @@ export const yampCardStyles = css`
   }
 
   .in-menu-active-label {
-    position: absolute;
+    position: absolute !important;
     left: 50%;
     bottom: 6px;
     transform: translateX(-50%);
@@ -2448,7 +2444,7 @@ export const yampCardStyles = css`
     letter-spacing: 0.05em;
     color: #fff;
     opacity: 0.78;
-    pointer-events: none;
+    pointer-events: none !important;
   }
 
   /* When always collapsed is enabled, keep menu at top */
@@ -4521,9 +4517,12 @@ export const lyricsStyles = css`
     overflow: hidden;
     pointer-events: auto;
     touch-action: pan-y;
-    backdrop-filter: ${BLUR_5};
-    -webkit-backdrop-filter: ${BLUR_5};
-    background: var(--yamp-lyrics-bg, var(--yamp-overlay-bg));
+    backdrop-filter: var(--yamp-lyrics-backdrop-filter, ${BLUR_5});
+    -webkit-backdrop-filter: var(--yamp-lyrics-backdrop-filter, ${BLUR_5});
+    background: var(
+      --yamp-lyrics-bg,
+      color-mix(in srgb, var(--yamp-overlay-base, #000) var(--yamp-lyrics-fade, 80%), transparent)
+    );
     color: var(--yamp-lyrics-color, var(--primary-text-color, #fff));
   }
 

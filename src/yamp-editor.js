@@ -2,7 +2,7 @@ import { LitElement, html, css, nothing } from "lit";
 import * as yaml from "js-yaml";
 import { localize } from "./localize/localize.js";
 
-import { SUPPORT_GROUPING, TEMPLATE_CONFIGS } from "./constants.js";
+import { SUPPORT_GROUPING, TEMPLATE_CONFIGS, DEFAULT_LYRICS_BACKGROUND_FADE } from "./constants.js";
 import { isMusicAssistantEntity, getActionPlacement } from "./yamp-utils.js";
 import "./yamp-sortable.js";
 
@@ -27,6 +27,10 @@ const VOLUME_MODE_SELECTOR = Object.freeze({
 
 const VOLUME_STEP_SELECTOR = Object.freeze({
   number: { min: 0.01, max: 1, step: 0.01, unit_of_measurement: "", mode: "box" },
+});
+
+const LYRICS_BACKGROUND_FADE_SELECTOR = Object.freeze({
+  number: { min: 0, max: 100, step: 1, unit_of_measurement: "%", mode: "slider" },
 });
 
 export class YetAnotherMediaPlayerEditor extends LitElement {
@@ -2705,6 +2709,111 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                   `
             }
           </div>
+        </div>
+        <div
+          class="form-row"
+          data-search-keys="lyrics_background_fade lyrics background fade overlay"
+          style="${!this._isTemplateValue(this._config.always_collapsed) && this._config.always_collapsed === true ? "opacity: 0.5;" : ""}"
+          title="${
+            !this._isTemplateValue(this._config.always_collapsed) &&
+            this._config.always_collapsed === true
+              ? localize("editor.subtitles.not_available_collapsed")
+              : ""
+          }"
+        >
+          ${
+            this._isTemplateMode("lyrics_background_fade", this._config.lyrics_background_fade)
+              ? html`
+                  <div class="editor-field-wrapper">
+                    <div class="grow-children" style="flex-direction: column;">
+                      <span class="form-label"
+                        >${localize("editor.labels.lyrics_background_fade")}</span
+                      >
+                      <ha-code-editor
+                        lint
+                        .hass=${this.hass}
+                        mode="jinja2"
+                        autocomplete-entities
+                        label="${localize("editor.labels.lyrics_background_fade")}"
+                        .value=${
+                          this._config.lyrics_background_fade !== undefined &&
+                          this._config.lyrics_background_fade !== null
+                            ? String(this._config.lyrics_background_fade)
+                            : ""
+                        }
+                        @value-changed=${(e) =>
+                          this._updateConfig("lyrics_background_fade", e.detail.value)}
+                      ></ha-code-editor>
+                    </div>
+                    <div class="field-actions">
+                      ${this._renderTemplateToggle(
+                        "lyrics_background_fade",
+                        this._config.lyrics_background_fade,
+                        (v) => this._updateConfig("lyrics_background_fade", v)
+                      )}
+                      <ha-icon
+                        class="icon-button-small"
+                        icon="mdi:restore"
+                        title="${localize("common.reset_default")}"
+                        @click=${() =>
+                          this._updateConfig(
+                            "lyrics_background_fade",
+                            DEFAULT_LYRICS_BACKGROUND_FADE
+                          )}
+                      ></ha-icon>
+                    </div>
+                  </div>
+                `
+              : html`
+                  <span class="form-label"
+                    >${localize("editor.labels.lyrics_background_fade")}</span
+                  >
+                  <div class="editor-field-wrapper">
+                    <div class="grow-children">
+                      <ha-selector
+                        .hass=${this.hass}
+                        class="full-width"
+                        .selector=${LYRICS_BACKGROUND_FADE_SELECTOR}
+                        helper="${localize("editor.subtitles.lyrics_background_fade")}"
+                        .value=${this._config.lyrics_background_fade ?? DEFAULT_LYRICS_BACKGROUND_FADE}
+                        .disabled=${!this._isTemplateValue(this._config.always_collapsed) && this._config.always_collapsed === true}
+                        @value-changed=${(e) => {
+                          const raw = e.detail.value;
+                          if (raw === "" || raw === undefined) {
+                            this._updateConfig(
+                              "lyrics_background_fade",
+                              DEFAULT_LYRICS_BACKGROUND_FADE
+                            );
+                            return;
+                          }
+                          const parsed = Number(raw);
+                          this._updateConfig(
+                            "lyrics_background_fade",
+                            Number.isFinite(parsed) ? parsed : DEFAULT_LYRICS_BACKGROUND_FADE
+                          );
+                        }}
+                      ></ha-selector>
+                    </div>
+                    <div class="field-actions">
+                      ${this._renderTemplateToggle(
+                        "lyrics_background_fade",
+                        this._config.lyrics_background_fade,
+                        (v) => this._updateConfig("lyrics_background_fade", v)
+                      )}
+                      <ha-icon
+                        class="icon-button-small"
+                        icon="mdi:restore"
+                        title="${localize("common.reset_default")}"
+                        @click=${() =>
+                          this._updateConfig(
+                            "lyrics_background_fade",
+                            DEFAULT_LYRICS_BACKGROUND_FADE
+                          )}
+                      ></ha-icon>
+                    </div>
+                  </div>
+                `
+          }
         </div>
         <div class="form-row">
           <ha-selector

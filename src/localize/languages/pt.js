@@ -209,6 +209,8 @@ export default {
         "O Music Assistant requer a integração mass_queue para obter letras do seu motor de metadados interno.",
       lyrics_pre_roll:
         "Ajuste o tempo de destaque da letra. Valores positivos aceleram, valores negativos atrasam (padrão: 0).",
+      lyrics_background_fade:
+        "Ajuste o desvanecimento do fundo e a opacidade de atenuação da sobreposição de letras (0% para arte transparente, 100% para fundo sólido).",
       blurred_artwork: "Sempre desfocar a imagem de fundo",
       hide_collapsed_artwork:
         "Ocultar a imagem pequena à direita quando o cartão estiver recolhido",
@@ -266,6 +268,7 @@ export default {
       lyrics_mode: "Modo de letras",
       lyrics_source: "Fonte das letras",
       lyrics_pre_roll: "Antecipação de letra (segundos)",
+      lyrics_background_fade: "Desvanecimento de fundo de letras",
       blurred_artwork: "Imagem desfocada",
       hide_collapsed_artwork: "Ocultar imagem reduzida",
       show_idle_artwork_when_not_playing: "Mostrar imagem de repouso quando não reproduzindo",
@@ -324,6 +327,7 @@ export default {
       appearance: "Aparência",
       no_artwork_option: "Sem imagem",
       details_alignment: "Alinhamento de detalhes",
+      lyrics_background_fade: "Desvanecimento de fundo de letras (%)",
       queue_controls_style: "Estilo de controles de fila",
     },
     action_types: {
