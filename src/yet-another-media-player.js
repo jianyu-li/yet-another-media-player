@@ -43,7 +43,7 @@ import {
   isValidArtworkUrl,
   getValidArtworkAttr
 } from "./yamp-utils.js";
-import { localize } from "./localize/localize.js";
+import { localize, setHassLanguage } from "./localize/localize.js";
 
 
 import {
@@ -6339,10 +6339,10 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const isAdmin = this.hass?.user?.is_admin === true;
     if (!isAdmin && configSource !== "lrclib") {
       if (configSource === "mass") {
-        console.warn(`YAMP: ${this.localize('lyrics.admin_only_mass')}`);
+        console.warn(`YAMP: ${localize('lyrics.admin_only_mass')}`);
 
         const event = new Event("hass-notification", { bubbles: true, composed: true });
-        event.detail = { message: this.localize('lyrics.admin_only_mass') };
+        event.detail = { message: localize('lyrics.admin_only_mass') };
         this.dispatchEvent(event);
 
         this._fetchingLyrics = false;
@@ -6350,7 +6350,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         this.requestUpdate();
         return;
       } else {
-        console.log(`YAMP: ${this.localize('lyrics.fallback_to_lrclib_non_admin')}`);
+        console.log(`YAMP: ${localize('lyrics.fallback_to_lrclib_non_admin')}`);
         configSource = "lrclib";
       }
     }
@@ -6620,6 +6620,12 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
 
   updated(changedProps) {
+    if (changedProps.has("hass") && this.hass) {
+      const currentLang = this.hass.selectedLanguage || this.hass.language || this.hass.locale?.language;
+      if (currentLang) {
+        setHassLanguage(currentLang);
+      }
+    }
     this._updateHostAttributes();
     if (this._idleImageTemplate && changedProps.has("hass")) {
       this._idleImageTemplateNeedsResolve = true;
@@ -8207,6 +8213,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
   render() {
     if (!this.hass || !this.config) return nothing;
+
+    const currentLang = this.hass.selectedLanguage || this.hass.language || this.hass.locale?.language;
+    if (currentLang) {
+      setHassLanguage(currentLang);
+    }
 
 
 

@@ -106,6 +106,7 @@ export interface HomeAssistant {
     is_owner: boolean;
   };
   language: string;
+  selectedLanguage?: string | null;
   locale: {
     language: string;
     number_format?: string;

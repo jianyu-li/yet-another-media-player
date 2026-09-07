@@ -2,7 +2,7 @@ import { html, nothing } from "lit";
 import { isMusicAssistantEntity, applyHostnameToUrl } from "./yamp-utils.js";
 import { localize } from "./localize/localize.js";
 
-const playOptions = [
+const getPlayOptions = () => [
   { mode: "replace", icon: "mdi:playlist-remove", label: localize("search.replace") },
   { mode: "next", icon: "mdi:playlist-play", label: localize("search.play_next") },
   { mode: "replace_next", icon: "mdi:playlist-music", label: localize("search.replace_play") },
@@ -818,7 +818,7 @@ export function renderSearchOptionsOverlay({
         <div class="entity-options-sheet">
           <div class="entity-options-title">${item.title}</div>
 
-          ${playOptions
+          ${getPlayOptions()
             .filter((option) => {
               if (option.mode === "add_to_playlist") {
                 return isTrack(item) && massQueueAvailable;
