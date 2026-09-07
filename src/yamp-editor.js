@@ -2721,10 +2721,10 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
               : ""
           }"
         >
-          <div class="editor-field-wrapper">
-            ${
-              this._isTemplateMode("lyrics_background_fade", this._config.lyrics_background_fade)
-                ? html`
+          ${
+            this._isTemplateMode("lyrics_background_fade", this._config.lyrics_background_fade)
+              ? html`
+                  <div class="editor-field-wrapper">
                     <div class="grow-children" style="flex-direction: column;">
                       <span class="form-label"
                         >${localize("editor.labels.lyrics_background_fade")}</span
@@ -2762,14 +2762,18 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                           )}
                       ></ha-icon>
                     </div>
-                  `
-                : html`
+                  </div>
+                `
+              : html`
+                  <span class="form-label"
+                    >${localize("editor.labels.lyrics_background_fade")}</span
+                  >
+                  <div class="editor-field-wrapper">
                     <div class="grow-children">
                       <ha-selector
                         .hass=${this.hass}
                         class="full-width"
                         .selector=${LYRICS_BACKGROUND_FADE_SELECTOR}
-                        label="${localize("editor.labels.lyrics_background_fade")}"
                         helper="${localize("editor.subtitles.lyrics_background_fade")}"
                         .value=${this._config.lyrics_background_fade ?? DEFAULT_LYRICS_BACKGROUND_FADE}
                         .disabled=${!this._isTemplateValue(this._config.always_collapsed) && this._config.always_collapsed === true}
@@ -2807,9 +2811,9 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                           )}
                       ></ha-icon>
                     </div>
-                  `
-            }
-          </div>
+                  </div>
+                `
+          }
         </div>
         <div class="form-row">
           <ha-selector
