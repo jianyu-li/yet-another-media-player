@@ -20,15 +20,53 @@ const languages = {
   sl,
 };
 
-export function localize(string, search = "", replace = "") {
+let activeHassLanguage = null;
+
+export function setHassLanguage(lang) {
+  if (typeof lang === "string" && lang.trim() !== "") {
+    activeHassLanguage = lang.trim();
+  } else {
+    activeHassLanguage = null;
+  }
+}
+
+function getBrowserLanguage() {
+  if (typeof navigator === "undefined") return "";
+  if (Array.isArray(navigator.languages)) {
+    for (const l of navigator.languages) {
+      if (!l || typeof l !== "string") continue;
+      const normalized = l.replace(/['"]+/g, "").replace("-", "_");
+      const base = normalized.split("_")[0];
+      if (languages[normalized] || languages[base]) {
+        return normalized;
+      }
+    }
+  }
+  return (Array.isArray(navigator.languages) && navigator.languages[0]) || navigator.language || "";
+}
+
+export function getActiveLanguage() {
+  const haElement =
+    typeof document !== "undefined" ? document.querySelector("home-assistant") : null;
+  const haHass = haElement?.hass;
+
   const rawLang = (
-    localStorage.getItem("selectedLanguage") ||
-    document.querySelector("home-assistant")?.hass?.language ||
+    (typeof localStorage !== "undefined" && localStorage.getItem("selectedLanguage")) ||
+    haHass?.selectedLanguage ||
+    haHass?.language ||
+    haHass?.locale?.language ||
+    activeHassLanguage ||
+    getBrowserLanguage() ||
     "en"
   )
     .replace(/['"]+/g, "")
     .replace("-", "_");
-  const lang = languages[rawLang] ? rawLang : rawLang.split("_")[0];
+
+  return languages[rawLang] ? rawLang : rawLang.split("_")[0];
+}
+
+export function localize(string, search = "", replace = "") {
+  const lang = getActiveLanguage();
 
   let translated;
   const parts = string.split(".");

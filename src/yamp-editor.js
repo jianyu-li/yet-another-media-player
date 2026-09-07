@@ -1,18 +1,18 @@
 import { LitElement, html, css, nothing } from "lit";
 import * as yaml from "js-yaml";
-import { localize } from "./localize/localize.js";
+import { localize, setHassLanguage } from "./localize/localize.js";
 
 import { SUPPORT_GROUPING, TEMPLATE_CONFIGS, DEFAULT_LYRICS_BACKGROUND_FADE } from "./constants.js";
 import { isMusicAssistantEntity, getActionPlacement } from "./yamp-utils.js";
 import "./yamp-sortable.js";
 
-const ADAPTIVE_TEXT_SELECTOR_OPTIONS = Object.freeze([
+const getAdaptiveTextSelectorOptions = () => [
   { value: "details", label: localize("card.sections.details") },
   { value: "menu", label: localize("card.sections.menu") },
   { value: "action_chips", label: localize("card.sections.action_chips") },
   { value: "lyrics", label: localize("card.sections.lyrics") },
-]);
-const ADAPTIVE_TEXT_SELECTOR_VALUES = ADAPTIVE_TEXT_SELECTOR_OPTIONS.map((opt) => opt.value);
+];
+const ADAPTIVE_TEXT_SELECTOR_VALUES = Object.freeze(["details", "menu", "action_chips", "lyrics"]);
 
 const VOLUME_MODE_SELECTOR = Object.freeze({
   select: {
@@ -98,6 +98,11 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
 
   updated(changedProperties) {
     if (changedProperties.has("hass")) {
+      const currentLang =
+        this.hass?.selectedLanguage || this.hass?.language || this.hass?.locale?.language;
+      if (currentLang) {
+        setHassLanguage(currentLang);
+      }
       const oldHass = changedProperties.get("hass");
       if (this.hass?.services !== oldHass?.services) {
         this._serviceItems = this._getServiceItems();
@@ -1142,6 +1147,13 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
 
   render() {
     if (!this._config) return html``;
+    if (this.hass) {
+      const currentLang =
+        this.hass?.selectedLanguage || this.hass?.language || this.hass?.locale?.language;
+      if (currentLang) {
+        setHassLanguage(currentLang);
+      }
+    }
 
     const currentTemplate = this._yamlConfig.template || "custom";
 
@@ -3016,7 +3028,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
               .selector=${{
                 select: {
                   multiple: true,
-                  options: ADAPTIVE_TEXT_SELECTOR_OPTIONS,
+                  options: getAdaptiveTextSelectorOptions(),
                 },
               }}
               .value=${this._getAdaptiveTextTargetsValue()}
