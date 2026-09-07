@@ -207,6 +207,8 @@ export default {
         "Music Assistant zahteva integracijo mass_queue za pridobivanje besedil iz svojega notranjega mehanizma metapodatkov.",
       lyrics_pre_roll:
         "Zamaknite časovno uskladitev označevanja besedila. Pozitivne vrednosti ga pospešijo, negativne pa upočasnijo (privzeto: 0).",
+      lyrics_background_fade:
+        "Prilagodite prelivanje ozadja in motnost zatemnitve prekrivne plošče z besedilom (0% za prosojno grafiko, 100% za enobarvno ozadje).",
       blurred_artwork: "Vedno zamegli ozadje",
       hide_collapsed_artwork: "Skrij majhno sliko na desni, ko je kartica strnjena",
       show_idle_artwork_when_not_playing:
@@ -263,6 +265,7 @@ export default {
       lyrics_mode: "Način besedila",
       lyrics_source: "Vir besedil",
       lyrics_pre_roll: "Pre-roll besedila (sekunde)",
+      lyrics_background_fade: "Prelivanje ozadja besedila",
       blurred_artwork: "Zamegljena grafika",
       hide_collapsed_artwork: "Skrij skrčeno grafika",
       show_idle_artwork_when_not_playing: "Prikaži sliko za nedejavnost, ko se ne predvaja",
@@ -321,6 +324,7 @@ export default {
       appearance: "Videz",
       no_artwork_option: "Brez grafike",
       details_alignment: "Poravnava podrobnosti",
+      lyrics_background_fade: "Prelivanje ozadja besedila (%)",
       queue_controls_style: "Slog kontrol čakalne vrste",
     },
     action_types: {

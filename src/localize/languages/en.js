@@ -222,6 +222,8 @@ export default {
         "Music Assistant requires the mass_queue integration to fetch lyrics from its internal metadata engine.",
       lyrics_pre_roll:
         "Shift the lyrics highlight timing. Positive values speed it up, negative values slow it down (default: 0).",
+      lyrics_background_fade:
+        "Adjust the background fade and dimming opacity of the lyrics overlay (0% for transparent artwork, 100% for solid background).",
       blurred_artwork: "Always blur the background artwork",
       hide_collapsed_artwork: "Hide the smaller artwork on the right when the card is collapsed",
       show_idle_artwork_when_not_playing:
@@ -276,6 +278,7 @@ export default {
       lyrics_mode: "Lyrics Mode",
       lyrics_source: "Lyrics Source",
       lyrics_pre_roll: "Lyrics Pre-Roll (seconds)",
+      lyrics_background_fade: "Lyrics Background Fade",
       blurred_artwork: "Blurred Artwork",
       hide_collapsed_artwork: "Hide Collapsed Artwork",
       show_idle_artwork_when_not_playing: "Show Idle Image When Not Playing",
@@ -334,6 +337,7 @@ export default {
       appearance: "Appearance",
       no_artwork_option: "No Artwork",
       details_alignment: "Details Alignment",
+      lyrics_background_fade: "Lyrics Background Fade (%)",
     },
     action_types: {
       menu: "Open a Card Menu Item",

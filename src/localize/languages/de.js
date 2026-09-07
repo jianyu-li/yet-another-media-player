@@ -224,6 +224,8 @@ export default {
         "Music Assistant benötigt die mass_queue-Integration, um Liedtexte von seiner internen Metadaten-Engine abzurufen.",
       lyrics_pre_roll:
         "Passen Sie das Timing der Songtext-Hervorhebung an. Positive Werte beschleunigen sie, negative verzögern sie (Standard: 0).",
+      lyrics_background_fade:
+        "Hintergrundüberblendung und Dimm-Deckkraft des Liedtext-Overlays anpassen (0% für transparentes Artwork, 100% für durchgehenden Hintergrund).",
       blurred_artwork: "Hintergrundbild immer weichzeichnen",
       hide_collapsed_artwork:
         "Das kleine Artwork auf der rechten Seite ausblenden, wenn die Karte eingeklappt ist",
@@ -281,6 +283,7 @@ export default {
       lyrics_mode: "Liedtext-Modus",
       lyrics_source: "Liedtext-Quelle",
       lyrics_pre_roll: "Liedtext Pre-Roll (Sekunden)",
+      lyrics_background_fade: "Liedtext Hintergrundüberblendung",
       blurred_artwork: "Verschwommenes Artwork",
       hide_collapsed_artwork: "Verkleinertes Artwork ausblenden",
       show_idle_artwork_when_not_playing: "Ruhebild anzeigen, wenn nicht abgespielt wird",
@@ -339,6 +342,7 @@ export default {
       appearance: "Erscheinungsbild",
       no_artwork_option: "Kein Artwork",
       details_alignment: "Detail-Ausrichtung",
+      lyrics_background_fade: "Liedtext Hintergrundüberblendung (%)",
       queue_controls_style: "Warteschlangen-Steuerungsstil",
     },
     action_types: {

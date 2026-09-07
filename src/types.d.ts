@@ -264,6 +264,7 @@ export interface YampCardConfig {
   hide_active_entity_label_on_idle?: boolean;
   swap_pause_for_stop?: boolean;
   show_album?: boolean;
+  lyrics_background_fade?: number | string;
   [key: string]: any;
 }
 

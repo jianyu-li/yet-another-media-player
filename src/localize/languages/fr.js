@@ -216,6 +216,8 @@ export default {
         "Music Assistant nécessite l'intégration mass_queue pour récupérer les paroles de son moteur de métadonnées interne.",
       lyrics_pre_roll:
         "Ajuste le timing de mise en évidence des paroles. Les valeurs positives l'accélèrent, les négatives le ralentissent (par défaut : 0).",
+      lyrics_background_fade:
+        "Ajuster le fondu d'arrière-plan et l'opacité d'assombrissement de la superposition des paroles (0% pour une illustration transparente, 100% pour un arrière-plan plein).",
       blurred_artwork: "Toujours flouter l'image d'arrière-plan",
       hide_collapsed_artwork: "Masquer l'image réduite sur la droite lorsque la carte est repliée",
       show_idle_artwork_when_not_playing:
@@ -272,6 +274,7 @@ export default {
       lyrics_mode: "Mode des paroles",
       lyrics_source: "Source des paroles",
       lyrics_pre_roll: "Pré-roll des paroles (secondes)",
+      lyrics_background_fade: "Fondu d'arrière-plan des paroles",
       blurred_artwork: "Image floutée",
       hide_collapsed_artwork: "Masquer l'image réduite",
       show_idle_artwork_when_not_playing: "Afficher l'image d'inactivité si pas de lecture",
@@ -330,6 +333,7 @@ export default {
       appearance: "Apparence",
       no_artwork_option: "Pas d'illustration",
       details_alignment: "Alignement des détails",
+      lyrics_background_fade: "Fondu d'arrière-plan des paroles (%)",
       queue_controls_style: "Style des commandes de file d'attente",
     },
     action_types: {

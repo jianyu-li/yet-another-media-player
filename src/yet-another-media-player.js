@@ -54,6 +54,7 @@ import {
   SUPPORT_GROUPING,
   ARTWORK_OVERRIDE_MATCH_KEYS,
   DEFAULT_PROGRESS_BAR_HEIGHT,
+  DEFAULT_LYRICS_BACKGROUND_FADE,
   TEMPLATE_CONFIGS
 } from "./constants.js";
 
@@ -566,6 +567,32 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     return !!raw;
   }
 
+  get _lyricsBackgroundFade() {
+    const raw = this.config?.lyrics_background_fade;
+    if (typeof raw === "string" && (raw.includes("{{") || raw.includes("{%") || raw.trim().startsWith("[[["))) {
+      let resolved = this._lyricsBackgroundFadeResolveCache?.["card"]?.value;
+      if (resolved === undefined && raw.trim().startsWith("[[[")) {
+        try {
+          resolved = resolveStringTemplateSync(this.hass, raw, this._getTemplateContext());
+        } catch (e) {
+          console.debug("YAMP template eval fallback error", e);
+        }
+      }
+      if (resolved !== undefined && resolved !== null && resolved !== "") {
+        const num = Number(resolved);
+        return Number.isFinite(num) ? Math.max(0, Math.min(100, num)) : DEFAULT_LYRICS_BACKGROUND_FADE;
+      }
+      return DEFAULT_LYRICS_BACKGROUND_FADE;
+    }
+    if (raw === undefined || raw === null || raw === "") return DEFAULT_LYRICS_BACKGROUND_FADE;
+    const num = Number(raw);
+    return Number.isFinite(num) ? Math.max(0, Math.min(100, num)) : DEFAULT_LYRICS_BACKGROUND_FADE;
+  }
+
+  _getLyricsBackgroundFade() {
+    return this._lyricsBackgroundFade;
+  }
+
   get _artworkObjectFit() {
     const fit = this._baseArtworkObjectFit || "cover";
     if (fit === "scaled-contain-alternate" && this._alwaysCollapsed) {
@@ -621,6 +648,9 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._cardHeightTemplateValue = {};
     this._cardHeightResolveCache = {};
     this._lastCardHeightContextKey = null;
+    this._lyricsBackgroundFadeTemplateValue = {};
+    this._lyricsBackgroundFadeResolveCache = {};
+    this._lastLyricsBackgroundFadeContextKey = null;
     this._transferQueuePendingTarget = null;
     this._transferQueueStatus = null;
     this._hasTransferQueueForCurrent = false;
@@ -892,6 +922,10 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       currentCache = this._cardHeightTemplateValue[idx];
       templateVals = this._cardHeightTemplateValue;
       cache = this._cardHeightResolveCache;
+    } else if (type === 'lyrics_background_fade') {
+      currentCache = this._lyricsBackgroundFadeTemplateValue[idx];
+      templateVals = this._lyricsBackgroundFadeTemplateValue;
+      cache = this._lyricsBackgroundFadeResolveCache;
     }
 
     // Check if there's already an active subscription for this exact template
@@ -929,7 +963,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
         if (type === 'ma' || type === 'vol' || type === 'remote') {
           isValid = resolved && /^([a-z0-9_]+)\.[a-zA-Z0-9_]+$/.test(resolved);
-        } else if (type === 'action_in_menu' || type === 'always_collapsed' || type === 'control_layout' || type === 'card_height' || type === 'hidden_controls') {
+        } else if (type === 'action_in_menu' || type === 'always_collapsed' || type === 'control_layout' || type === 'card_height' || type === 'lyrics_background_fade' || type === 'hidden_controls') {
           isValid = true; // Any string result is valid
         }
 
@@ -945,7 +979,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
             cache[idx] = { id: resolved, ts: Date.now() };
             shouldUpdate = true;
           }
-        } else if (type === 'action_in_menu' || type === 'always_collapsed' || type === 'control_layout' || type === 'card_height' || type === 'hidden_controls') {
+        } else if (type === 'action_in_menu' || type === 'always_collapsed' || type === 'control_layout' || type === 'card_height' || type === 'lyrics_background_fade' || type === 'hidden_controls') {
           const currentCached = cache[idx]?.value;
           if (isValid && currentCached !== resolved) {
             cache[idx] = { value: resolved, ts: Date.now() };
@@ -1152,6 +1186,10 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       templateVals = this._cardHeightTemplateValue;
       cache = this._cardHeightResolveCache;
       contextKeyName = '_lastCardHeightContextKey';
+    } else if (type === 'lyrics_background_fade') {
+      templateVals = this._lyricsBackgroundFadeTemplateValue;
+      cache = this._lyricsBackgroundFadeResolveCache;
+      contextKeyName = '_lastLyricsBackgroundFadeContextKey';
     } else {
       return;
     }
@@ -1195,7 +1233,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       }
     };
 
-    if (type === 'always_collapsed' || type === 'control_layout' || type === 'card_height') {
+    if (type === 'always_collapsed' || type === 'control_layout' || type === 'card_height' || type === 'lyrics_background_fade') {
       processItem('card', rawConfigData);
     } else if (type === 'action_in_menu') {
       const actions = rawConfigData || [];
@@ -6591,6 +6629,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._syncTemplateSubscriptions('always_collapsed', currentContext, this.config?.always_collapsed);
     this._syncTemplateSubscriptions('control_layout', currentContext, this.config?.control_layout);
     this._syncTemplateSubscriptions('card_height', currentContext, this.config?.card_height);
+    this._syncTemplateSubscriptions('lyrics_background_fade', currentContext, this.config?.lyrics_background_fade);
     this._syncEntityTemplateSubscriptions('ma', currentContext);
     this._syncEntityTemplateSubscriptions('vol', currentContext);
     this._syncEntityTemplateSubscriptions('remote', currentContext);
@@ -8737,7 +8776,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           ? `url('${artworkUrl}')`
           : "none";
     const hasBackgroundImage = backgroundImageValue !== "none";
-    const backgroundFilter = (artworkUrl && (this._lyricsActive || this.config.blurred_artwork === true || (this.config.blurred_artwork !== false && (collapsed || (useInsetArtwork && activeArtworkFit === "scaled-contain")))))
+    const backgroundFilter = (artworkUrl && (this.config.blurred_artwork === true || (this.config.blurred_artwork !== false && (collapsed || (useInsetArtwork && activeArtworkFit === "scaled-contain")))))
       ? "blur(18px) brightness(0.7) saturate(1.15)"
       : "none";
     let artworkPos = (typeof artworkObjectPosition !== 'undefined' ? artworkObjectPosition : null) || this.config.artwork_position || "top center";
@@ -8783,6 +8822,9 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       (volumeRowWillCollapse ? 0 : 56)
     );
     const lyricsBottomOffset = lowerControlsH;
+    const lyricsFade = this._getLyricsBackgroundFade();
+    const lyricsBlurPx = lyricsFade === 0 ? 0 : Math.min(5, Number(((lyricsFade / 80) * 5).toFixed(1)));
+    const lyricsBackdropFilter = lyricsBlurPx === 0 ? "none" : `blur(${lyricsBlurPx}px)`;
 
     return html`
         <ha-card class="yamp-card" 
@@ -8791,6 +8833,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
             data-match-theme="${String(this.config.match_theme === true)}"
             data-artwork-fit="${activeArtworkFit}"
             data-lyrics-active="${String(this._lyricsActive === true)}"
+            style=${this._lyricsActive ? `--yamp-lyrics-fade: ${lyricsFade}%; --yamp-lyrics-backdrop-filter: ${lyricsBackdropFilter};` : nothing}
             class=${classMap({
       "yamp-card-inner": true,
       "compact-collapsed": isCompact && collapsed,
@@ -8801,7 +8844,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           >
             ${artworkFullBleed && hasBackgroundImage ? html`
               <div class="full-bleed-artwork-bg" style="${sharedBackgroundStyle}"></div>
-              ${!(dimIdleFrame || this._isIdle) ? html`<div class="full-bleed-artwork-fade"></div>` : nothing}
+              ${!(dimIdleFrame || this._isIdle || this._lyricsActive) ? html`<div class="full-bleed-artwork-fade"></div>` : nothing}
             ` : nothing}
             ${(!useInsetArtwork && !artworkUrl && !idleImageUrl) ? html`
               <div class="media-artwork-placeholder"
@@ -8843,6 +8886,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
                 style="${[
                   `--yamp-lyrics-top-offset: ${showChipsInline ? 48 : 0}px`,
                   `--yamp-lyrics-bottom-offset: ${lyricsBottomOffset}px`,
+                  `--yamp-lyrics-fade: ${lyricsFade}%`,
+                  `--yamp-lyrics-backdrop-filter: ${lyricsBackdropFilter}`,
                   this._getGestureStyles()
                 ].filter(Boolean).join('; ')}"
               ></yamp-lyrics-view>
@@ -8872,7 +8917,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         return styles.join('; ');
       })()}"
               ></div>
-              ${!(dimIdleFrame || this._isIdle) && (!useInsetArtwork || activeArtworkFit === "scaled-contain" || this._lyricsActive) ? html`<div class="card-lower-fade" style="--yamp-lyrics-bottom-offset: ${lyricsBottomOffset}px;"></div>` : nothing}
+              ${!(dimIdleFrame || this._isIdle || this._lyricsActive) && (!useInsetArtwork || activeArtworkFit === "scaled-contain") ? html`<div class="card-lower-fade" style="--yamp-lyrics-bottom-offset: ${lyricsBottomOffset}px;"></div>` : nothing}
               <div class="card-lower-content${collapsed ? ' collapsed transitioning' : ' transitioning'}${collapsed && artworkUrl && collapsedArtworkSize > 0 ? ' has-artwork' : ''}" style="${(() => {
         if (!hideControlsNow && !this._lyricsActive) return '';
         return collapsed

@@ -8,6 +8,7 @@
 export const DEFAULT_PROGRESS_BAR_HEIGHT = 6;
 export const DEFAULT_IDLE_TIMEOUT_MS = 60000;
 export const DEFAULT_VOLUME_STEP = 0.05;
+export const DEFAULT_LYRICS_BACKGROUND_FADE = 80;
 
 /**
  * Predefined card configuration presets
@@ -162,6 +163,7 @@ export const CARD_CONFIG_DEFAULTS = Object.freeze({
   hide_active_entity_label_on_idle: false,
   swap_pause_for_stop: false,
   show_album: true,
+  lyrics_background_fade: DEFAULT_LYRICS_BACKGROUND_FADE,
 });
 
 /**
@@ -195,6 +197,7 @@ export const TEMPLATE_SUPPORTED_FIELDS = Object.freeze(
     "subtitle",
     "idle_artwork",
     "idle_image",
+    "lyrics_background_fade",
   ])
 );
 
