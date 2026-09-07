@@ -4620,10 +4620,53 @@ export const lyricsStyles = css`
 
   .lyric-line.is-instrumental {
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 12px;
     min-height: 32px;
     filter: none;
+  }
+
+  .lyric-instrumental-text {
+    font-size: calc(
+      var(--yamp-lyrics-instrumental-font-size, 1.4rem) * var(--yamp-text-scale-lyrics, 1)
+    );
+    font-weight: 700;
+    line-height: 1.3;
+    opacity: 0.85;
+    text-align: center;
+    letter-spacing: 0.3px;
+    text-shadow: var(--yamp-overlay-text-shadow, 0 2px 4px rgba(0, 0, 0, 0.5));
+  }
+
+  /* Playing indicator animation - equalizer bars within lyricsStyles */
+  @keyframes chipPlayingBar1 {
+    0%,
+    100% {
+      height: 3px;
+    }
+    50% {
+      height: 10px;
+    }
+  }
+  @keyframes chipPlayingBar2 {
+    0%,
+    100% {
+      height: 5px;
+    }
+    50% {
+      height: 12px;
+    }
+  }
+  @keyframes chipPlayingBar3 {
+    0%,
+    100% {
+      height: 4px;
+    }
+    50% {
+      height: 8px;
+    }
   }
 
   .lyrics-playing-indicator {
@@ -4662,6 +4705,11 @@ export const lyricsStyles = css`
 
   .lyric-line.active .lyrics-playing-indicator .bar:nth-child(3) {
     animation: chipPlayingBar3 0.7s ease-in-out 0.3s infinite;
+  }
+
+  :host([data-playing="false"]) .lyrics-playing-indicator .bar,
+  .lyrics-playing-indicator.paused .bar {
+    animation-play-state: paused !important;
   }
 
   .lyrics-loading,

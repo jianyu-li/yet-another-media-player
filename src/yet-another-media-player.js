@@ -6498,6 +6498,15 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         } else if (typeof lyricsArray === "string") {
           lrcString = lyricsArray;
         } else if (typeof lyricsArray === "object") {
+          if (lyricsArray.instrumental) {
+            return [
+              {
+                time: 0,
+                text: localize("lyrics.instrumental") || "Instrumental Track",
+                isInstrumental: true,
+              },
+            ];
+          }
           lrcString = lyricsArray.lyrics || lyricsArray.text || "";
         }
         return lrcString ? parseLrc(lrcString) : [];
@@ -6554,7 +6563,13 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
       if (data) {
         if (data.instrumental) {
-          return [{ time: null, text: localize("lyrics.instrumental") || "Instrumental Track" }];
+          return [
+            {
+              time: 0,
+              text: localize("lyrics.instrumental") || "Instrumental Track",
+              isInstrumental: true,
+            },
+          ];
         }
         const lrcString = data.syncedLyrics || data.plainLyrics || "";
         return lrcString ? parseLrc(lrcString) : [];
@@ -8811,11 +8826,13 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
               <yamp-lyrics-view
                 data-match-theme="${String(this.config.match_theme === true)}"
                 data-artwork-fit="${activeArtworkFit}"
+                data-playing="${String(this._isCurrentEntityPlaying())}"
                 .hass=${this.hass}
                 .lyrics=${this._massLyrics}
                 .position=${pos}
                 .loading=${this._fetchingLyrics}
                 .error=${this._lyricsError}
+                .playing=${this._isCurrentEntityPlaying()}
                 .activeThemeColor=${this.config.match_theme === true ? "var(--custom-accent, var(--state-media_player-active-color, var(--primary-color, #ffffff)))" : "var(--custom-accent, #ffffff)"}
                 .mode=${this._isCurrentlyPlayingRadio() ? 'text' : (this.config.lyrics_mode || 'default')}
                 .preRoll=${this.config.lyrics_pre_roll ?? 0}
