@@ -1799,9 +1799,27 @@ export const yampCardStyles = css`
   }
 
   .yamp-card-inner[data-lyrics-active="true"] .card-lower-content > :not(.card-artwork-spacer) {
-    position: relative;
     z-index: ${Z_LAYERS.FLOATING_CONTROLS};
     pointer-events: auto;
+  }
+
+  .yamp-card-inner[data-lyrics-active="true"]
+    .card-lower-content
+    > :not(.card-artwork-spacer):not(.in-menu-active-label):not(.more-info-menu):not(
+      .collapsed-artwork-container
+    ) {
+    position: relative;
+  }
+
+  .yamp-card-inner[data-lyrics-active="true"] .in-menu-active-label,
+  .yamp-card-inner[data-lyrics-active="true"] .more-info-menu.volume-collapsed,
+  .yamp-card-inner[data-lyrics-active="true"] .collapsed-artwork-container {
+    position: absolute !important;
+    z-index: ${Z_LAYERS.FLOATING_CONTROLS};
+  }
+
+  .yamp-card-inner[data-lyrics-active="true"] .in-menu-active-label {
+    pointer-events: none !important;
   }
 
   .card-lower-content.transitioning .details,
@@ -2417,7 +2435,7 @@ export const yampCardStyles = css`
   }
 
   .in-menu-active-label {
-    position: absolute;
+    position: absolute !important;
     left: 50%;
     bottom: 6px;
     transform: translateX(-50%);
@@ -2426,7 +2444,7 @@ export const yampCardStyles = css`
     letter-spacing: 0.05em;
     color: #fff;
     opacity: 0.78;
-    pointer-events: none;
+    pointer-events: none !important;
   }
 
   /* When always collapsed is enabled, keep menu at top */

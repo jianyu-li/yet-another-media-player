@@ -4371,7 +4371,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       const isActive = !!targetSet?.has(target);
       this.style.setProperty(varName, isActive ? scaleString : "1");
     }
-    const detailActive = !!targetSet?.has("details") && !this._lyricsActive;
+    const detailActive = !!targetSet?.has("details");
     const safeDetailsScale = Number.isFinite(detailsScale) ? detailsScale : safeScale;
     const detailScaleString = detailActive ? safeDetailsScale.toFixed(2) : "1";
     const detailLineHeight = detailActive ? this._calculateDetailsLineHeight(safeDetailsScale) : 1.2;
@@ -8682,7 +8682,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const collapsedDetailsMinHeight = effectiveExtraSpace > 0
       ? Math.round(baseDetailsMinHeight + detailGrowth)
       : (effectiveExtraSpace < -20 ? 36 : baseDetailsMinHeight);
-    const detailsScale = (this._adaptiveTextTargets?.has("details") && !this._lyricsActive) ? (this._currentDetailsScale || 1) : 1;
+    const detailsScale = this._adaptiveTextTargets?.has("details") ? (this._currentDetailsScale || 1) : 1;
     const detailsMinHeight = Math.round((collapsed ? collapsedDetailsMinHeight : baseDetailsMinHeight) * detailsScale);
     let showCollapsedPlaceholder;
     const expandedHeightBaseline = 350;
@@ -8811,7 +8811,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
     const volumeRowWillCollapse = isVolumeHiddenByConfig && !isCompactVolume && !hasLeadingControl && !hasRightPlaceholder;
 
-    const detailsHasAdaptiveText = this._adaptiveTextTargets?.has("details") && !this._lyricsActive;
+    const detailsHasAdaptiveText = !!this._adaptiveTextTargets?.has("details");
     this._lastSpacerRendered = !!(showCollapsedPlaceholder || (!collapsed && (!detailsHasAdaptiveText || hasSpacerContent)));
     this._lastVolumeRendered = !volumeRowWillCollapse;
 
