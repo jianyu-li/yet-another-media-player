@@ -8,7 +8,7 @@
 export const DEFAULT_PROGRESS_BAR_HEIGHT = 6;
 export const DEFAULT_IDLE_TIMEOUT_MS = 60000;
 export const DEFAULT_VOLUME_STEP = 0.05;
-export const DEFAULT_LYRICS_BACKGROUND_FADE = 80;
+export const DEFAULT_LYRICS_BACKGROUND_FADE = 75;
 
 /**
  * Predefined card configuration presets
