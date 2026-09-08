@@ -2704,16 +2704,23 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       } else if (currentLevel.type === 'album') {
         this._searchBreadcrumb = `Tracks from ${currentLevel.name}`;
         this._searchMediaClassFilter = 'track';
+        const artistLevel = this._searchHierarchy.find(level => level.type === 'artist');
+        const artistName = artistLevel ? artistLevel.name : null;
         if (currentLevel.uri && this._isMusicAssistantEntity()) {
-          this._searchQuery = currentLevel.name;
-          this._searchAlbumTracks(currentLevel.name, null, currentLevel.uri);
+          this._searchQuery = "";
+          this._currentSearchQuery = "";
+          this._searchResults = [];
+          this._searchLoading = true;
+          this.requestUpdate();
+          this._loadAlbumTracks(currentLevel.uri, currentLevel.name, artistName).then(() => {
+            this._scrollToTop();
+          });
           return;
         }
         // Fallback search
-        const artistLevel = this._searchHierarchy.find(level => level.type === 'artist');
         const searchParams = { album: currentLevel.name };
-        if (artistLevel) {
-          searchParams.artist = artistLevel.name;
+        if (artistName) {
+          searchParams.artist = artistName;
         }
         this._doSearch('track', searchParams);
       } else if (currentLevel.type === 'playlist') {
@@ -4102,20 +4109,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     }
   }
 
-  // Handle hierarchical search - search for tracks by album
-  async _searchAlbumTracks(albumName, artistName, albumUri = null) {
-    this._searchHierarchy.push({ type: 'album', name: albumName, query: this._searchQuery, uri: albumUri, filter: this._searchMediaClassFilter });
-    this._searchBreadcrumb = `Tracks from ${albumName}`;
-    this._searchResultsByType = {}; // Clear cache for new search
-    this._currentSearchQuery = "";
-    this._searchMediaClassFilter = 'track';
-
-    // Immediate loading state
-    this._searchResults = [];
-    this._searchLoading = true;
-    this._searchQuery = "";
-    this.requestUpdate();
-
+  // Stack-safe loader: fetches album tracks without modifying _searchHierarchy
+  async _loadAlbumTracks(albumUri, albumName, artistName = null) {
     // Priority 1: Use mass_queue integration if available (preferred for Music Assistant)
     if (albumUri && (await this._isMassQueueIntegrationAvailable(this.hass))) {
       const mqTracks = await this._fetchMassQueueTracks(albumUri, "get_album_tracks");
@@ -4174,11 +4169,28 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       searchParams.artist = artistName;
     }
 
+    // Use Music Assistant search with specific parameters for tracks
+    await this._doSearch('track', searchParams);
+  }
+
+  // Handle hierarchical search - search for tracks by album
+  async _searchAlbumTracks(albumName, artistName, albumUri = null) {
+    this._searchHierarchy.push({ type: 'album', name: albumName, query: this._searchQuery, uri: albumUri, filter: this._searchMediaClassFilter });
+    this._searchBreadcrumb = `Tracks from ${albumName}`;
+    this._searchResultsByType = {}; // Clear cache for new search
+    this._currentSearchQuery = "";
+    this._searchMediaClassFilter = 'track';
+
+    // Immediate loading state
+    this._searchResults = [];
+    this._searchLoading = true;
+    this._searchQuery = "";
+    this.requestUpdate();
+
     // Remove swipe handlers when entering hierarchy
     this._removeSearchSwipeHandlers();
 
-    // Use Music Assistant search with specific parameters for tracks
-    await this._doSearch('track', searchParams);
+    await this._loadAlbumTracks(albumUri, albumName, artistName);
   }
 
   // Helper to load tracks for a playlist via mass_queue or browse_media
