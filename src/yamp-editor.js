@@ -889,7 +889,6 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           padding: 6px 0px 6px 6px;
           margin: 0px -14px 0px 0px;
           min-width: 0;
-          max-width: 100%;
           box-sizing: border-box;
         }
         /* wraps the action icon, name textbox and edit button */
@@ -900,7 +899,6 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           padding: 6px 0px 6px 6px;
           margin: 0px -14px 0px 0px;
           min-width: 0;
-          max-width: 100%;
           box-sizing: border-box;
         }
         .action-row-inner > ha-icon {
@@ -1134,7 +1132,6 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
         }
         .artwork-row {
           margin: 0;
-          padding: 6px 0px 6px 6px;
           min-width: 0;
           max-width: 100%;
           box-sizing: border-box;
@@ -1814,10 +1811,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                     </div>
                                   `
                             }
-                            <div
-                              class="form-row-multi-column"
-                              style="gap:12px; flex-wrap:wrap; align-items:flex-start; width:100%; min-width:0; box-sizing:border-box;"
-                            >
+                            <div class="form-row-multi-column" style="align-items:flex-start;">
                               <div class="grow-children" style="flex:1; min-width: 100px;">
                                 <ha-selector
                                   .hass=${this.hass}
