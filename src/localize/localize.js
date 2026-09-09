@@ -23,11 +23,53 @@ const languages = {
 let activeHassLanguage = null;
 
 export function setHassLanguage(lang) {
-  if (typeof lang === "string" && lang.trim() !== "") {
+  if (
+    typeof lang === "string" &&
+    lang.trim() !== "" &&
+    lang.trim().toLowerCase() !== "null" &&
+    lang.trim().toLowerCase() !== "undefined"
+  ) {
     activeHassLanguage = lang.trim();
   } else {
     activeHassLanguage = null;
   }
+}
+
+function getStoredLanguage() {
+  if (typeof localStorage === "undefined") return "";
+  try {
+    const raw = localStorage.getItem("selectedLanguage");
+    if (!raw) return "";
+    let val = raw;
+    try {
+      val = JSON.parse(raw);
+    } catch {
+      // raw was not JSON-encoded (e.g. set directly as a plain string in console)
+    }
+    if (typeof val === "string") {
+      const cleaned = val.replace(/['"]+/g, "").trim();
+      // JSON.parse("null") yields JS null (caught by typeof check above).
+      // This guard covers direct console entry: localStorage.setItem("selectedLanguage", "null")
+      if (
+        cleaned !== "" &&
+        cleaned.toLowerCase() !== "null" &&
+        cleaned.toLowerCase() !== "undefined"
+      ) {
+        return cleaned;
+      }
+    }
+  } catch {
+    return "";
+  }
+  return "";
+}
+
+function sanitizeLanguage(val) {
+  if (typeof val !== "string") return "";
+  const cleaned = val.replace(/['"]+/g, "").trim();
+  return cleaned !== "" && cleaned.toLowerCase() !== "null" && cleaned.toLowerCase() !== "undefined"
+    ? cleaned
+    : "";
 }
 
 function getBrowserLanguage() {
@@ -51,11 +93,11 @@ export function getActiveLanguage() {
   const haHass = haElement?.hass;
 
   const rawLang = (
-    (typeof localStorage !== "undefined" && localStorage.getItem("selectedLanguage")) ||
-    haHass?.selectedLanguage ||
-    haHass?.language ||
-    haHass?.locale?.language ||
-    activeHassLanguage ||
+    getStoredLanguage() ||
+    sanitizeLanguage(haHass?.selectedLanguage) ||
+    sanitizeLanguage(haHass?.language) ||
+    sanitizeLanguage(haHass?.locale?.language) ||
+    sanitizeLanguage(activeHassLanguage) ||
     getBrowserLanguage() ||
     "en"
   )
