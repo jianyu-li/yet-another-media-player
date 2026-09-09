@@ -230,6 +230,7 @@ export default {
         "Upravte prelínanie pozadia a nepriehľadnosť stmavenia prekrytia textu piesne (0% pre priehľadný obrázok, 100% pre plné pozadie).",
       blurred_artwork: "Vždy rozmazať obrázok na pozadí",
       hide_collapsed_artwork: "Skryť malý obrázok vpravo, keď je karta zbalená",
+      disable_artwork_gradient: "Zakázať prekrytie spodného prechodu na obrázku",
       show_idle_artwork_when_not_playing:
         "Keď je táto možnosť povolená, pri výbere čipu, na ktorom sa momentálne nič neprehráva, sa namiesto aktívnej grafiky prehrávania zobrazí nakonfigurovaný obrázok pri nečinnosti.",
       prefer_ma_metadata:
@@ -287,6 +288,7 @@ export default {
       lyrics_background_fade: "Prelínanie pozadia textu piesne",
       blurred_artwork: "Rozmazaný obrázok",
       hide_collapsed_artwork: "Skryť zmenšený obrázok",
+      disable_artwork_gradient: "Zakázať prechod obrázka",
       show_idle_artwork_when_not_playing: "Zobraziť obrázok nečinnosti, keď sa neprehráva",
       prefer_ma_metadata: "Uprednostniť metadáta z Music Assistant",
       show_volume_overlay: "Zobraziť prekrytie hlasitosti",

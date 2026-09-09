@@ -213,6 +213,7 @@ export default {
         "Regola la dissolvenza dello sfondo e l'opacità di attenuazione della sovrapposizione dei testi (0% per grafica trasparente, 100% per sfondo solido).",
       blurred_artwork: "Sfoca sempre l'immagine di sfondo",
       hide_collapsed_artwork: "Nascondi l'immagine piccola a destra quando la scheda è compressa",
+      disable_artwork_gradient: "Disattiva la sfumatura inferiore sull'immagine di copertina",
       show_idle_artwork_when_not_playing:
         "Se abilitato, selezionando un chip che non è attualmente in riproduzione verrà mostrata l'immagine inattiva configurata invece della copertina di riproduzione attiva.",
       prefer_ma_metadata:
@@ -270,6 +271,7 @@ export default {
       lyrics_background_fade: "Dissolvenza sfondo testi",
       blurred_artwork: "Immagine sfocata",
       hide_collapsed_artwork: "Nascondi immagine contratta",
+      disable_artwork_gradient: "Disattiva sfumatura copertina",
       show_idle_artwork_when_not_playing: "Mostra immagine inattiva quando non in riproduzione",
       prefer_ma_metadata: "Preferisci i metadati di Music Assistant",
       show_volume_overlay: "Mostra overlay volume",

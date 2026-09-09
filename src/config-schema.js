@@ -140,6 +140,7 @@ export const CARD_CONFIG_DEFAULTS = Object.freeze({
   extend_artwork: false,
   blurred_artwork: false,
   hide_collapsed_artwork: false,
+  disable_artwork_gradient: false,
   match_theme: false,
   search_view: "card",
   search_card_columns: 2,
