@@ -787,6 +787,9 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           display: flex;
           flex-wrap: wrap;
           gap: 12px;
+          min-width: 0;
+          max-width: 100%;
+          box-sizing: border-box;
         }
         .form-row-multi-column > div {
           flex: 1;
@@ -885,6 +888,8 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           gap: 8px;
           padding: 6px 0px 6px 6px;
           margin: 0px -14px 0px 0px;
+          min-width: 0;
+          box-sizing: border-box;
         }
         /* wraps the action icon, name textbox and edit button */
         .action-row-inner {
@@ -893,6 +898,8 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           gap: 8px;
           padding: 6px 0px 6px 6px;
           margin: 0px -14px 0px 0px;
+          min-width: 0;
+          box-sizing: border-box;
         }
         .action-row-inner > ha-icon {
           margin-right: 5px;
@@ -903,10 +910,14 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           flex: 1;
           display: flex;
           min-width: 0;
+          max-width: 100%;
+          box-sizing: border-box;
         }
         .grow-children > * {
           flex: 1;
           min-width: 0;
+          max-width: 100%;
+          box-sizing: border-box;
         }
         .entity-editor-header, .action-editor-header {
           display: flex;
@@ -1077,6 +1088,16 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           align-items: flex-start;
           gap: 8px;
           width: 100%;
+          min-width: 0;
+          max-width: 100%;
+          box-sizing: border-box;
+        }
+        ha-code-editor {
+          display: block;
+          width: 100%;
+          min-width: 0;
+          max-width: 100%;
+          box-sizing: border-box;
         }
         .icon-button-small {
           display: inline-flex;
@@ -1109,11 +1130,23 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           display: flex;
           justify-content: center;
         }
+        .artwork-row {
+          margin: 0;
+          min-width: 0;
+          max-width: 100%;
+          box-sizing: border-box;
+        }
+        .artwork-row + .artwork-row {
+          border-top: 1px solid var(--yamp-section-divider, rgba(255, 255, 255, 0.06));
+        }
         .artwork-row .artwork-fields {
           display: flex;
           flex-direction: column;
           gap: 8px;
           flex: 1;
+          min-width: 0;
+          max-width: 100%;
+          box-sizing: border-box;
         }
         .config-subtitle.small {
           font-size: 0.9em;
@@ -1543,6 +1576,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                           <div class="artwork-fields">
                             <ha-selector
                               .hass=${this.hass}
+                              class="full-width"
                               label="${localize("editor.fields.match_field")}"
                               .required=${true}
                               .selector=${{ select: { mode: "dropdown", options: matchOptions } }}
@@ -1777,10 +1811,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                     </div>
                                   `
                             }
-                            <div
-                              class="form-row-multi-column"
-                              style="gap:12px; flex-wrap:wrap; align-items:flex-start;"
-                            >
+                            <div class="form-row-multi-column" style="align-items:flex-start;">
                               <div class="grow-children" style="flex:1; min-width: 100px;">
                                 <ha-selector
                                   .hass=${this.hass}
@@ -1796,6 +1827,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                               <div class="grow-children" style="flex:1.5; min-width: 120px;">
                                 <ha-selector
                                   .hass=${this.hass}
+                                  class="full-width"
                                   label="${localize("editor.fields.object_fit")}"
                                   .required=${false}
                                   .selector=${{
@@ -1851,6 +1883,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                               <div class="grow-children" style="flex:1.5; min-width: 120px;">
                                 <ha-selector
                                   .hass=${this.hass}
+                                  class="full-width"
                                   label="${localize("editor.fields.artwork_position")}"
                                   .required=${false}
                                   .selector=${{
