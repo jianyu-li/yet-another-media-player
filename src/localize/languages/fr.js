@@ -220,6 +220,7 @@ export default {
         "Ajuster le fondu d'arrière-plan et l'opacité d'assombrissement de la superposition des paroles (0% pour une illustration transparente, 100% pour un arrière-plan plein).",
       blurred_artwork: "Toujours flouter l'image d'arrière-plan",
       hide_collapsed_artwork: "Masquer l'image réduite sur la droite lorsque la carte est repliée",
+      disable_artwork_gradient: "Désactiver le dégradé inférieur superposé sur l'illustration",
       show_idle_artwork_when_not_playing:
         "Lorsqu'il est activé, la sélection d'un badge qui n'est pas en cours de lecture affichera l'image d'inactivité configurée à la place de l'illustration de lecture active.",
       prefer_ma_metadata:
@@ -277,6 +278,7 @@ export default {
       lyrics_background_fade: "Fondu d'arrière-plan des paroles",
       blurred_artwork: "Image floutée",
       hide_collapsed_artwork: "Masquer l'image réduite",
+      disable_artwork_gradient: "Désactiver le dégradé de l'illustration",
       show_idle_artwork_when_not_playing: "Afficher l'image d'inactivité si pas de lecture",
       prefer_ma_metadata: "Préférer les métadonnées Music Assistant",
       show_volume_overlay: "Afficher la superposition de volume",

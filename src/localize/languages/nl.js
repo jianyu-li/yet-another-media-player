@@ -239,6 +239,7 @@ export default {
       blurred_artwork: "Achtergrondafbeelding altijd vervagen",
       hide_collapsed_artwork:
         "Verberg de kleine afbeelding aan de rechterkant wanneer de kaart is ingeklapt",
+      disable_artwork_gradient: "Het verloop onderaan de albumhoes uitschakelen",
       show_idle_artwork_when_not_playing:
         "Indien ingeschakeld, zal het selecteren van een chip die momenteel niet wordt afgespeeld de geconfigureerde stand-by afbeelding weergeven in plaats van de actieve afspeel-art.",
       prefer_ma_metadata:
@@ -296,6 +297,7 @@ export default {
       lyrics_background_fade: "Songtekst achtergrondvervaging",
       blurred_artwork: "Vervaagde afbeelding",
       hide_collapsed_artwork: "Verkleinde afbeelding verbergen",
+      disable_artwork_gradient: "Kleurverloop van hoes uitschakelen",
       show_idle_artwork_when_not_playing: "Toon stand-by afbeelding wanneer niet afgespeeld",
       prefer_ma_metadata: "Voorkeur voor Music Assistant-metadata",
       show_volume_overlay: "Volume-overlay weergeven",

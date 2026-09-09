@@ -1391,6 +1391,19 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
               </div>
             </div>
           </div>
+          <div class="form-row form-row-multi-column">
+            <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
+              <ha-switch
+                id="disable-artwork-gradient-toggle"
+                .checked=${this._config.disable_artwork_gradient === true}
+                @change=${(e) => this._updateConfig("disable_artwork_gradient", e.target.checked)}
+              ></ha-switch>
+              <div style="display: flex; flex-direction: column;">
+                <label for="disable-artwork-gradient-toggle" style="font-weight: 500;">${localize("editor.labels.disable_artwork_gradient")}</label>
+                <div style="font-size: 0.85em; opacity: 0.7;">${localize("editor.subtitles.disable_artwork_gradient")}</div>
+              </div>
+            </div>
+          </div>
           <div class="form-row">
             <ha-selector
               .hass=${this.hass}

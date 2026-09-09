@@ -242,6 +242,7 @@ export interface YampCardConfig {
   extend_artwork?: boolean;
   blurred_artwork?: boolean;
   hide_collapsed_artwork?: boolean;
+  disable_artwork_gradient?: boolean;
   match_theme?: boolean;
   search_view?: "card" | "list" | string;
   search_card_columns?: number;

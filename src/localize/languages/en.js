@@ -226,6 +226,7 @@ export default {
         "Adjust the background fade and dimming opacity of the lyrics overlay (0% for transparent artwork, 100% for solid background).",
       blurred_artwork: "Always blur the background artwork",
       hide_collapsed_artwork: "Hide the smaller artwork on the right when the card is collapsed",
+      disable_artwork_gradient: "Disable the bottom fade gradient overlay on the artwork",
       show_idle_artwork_when_not_playing:
         "When enabled, selecting a chip that is not currently playing will display the configured idle image instead of the active playback artwork.",
       prefer_ma_metadata:
@@ -281,6 +282,7 @@ export default {
       lyrics_background_fade: "Lyrics Background Fade",
       blurred_artwork: "Blurred Artwork",
       hide_collapsed_artwork: "Hide Collapsed Artwork",
+      disable_artwork_gradient: "Disable Artwork Gradient",
       show_idle_artwork_when_not_playing: "Show Idle Image When Not Playing",
       prefer_ma_metadata: "Prefer Music Assistant Metadata",
       show_volume_overlay: "Show Volume Overlay",

@@ -211,6 +211,7 @@ export default {
         "Prilagodite prelivanje ozadja in motnost zatemnitve prekrivne plošče z besedilom (0% za prosojno grafiko, 100% za enobarvno ozadje).",
       blurred_artwork: "Vedno zamegli ozadje",
       hide_collapsed_artwork: "Skrij majhno sliko na desni, ko je kartica strnjena",
+      disable_artwork_gradient: "Onemogoči spodnji barvni prehod na grafiki",
       show_idle_artwork_when_not_playing:
         "Ko je to omogočeno, se ob izbiri čipa, na katerem se trenutno nič ne predvaja, prikaže nastavljena slika za nedejavnost namesto aktivne grafike predvajanja.",
       prefer_ma_metadata:
@@ -268,6 +269,7 @@ export default {
       lyrics_background_fade: "Prelivanje ozadja besedila",
       blurred_artwork: "Zamegljena grafika",
       hide_collapsed_artwork: "Skrij skrčeno grafika",
+      disable_artwork_gradient: "Onemogoči prehod grafike",
       show_idle_artwork_when_not_playing: "Prikaži sliko za nedejavnost, ko se ne predvaja",
       prefer_ma_metadata: "Prednost metapodatkom Music Assistant",
       show_volume_overlay: "Prikaži prekrivno ploščo za glasnost",

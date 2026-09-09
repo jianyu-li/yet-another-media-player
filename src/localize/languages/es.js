@@ -215,6 +215,7 @@ export default {
       blurred_artwork: "Difuminar siempre la imagen de fondo",
       hide_collapsed_artwork:
         "Ocultar la imagen pequeña a la derecha cuando la tarjeta esté contraída",
+      disable_artwork_gradient: "Desactivar el degradado inferior superpuesto en la portada",
       show_idle_artwork_when_not_playing:
         "Cuando está habilitado, al seleccionar una ficha que no se está reproduciendo actualmente, se mostrará la imagen de inactividad configurada en lugar de la carátula de reproducción activa.",
       prefer_ma_metadata:
@@ -272,6 +273,7 @@ export default {
       lyrics_background_fade: "Desvanecimiento de fondo de letras",
       blurred_artwork: "Imagen difuminada",
       hide_collapsed_artwork: "Ocultar imagen reducida",
+      disable_artwork_gradient: "Desactivar degradado de portada",
       show_idle_artwork_when_not_playing: "Mostrar imagen de inactividad cuando no se reproduce",
       prefer_ma_metadata: "Preferir metadatos de Music Assistant",
       show_volume_overlay: "Mostrar superposición de volumen",

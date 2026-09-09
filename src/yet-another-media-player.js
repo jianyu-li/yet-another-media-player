@@ -593,6 +593,10 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     return this._lyricsBackgroundFade;
   }
 
+  get _artworkGradientDisabled() {
+    return this.config?.disable_artwork_gradient === true;
+  }
+
   get _artworkObjectFit() {
     const fit = this._baseArtworkObjectFit || "cover";
     if (fit === "scaled-contain-alternate" && this._alwaysCollapsed) {
@@ -8867,7 +8871,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           >
             ${artworkFullBleed && hasBackgroundImage ? html`
               <div class="full-bleed-artwork-bg" style="${sharedBackgroundStyle}"></div>
-              ${!(dimIdleFrame || this._isIdle || this._lyricsActive) ? html`<div class="full-bleed-artwork-fade"></div>` : nothing}
+              ${!this._artworkGradientDisabled && !(dimIdleFrame || this._isIdle || this._lyricsActive) ? html`<div class="full-bleed-artwork-fade"></div>` : nothing}
             ` : nothing}
             ${(!useInsetArtwork && !artworkUrl && !idleImageUrl) ? html`
               <div class="media-artwork-placeholder"
@@ -8940,7 +8944,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         return styles.join('; ');
       })()}"
               ></div>
-              ${!(dimIdleFrame || this._isIdle || this._lyricsActive) && (!useInsetArtwork || activeArtworkFit === "scaled-contain") ? html`<div class="card-lower-fade" style="--yamp-lyrics-bottom-offset: ${lyricsBottomOffset}px;"></div>` : nothing}
+              ${!this._artworkGradientDisabled && !(dimIdleFrame || this._isIdle || this._lyricsActive) && (!useInsetArtwork || activeArtworkFit === "scaled-contain") ? html`<div class="card-lower-fade" style="--yamp-lyrics-bottom-offset: ${lyricsBottomOffset}px;"></div>` : nothing}
               <div class="card-lower-content${collapsed ? ' collapsed transitioning' : ' transitioning'}${collapsed && artworkUrl && collapsedArtworkSize > 0 ? ' has-artwork' : ''}" style="${(() => {
         if (!hideControlsNow) return '';
         return collapsed
@@ -9338,6 +9342,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
     host.setAttribute("data-hide-menu-player", String(config.hide_menu_player === true || forceHideMenuPlayer));
     host.setAttribute("data-extend-artwork", String(this._extendArtwork));
+    host.setAttribute("data-disable-artwork-gradient", String(this._artworkGradientDisabled));
     host.setAttribute("data-control-layout", this._controlLayout || "classic");
     host.setAttribute("data-details-alignment", config.details_alignment || "left");
 

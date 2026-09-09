@@ -301,7 +301,8 @@ export const yampCardStyles = css`
     transform: translateZ(0);
   }
 
-  .yamp-card-inner[data-lyrics-active="true"] .full-bleed-artwork-fade {
+  .yamp-card-inner[data-lyrics-active="true"] .full-bleed-artwork-fade,
+  :host([data-disable-artwork-gradient="true"]) .full-bleed-artwork-fade {
     display: none !important;
   }
 
@@ -1776,7 +1777,8 @@ export const yampCardStyles = css`
     );
   }
 
-  .yamp-card-inner[data-lyrics-active="true"] .card-lower-fade {
+  .yamp-card-inner[data-lyrics-active="true"] .card-lower-fade,
+  :host([data-disable-artwork-gradient="true"]) .card-lower-fade {
     display: none !important;
   }
 
