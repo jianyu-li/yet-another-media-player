@@ -1160,16 +1160,16 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       if (!this._compiledJsTemplates[code]) {
         const body = code.includes("return") ? code : `return (${code});`;
         this._compiledJsTemplates[code] = new Function(
-          "hass", "states", "user", "is_state", "state_attr",
+          "hass", "states", "user", "is_state", "state_attr", "context",
           "current", "is_idle", "is_playing", "is_search", "is_grouping",
-          "is_source", "is_lyrics", "is_options", "is_transfer_queue", "is_any_menu_open",
+          "is_source", "is_lyrics", "is_options", "is_transfer_queue", "is_any_menu_open", "is_dark_mode",
           body
         );
       }
       return this._compiledJsTemplates[code](
-        hass, states, user, is_state, state_attr,
+        hass, states, user, is_state, state_attr, context,
         context.current, context.is_idle, context.is_playing, context.is_search, context.is_grouping,
-        context.is_source, context.is_lyrics, context.is_options, context.is_transfer_queue, context.is_any_menu_open
+        context.is_source, context.is_lyrics, context.is_options, context.is_transfer_queue, context.is_any_menu_open, context.is_dark_mode
       );
     } catch (err) {
       console.warn("yamp: failed to evaluate JS template:", templateStr, err);
@@ -4721,6 +4721,10 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _getTemplateContext() {
+    const isDarkMode = Boolean(
+      this.hass?.themes?.darkMode ??
+      (typeof window !== "undefined" && window.matchMedia?.("(prefers-color-scheme: dark)")?.matches)
+    );
     return {
       entity: this.currentEntityId || '',
       is_idle: this._isIdle,
@@ -4732,6 +4736,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       is_options: this._showEntityOptions,
       is_transfer_queue: this._showTransferQueue,
       is_any_menu_open: this.isAnyMenuOpen,
+      is_dark_mode: isDarkMode,
       current: this.currentActivePlaybackEntityId || this.currentEntityId || '',
     };
   }
@@ -6727,6 +6732,9 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     }
     if (this._backgroundImageTemplate && changedProps.has("hass")) {
       this._backgroundImageTemplateNeedsResolve = true;
+    }
+    if (this._fontColorTemplate && changedProps.has("hass")) {
+      this._fontColorTemplateNeedsResolve = true;
     }
     const currentContext = JSON.stringify(this._getTemplateContext());
     this._syncTemplateSubscriptions('action_in_menu', currentContext, this.config?.actions);
@@ -8993,7 +9001,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           >
             ${hasCardBg ? html`
               <div class="card-background-image-layer" style="${cardBgStyle}"></div>
-              <div class="card-background-image-overlay"></div>
+              ${!this._artworkGradientDisabled && !isDirectColorOrGradient ? html`<div class="card-background-image-overlay"></div>` : nothing}
             ` : nothing}
             ${artworkFullBleed && hasBackgroundImage ? html`
               <div class="full-bleed-artwork-bg" style="${sharedBackgroundStyle}"></div>

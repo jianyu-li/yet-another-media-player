@@ -658,6 +658,8 @@ The following configuration keys support templates:
 - **`card_height`**: Dynamically adjust the total height of the card.
 - **`lyrics_background_fade`**: Dynamically control the lyrics overlay background opacity percentage (0-100%).
 - **`idle_image`**: Change the background image shown when the player is idle.
+- **`background_image`**: Set a persistent card background image URL, gradient, or color.
+- **`font_color`**: Dynamically control text and icon color across the card.
 - **`navigation_path`**: Create dynamic navigation URLs (e.g., search IMDb or Genius).
 - **`volume_entity`**: Dynamically select which entity controls volume for a specific player.
 - **`music_assistant_entity`**: Dynamically select the companion Music Assistant entity.
@@ -682,6 +684,7 @@ All templates have access to standard Home Assistant template functions (`states
 | `is_source` | `boolean` | `true` if the source selection list is open. |
 | `is_options` | `boolean` | `true` if the entity options menu is open. |
 | `is_transfer_queue` | `boolean` | `true` if the transfer queue menu is open. |
+| `is_dark_mode` | `boolean` | `true` if Home Assistant is currently in dark mode. |
 
 ## Examples
 
@@ -756,6 +759,35 @@ entities:
         }
         return 'media_player.living_room_atv';
       ]]]
+```
+
+### Theme & Dark Mode Adaptation
+Switch background artwork, image, or font colors automatically based on Home Assistant's dark/light theme.
+
+**Jinja2 (Server-Side)**
+```yaml
+background_image: |
+  {% if is_dark_mode %}
+    /local/image/night_media_card.png
+  {% else %}
+    /local/image/noon_media_card.png
+  {% endif %}
+font_color: |
+  {% if is_dark_mode %} #ffffff {% else %} #222222 {% endif %}
+```
+
+**JavaScript (Client-Side)**
+```yaml
+background_image: |
+  [[[
+    return is_dark_mode
+      ? "url('/local/image/night_media_card.png')"
+      : "url('/local/image/noon_media_card.png')";
+  ]]]
+font_color: |
+  [[[
+    return is_dark_mode ? "#ffffff" : "#222222";
+  ]]]
 ```
 
 ## Controls & Typography

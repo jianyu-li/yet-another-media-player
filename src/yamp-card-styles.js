@@ -307,6 +307,11 @@ export const yampCardStyles = css`
     transform: translateZ(0);
   }
 
+  .yamp-card-inner[data-lyrics-active="true"] .card-background-image-overlay,
+  :host([data-disable-artwork-gradient="true"]) .card-background-image-overlay {
+    display: none !important;
+  }
+
   .full-bleed-artwork-bg {
     position: absolute;
     inset: -50px;

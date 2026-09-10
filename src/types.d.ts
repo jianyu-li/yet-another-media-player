@@ -277,14 +277,23 @@ export interface YampCardConfig {
 export interface TemplateContext {
   is_playing: boolean;
   is_idle: boolean;
-  is_paused: boolean;
-  is_off: boolean;
-  current: HassEntity | null;
-  current_entity: HassEntity | null;
-  activeEntity: string;
-  selectedIndex: number;
-  hass: HomeAssistant;
-  config: YampCardConfig;
+  is_paused?: boolean;
+  is_off?: boolean;
+  is_search?: boolean;
+  is_grouping?: boolean;
+  is_source?: boolean;
+  is_lyrics?: boolean;
+  is_options?: boolean;
+  is_transfer_queue?: boolean;
+  is_any_menu_open?: boolean;
+  is_dark_mode: boolean;
+  entity?: string;
+  current: HassEntity | string | null;
+  current_entity?: HassEntity | null;
+  activeEntity?: string;
+  selectedIndex?: number;
+  hass?: HomeAssistant;
+  config?: YampCardConfig;
 }
 
 export interface MusicAssistantItem {
