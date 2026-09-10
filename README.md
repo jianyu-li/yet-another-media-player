@@ -106,6 +106,7 @@ Below you will find a list of all configuration options.
 | `adaptive_text`            | boolean/array| No           | `false`     | Set to `true` to scale all text, or supply a list of targets (`details`, `menu`, `action_chips`) to choose exactly which sections adapt |
 | `hide_active_entity_label` | boolean      | No           | `false`     | Hide the small entity name label shown at the bottom center when chips are placed in the menu |
 | `details_alignment`        | choice       | No           | `left`      | Align the track title and artist (`left`, `center`, `right`). Set to `none` to completely hide the details section. |
+| `font_color`               | color/string | No           | —           | Custom color for text and icons (hex, rgba, named, or template) ([Supports Templates](#template-support)) |
 | `card_height`              | number/string| No           | —           | Override the card height (in px) ([Supports Templates](#template-support)) |
 | `lyrics_background_fade`   | number/string| No           | `80`        | Opacity percentage (0–100%) for the lyrics overlay background and artwork gradient ([Supports Templates](#template-support)) |
 | `search_view`              | choice       | No           | `list`      | Choose the default layout for search results: `list`, `card`, or `card_minimal` |
@@ -113,6 +114,9 @@ Below you will find a list of all configuration options.
 | `queue_controls_style`     | choice       | No           | `drag_handle` | Style of queue controls: `drag_handle` replaces movement buttons with a single drag handle, `icons` shows classic up/down/next buttons |
 |                                                                                                 |
 | **Artwork**                |              |              |             |                                                                                                 |
+| `background_image`         | image/url/string | No       | —           | Persistent card background image URL, gradient, or color ([Supports Templates](#template-support)) |
+| `background_fit`           | choice       | No           | `cover`     | Control background image scaling: `cover`, `contain`, `fill`, `scale-down`, or `none`           |
+| `background_position`      | choice       | No           | `center center`| Control background image alignment: `center`, `top`, `bottom`, `center left`, `center right`, `top left`, `top right`, `bottom left`, `bottom right` |
 | `artwork_hostname`         | string       | No           | —           | Hostname URL (e.g., `http://192.168.1.50:8123`) prepended to relative artwork URLs; required when Casting to external devices |
 | `artwork_object_fit`       | choice       | No           | `cover`     | Control how artwork scales: `cover`, `contain`, `scaled-contain`, `scaled-contain-alternate`, `fill`, `scale-down`, `none`, or `no_artwork` |
 | `artwork_position`         | choice       | No           | `top center`| Control artwork alignment: `top center`, `center center`, or `bottom center`                     |
