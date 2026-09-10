@@ -1159,7 +1159,6 @@ export const yampCardStyles = css`
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    color: #fff;
   }
 
   :host([data-details-alignment="center"]) .details {
@@ -1917,7 +1916,39 @@ export const yampCardStyles = css`
     color: #fff;
   }
 
-  /* Match Theme mode & Scaled Contain Alternate mode - use theme colors for high contrast in light/dark themes */
+  /* Match Theme mode, custom font color & Scaled Contain Alternate mode - use theme or custom colors */
+  .yamp-card-inner[data-has-font-color="true"] .details,
+  .yamp-card-inner[data-has-font-color="true"] .title,
+  .yamp-card-inner[data-has-font-color="true"] .artist,
+  .yamp-card-inner[data-has-font-color="true"] .source-menu-btn,
+  .yamp-card-inner[data-has-font-color="true"] .source-selected,
+  .yamp-card-inner[data-has-font-color="true"] .controls-row,
+  .yamp-card-inner[data-has-font-color="true"] .button,
+  .yamp-card-inner[data-has-font-color="true"] .modern-button,
+  .yamp-card-inner[data-has-font-color="true"] .vol-stepper span,
+  .yamp-card-inner[data-has-font-color="true"] .vol-label,
+  .yamp-card-inner[data-has-font-color="true"] .more-info-btn ha-icon,
+  .yamp-card-inner[data-has-font-color="true"] .volume-icon-btn,
+  .yamp-card-inner[data-has-font-color="true"] .volume-icon-btn ha-icon,
+  .yamp-card-inner[data-has-font-color="true"] .radio-mode-button,
+  .yamp-card-inner[data-has-font-color="true"] .volume-slider-icon,
+  .yamp-card-inner[data-has-font-color="true"] .timestamps-container,
+  .yamp-card-inner[data-match-theme="true"] .details,
+  .yamp-card-inner[data-match-theme="true"] .title,
+  .yamp-card-inner[data-match-theme="true"] .artist,
+  .yamp-card-inner[data-match-theme="true"] .source-menu-btn,
+  .yamp-card-inner[data-match-theme="true"] .source-selected,
+  .yamp-card-inner[data-match-theme="true"] .controls-row,
+  .yamp-card-inner[data-match-theme="true"] .button,
+  .yamp-card-inner[data-match-theme="true"] .modern-button,
+  .yamp-card-inner[data-match-theme="true"] .vol-stepper span,
+  .yamp-card-inner[data-match-theme="true"] .vol-label,
+  .yamp-card-inner[data-match-theme="true"] .more-info-btn ha-icon,
+  .yamp-card-inner[data-match-theme="true"] .volume-icon-btn,
+  .yamp-card-inner[data-match-theme="true"] .volume-icon-btn ha-icon,
+  .yamp-card-inner[data-match-theme="true"] .radio-mode-button,
+  .yamp-card-inner[data-match-theme="true"] .volume-slider-icon,
+  .yamp-card-inner[data-match-theme="true"] .timestamps-container,
   .yamp-card-inner[data-lyrics-active="true"] .details,
   .yamp-card-inner[data-lyrics-active="true"] .title,
   .yamp-card-inner[data-lyrics-active="true"] .artist,
@@ -1953,6 +1984,8 @@ export const yampCardStyles = css`
     color: var(--primary-text);
   }
 
+  .yamp-card-inner[data-has-font-color="true"] .modern-button,
+  .yamp-card-inner[data-match-theme="true"] .modern-button,
   .yamp-card-inner[data-lyrics-active="true"] .modern-button,
   .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .modern-button {
     background: color-mix(in srgb, var(--primary-text), transparent 85%);
@@ -1960,6 +1993,8 @@ export const yampCardStyles = css`
   }
 
   /* Hamburger icon (span) uses !important in base styles, so we override it here */
+  .yamp-card-inner[data-has-font-color="true"] .more-info-icon,
+  .yamp-card-inner[data-match-theme="true"] .more-info-icon,
   .yamp-card-inner[data-lyrics-active="true"] .more-info-icon,
   .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .more-info-icon {
     color: var(--primary-text) !important;

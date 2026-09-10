@@ -85,6 +85,11 @@ export default {
           title: "Allgemeine Einstellungen",
           description: "Globale Steuerung der Artwork-Anzeige und -Abrufung.",
         },
+        background: {
+          title: "Hintergrundbild",
+          description:
+            "Konfigurieren Sie ein dauerhaftes Hintergrundbild für die Karte hinter den Wiedergabeinhalten.",
+        },
         idle: {
           title: "Artwork im Leerlauf",
           description:
@@ -236,6 +241,8 @@ export default {
         "Verwenden Sie immer die gekoppelte Music Assistant-Entität für Titel, Künstler und Artwork, auch wenn die primäre Entität gerade spielt.",
       show_volume_overlay:
         "Zeige kurz eine große Lautstärkeanzeige über dem Cover an, wenn sich die Lautstärke ändert.",
+      font_color_helper:
+        "Text- und Symbolfarben anpassen. Akzeptiert Hex, CSS-Namen, RGBA oder Vorlagen (Standard: Theme-Farbe).",
       queue_controls_style:
         "Wählen Sie, ob ein Ziehgriff oder einzelne Bewegungstasten für Warteschlangenelemente angezeigt werden sollen.",
     },
@@ -308,7 +315,12 @@ export default {
       card_height: "Kartenhöhe (px)",
       control_layout: "Steuerungs-Layout",
       idle_image: "Ruhebild",
-
+      background_image: "Hintergrundbild",
+      background_image_entity: "Hintergrundbild-Entität",
+      font_color: "Schriftfarbe",
+      font_color_entity: "Schriftfarbe",
+      background_position: "Hintergrundposition",
+      background_fit: "Hintergrundanpassung",
       image_url: "Bild-URL",
       fallback_image_url: "Fallback Bild-URL",
       move_to_main: "Aktion in Haupt-Chips verschieben",
@@ -422,6 +434,24 @@ export default {
       top: "Oben",
       center: "Mitte",
       bottom: "Unten",
+    },
+    background_fit: {
+      cover: "Ausfüllen",
+      contain: "Einpassen",
+      fill: "Dehnen",
+      "scale-down": "Herunterskalieren",
+      none: "Keine",
+    },
+    background_position: {
+      center: "Mitte",
+      top: "Oben",
+      bottom: "Unten",
+      "center left": "Mitte links",
+      "center right": "Mitte rechts",
+      "top left": "Oben links",
+      "top right": "Oben rechts",
+      "bottom left": "Unten links",
+      "bottom right": "Unten rechts",
     },
   },
   card: {

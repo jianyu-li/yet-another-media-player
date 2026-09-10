@@ -85,6 +85,10 @@ export default {
           title: "Splošne nastavitve",
           description: "Globalni nadzor nad prikazom in pridobivanjem grafike.",
         },
+        background: {
+          title: "Slika ozadja",
+          description: "Konfigurirajte trajno sliko ozadja za kartico za vsebino predvajanja.",
+        },
         idle: {
           title: "Grafika v mirovanju",
           description: "Prikaži statično sliko ali posnetek entitete, ko se nič ne predvaja.",
@@ -218,6 +222,8 @@ export default {
         "Za naslov skladbe, izvajalca in grafiko vedno uporabi seznanjeno entiteto Music Assistant, tudi če se predvaja primarna entiteta.",
       show_volume_overlay:
         "Ob spremembi glasnosti za kratek čas prikaže velik indikator glasnosti čez naslovnico.",
+      font_color_helper:
+        "Prilagodite barve besedila in ikon. Sprejema šestnajstiško, imena CSS, rgba ali predloge (privzeto: barva teme).",
       queue_controls_style:
         "Izberite, ali želite prikazati ročaj za vlečenje ali posamezne gumbe za premikanje elementov čakalne vrste.",
     },
@@ -290,7 +296,12 @@ export default {
       card_height: "Višina kartice (px)",
       control_layout: "Postavitev kontrolnikov",
       idle_image: "Slika v mirovanju",
-
+      background_image: "Slika ozadja",
+      background_image_entity: "Entiteta slike ozadja",
+      font_color: "Barva pisave",
+      font_color_entity: "Barva pisave",
+      background_position: "Položaj ozadja",
+      background_fit: "Prilagajanje ozadja",
       image_url: "URL slike",
       fallback_image_url: "Rezervni URL slike",
       move_to_main: "Premakni dejanje na glavno vrstico",
@@ -404,6 +415,24 @@ export default {
       top: "Zgoraj",
       center: "Sredina",
       bottom: "Spodaj",
+    },
+    background_fit: {
+      cover: "Prekrij",
+      contain: "Prilagodi",
+      fill: "Zapolni",
+      "scale-down": "Pomanjšaj",
+      none: "Brez",
+    },
+    background_position: {
+      center: "Sredina",
+      top: "Zgoraj",
+      bottom: "Spodaj",
+      "center left": "Sredina levo",
+      "center right": "Sredina desno",
+      "top left": "Zgoraj levo",
+      "top right": "Zgoraj desno",
+      "bottom left": "Spodaj levo",
+      "bottom right": "Spodaj desno",
     },
   },
   card: {

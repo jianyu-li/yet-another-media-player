@@ -6742,7 +6742,6 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._syncTemplateSubscriptions('control_layout', currentContext, this.config?.control_layout);
     this._syncTemplateSubscriptions('card_height', currentContext, this.config?.card_height);
     this._syncTemplateSubscriptions('lyrics_background_fade', currentContext, this.config?.lyrics_background_fade);
-    this._syncTemplateSubscriptions('font_color', currentContext, this.config?.font_color);
     this._syncEntityTemplateSubscriptions('ma', currentContext);
     this._syncEntityTemplateSubscriptions('vol', currentContext);
     this._syncEntityTemplateSubscriptions('remote', currentContext);
@@ -8519,7 +8518,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     if (this._backgroundImageTemplate && this._backgroundImageTemplateNeedsResolve && !this._resolvingBackgroundImageTemplate) {
       void this._resolveBackgroundImageTemplate();
     }
-    if (this._fontColorTemplateNeedsResolve && !this._resolvingFontColorTemplate) {
+    if (this._fontColorTemplate && this._fontColorTemplateNeedsResolve && !this._resolvingFontColorTemplate) {
       void this._resolveFontColorTemplate();
     }
     // Idle image "picture frame" mode when idle
@@ -8983,13 +8982,14 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           style=${(hasCustomCardHeight && (!collapsed || this._alwaysCollapsed)) ? `height:${customCardHeight}px;` : nothing}>
           <div
             data-match-theme="${String(this.config.match_theme === true)}"
+            data-has-font-color="${String(hasFontColor)}"
             data-artwork-fit="${activeArtworkFit}"
             data-has-background-image="${String(hasCardBg)}"
             data-lyrics-active="${String(this._lyricsActive === true)}"
             style=${[
               (hasCustomCardHeight && (!collapsed || this._alwaysCollapsed)) ? `height:${customCardHeight}px;` : null,
               this._lyricsActive ? `--yamp-lyrics-fade: ${lyricsFade}%; --yamp-lyrics-backdrop-filter: ${lyricsBackdropFilter}` : null,
-              hasFontColor ? `--primary-text: ${cardFontColor}; --primary-text-color: ${cardFontColor}; --yamp-icon-color: ${cardFontColor}; --secondary-text-color: ${cardFontColor};` : null
+              hasFontColor ? `--primary-text: ${cardFontColor}; --primary-text-color: ${cardFontColor}; --secondary-text: ${cardFontColor}; --secondary-text-color: ${cardFontColor}; --yamp-icon-color: ${cardFontColor};` : null
             ].filter(Boolean).join('; ') || nothing}
             class=${classMap({
       "yamp-card-inner": true,

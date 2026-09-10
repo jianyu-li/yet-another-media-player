@@ -85,6 +85,11 @@ export default {
           title: "Algemene Instellingen",
           description: "Globale instellingen voor hoe artwork wordt weergegeven en opgehaald.",
         },
+        background: {
+          title: "Achtergrondafbeelding",
+          description:
+            "Configureer een persistente achtergrondafbeelding voor de kaart achter de afspeelcontent.",
+        },
         idle: {
           title: "Artwork bij Inactiviteit",
           description:
@@ -246,6 +251,8 @@ export default {
         "Gebruik altijd de gekoppelde Music Assistant-entiteit voor de tracktitel, artiest en artwork, zelfs als de primaire entiteit wordt afgespeeld.",
       show_volume_overlay:
         "Geef kort een grote volume-indicator weer over het artwork wanneer het volumeniveau verandert.",
+      font_color_helper:
+        "Pas tekst- en pictogramkleuren aan. Accepteert hex, CSS-namen, rgba of sjablonen (standaard: themakleur).",
       queue_controls_style:
         "Kies of u een sleephandgreep of individuele bewegingsknoppen wilt weergeven voor wachtrij-items.",
     },
@@ -318,7 +325,12 @@ export default {
       card_height: "Kaarthoogte (px)",
       control_layout: "Knoppen Lay-out",
       idle_image: "Rustafbeelding",
-
+      background_image: "Achtergrondafbeelding",
+      background_image_entity: "Achtergrondafbeelding Entiteit",
+      font_color: "Letterkleur",
+      font_color_entity: "Letterkleur",
+      background_position: "Achtergrondpositie",
+      background_fit: "Achtergrondpassing",
       image_url: "Afbeelding URL",
       fallback_image_url: "Fallback Afbeelding URL",
       move_to_main: "Verplaats actie naar hoofdchips",
@@ -432,6 +444,24 @@ export default {
       top: "Boven",
       center: "Midden",
       bottom: "Onder",
+    },
+    background_fit: {
+      cover: "Bedekken",
+      contain: "Passend maken",
+      fill: "Vullen",
+      "scale-down": "Verkleinen",
+      none: "Geen",
+    },
+    background_position: {
+      center: "Midden",
+      top: "Boven",
+      bottom: "Onder",
+      "center left": "Midden links",
+      "center right": "Midden rechts",
+      "top left": "Boven links",
+      "top right": "Boven rechts",
+      "bottom left": "Onder links",
+      "bottom right": "Onder rechts",
     },
   },
   card: {
