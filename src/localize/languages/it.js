@@ -86,6 +86,11 @@ export default {
           title: "Impostazioni generali",
           description: "Controlli globali per la copertina.",
         },
+        background: {
+          title: "Immagine di sfondo",
+          description:
+            "Configura un'immagine di sfondo persistente per la scheda dietro il contenuto in riproduzione.",
+        },
         idle: {
           title: "Copertina in riposo",
           description: "Mostra un'immagine statica quando non c'è riproduzione.",
@@ -220,6 +225,8 @@ export default {
         "Utilizza sempre l'entità Music Assistant associata per il titolo del brano, l'artista e l'artwork, anche se l'entità principale è in riproduzione.",
       show_volume_overlay:
         "Visualizza brevemente un grande indicatore del volume sopra la copertina quando il livello del volume cambia.",
+      font_color_helper:
+        "Personalizza i colori di testo e icone. Accetta esadecimale, nomi CSS, rgba o modelli (predefinito: colore del tema).",
       queue_controls_style:
         "Scegli se mostrare una maniglia di trascinamento o pulsanti di movimento singoli per gli elementi della coda.",
     },
@@ -292,7 +299,12 @@ export default {
       card_height: "Altezza (px)",
       control_layout: "Design",
       idle_image: "Immagine di inattività",
-
+      background_image: "Immagine di sfondo",
+      background_image_entity: "Entità immagine di sfondo",
+      font_color: "Colore del carattere",
+      font_color_entity: "Colore del carattere",
+      background_position: "Posizione dello sfondo",
+      background_fit: "Adattamento sfondo",
       image_url: "URL immagine",
       fallback_image_url: "URL fallback",
       move_to_main: "Sposta in chip principali",
@@ -406,6 +418,24 @@ export default {
       top: "In alto",
       center: "Centro",
       bottom: "In basso",
+    },
+    background_fit: {
+      cover: "Copri",
+      contain: "Contieni",
+      fill: "Riempi",
+      "scale-down": "Riduci",
+      none: "Nessuno",
+    },
+    background_position: {
+      center: "Centro",
+      top: "In alto",
+      bottom: "In basso",
+      "center left": "Al centro a sinistra",
+      "center right": "Al centro a destra",
+      "top left": "In alto a sinistra",
+      "top right": "In alto a destra",
+      "bottom left": "In basso a sinistra",
+      "bottom right": "In basso a destra",
     },
   },
   card: {

@@ -380,6 +380,37 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     return typeof val === "string" && /^[a-z_]+\.[a-zA-Z0-9_]+$/.test(val.trim());
   }
 
+  _toHexColor(val) {
+    if (!val || typeof val !== "string") return "#ffffff";
+    const trimmed = val.trim().toLowerCase();
+    if (/^#[0-9a-f]{6}$/.test(trimmed)) return trimmed;
+    if (/^#[0-9a-f]{3}$/.test(trimmed)) {
+      return "#" + trimmed[1] + trimmed[1] + trimmed[2] + trimmed[2] + trimmed[3] + trimmed[3];
+    }
+    const colorMap = {
+      black: "#000000",
+      white: "#ffffff",
+      red: "#ff0000",
+      green: "#008000",
+      blue: "#0000ff",
+      yellow: "#ffff00",
+      cyan: "#00ffff",
+      magenta: "#ff00ff",
+      orange: "#ffa500",
+      gray: "#808080",
+      grey: "#808080",
+    };
+    if (colorMap[trimmed]) return colorMap[trimmed];
+    const rgbMatch = trimmed.match(/^rgba?\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)/);
+    if (rgbMatch) {
+      const r = Math.min(255, parseInt(rgbMatch[1], 10)).toString(16).padStart(2, "0");
+      const g = Math.min(255, parseInt(rgbMatch[2], 10)).toString(16).padStart(2, "0");
+      const b = Math.min(255, parseInt(rgbMatch[3], 10)).toString(16).padStart(2, "0");
+      return `#${r}${g}${b}`;
+    }
+    return "#ffffff";
+  }
+
   setConfig(config) {
     this._yamlConfig = { ...config };
     const rawEntities = config.entities ?? [];
@@ -1452,6 +1483,205 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
 
         <div class="config-section">
           <div class="section-header">
+            <div class="section-title">${localize("editor.sections.artwork.background.title")}</div>
+            <div class="section-description">${localize("editor.sections.artwork.background.description")}</div>
+          </div>
+          ${
+            this._isTemplateMode("background_image", this._config.background_image)
+              ? html`
+                  <div class="form-row">
+                    <div class="editor-field-wrapper">
+                      <div class="grow-children" style="flex-direction: column;">
+                        <span class="form-label"
+                          >${localize("editor.fields.background_image_entity")}</span
+                        >
+                        <ha-code-editor
+                          lint
+                          .hass=${this.hass}
+                          mode="jinja2"
+                          autocomplete-entities
+                          label="${localize("editor.sections.artwork.background.title")}"
+                          .value=${this._config.background_image ?? ""}
+                          @value-changed=${(e) => this._updateConfig("background_image", e.detail.value)}
+                        ></ha-code-editor>
+                      </div>
+                      <div class="field-actions">
+                        ${this._renderTemplateToggle(
+                          "background_image",
+                          this._config.background_image,
+                          (v) => this._updateConfig("background_image", v)
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                `
+              : html`
+                  <div class="form-row form-row-multi-column">
+                    <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
+                      <ha-switch
+                        id="background-image-url-toggle"
+                        .checked=${
+                          this._useBackgroundImageUrl ??
+                          this._looksLikeUrlOrPath(this._config.background_image)
+                        }
+                        @change=${(e) => {
+                          this._useBackgroundImageUrl = e.target.checked;
+                          this._updateConfig("background_image", "");
+                        }}
+                      ></ha-switch>
+                      <label for="background-image-url-toggle"
+                        >${localize("editor.labels.use_url_path")}</label
+                      >
+                    </div>
+                    <div style="flex: 2; display: flex; align-items: center; gap: 8px;">
+                      <div class="editor-field-wrapper">
+                        <div class="grow-children">
+                          ${
+                            (this._useBackgroundImageUrl ??
+                            this._looksLikeUrlOrPath(this._config.background_image))
+                              ? html`
+                                  <ha-selector
+                                    .hass=${this.hass}
+                                    class="full-width"
+                                    .selector=${{ text: {} }}
+                                    .value=${this._config.background_image ?? ""}
+                                    @value-changed=${(e) =>
+                                      this._updateConfig("background_image", e.detail.value)}
+                                    .label=${localize("editor.fields.image_url")}
+                                    placeholder="https://... or /local/..."
+                                    helper="${localize("editor.subtitles.image_url_helper")}"
+                                  ></ha-selector>
+                                `
+                              : html`
+                                  <ha-generic-picker
+                                    class="full-width"
+                                    .hass=${this.hass}
+                                    .value=${this._config.background_image ?? ""}
+                                    .label=${localize("editor.fields.background_image_entity")}
+                                    .valueRenderer=${(v) => this._entityValueRenderer(v)}
+                                    .rowRenderer=${(item) => this._entityRowRenderer(item)}
+                                    .getItems=${this._getEntityItems(["camera", "image"])}
+                                    @value-changed=${(e) =>
+                                      this._updateConfig("background_image", e.detail.value)}
+                                    allow-custom-value
+                                  ></ha-generic-picker>
+                                `
+                          }
+                        </div>
+                        <div class="field-actions">
+                          ${this._renderTemplateToggle(
+                            "background_image",
+                            this._config.background_image,
+                            (v) => this._updateConfig("background_image", v)
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                `
+          }
+          <div class="form-row form-row-multi-column" style="${!this._config.background_image ? "opacity: 0.4; pointer-events: none;" : ""}">
+            <div class="grow-children">
+              <ha-selector
+                .hass=${this.hass}
+                label="${localize("editor.fields.background_fit")}"
+                .disabled=${!this._config.background_image}
+                .selector=${{
+                  select: {
+                    mode: "dropdown",
+                    options: [
+                      {
+                        value: "cover",
+                        label: (localize("editor.background_fit.cover") || "Cover") + " (default)",
+                      },
+                      {
+                        value: "contain",
+                        label: localize("editor.background_fit.contain") || "Contain",
+                      },
+                      { value: "fill", label: localize("editor.background_fit.fill") || "Fill" },
+                      {
+                        value: "scale-down",
+                        label: localize("editor.background_fit.scale-down") || "Scale Down",
+                      },
+                      { value: "none", label: localize("editor.background_fit.none") || "None" },
+                    ],
+                  },
+                }}
+                .value=${this._config.background_fit ?? "cover"}
+                @value-changed=${(e) => {
+                  const value = e.detail.value;
+                  this._updateConfig("background_fit", value === "cover" ? undefined : value);
+                }}
+              ></ha-selector>
+            </div>
+            <div class="grow-children">
+              <ha-selector
+                .hass=${this.hass}
+                label="${localize("editor.fields.background_position")}"
+                .disabled=${!this._config.background_image}
+                .selector=${{
+                  select: {
+                    mode: "dropdown",
+                    options: [
+                      {
+                        value: "center center",
+                        label:
+                          (localize("editor.background_position.center") || "Center") +
+                          " (default)",
+                      },
+                      {
+                        value: "top center",
+                        label: localize("editor.background_position.top") || "Top",
+                      },
+                      {
+                        value: "bottom center",
+                        label: localize("editor.background_position.bottom") || "Bottom",
+                      },
+                      {
+                        value: "center left",
+                        label: localize("editor.background_position.center left") || "Center Left",
+                      },
+                      {
+                        value: "center right",
+                        label:
+                          localize("editor.background_position.center right") || "Center Right",
+                      },
+                      {
+                        value: "top left",
+                        label: localize("editor.background_position.top left") || "Top Left",
+                      },
+                      {
+                        value: "top right",
+                        label: localize("editor.background_position.top right") || "Top Right",
+                      },
+                      {
+                        value: "bottom left",
+                        label: localize("editor.background_position.bottom left") || "Bottom Left",
+                      },
+                      {
+                        value: "bottom right",
+                        label:
+                          localize("editor.background_position.bottom right") || "Bottom Right",
+                      },
+                    ],
+                  },
+                }}
+                .value=${this._config.background_position ?? "center center"}
+                @value-changed=${(e) => {
+                  const value = e.detail.value;
+                  this._updateConfig(
+                    "background_position",
+                    value === "center center" ? undefined : value
+                  );
+                }}
+              ></ha-selector>
+            </div>
+          </div>
+
+
+        </div>
+        <div class="config-section">
+          <div class="section-header">
             <div class="section-title">${localize("editor.sections.artwork.idle.title")}</div>
             <div class="section-description">${localize("editor.sections.artwork.idle.description")}</div>
           </div>
@@ -1512,7 +1742,8 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                     .value=${this._config.idle_image ?? ""}
                                     @value-changed=${(e) =>
                                       this._updateConfig("idle_image", e.detail.value)}
-                                    label="e.g., https://example.com/image.jpg or /local/custom/image.jpg"
+                                    .label=${localize("editor.fields.image_url")}
+                                    placeholder="https://... or /local/..."
                                     helper="${localize("editor.subtitles.image_url_helper")}"
                                   ></ha-selector>
                                 `
@@ -2672,6 +2903,67 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             label="${localize("editor.fields.appearance")}"
             @value-changed=${(e) => this._updateConfig("appearance", e.detail.value)}
           ></ha-selector>
+        </div>
+
+        <div class="form-row" data-search-keys="font_color font color appearance text_color">
+          <div class="editor-field-wrapper">
+            ${
+              this._isTemplateMode("font_color", this._config.font_color)
+                ? html`
+                    <div class="grow-children" style="flex-direction: column;">
+                      <span class="form-label">${localize("editor.fields.font_color_entity")}</span>
+                      <ha-code-editor
+                        lint
+                        .hass=${this.hass}
+                        mode="jinja2"
+                        autocomplete-entities
+                        label="${localize("editor.fields.font_color")}"
+                        .value=${this._config.font_color ?? ""}
+                        @value-changed=${(e) => this._updateConfig("font_color", e.detail.value)}
+                      ></ha-code-editor>
+                    </div>
+                  `
+                : html`
+                    <div
+                      class="grow-children"
+                      style="display: flex; align-items: flex-start; gap: 12px;"
+                    >
+                      <div
+                        style="position: relative; width: 36px; height: 36px; border-radius: 50%; overflow: hidden; border: 2px solid var(--divider-color, rgba(255,255,255,0.2)); flex: 0 0 36px; cursor: pointer; margin-top: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.2);"
+                        title="${localize("editor.fields.font_color")}"
+                      >
+                        <input
+                          type="color"
+                          .value=${this._toHexColor(this._config.font_color)}
+                          @input=${(e) => this._updateConfig("font_color", e.target.value)}
+                          style="position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; cursor: pointer; border: none; padding: 0; background: transparent;"
+                        />
+                      </div>
+                      <ha-selector
+                        .hass=${this.hass}
+                        class="full-width"
+                        style="flex: 1;"
+                        .selector=${{ text: {} }}
+                        .value=${this._config.font_color ?? ""}
+                        label="${localize("editor.fields.font_color")}"
+                        helper="${localize("editor.subtitles.font_color_helper") || "e.g., #ffffff, rgba(255, 255, 255, 0.9), white"}"
+                        @value-changed=${(e) => this._updateConfig("font_color", e.detail.value)}
+                      ></ha-selector>
+                    </div>
+                  `
+            }
+            <div class="field-actions">
+              ${this._renderTemplateToggle("font_color", this._config.font_color, (v) =>
+                this._updateConfig("font_color", v)
+              )}
+              <ha-icon
+                class="icon-button-small ${!this._config.font_color ? "icon-button-disabled" : ""}"
+                icon="mdi:restore"
+                title="${localize("common.reset_default")}"
+                @click=${() => this._updateConfig("font_color", undefined)}
+              ></ha-icon>
+            </div>
+          </div>
         </div>
 
         <div

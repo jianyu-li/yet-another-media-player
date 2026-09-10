@@ -86,6 +86,11 @@ export default {
           title: "Paramètres Généraux",
           description: "Contrôles globaux pour l'affichage des illustrations.",
         },
+        background: {
+          title: "Image d'arrière-plan",
+          description:
+            "Configurez une image d'arrière-plan persistante pour la carte derrière le contenu en cours de lecture.",
+        },
         idle: {
           title: "Illustration au Repos",
           description: "Afficher une image statique lorsque rien n'est en lecture.",
@@ -227,6 +232,8 @@ export default {
         "Toujours utiliser l'entité Music Assistant associée pour le titre de la piste, l'artiste et l'image, même si l'entité principale est en cours de lecture.",
       show_volume_overlay:
         "Affiche brièvement un grand indicateur de volume sur l'illustration lorsque le niveau de volume change.",
+      font_color_helper:
+        "Personnalisez les couleurs du texte et des icônes. Accepte l'hexadécimal, les noms CSS, rgba ou les modèles (par défaut: couleur du thème).",
       queue_controls_style:
         "Choisissez d'afficher une poignée de glissement ou des boutons de déplacement individuels pour les éléments de la file d'attente.",
     },
@@ -299,7 +306,12 @@ export default {
       card_height: "Hauteur (px)",
       control_layout: "Mise en page",
       idle_image: "Image de veille",
-
+      background_image: "Image d'arrière-plan",
+      background_image_entity: "Entité d'image d'arrière-plan",
+      font_color: "Couleur de police",
+      font_color_entity: "Couleur de police",
+      background_position: "Position de l'arrière-plan",
+      background_fit: "Ajustement de l'arrière-plan",
       image_url: "URL image",
       fallback_image_url: "URL de secours",
       move_to_main: "Mettre dans les jetons principaux",
@@ -413,6 +425,24 @@ export default {
       top: "Haut",
       center: "Centre",
       bottom: "Bas",
+    },
+    background_fit: {
+      cover: "Couvrir",
+      contain: "Contenir",
+      fill: "Remplir",
+      "scale-down": "Réduire",
+      none: "Aucun",
+    },
+    background_position: {
+      center: "Centre",
+      top: "Haut",
+      bottom: "Bas",
+      "center left": "Centre gauche",
+      "center right": "Centre droite",
+      "top left": "Haut gauche",
+      "top right": "Haut droite",
+      "bottom left": "Bas gauche",
+      "bottom right": "Bas droite",
     },
   },
   card: {

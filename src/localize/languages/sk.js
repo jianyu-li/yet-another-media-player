@@ -85,6 +85,10 @@ export default {
           title: "Všeobecné nastavenia",
           description: "Globálne ovládanie toho, ako sa grafika zobrazuje a získava.",
         },
+        background: {
+          title: "Obrázok pozadia",
+          description: "Nakonfigurujte trvalý obrázok pozadia pre kartu za obsahom prehrávania.",
+        },
         idle: {
           title: "Grafika pri nečinnosti",
           description: "Zobraziť statický obrázok alebo snímku entity, keď sa nič neprehráva.",
@@ -237,6 +241,8 @@ export default {
         "Vždy používajte spárovanú entitu Music Assistant pre názov skladby, interpreta a grafiku, aj keď sa prehráva primárna entita.",
       show_volume_overlay:
         "Pri zmene úrovne hlasitosti nakrátko zobrazí veľký ukazovateľ hlasitosti cez grafiku albumu.",
+      font_color_helper:
+        "Prispôsobte farby textu a ikon. Prijíma hex, názvy CSS, rgba alebo šablóny (predvolené: farba motívu).",
       queue_controls_style:
         "Vyberte, či sa má pre položky fronty zobraziť úchyt na ťahanie alebo jednotlivé tlačidlá pohybu.",
     },
@@ -309,7 +315,12 @@ export default {
       card_height: "Výška karty (px)",
       control_layout: "Rozloženie ovládania",
       idle_image: "Obrázok nečinnosti",
-
+      background_image: "Obrázok pozadia",
+      background_image_entity: "Entita obrázka pozadia",
+      font_color: "Farba písma",
+      font_color_entity: "Farba písma",
+      background_position: "Pozícia pozadia",
+      background_fit: "Prispôsobenie pozadia",
       image_url: "URL obrázka",
       fallback_image_url: "Záložná URL obrázka",
       move_to_main: "Presunúť do hlavných čipov",
@@ -423,6 +434,24 @@ export default {
       top: "Hore",
       center: "Stred",
       bottom: "Dole",
+    },
+    background_fit: {
+      cover: "Pokryť",
+      contain: "Zmestiť",
+      fill: "Vyplniť",
+      "scale-down": "Zmenšiť",
+      none: "Žiadne",
+    },
+    background_position: {
+      center: "Stred",
+      top: "Hore",
+      bottom: "Dole",
+      "center left": "V strede vľavo",
+      "center right": "V strede vpravo",
+      "top left": "Vľavo hore",
+      "top right": "Vpravo hore",
+      "bottom left": "Vľavo dole",
+      "bottom right": "Vpravo dole",
     },
   },
   card: {

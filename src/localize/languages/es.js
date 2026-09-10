@@ -86,6 +86,11 @@ export default {
           title: "Ajustes generales",
           description: "Controles globales para la portada.",
         },
+        background: {
+          title: "Imagen de fondo",
+          description:
+            "Configura una imagen de fondo persistente para la tarjeta detrás del contenido de reproducción.",
+        },
         idle: {
           title: "Portada en reposo",
           description: "Mostrar imagen estática cuando nada se reproduce.",
@@ -222,6 +227,8 @@ export default {
         "Utilizar siempre la entidad de Music Assistant emparejada para el título de la pista, el artista y el arte, incluso si la entidad primaria está reproduciendo.",
       show_volume_overlay:
         "Muestra brevemente un indicador de volumen grande sobre la carátula cuando cambia el nivel de volumen.",
+      font_color_helper:
+        "Personaliza los colores del texto y los iconos. Acepta hex, nombres CSS, rgba o plantillas (predeterminado: color del tema).",
       queue_controls_style:
         "Elige si mostrar un tirador de arrastre o botones de movimento individuales para los elementos de la cola.",
     },
@@ -294,7 +301,12 @@ export default {
       card_height: "Altura (px)",
       control_layout: "Diseño",
       idle_image: "Imagen de reposo",
-
+      background_image: "Imagen de fondo",
+      background_image_entity: "Entidad de imagen de fondo",
+      font_color: "Color de fuente",
+      font_color_entity: "Color de fuente",
+      background_position: "Posición del fondo",
+      background_fit: "Ajuste del fondo",
       image_url: "URL imagen",
       fallback_image_url: "URL de respaldo",
       move_to_main: "Mover a chips principales",
@@ -408,6 +420,24 @@ export default {
       top: "Arriba",
       center: "Centro",
       bottom: "Abajo",
+    },
+    background_fit: {
+      cover: "Cubrir",
+      contain: "Contener",
+      fill: "Rellenar",
+      "scale-down": "Reducir escala",
+      none: "Ninguno",
+    },
+    background_position: {
+      center: "Centro",
+      top: "Arriba",
+      bottom: "Abajo",
+      "center left": "Centro izquierda",
+      "center right": "Centro derecha",
+      "top left": "Arriba izquierda",
+      "top right": "Arriba derecha",
+      "bottom left": "Abajo izquierda",
+      "bottom right": "Abajo derecha",
     },
   },
   card: {

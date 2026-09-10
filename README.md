@@ -106,6 +106,7 @@ Below you will find a list of all configuration options.
 | `adaptive_text`            | boolean/array| No           | `false`     | Set to `true` to scale all text, or supply a list of targets (`details`, `menu`, `action_chips`) to choose exactly which sections adapt |
 | `hide_active_entity_label` | boolean      | No           | `false`     | Hide the small entity name label shown at the bottom center when chips are placed in the menu |
 | `details_alignment`        | choice       | No           | `left`      | Align the track title and artist (`left`, `center`, `right`). Set to `none` to completely hide the details section. |
+| `font_color`               | color/string | No           | —           | Custom color for text and icons (hex, rgba, named, or template) ([Supports Templates](#template-support)) |
 | `card_height`              | number/string| No           | —           | Override the card height (in px) ([Supports Templates](#template-support)) |
 | `lyrics_background_fade`   | number/string| No           | `80`        | Opacity percentage (0–100%) for the lyrics overlay background and artwork gradient ([Supports Templates](#template-support)) |
 | `search_view`              | choice       | No           | `list`      | Choose the default layout for search results: `list`, `card`, or `card_minimal` |
@@ -113,6 +114,9 @@ Below you will find a list of all configuration options.
 | `queue_controls_style`     | choice       | No           | `drag_handle` | Style of queue controls: `drag_handle` replaces movement buttons with a single drag handle, `icons` shows classic up/down/next buttons |
 |                                                                                                 |
 | **Artwork**                |              |              |             |                                                                                                 |
+| `background_image`         | image/url/string | No       | —           | Persistent card background image URL, gradient, or color ([Supports Templates](#template-support)) |
+| `background_fit`           | choice       | No           | `cover`     | Control background image scaling: `cover`, `contain`, `fill`, `scale-down`, or `none`           |
+| `background_position`      | choice       | No           | `center center`| Control background image alignment: `center`, `top`, `bottom`, `center left`, `center right`, `top left`, `top right`, `bottom left`, `bottom right` |
 | `artwork_hostname`         | string       | No           | —           | Hostname URL (e.g., `http://192.168.1.50:8123`) prepended to relative artwork URLs; required when Casting to external devices |
 | `artwork_object_fit`       | choice       | No           | `cover`     | Control how artwork scales: `cover`, `contain`, `scaled-contain`, `scaled-contain-alternate`, `fill`, `scale-down`, `none`, or `no_artwork` |
 | `artwork_position`         | choice       | No           | `top center`| Control artwork alignment: `top center`, `center center`, or `bottom center`                     |
@@ -658,6 +662,8 @@ The following configuration keys support templates:
 - **`card_height`**: Dynamically adjust the total height of the card.
 - **`lyrics_background_fade`**: Dynamically control the lyrics overlay background opacity percentage (0-100%).
 - **`idle_image`**: Change the background image shown when the player is idle.
+- **`background_image`**: Set a persistent card background image URL, gradient, or color.
+- **`font_color`**: Dynamically control text and icon color across the card.
 - **`navigation_path`**: Create dynamic navigation URLs (e.g., search IMDb or Genius).
 - **`volume_entity`**: Dynamically select which entity controls volume for a specific player.
 - **`music_assistant_entity`**: Dynamically select the companion Music Assistant entity.
@@ -682,6 +688,7 @@ All templates have access to standard Home Assistant template functions (`states
 | `is_source` | `boolean` | `true` if the source selection list is open. |
 | `is_options` | `boolean` | `true` if the entity options menu is open. |
 | `is_transfer_queue` | `boolean` | `true` if the transfer queue menu is open. |
+| `is_dark_mode` | `boolean` | `true` if Home Assistant is currently in dark mode. |
 
 ## Examples
 
@@ -756,6 +763,35 @@ entities:
         }
         return 'media_player.living_room_atv';
       ]]]
+```
+
+### Theme & Dark Mode Adaptation
+Switch background artwork, image, or font colors automatically based on Home Assistant's dark/light theme.
+
+**Jinja2 (Server-Side)**
+```yaml
+background_image: |
+  {% if is_dark_mode %}
+    /local/image/night_media_card.png
+  {% else %}
+    /local/image/noon_media_card.png
+  {% endif %}
+font_color: |
+  {% if is_dark_mode %} #ffffff {% else %} #222222 {% endif %}
+```
+
+**JavaScript (Client-Side)**
+```yaml
+background_image: |
+  [[[
+    return is_dark_mode
+      ? "url('/local/image/night_media_card.png')"
+      : "url('/local/image/noon_media_card.png')";
+  ]]]
+font_color: |
+  [[[
+    return is_dark_mode ? "#ffffff" : "#222222";
+  ]]]
 ```
 
 ## Controls & Typography

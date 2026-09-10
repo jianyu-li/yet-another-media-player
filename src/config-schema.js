@@ -135,6 +135,10 @@ export const CARD_CONFIG_DEFAULTS = Object.freeze({
   idle_timeout_ms: DEFAULT_IDLE_TIMEOUT_MS,
   idle_screen: "default",
   idle_image: "",
+  background_image: "",
+  font_color: "",
+  background_position: "center center",
+  background_fit: "cover",
   artwork_position: "top center",
   artwork_object_fit: "cover",
   extend_artwork: false,
@@ -198,6 +202,8 @@ export const TEMPLATE_SUPPORTED_FIELDS = Object.freeze(
     "subtitle",
     "idle_artwork",
     "idle_image",
+    "background_image",
+    "font_color",
     "lyrics_background_fade",
   ])
 );

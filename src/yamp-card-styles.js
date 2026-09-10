@@ -244,7 +244,9 @@ export const yampCardStyles = css`
   }
 
   ha-card.yamp-card {
-    display: block;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
     border-radius: var(--border-radius);
     box-shadow: var(--ha-card-box-shadow, none);
     background: transparent;
@@ -258,8 +260,12 @@ export const yampCardStyles = css`
   }
 
   /* Static background color fallback for inset artwork layouts */
-  ha-card.yamp-card:has(> .yamp-card-inner[data-artwork-fit="scaled-contain"]),
-  ha-card.yamp-card:has(> .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"]) {
+  ha-card.yamp-card:has(
+      > .yamp-card-inner[data-has-background-image="false"][data-artwork-fit="scaled-contain"]
+    ),
+  ha-card.yamp-card:has(
+      > .yamp-card-inner[data-has-background-image="false"][data-artwork-fit="scaled-contain-alternate"]
+    ) {
     background: var(--card-bg);
   }
 
@@ -267,6 +273,8 @@ export const yampCardStyles = css`
     position: relative;
     z-index: ${Z_LAYERS.FLOATING_ELEMENT};
     height: 100%;
+    min-height: 100%;
+    flex: 1 1 100%;
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -274,6 +282,34 @@ export const yampCardStyles = css`
     border-radius: var(--border-radius);
     clip-path: inset(0 round var(--border-radius));
     transform: translateZ(0);
+  }
+
+  .card-background-image-layer {
+    position: absolute;
+    inset: 0;
+    z-index: ${Z_LAYERS.MEDIA_BACKGROUND};
+    background-repeat: no-repeat;
+    pointer-events: none;
+    transform: translateZ(0);
+  }
+
+  .card-background-image-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: ${Z_LAYERS.MEDIA_BACKGROUND};
+    pointer-events: none;
+    background: linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0.2) 0%,
+      rgba(0, 0, 0, 0.4) 50%,
+      rgba(0, 0, 0, 0.6) 100%
+    );
+    transform: translateZ(0);
+  }
+
+  .yamp-card-inner[data-lyrics-active="true"] .card-background-image-overlay,
+  :host([data-disable-artwork-gradient="true"]) .card-background-image-overlay {
+    display: none !important;
   }
 
   .full-bleed-artwork-bg {
@@ -1123,7 +1159,6 @@ export const yampCardStyles = css`
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
-    color: #fff;
   }
 
   :host([data-details-alignment="center"]) .details {
@@ -1809,18 +1844,20 @@ export const yampCardStyles = css`
     .card-lower-content
     > :not(.card-artwork-spacer):not(.in-menu-active-label):not(.more-info-menu):not(
       .collapsed-artwork-container
-    ) {
+    ):not(.collapsed-progress-bar) {
     position: relative;
   }
 
   .yamp-card-inner[data-lyrics-active="true"] .in-menu-active-label,
   .yamp-card-inner[data-lyrics-active="true"] .more-info-menu.volume-collapsed,
-  .yamp-card-inner[data-lyrics-active="true"] .collapsed-artwork-container {
+  .yamp-card-inner[data-lyrics-active="true"] .collapsed-artwork-container,
+  .yamp-card-inner[data-lyrics-active="true"] .collapsed-progress-bar {
     position: absolute !important;
     z-index: ${Z_LAYERS.FLOATING_CONTROLS};
   }
 
-  .yamp-card-inner[data-lyrics-active="true"] .in-menu-active-label {
+  .yamp-card-inner[data-lyrics-active="true"] .in-menu-active-label,
+  .yamp-card-inner[data-lyrics-active="true"] .collapsed-progress-bar {
     pointer-events: none !important;
   }
 
@@ -1881,7 +1918,39 @@ export const yampCardStyles = css`
     color: #fff;
   }
 
-  /* Match Theme mode & Scaled Contain Alternate mode - use theme colors for high contrast in light/dark themes */
+  /* Match Theme mode, custom font color & Scaled Contain Alternate mode - use theme or custom colors */
+  .yamp-card-inner[data-has-font-color="true"] .details,
+  .yamp-card-inner[data-has-font-color="true"] .title,
+  .yamp-card-inner[data-has-font-color="true"] .artist,
+  .yamp-card-inner[data-has-font-color="true"] .source-menu-btn,
+  .yamp-card-inner[data-has-font-color="true"] .source-selected,
+  .yamp-card-inner[data-has-font-color="true"] .controls-row,
+  .yamp-card-inner[data-has-font-color="true"] .button,
+  .yamp-card-inner[data-has-font-color="true"] .modern-button,
+  .yamp-card-inner[data-has-font-color="true"] .vol-stepper span,
+  .yamp-card-inner[data-has-font-color="true"] .vol-label,
+  .yamp-card-inner[data-has-font-color="true"] .more-info-btn ha-icon,
+  .yamp-card-inner[data-has-font-color="true"] .volume-icon-btn,
+  .yamp-card-inner[data-has-font-color="true"] .volume-icon-btn ha-icon,
+  .yamp-card-inner[data-has-font-color="true"] .radio-mode-button,
+  .yamp-card-inner[data-has-font-color="true"] .volume-slider-icon,
+  .yamp-card-inner[data-has-font-color="true"] .timestamps-container,
+  .yamp-card-inner[data-match-theme="true"] .details,
+  .yamp-card-inner[data-match-theme="true"] .title,
+  .yamp-card-inner[data-match-theme="true"] .artist,
+  .yamp-card-inner[data-match-theme="true"] .source-menu-btn,
+  .yamp-card-inner[data-match-theme="true"] .source-selected,
+  .yamp-card-inner[data-match-theme="true"] .controls-row,
+  .yamp-card-inner[data-match-theme="true"] .button,
+  .yamp-card-inner[data-match-theme="true"] .modern-button,
+  .yamp-card-inner[data-match-theme="true"] .vol-stepper span,
+  .yamp-card-inner[data-match-theme="true"] .vol-label,
+  .yamp-card-inner[data-match-theme="true"] .more-info-btn ha-icon,
+  .yamp-card-inner[data-match-theme="true"] .volume-icon-btn,
+  .yamp-card-inner[data-match-theme="true"] .volume-icon-btn ha-icon,
+  .yamp-card-inner[data-match-theme="true"] .radio-mode-button,
+  .yamp-card-inner[data-match-theme="true"] .volume-slider-icon,
+  .yamp-card-inner[data-match-theme="true"] .timestamps-container,
   .yamp-card-inner[data-lyrics-active="true"] .details,
   .yamp-card-inner[data-lyrics-active="true"] .title,
   .yamp-card-inner[data-lyrics-active="true"] .artist,
@@ -1917,6 +1986,8 @@ export const yampCardStyles = css`
     color: var(--primary-text);
   }
 
+  .yamp-card-inner[data-has-font-color="true"] .modern-button,
+  .yamp-card-inner[data-match-theme="true"] .modern-button,
   .yamp-card-inner[data-lyrics-active="true"] .modern-button,
   .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .modern-button {
     background: color-mix(in srgb, var(--primary-text), transparent 85%);
@@ -1924,6 +1995,8 @@ export const yampCardStyles = css`
   }
 
   /* Hamburger icon (span) uses !important in base styles, so we override it here */
+  .yamp-card-inner[data-has-font-color="true"] .more-info-icon,
+  .yamp-card-inner[data-match-theme="true"] .more-info-icon,
   .yamp-card-inner[data-lyrics-active="true"] .more-info-icon,
   .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .more-info-icon {
     color: var(--primary-text) !important;
