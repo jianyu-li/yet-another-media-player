@@ -227,6 +227,10 @@ export interface YampCardConfig {
   idle_timeout_ms?: number;
   idle_screen?: "default" | "artwork" | "blank" | "collapsed" | "transparent" | string;
   idle_image?: string;
+  background_image?: string;
+  font_color?: string;
+  background_position?: "top center" | "center center" | "bottom center" | string;
+  background_fit?: "cover" | "contain" | "fill" | "scale-down" | "none" | string;
   media_artwork_overrides?: ArtworkOverrideRule[];
   artwork_position?: "top center" | "center center" | "bottom center" | string;
   artwork_object_fit?:

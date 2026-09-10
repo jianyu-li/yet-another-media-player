@@ -731,6 +731,14 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._idleImageTemplateResult = "";
     this._resolvingIdleImageTemplate = false;
     this._idleImageTemplateNeedsResolve = false;
+    this._backgroundImageTemplate = null;
+    this._backgroundImageTemplateResult = "";
+    this._resolvingBackgroundImageTemplate = false;
+    this._backgroundImageTemplateNeedsResolve = false;
+    this._fontColorTemplate = null;
+    this._fontColorTemplateResult = "";
+    this._resolvingFontColorTemplate = false;
+    this._fontColorTemplateNeedsResolve = false;
     this._artworkOverrideTemplateCache = {};
     this._artworkOverrideIndexMap = null;
     this._hideActiveEntityLabel = false;
@@ -4680,6 +4688,38 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     }
   }
 
+  async _resolveBackgroundImageTemplate() {
+    if (!this._backgroundImageTemplate || this._resolvingBackgroundImageTemplate || !this.hass) return;
+    this._resolvingBackgroundImageTemplate = true;
+    try {
+      const context = this._getTemplateContext();
+      const result = await resolveStringTemplate(this.hass, this._backgroundImageTemplate, context);
+      this._backgroundImageTemplateResult = (result ?? "").toString().trim();
+    } catch (error) {
+      this._backgroundImageTemplateResult = "";
+    } finally {
+      this._resolvingBackgroundImageTemplate = false;
+      this._backgroundImageTemplateNeedsResolve = false;
+      this.requestUpdate();
+    }
+  }
+
+  async _resolveFontColorTemplate() {
+    if (!this._fontColorTemplate || this._resolvingFontColorTemplate || !this.hass) return;
+    this._resolvingFontColorTemplate = true;
+    try {
+      const context = this._getTemplateContext();
+      const result = await resolveStringTemplate(this.hass, this._fontColorTemplate, context);
+      this._fontColorTemplateResult = (result ?? "").toString().trim();
+    } catch (error) {
+      this._fontColorTemplateResult = "";
+    } finally {
+      this._resolvingFontColorTemplate = false;
+      this._fontColorTemplateNeedsResolve = false;
+      this.requestUpdate();
+    }
+  }
+
   _getTemplateContext() {
     return {
       entity: this.currentEntityId || '',
@@ -4963,6 +5003,23 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     return trimmed;
   }
 
+  _resolveImageUrlFromInput(input) {
+    const normalized = this._normalizeImageSourceValue(input);
+    if (!normalized || !this.hass) return null;
+    if (this.hass.states?.[normalized]) {
+      const stateObj = this.hass.states[normalized];
+      return (
+        stateObj.attributes?.entity_picture_local ||
+        stateObj.attributes?.entity_picture ||
+        (stateObj.state && typeof stateObj.state === "string" && (stateObj.state.startsWith("http") || stateObj.state.startsWith("/")) ? stateObj.state : null)
+      );
+    }
+    if (normalized.startsWith("http") || normalized.startsWith("/")) {
+      return normalized;
+    }
+    return null;
+  }
+
   setConfig(rawConfig) {
     if (!rawConfig.entities || !Array.isArray(rawConfig.entities) || rawConfig.entities.length === 0) {
       throw new Error("You must define at least one media_player entity.");
@@ -5069,6 +5126,28 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       this._idleImageTemplate = null;
       this._idleImageTemplateResult = "";
       this._idleImageTemplateNeedsResolve = false;
+    }
+    // Handle background image templates
+    if (typeof config.background_image === "string" &&
+      (config.background_image.includes("{{") || config.background_image.includes("{%"))) {
+      this._backgroundImageTemplate = config.background_image;
+      this._backgroundImageTemplateResult = "";
+      this._backgroundImageTemplateNeedsResolve = true;
+    } else {
+      this._backgroundImageTemplate = null;
+      this._backgroundImageTemplateResult = "";
+      this._backgroundImageTemplateNeedsResolve = false;
+    }
+    // Handle font color templates
+    if (typeof config.font_color === "string" &&
+      (config.font_color.includes("{{") || config.font_color.includes("{%"))) {
+      this._fontColorTemplate = config.font_color;
+      this._fontColorTemplateResult = "";
+      this._fontColorTemplateNeedsResolve = true;
+    } else {
+      this._fontColorTemplate = null;
+      this._fontColorTemplateResult = "";
+      this._fontColorTemplateNeedsResolve = false;
     }
     // Handle card_height templates (similar to idle_image)
     // card_height now uses websocket template subscriptions
@@ -6646,12 +6725,16 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     if (this._idleImageTemplate && changedProps.has("hass")) {
       this._idleImageTemplateNeedsResolve = true;
     }
+    if (this._backgroundImageTemplate && changedProps.has("hass")) {
+      this._backgroundImageTemplateNeedsResolve = true;
+    }
     const currentContext = JSON.stringify(this._getTemplateContext());
     this._syncTemplateSubscriptions('action_in_menu', currentContext, this.config?.actions);
     this._syncTemplateSubscriptions('always_collapsed', currentContext, this.config?.always_collapsed);
     this._syncTemplateSubscriptions('control_layout', currentContext, this.config?.control_layout);
     this._syncTemplateSubscriptions('card_height', currentContext, this.config?.card_height);
     this._syncTemplateSubscriptions('lyrics_background_fade', currentContext, this.config?.lyrics_background_fade);
+    this._syncTemplateSubscriptions('font_color', currentContext, this.config?.font_color);
     this._syncEntityTemplateSubscriptions('ma', currentContext);
     this._syncEntityTemplateSubscriptions('vol', currentContext);
     this._syncEntityTemplateSubscriptions('remote', currentContext);
@@ -8425,12 +8508,42 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     if (this._idleImageTemplate && this._idleImageTemplateNeedsResolve && !this._resolvingIdleImageTemplate && this._isIdle) {
       void this._resolveIdleImageTemplate();
     }
+    if (this._backgroundImageTemplate && this._backgroundImageTemplateNeedsResolve && !this._resolvingBackgroundImageTemplate) {
+      void this._resolveBackgroundImageTemplate();
+    }
+    if (this._fontColorTemplateNeedsResolve && !this._resolvingFontColorTemplate) {
+      void this._resolveFontColorTemplate();
+    }
     // Idle image "picture frame" mode when idle
     const isJsTemplate = typeof this.config.idle_image === "string" && this.config.idle_image.trim().startsWith("[[[");
     const rawIdleImageInput = isJsTemplate
       ? this._evaluateJsTemplate(this.config.idle_image)
       : (this._idleImageTemplate ? this._idleImageTemplateResult : this.config.idle_image);
     const normalizedIdleImageInput = this._normalizeImageSourceValue(rawIdleImageInput);
+
+    // Persistent card background image
+    const isBgJsTemplate = typeof this.config.background_image === "string" && this.config.background_image.trim().startsWith("[[[");
+    const rawBgImageInput = isBgJsTemplate
+      ? this._evaluateJsTemplate(this.config.background_image)
+      : (this._backgroundImageTemplate ? this._backgroundImageTemplateResult : this.config.background_image);
+    const cardBackgroundImageUrl = this._resolveImageUrlFromInput(rawBgImageInput);
+    const trimmedBgInput = (typeof rawBgImageInput === "string" && rawBgImageInput.trim().length > 0) ? rawBgImageInput.trim() : "";
+    const isDirectColorOrGradient = !cardBackgroundImageUrl && trimmedBgInput.length > 0 && (
+      trimmedBgInput.startsWith("#") ||
+      trimmedBgInput.startsWith("rgb") ||
+      trimmedBgInput.startsWith("hsl") ||
+      trimmedBgInput.startsWith("linear-gradient") ||
+      trimmedBgInput.startsWith("radial-gradient") ||
+      /^[a-zA-Z]+$/.test(trimmedBgInput)
+    );
+    const hasCardBg = !!(cardBackgroundImageUrl || isDirectColorOrGradient);
+
+    const isFcJsTemplate = typeof this.config.font_color === "string" && this.config.font_color.trim().startsWith("[[[");
+    const rawFontColorInput = isFcJsTemplate
+      ? this._evaluateJsTemplate(this.config.font_color)
+      : (this._fontColorTemplate ? this._fontColorTemplateResult : this.config.font_color);
+    const cardFontColor = (typeof rawFontColorInput === "string" && rawFontColorInput.trim().length > 0) ? rawFontColorInput.trim() : null;
+    const hasFontColor = !!cardFontColor;
 
     // Use the unified entity resolution system for playback state.
     // (Note: resolved here at the top of render to support show_idle_artwork_when_not_playing detection)
@@ -8441,18 +8554,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
     let idleImageUrl = null;
     if (normalizedIdleImageInput && (this._isIdle || forceIdleImage)) {
-      // Check if it's an entity ID
-      if (this.hass.states[normalizedIdleImageInput]) {
-        const sensorState = this.hass.states[normalizedIdleImageInput];
-        idleImageUrl =
-          sensorState.attributes.entity_picture_local ||
-          sensorState.attributes.entity_picture ||
-          (sensorState.state && typeof sensorState.state === "string" && sensorState.state.startsWith("http") ? sensorState.state : null);
-      }
-      // Check if it's a direct URL or file path
-      else if (normalizedIdleImageInput.startsWith("http") || normalizedIdleImageInput.startsWith("/")) {
-        idleImageUrl = normalizedIdleImageInput;
-      }
+      idleImageUrl = this._resolveImageUrlFromInput(normalizedIdleImageInput);
     }
     const dimIdleFrame = !!idleImageUrl;
     const hideControlsNow = this._idleTimeoutMs === 0 ? false : this._isIdle;
@@ -8821,6 +8923,21 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       `filter: ${backgroundFilter}`
     ].join('; ');
 
+    const bgFit = this.config.background_fit || "cover";
+    const bgPosition = this.config.background_position || "center center";
+    const bgSize = this._getBackgroundSizeForFit(bgFit);
+    const cardBgStyle = cardBackgroundImageUrl ? [
+      `background-image: url('${cardBackgroundImageUrl}')`,
+      `background-size: ${bgSize}`,
+      `background-position: ${bgPosition}`,
+      "background-repeat: no-repeat"
+    ].join('; ') : (isDirectColorOrGradient ? [
+      trimmedBgInput.startsWith("linear-gradient") || trimmedBgInput.startsWith("radial-gradient")
+        ? `background-image: ${trimmedBgInput}`
+        : `background-color: ${trimmedBgInput}`,
+      "background-repeat: no-repeat"
+    ].join('; ') : '');
+
 
 
     const isVolumeHiddenByConfig =
@@ -8859,8 +8976,13 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           <div
             data-match-theme="${String(this.config.match_theme === true)}"
             data-artwork-fit="${activeArtworkFit}"
+            data-has-background-image="${String(hasCardBg)}"
             data-lyrics-active="${String(this._lyricsActive === true)}"
-            style=${this._lyricsActive ? `--yamp-lyrics-fade: ${lyricsFade}%; --yamp-lyrics-backdrop-filter: ${lyricsBackdropFilter};` : nothing}
+            style=${[
+              (hasCustomCardHeight && (!collapsed || this._alwaysCollapsed)) ? `height:${customCardHeight}px;` : null,
+              this._lyricsActive ? `--yamp-lyrics-fade: ${lyricsFade}%; --yamp-lyrics-backdrop-filter: ${lyricsBackdropFilter}` : null,
+              hasFontColor ? `--primary-text: ${cardFontColor}; --primary-text-color: ${cardFontColor}; --yamp-icon-color: ${cardFontColor}; --secondary-text-color: ${cardFontColor};` : null
+            ].filter(Boolean).join('; ') || nothing}
             class=${classMap({
       "yamp-card-inner": true,
       "compact-collapsed": isCompact && collapsed,
@@ -8869,11 +8991,15 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       "collapsed": collapsed
     })}
           >
+            ${hasCardBg ? html`
+              <div class="card-background-image-layer" style="${cardBgStyle}"></div>
+              <div class="card-background-image-overlay"></div>
+            ` : nothing}
             ${artworkFullBleed && hasBackgroundImage ? html`
               <div class="full-bleed-artwork-bg" style="${sharedBackgroundStyle}"></div>
               ${!this._artworkGradientDisabled && !(dimIdleFrame || this._isIdle || this._lyricsActive) ? html`<div class="full-bleed-artwork-fade"></div>` : nothing}
             ` : nothing}
-            ${(!useInsetArtwork && !artworkUrl && !idleImageUrl) ? html`
+            ${(!useInsetArtwork && !artworkUrl && !idleImageUrl && !hasCardBg) ? html`
               <div class="media-artwork-placeholder"
                 @pointerdown=${this._onTapAreaPointerDown}
                 @pointermove=${this._onTapAreaPointerMove}
@@ -8944,7 +9070,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         return styles.join('; ');
       })()}"
               ></div>
-              ${!this._artworkGradientDisabled && !(dimIdleFrame || this._isIdle || this._lyricsActive) && (!useInsetArtwork || activeArtworkFit === "scaled-contain") ? html`<div class="card-lower-fade" style="--yamp-lyrics-bottom-offset: ${lyricsBottomOffset}px;"></div>` : nothing}
+              ${!this._artworkGradientDisabled && !(dimIdleFrame || this._isIdle || this._lyricsActive || (!artworkUrl && hasCardBg)) && (!useInsetArtwork || activeArtworkFit === "scaled-contain") ? html`<div class="card-lower-fade" style="--yamp-lyrics-bottom-offset: ${lyricsBottomOffset}px;"></div>` : nothing}
               <div class="card-lower-content${collapsed ? ' collapsed transitioning' : ' transitioning'}${collapsed && artworkUrl && collapsedArtworkSize > 0 ? ' has-artwork' : ''}" style="${(() => {
         if (!hideControlsNow) return '';
         return collapsed
@@ -10278,6 +10404,13 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
             domain: "",
             multiple: false
           }
+        },
+        required: false
+      },
+      {
+        name: "background_image",
+        selector: {
+          text: {}
         },
         required: false
       },

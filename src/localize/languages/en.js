@@ -84,6 +84,11 @@ export default {
           title: "General Settings",
           description: "Global controls for how artwork is displayed and retrieved.",
         },
+        background: {
+          title: "Background Image",
+          description:
+            "Configure a persistent background image for the card behind playback content.",
+        },
         idle: {
           title: "Idle Artwork",
           description: "Show a static image or entity snapshot whenever nothing is playing.",
@@ -233,6 +238,8 @@ export default {
         "Always use the paired Music Assistant entity for track title, artist, and artwork, even if the primary entity is playing.",
       show_volume_overlay:
         "Briefly display a large volume indicator over the artwork when the volume level changes.",
+      font_color_helper:
+        "Customize text and icon colors. Accepts hex, CSS names, rgba, or templates (default: theme color).",
     },
     titles: {
       edit_entity: "Edit Entity",
@@ -303,6 +310,12 @@ export default {
       card_height: "Card Height (px)",
       control_layout: "Control Layout",
       idle_image: "Idle Image",
+      background_image: "Background Image",
+      background_image_entity: "Background Image Entity",
+      font_color: "Font Color",
+      font_color_entity: "Font Color Entity",
+      background_position: "Background Position",
+      background_fit: "Background Fit",
       image_url: "Image URL",
       fallback_image_url: "Fallback Image URL",
       move_to_main: "Move action to main chips",
@@ -416,6 +429,24 @@ export default {
       top: "Top",
       center: "Center",
       bottom: "Bottom",
+    },
+    background_fit: {
+      cover: "Cover",
+      contain: "Contain",
+      fill: "Fill",
+      "scale-down": "Scale Down",
+      none: "None",
+    },
+    background_position: {
+      center: "Center",
+      top: "Top",
+      bottom: "Bottom",
+      "center left": "Center Left",
+      "center right": "Center Right",
+      "top left": "Top Left",
+      "top right": "Top Right",
+      "bottom left": "Bottom Left",
+      "bottom right": "Bottom Right",
     },
   },
   card: {

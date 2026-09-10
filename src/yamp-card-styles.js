@@ -244,7 +244,9 @@ export const yampCardStyles = css`
   }
 
   ha-card.yamp-card {
-    display: block;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
     border-radius: var(--border-radius);
     box-shadow: var(--ha-card-box-shadow, none);
     background: transparent;
@@ -258,8 +260,12 @@ export const yampCardStyles = css`
   }
 
   /* Static background color fallback for inset artwork layouts */
-  ha-card.yamp-card:has(> .yamp-card-inner[data-artwork-fit="scaled-contain"]),
-  ha-card.yamp-card:has(> .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"]) {
+  ha-card.yamp-card:has(
+      > .yamp-card-inner[data-has-background-image="false"][data-artwork-fit="scaled-contain"]
+    ),
+  ha-card.yamp-card:has(
+      > .yamp-card-inner[data-has-background-image="false"][data-artwork-fit="scaled-contain-alternate"]
+    ) {
     background: var(--card-bg);
   }
 
@@ -267,12 +273,37 @@ export const yampCardStyles = css`
     position: relative;
     z-index: ${Z_LAYERS.FLOATING_ELEMENT};
     height: 100%;
+    min-height: 100%;
+    flex: 1 1 100%;
     display: flex;
     flex-direction: column;
     overflow: hidden;
     container-type: inline-size;
     border-radius: var(--border-radius);
     clip-path: inset(0 round var(--border-radius));
+    transform: translateZ(0);
+  }
+
+  .card-background-image-layer {
+    position: absolute;
+    inset: 0;
+    z-index: ${Z_LAYERS.MEDIA_BACKGROUND};
+    background-repeat: no-repeat;
+    pointer-events: none;
+    transform: translateZ(0);
+  }
+
+  .card-background-image-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: ${Z_LAYERS.MEDIA_BACKGROUND};
+    pointer-events: none;
+    background: linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0.2) 0%,
+      rgba(0, 0, 0, 0.4) 50%,
+      rgba(0, 0, 0, 0.6) 100%
+    );
     transform: translateZ(0);
   }
 
