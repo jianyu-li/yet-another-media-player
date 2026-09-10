@@ -1844,18 +1844,20 @@ export const yampCardStyles = css`
     .card-lower-content
     > :not(.card-artwork-spacer):not(.in-menu-active-label):not(.more-info-menu):not(
       .collapsed-artwork-container
-    ) {
+    ):not(.collapsed-progress-bar) {
     position: relative;
   }
 
   .yamp-card-inner[data-lyrics-active="true"] .in-menu-active-label,
   .yamp-card-inner[data-lyrics-active="true"] .more-info-menu.volume-collapsed,
-  .yamp-card-inner[data-lyrics-active="true"] .collapsed-artwork-container {
+  .yamp-card-inner[data-lyrics-active="true"] .collapsed-artwork-container,
+  .yamp-card-inner[data-lyrics-active="true"] .collapsed-progress-bar {
     position: absolute !important;
     z-index: ${Z_LAYERS.FLOATING_CONTROLS};
   }
 
-  .yamp-card-inner[data-lyrics-active="true"] .in-menu-active-label {
+  .yamp-card-inner[data-lyrics-active="true"] .in-menu-active-label,
+  .yamp-card-inner[data-lyrics-active="true"] .collapsed-progress-bar {
     pointer-events: none !important;
   }
 
