@@ -1547,7 +1547,8 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                     .value=${this._config.background_image ?? ""}
                                     @value-changed=${(e) =>
                                       this._updateConfig("background_image", e.detail.value)}
-                                    label="e.g., https://example.com/image.jpg or /local/custom/image.jpg"
+                                    .label=${localize("editor.fields.image_url")}
+                                    placeholder="https://... or /local/..."
                                     helper="${localize("editor.subtitles.image_url_helper")}"
                                   ></ha-selector>
                                 `
@@ -1741,7 +1742,8 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                     .value=${this._config.idle_image ?? ""}
                                     @value-changed=${(e) =>
                                       this._updateConfig("idle_image", e.detail.value)}
-                                    label="e.g., https://example.com/image.jpg or /local/custom/image.jpg"
+                                    .label=${localize("editor.fields.image_url")}
+                                    placeholder="https://... or /local/..."
                                     helper="${localize("editor.subtitles.image_url_helper")}"
                                   ></ha-selector>
                                 `
