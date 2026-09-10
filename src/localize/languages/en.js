@@ -313,7 +313,7 @@ export default {
       background_image: "Background Image",
       background_image_entity: "Background Image Entity",
       font_color: "Font Color",
-      font_color_entity: "Font Color Entity",
+      font_color_entity: "Font Color",
       background_position: "Background Position",
       background_fit: "Background Fit",
       image_url: "Image URL",
