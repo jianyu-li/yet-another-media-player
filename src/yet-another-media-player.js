@@ -14,6 +14,7 @@ import { yampCardStyles } from "./yamp-card-styles.js";
 import { QueueDragMixin } from "./yamp-queue-drag.js";
 import { parseLrc } from "./lyrics-parser.js";
 import "./lyrics-view.js";
+import { YampMediaSessionManager } from "./yamp-media-session.js";
 import {
   renderSearchOptionsOverlay,
   searchMedia,
@@ -615,6 +616,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
   constructor() {
     super();
+    this._mediaSessionManager = new YampMediaSessionManager(this);
     this._selectedIndex = 0;
     this._lastSyncedEntityId = null;
     this._lastPlaying = null;
@@ -5508,6 +5510,9 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       this._fontColorTemplateResult = "";
       this._fontColorTemplateNeedsResolve = false;
     }
+    if (this._mediaSessionManager && config.lock_screen_controls !== true) {
+      this._mediaSessionManager.reset();
+    }
     // Handle card_height templates (similar to idle_image)
     // card_height now uses websocket template subscriptions
     // Set idle timeout ms
@@ -7386,6 +7391,18 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       this._progressTimer = setInterval(() => {
         this.requestUpdate();
       }, 500);
+    }
+
+    // Sync lock screen media controls (Web Media Session API)
+    if (this._mediaSessionManager) {
+      const activePlaybackEntity = this.currentActivePlaybackEntityId || this.currentEntityId;
+      const artworkUrl = this._getArtworkUrl(playbackState, false);
+      this._mediaSessionManager.update({
+        enabled: this.config?.lock_screen_controls === true,
+        stateObj: playbackState,
+        targetEntityId: activePlaybackEntity,
+        artworkUrl,
+      });
     }
 
     // Update idle state after all other state checks
@@ -11064,6 +11081,9 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     if (this._lyricsFetchTimeout) {
       clearTimeout(this._lyricsFetchTimeout);
       this._lyricsFetchTimeout = null;
+    }
+    if (this._mediaSessionManager) {
+      this._mediaSessionManager.destroy();
     }
     super.disconnectedCallback?.();
     if (this._progressTimer) {

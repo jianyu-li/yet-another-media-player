@@ -3332,6 +3332,20 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           </div>
           <div class="config-subtitle">${localize("editor.subtitles.show_album")}</div>
         </div>
+        <div
+          class="form-row"
+          data-search-keys="lock_screen_controls media_session lock screen ios controls"
+        >
+          <div>
+            <ha-switch
+              id="lock-screen-controls-toggle"
+              .checked=${this._config.lock_screen_controls ?? false}
+              @change=${(e) => this._updateConfig("lock_screen_controls", e.target.checked)}
+            ></ha-switch>
+            <span>${localize("editor.labels.lock_screen_controls")}</span>
+          </div>
+          <div class="config-subtitle">${localize("editor.subtitles.lock_screen_controls")}</div>
+        </div>
         <div class="form-row">
           <div>
             <ha-switch
