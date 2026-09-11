@@ -83,10 +83,12 @@ function getInaudibleWavUrl() {
  */
 function toAbsoluteUrl(url) {
   if (!url) return "";
+  const str = typeof url === "string" ? url : url?.url;
+  if (!str || typeof str !== "string") return "";
   try {
-    return new URL(url, window.location.href).href;
+    return new URL(str, window.location.href).href;
   } catch (_e) {
-    return url;
+    return str;
   }
 }
 
@@ -290,9 +292,11 @@ export class YampMediaSessionManager {
    * @param {boolean} options.enabled Whether lock_screen_controls is enabled in config
    * @param {any} options.stateObj The active playback state object
    * @param {string|null} options.targetEntityId The active entity ID for actions
-   * @param {string|null} options.artworkUrl The resolved artwork URL
+   * @param {string|null} [options.title] Optional override title from rich metadata
+   * @param {string|null} [options.artist] Optional override artist from rich metadata
+   * @param {string|null} [options.album] Optional override album from rich metadata
    */
-  update({ enabled, stateObj, targetEntityId, artworkUrl }) {
+  update({ enabled, stateObj, targetEntityId, artworkUrl, title, artist, album }) {
     if (!this.isSupported) return;
 
     if (!enabled || !stateObj) {
@@ -335,27 +339,42 @@ export class YampMediaSessionManager {
     this._registerActionHandlers(targetEntityId);
 
     // Update track metadata
-    const title = stateObj.attributes?.media_title || stateObj.attributes?.friendly_name || "Media";
-    const artist = stateObj.attributes?.media_artist || "";
-    const album = stateObj.attributes?.media_album_name || "";
-    const absoluteArtwork = toAbsoluteUrl(artworkUrl || stateObj.attributes?.entity_picture || "");
+    const resolvedTitle =
+      title || stateObj.attributes?.media_title || stateObj.attributes?.friendly_name || "Media";
+    const resolvedArtist = artist || stateObj.attributes?.media_artist || "";
+    const resolvedAlbum = album || stateObj.attributes?.media_album_name || "";
+    const rawArtwork =
+      (typeof artworkUrl === "string" ? artworkUrl : artworkUrl?.url) ||
+      stateObj.attributes?.entity_picture ||
+      "";
+    const absoluteArtwork = toAbsoluteUrl(rawArtwork);
 
-    const metaKey = `${title}|${artist}|${album}|${absoluteArtwork}`;
+    const metaKey = `${resolvedTitle}|${resolvedArtist}|${resolvedAlbum}|${absoluteArtwork}`;
     if (this._lastMetadata !== metaKey) {
       this._lastMetadata = metaKey;
       const artwork = absoluteArtwork
-        ? [{ src: absoluteArtwork, sizes: "512x512", type: "image/jpeg" }]
+        ? [
+            { src: absoluteArtwork, sizes: "96x96" },
+            { src: absoluteArtwork, sizes: "128x128" },
+            { src: absoluteArtwork, sizes: "192x192" },
+            { src: absoluteArtwork, sizes: "256x256" },
+            { src: absoluteArtwork, sizes: "384x384" },
+            { src: absoluteArtwork, sizes: "512x512" },
+            { src: absoluteArtwork },
+          ]
         : [];
 
-      try {
-        navigator.mediaSession.metadata = new MediaMetadata({
-          title,
-          artist,
-          album,
-          artwork,
-        });
-      } catch (_e) {
-        // Fallback for browsers with non-standard MediaMetadata constructors
+      if (typeof MediaMetadata !== "undefined") {
+        try {
+          navigator.mediaSession.metadata = new MediaMetadata({
+            title: resolvedTitle,
+            artist: resolvedArtist,
+            album: resolvedAlbum,
+            artwork,
+          });
+        } catch (_e) {
+          // Fallback for browsers with non-standard MediaMetadata constructors
+        }
       }
     }
 

@@ -7396,12 +7396,50 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     // Sync lock screen media controls (Web Media Session API)
     if (this._mediaSessionManager) {
       const activePlaybackEntity = this.currentActivePlaybackEntityId || this.currentEntityId;
-      const artworkUrl = this._getArtworkUrl(playbackState, false);
+      const metadataState = this.metadataStateObj;
+      const mainState = this.currentStateObj;
+
+      const metadataArtwork = this._getArtworkUrl(metadataState, false);
+      const playbackArtwork = this._getArtworkUrl(playbackState, false);
+      const mainArtwork = this._getArtworkUrl(mainState, false);
+
+      const artworkUrl =
+        metadataArtwork?.url ||
+        playbackArtwork?.url ||
+        mainArtwork?.url ||
+        metadataState?.attributes?.entity_picture ||
+        playbackState?.attributes?.entity_picture ||
+        mainState?.attributes?.entity_picture ||
+        "";
+
+      const title =
+        metadataState?.attributes?.media_title ||
+        playbackState?.attributes?.media_title ||
+        mainState?.attributes?.media_title ||
+        playbackState?.attributes?.friendly_name ||
+        mainState?.attributes?.friendly_name ||
+        "";
+
+      const artist =
+        metadataState?.attributes?.media_artist ||
+        playbackState?.attributes?.media_artist ||
+        mainState?.attributes?.media_artist ||
+        "";
+
+      const album =
+        metadataState?.attributes?.media_album_name ||
+        playbackState?.attributes?.media_album_name ||
+        mainState?.attributes?.media_album_name ||
+        "";
+
       this._mediaSessionManager.update({
         enabled: this.config?.lock_screen_controls === true,
         stateObj: playbackState,
         targetEntityId: activePlaybackEntity,
         artworkUrl,
+        title,
+        artist,
+        album,
       });
     }
 
