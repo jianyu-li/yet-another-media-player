@@ -764,6 +764,10 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._marqueeAnimationEndHandler = null;
     this._marqueeObservedElements = null;
     this._lastMarqueeKey = null;
+    this._marqueeCleanups = [];
+    this._marqueeManualResetTimers = new Map();
+    this._suppressMarqueeClick = false;
+    this._suppressMarqueeClickTimer = null;
     this._lyricsFetchTimeout = null;
     this._handleGlobalScroll = this._handleGlobalScroll.bind(this);
     this._handleViewportResize = this._handleViewportResize.bind(this);
@@ -4480,6 +4484,297 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._updateMarquee();
   }
 
+  _getTranslateX(element) {
+    if (!element) return 0;
+    const style = window.getComputedStyle(element);
+    const transform = style.transform || style.webkitTransform;
+    if (!transform || transform === "none") return 0;
+    try {
+      return new DOMMatrix(transform).m41;
+    } catch {
+      const match = transform.match(/matrix\(([^)]+)\)/);
+      if (match) {
+        const parts = match[1].split(",");
+        return parseFloat(parts[4]) || 0;
+      }
+      return 0;
+    }
+  }
+
+  _clearMarqueeResetTimer(container) {
+    if (this._marqueeManualResetTimers?.has(container)) {
+      clearTimeout(this._marqueeManualResetTimers.get(container));
+      this._marqueeManualResetTimers.delete(container);
+    }
+  }
+
+  _resetMarqueeManual(container, inner, resumeMarquee = true) {
+    if (!container || !inner) return;
+    this._clearMarqueeResetTimer(container);
+
+    if (!container.hasAttribute("data-marquee-manual")) {
+      container.removeAttribute("data-marquee-paused");
+      container.removeAttribute("data-marquee-dragging");
+      return;
+    }
+
+    inner.style.transition = "transform 0.4s cubic-bezier(0.25, 1, 0.5, 1)";
+    inner.style.transform = "translateX(0px)";
+
+    let finished = false;
+    const finishReset = () => {
+      if (finished) return;
+      finished = true;
+      inner.removeEventListener("transitionend", onTransitionEnd);
+      inner.style.transition = "";
+      inner.style.transform = "";
+      inner.style.opacity = "";
+      container.removeAttribute("data-marquee-manual");
+      container.removeAttribute("data-marquee-paused");
+      container.removeAttribute("data-marquee-dragging");
+      this._clearMarqueeResetTimer(container);
+
+      if (resumeMarquee && this.isConnected && container.hasAttribute("data-marquee")) {
+        if (container.hasAttribute("data-marquee-sequential")) {
+          if (container.getAttribute("data-marquee-active") === "true") {
+            container.removeAttribute("data-marquee-active");
+            void container.offsetWidth;
+            container.setAttribute("data-marquee-active", "true");
+          } else {
+            const activeEl = this.renderRoot?.querySelector(
+              ".details [data-marquee-sequential='true'][data-marquee-active='true']"
+            );
+            if (!activeEl) {
+              container.setAttribute("data-marquee-active", "true");
+            }
+          }
+        }
+      }
+    };
+
+    const onTransitionEnd = (e) => {
+      if (e.target !== inner || e.propertyName !== "transform") return;
+      finishReset();
+    };
+
+    inner.addEventListener("transitionend", onTransitionEnd);
+    const fallbackTimer = setTimeout(finishReset, 450);
+    this._marqueeManualResetTimers.set(container, fallbackTimer);
+  }
+
+  _setupMarqueeManualInteraction(info) {
+    const { container, inner, overflow } = info;
+    if (!container || !inner || overflow <= 4) return;
+
+    let isPointerDown = false;
+    let pointerId = null;
+    let startX = 0;
+    let startY = 0;
+    let currentX = 0;
+    let startTransformX = 0;
+    let hasMovedHorizontally = false;
+    let isVerticalScroll = false;
+    let lastClientX = 0;
+    let lastTime = 0;
+    let velocityX = 0;
+
+    const onPointerDown = (e) => {
+      if (e.button !== undefined && e.button !== 0) return;
+      this._clearMarqueeResetTimer(container);
+      if (inner._clearMomentum) {
+        inner._clearMomentum();
+      }
+
+      isPointerDown = true;
+      pointerId = e.pointerId;
+      startX = e.clientX;
+      startY = e.clientY;
+      lastClientX = e.clientX;
+      lastTime = Date.now();
+      velocityX = 0;
+      hasMovedHorizontally = false;
+      isVerticalScroll = false;
+
+      if (container.hasAttribute("data-marquee-manual")) {
+        inner.style.transition = "";
+        startTransformX = this._getTranslateX(inner);
+      } else {
+        startTransformX = this._getTranslateX(inner);
+        container.setAttribute("data-marquee-paused", "true");
+      }
+      currentX = startTransformX;
+    };
+
+    const onPointerMove = (e) => {
+      if (!isPointerDown || e.pointerId !== pointerId) return;
+      if (isVerticalScroll) return;
+
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+
+      if (!hasMovedHorizontally) {
+        if (Math.abs(dy) > 6 && Math.abs(dy) > Math.abs(dx)) {
+          isVerticalScroll = true;
+          container.removeAttribute("data-marquee-paused");
+          return;
+        }
+        if (Math.abs(dx) > 6) {
+          hasMovedHorizontally = true;
+          container.setAttribute("data-marquee-manual", "true");
+          container.setAttribute("data-marquee-dragging", "true");
+          inner.style.transition = "";
+          inner.style.opacity = "1";
+          try {
+            if (container.setPointerCapture) {
+              container.setPointerCapture(e.pointerId);
+            }
+          } catch {
+            // Ignore capture failures on unsupported elements
+          }
+        }
+      }
+
+      if (hasMovedHorizontally) {
+        if (e.cancelable) e.preventDefault();
+        const now = Date.now();
+        const dt = now - lastTime;
+        if (dt > 0) {
+          velocityX = (e.clientX - lastClientX) / dt;
+          lastClientX = e.clientX;
+          lastTime = now;
+        }
+
+        const maxScroll = -Math.ceil(overflow);
+        const targetX = Math.min(0, Math.max(maxScroll, startTransformX + dx));
+        currentX = targetX;
+        inner.style.transform = `translateX(${targetX}px)`;
+      }
+    };
+
+    const onPointerUp = (e) => {
+      if (!isPointerDown || e.pointerId !== pointerId) return;
+      isPointerDown = false;
+      container.removeAttribute("data-marquee-dragging");
+
+      try {
+        if (container.hasPointerCapture && container.hasPointerCapture(pointerId)) {
+          container.releasePointerCapture(pointerId);
+        }
+      } catch {
+        // Ignore release failures
+      }
+
+      if (hasMovedHorizontally) {
+        this._suppressMarqueeClick = true;
+        if (this._suppressMarqueeClickTimer) {
+          clearTimeout(this._suppressMarqueeClickTimer);
+        }
+        this._suppressMarqueeClickTimer = setTimeout(() => {
+          this._suppressMarqueeClick = false;
+        }, 350);
+
+        const maxScroll = -Math.ceil(overflow);
+        if (Math.abs(velocityX) > 0.25) {
+          const momentumDist = velocityX * 160;
+          const finalX = Math.min(0, Math.max(maxScroll, currentX + momentumDist));
+          currentX = finalX;
+          inner.style.transition = "transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)";
+          inner.style.transform = `translateX(${finalX}px)`;
+          inner._clearMomentum = () => {
+            inner.removeEventListener("transitionend", inner._clearMomentum);
+            inner.style.transition = "";
+            inner._clearMomentum = null;
+          };
+          inner.addEventListener("transitionend", inner._clearMomentum);
+        }
+
+        if (e.pointerType === "touch") {
+          this._clearMarqueeResetTimer(container);
+          const timer = setTimeout(() => {
+            this._resetMarqueeManual(container, inner);
+          }, 3000);
+          this._marqueeManualResetTimers.set(container, timer);
+        } else {
+          // Desktop mouse: check if still hovered. If hovered, wait for mouseleave on .details.
+          // Otherwise set a fallback timer in case mouse is already outside.
+          const detailsEl = this.renderRoot?.querySelector(".details");
+          const isHovered = detailsEl?.matches(":hover") || container.matches(":hover");
+          if (!isHovered) {
+            this._clearMarqueeResetTimer(container);
+            const timer = setTimeout(() => {
+              this._resetMarqueeManual(container, inner);
+            }, 3000);
+            this._marqueeManualResetTimers.set(container, timer);
+          }
+        }
+      } else {
+        container.removeAttribute("data-marquee-paused");
+      }
+    };
+
+    const onWheel = (e) => {
+      const isHorizontalScroll = Math.abs(e.deltaX) > Math.abs(e.deltaY);
+      if (!isHorizontalScroll) return;
+
+      this._clearMarqueeResetTimer(container);
+      const rawDelta = e.deltaX;
+      if (rawDelta === 0) return;
+
+      let factor = 1;
+      if (e.deltaMode === 1) factor = 20;
+      else if (e.deltaMode === 2) factor = 100;
+      const delta = rawDelta * factor;
+
+      if (e.cancelable) e.preventDefault();
+
+      if (!container.hasAttribute("data-marquee-manual")) {
+        currentX = this._getTranslateX(inner);
+        container.setAttribute("data-marquee-manual", "true");
+        inner.style.transition = "";
+        inner.style.opacity = "1";
+        inner.style.transform = `translateX(${currentX}px)`;
+      }
+
+      const maxScroll = -Math.ceil(overflow);
+      const targetX = Math.min(0, Math.max(maxScroll, currentX - delta));
+      currentX = targetX;
+      inner.style.transform = `translateX(${targetX}px)`;
+
+      // If mouse is already outside, set an idle fallback timer.
+      const detailsEl = this.renderRoot?.querySelector(".details");
+      const isHovered = detailsEl?.matches(":hover") || container.matches(":hover");
+      if (!isHovered) {
+        const timer = setTimeout(() => {
+          this._resetMarqueeManual(container, inner);
+        }, 3000);
+        this._marqueeManualResetTimers.set(container, timer);
+      }
+    };
+
+    const onClickCapture = (e) => {
+      if (this._suppressMarqueeClick) {
+        e.stopImmediatePropagation();
+        e.preventDefault();
+      }
+    };
+
+    container.addEventListener("pointerdown", onPointerDown);
+    container.addEventListener("pointermove", onPointerMove);
+    container.addEventListener("pointerup", onPointerUp);
+    container.addEventListener("pointercancel", onPointerUp);
+    container.addEventListener("wheel", onWheel, { passive: false });
+    container.addEventListener("click", onClickCapture, true);
+
+    this._marqueeCleanups.push(() => {
+      container.removeEventListener("pointerdown", onPointerDown);
+      container.removeEventListener("pointermove", onPointerMove);
+      container.removeEventListener("pointerup", onPointerUp);
+      container.removeEventListener("pointercancel", onPointerUp);
+      container.removeEventListener("wheel", onWheel);
+      container.removeEventListener("click", onClickCapture, true);
+    });
+  }
+
   _cleanupMarquee() {
     if (this._marqueeSequentialTimer) {
       clearTimeout(this._marqueeSequentialTimer);
@@ -4491,6 +4786,35 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       });
       this._marqueeObservedElements = null;
     }
+    if (this._marqueeCleanups) {
+      this._marqueeCleanups.forEach((cleanup) => cleanup());
+      this._marqueeCleanups = [];
+    }
+    if (this._marqueeManualResetTimers) {
+      this._marqueeManualResetTimers.forEach((timer) => clearTimeout(timer));
+      this._marqueeManualResetTimers.clear();
+    }
+    if (this._suppressMarqueeClickTimer) {
+      clearTimeout(this._suppressMarqueeClickTimer);
+      this._suppressMarqueeClickTimer = null;
+    }
+    this._suppressMarqueeClick = false;
+
+    if (this.renderRoot) {
+      const marqueeContainers = this.renderRoot.querySelectorAll(".details [data-marquee='true']");
+      marqueeContainers.forEach((container) => {
+        container.removeAttribute("data-marquee-manual");
+        container.removeAttribute("data-marquee-paused");
+        container.removeAttribute("data-marquee-dragging");
+        const inner = container.querySelector(".marquee-inner");
+        if (inner) {
+          inner.style.transform = "";
+          inner.style.transition = "";
+          inner.style.opacity = "";
+        }
+      });
+    }
+
     this._lastMarqueeKey = null;
   }
 
@@ -4541,8 +4865,16 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       info.container.removeAttribute("data-marquee");
       info.container.removeAttribute("data-marquee-sequential");
       info.container.removeAttribute("data-marquee-active");
+      info.container.removeAttribute("data-marquee-manual");
+      info.container.removeAttribute("data-marquee-paused");
+      info.container.removeAttribute("data-marquee-dragging");
       info.container.style.removeProperty("--yamp-marquee-distance");
       info.container.style.removeProperty("--yamp-marquee-duration");
+      if (info.inner) {
+        info.inner.style.transform = "";
+        info.inner.style.transition = "";
+        info.inner.style.opacity = "";
+      }
     };
 
     if (titleOverflows && artistOverflows) {
@@ -4556,12 +4888,17 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       titleInfo.container.setAttribute("data-marquee-active", "true");
       artistInfo.container.removeAttribute("data-marquee-active");
 
+      this._setupMarqueeManualInteraction(titleInfo);
+      this._setupMarqueeManualInteraction(artistInfo);
+
       const items = [titleInfo, artistInfo];
       let activeIndex = 0;
 
       this._marqueeAnimationEndHandler = (e) => {
         if (e.animationName !== "yamp-marquee") return;
         if (!this.isConnected || this._lastMarqueeKey !== marqueeKey) return;
+
+
 
         const current = items[activeIndex];
         if (current?.container) {
@@ -4589,16 +4926,33 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       titleInfo.container.removeAttribute("data-marquee-sequential");
       titleInfo.container.removeAttribute("data-marquee-active");
       clearMarquee(artistInfo);
+      this._setupMarqueeManualInteraction(titleInfo);
     } else if (artistOverflows) {
       // Only artist overflows: single infinite marquee
       applyMarqueeVars(artistInfo);
       artistInfo.container.removeAttribute("data-marquee-sequential");
       artistInfo.container.removeAttribute("data-marquee-active");
       clearMarquee(titleInfo);
+      this._setupMarqueeManualInteraction(artistInfo);
     } else {
       // Neither overflows
       clearMarquee(titleInfo);
       clearMarquee(artistInfo);
+    }
+
+    const detailsEl = this.renderRoot.querySelector(".details");
+    if (detailsEl && (titleOverflows || artistOverflows)) {
+      const onDetailsMouseLeave = () => {
+        [titleInfo, artistInfo].forEach((info) => {
+          if (info.container?.hasAttribute("data-marquee-manual")) {
+            this._resetMarqueeManual(info.container, info.inner);
+          }
+        });
+      };
+      detailsEl.addEventListener("mouseleave", onDetailsMouseLeave);
+      this._marqueeCleanups.push(() => {
+        detailsEl.removeEventListener("mouseleave", onDetailsMouseLeave);
+      });
     }
   }
 
@@ -9179,7 +9533,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
                         </div>
                       </div>
                     ` : html`
-                      <div class="title track-options-title" @click=${(e) => { if (shouldShowDetails && title) { e.stopPropagation(); this._showMediaTitleOptions = true; } }} style="${shouldShowDetails && title ? 'cursor: pointer;' : ''}" title="${shouldShowDetails && title ? localize('search.show_track_options') : ''}">
+                      <div class="title track-options-title" @click=${(e) => { if (!this._suppressMarqueeClick && shouldShowDetails && title) { e.stopPropagation(); this._showMediaTitleOptions = true; } }} style="${shouldShowDetails && title ? 'cursor: pointer;' : ''}" title="${shouldShowDetails && title ? localize('search.show_track_options') : ''}">
                         <span class="marquee-inner">${shouldShowDetails && title ? title : html`&nbsp;`}</span>
                       </div>
                     `}
@@ -9189,6 +9543,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
                           <span
                             class="artist-name ${hasSearchableArtist ? "clickable-artist" : ""}"
                             @click=${(e) => {
+                              if (this._suppressMarqueeClick) return;
                               if (hasSearchableArtist) {
                                 e.stopPropagation();
                                 this._searchArtistFromNowPlaying();
@@ -9198,6 +9553,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
                           >${artist}</span><span class="artist-album-separator"> - </span><span
                             class="album-name clickable-album"
                             @click=${(e) => {
+                              if (this._suppressMarqueeClick) return;
                               e.stopPropagation();
                               this._searchAlbumFromNowPlaying();
                             }}
@@ -9207,6 +9563,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
                           <span
                             class="artist-name ${hasSearchableArtist ? "clickable-artist" : ""}"
                             @click=${(e) => {
+                              if (this._suppressMarqueeClick) return;
                               if (hasSearchableArtist) {
                                 e.stopPropagation();
                                 this._searchArtistFromNowPlaying();
@@ -9218,6 +9575,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
                           <span
                             class="album-name clickable-album"
                             @click=${(e) => {
+                              if (this._suppressMarqueeClick) return;
                               e.stopPropagation();
                               this._searchAlbumFromNowPlaying();
                             }}
