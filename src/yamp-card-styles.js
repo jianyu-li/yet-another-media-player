@@ -1033,6 +1033,14 @@ export const yampCardStyles = css`
     text-overflow: clip !important;
     -webkit-line-clamp: unset !important;
     text-align: left !important;
+    touch-action: pan-y;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  [data-marquee-dragging="true"],
+  [data-marquee-dragging="true"] * {
+    cursor: grabbing !important;
   }
 
   /* Single marquee mode (infinite loop when only 1 element overflows) */
@@ -1053,6 +1061,16 @@ export const yampCardStyles = css`
     > .marquee-inner {
     will-change: transform, opacity;
     animation: yamp-marquee var(--yamp-marquee-duration, 8s) ease-in-out 1;
+  }
+
+  [data-marquee-paused="true"] > .marquee-inner {
+    animation-play-state: paused !important;
+  }
+
+  [data-marquee-manual="true"] > .marquee-inner {
+    animation: none !important;
+    max-width: none !important;
+    will-change: transform;
   }
 
   @media (hover: hover) {
