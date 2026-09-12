@@ -163,6 +163,8 @@ export default {
       disable_mass: "Optionale Mass Queue Integration deaktivieren, auch wenn sie installiert ist.",
       swap_pause_stop: "Pause-Taste durch Stop-Taste im modernen Layout ersetzen.",
       show_album: "Den Albumnamen neben dem Interpreten in den Player-Details anzeigen.",
+      lock_screen_controls:
+        "Halte Steuerelemente und Titel-Metadaten auf dem Sperrbildschirm deines Geräts (iOS / Android / macOS) aktiv, wenn die App in den Hintergrund tritt.",
       adaptive_controls: "Wiedergabetasten an verfügbaren Platz anpassen.",
       hide_menu_player: "Entitäts-Label unten ausblenden, wenn Chips im Menü sind.",
       hide_reorder_progress:
@@ -271,6 +273,7 @@ export default {
       display_timestamps: "Zeitstempel anzeigen",
       swap_pause_stop: "Pause durch Stop ersetzen",
       show_album: "Albumname anzeigen",
+      lock_screen_controls: "Sperrbildschirm-Mediensteuerung",
       adaptive_controls: "Adaptive Tastengröße",
       hide_active_entity: "Aktives Entitäts-Label ausblenden",
       hide_active_entity_on_idle: "Aktive Entitätsbeschriftung im Leerlauf ausblenden",

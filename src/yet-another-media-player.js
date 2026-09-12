@@ -5510,9 +5510,6 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       this._fontColorTemplateResult = "";
       this._fontColorTemplateNeedsResolve = false;
     }
-    if (this._mediaSessionManager && config.lock_screen_controls !== true) {
-      this._mediaSessionManager.reset();
-    }
     // Handle card_height templates (similar to idle_image)
     // card_height now uses websocket template subscriptions
     // Set idle timeout ms

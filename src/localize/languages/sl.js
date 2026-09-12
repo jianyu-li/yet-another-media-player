@@ -155,6 +155,8 @@ export default {
       disable_mass: "Onemogoči integracijo Mass Queue.",
       swap_pause_stop: "Zamenjaj gumb pavze z gumbom zaustavitve med uporabo moderne postavitve.",
       show_album: "Prikaži ime albuma zraven izvajalca v podrobnostih predvajalnika.",
+      lock_screen_controls:
+        "Ohranite kontrolnike in metapodatke skladbe aktivne na zaklenjenem zaslonu vaše naprave (iOS / Android / macOS), ko je aplikacija v ozadju.",
       adaptive_controls: "Prilagodi velikost gumbov glede na prostor.",
       hide_menu_player: "Skrij oznako entitete v meniju.",
       hide_reorder_progress:
@@ -252,6 +254,7 @@ export default {
       display_timestamps: "Prikaži časovne oznake",
       swap_pause_stop: "Zamenjaj pavzo z zaustavitvijo",
       show_album: "Prikaži ime albuma",
+      lock_screen_controls: "Predstavnostni kontrolniki na zaklenjenem zaslonu",
       adaptive_controls: "Prilagodljiva velikost gumbov",
       hide_active_entity: "Skrij oznako aktivne entitete",
       hide_active_entity_on_idle: "Skrij oznako aktivne entitete ob mirovanju",
