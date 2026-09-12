@@ -471,6 +471,8 @@ export default {
       stop: "Zastaviť",
       next: "Nasledujúce",
       repeat: "Opakovať",
+      lock_screen_ready: "Ovládacie prvky na uzamknutej obrazovke aktívne",
+      lock_screen_connecting: "Pripájanie ovládacích prvkov na uzamknutej obrazovke...",
     },
     menu: {
       more_info: "Viac informácií",

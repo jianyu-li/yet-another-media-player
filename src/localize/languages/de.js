@@ -471,6 +471,8 @@ export default {
       stop: "Stop",
       next: "Weiter",
       repeat: "Wiederholen",
+      lock_screen_ready: "Sperrbildschirm-Steuerung aktiv",
+      lock_screen_connecting: "Sperrbildschirm-Steuerung wird verbunden...",
     },
     menu: {
       more_info: "Mehr Info",

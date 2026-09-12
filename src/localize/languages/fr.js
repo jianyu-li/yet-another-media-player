@@ -462,6 +462,8 @@ export default {
       stop: "Arrêt",
       next: "Suivant",
       repeat: "Répéter",
+      lock_screen_ready: "Contrôles de l'écran de verrouillage actifs",
+      lock_screen_connecting: "Connexion des contrôles de l'écran de verrouillage...",
     },
     menu: {
       more_info: "Plus d'infos",

@@ -456,6 +456,8 @@ export default {
       stop: "Parar",
       next: "Seguinte",
       repeat: "Repetir",
+      lock_screen_ready: "Controlos do ecrã de bloqueio ativos",
+      lock_screen_connecting: "A ligar os controlos do ecrã de bloqueio...",
     },
     menu: {
       more_info: "Mais info",

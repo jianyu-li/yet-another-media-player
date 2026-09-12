@@ -466,6 +466,8 @@ export default {
       stop: "Stop",
       next: "Next",
       repeat: "Repeat",
+      lock_screen_ready: "Lock screen controls active",
+      lock_screen_connecting: "Connecting lock screen controls...",
     },
     menu: {
       more_info: "More Info",

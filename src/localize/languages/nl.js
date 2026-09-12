@@ -481,6 +481,8 @@ export default {
       stop: "Stop",
       next: "Volgende",
       repeat: "Herhalen",
+      lock_screen_ready: "Vergrendelschermbediening actief",
+      lock_screen_connecting: "Vergrendelschermbediening verbinden...",
     },
     menu: {
       more_info: "Meer Info",

@@ -455,6 +455,8 @@ export default {
       stop: "Ferma",
       next: "Successivo",
       repeat: "Ripeti",
+      lock_screen_ready: "Controlli schermata di blocco attivi",
+      lock_screen_connecting: "Connessione controlli schermata di blocco...",
     },
     menu: {
       more_info: "Più info",

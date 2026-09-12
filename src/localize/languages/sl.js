@@ -452,6 +452,8 @@ export default {
       stop: "Ustavi",
       next: "Naslednje",
       repeat: "Ponovi",
+      lock_screen_ready: "Kontrole zaklenjenega zaslona aktivne",
+      lock_screen_connecting: "Povezovanje kontrol zaklenjenega zaslona...",
     },
     menu: {
       more_info: "Več informacij",
