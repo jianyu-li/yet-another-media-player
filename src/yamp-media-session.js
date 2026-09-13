@@ -213,7 +213,15 @@ export class YampMediaSessionManager {
     // Loop cleanly before EOF (at 28s out of 30s) to prevent browser from firing
     // 'ended' or 'pause' events at the buffer boundary which disconnects mediaSession
     if (this._audio && this._audio.currentTime >= 28.0) {
-      this._audio.currentTime = 1.0;
+      this._isInternalPause = true;
+      try {
+        this._audio.currentTime = 1.0;
+      } catch (_e) {
+        // Ignore seek error
+      }
+      setTimeout(() => {
+        this._isInternalPause = false;
+      }, 500);
     }
   }
 
@@ -247,8 +255,12 @@ export class YampMediaSessionManager {
 
   _onVisibilityChange() {
     if (typeof document !== "undefined" && document.visibilityState === "visible") {
-      if (this._autoplayBlocked) {
-        this._autoplayBlocked = false;
+      this._autoplayBlocked = false;
+      if (this._wasInterrupted) {
+        this._wasInterrupted = false;
+        setTimeout(() => {
+          this.card?.requestUpdate?.();
+        }, 0);
       }
     }
   }
@@ -268,13 +280,20 @@ export class YampMediaSessionManager {
     this._autoplayBlocked = false;
     this._initAudio();
     if (typeof window !== "undefined") {
-      const unlockEvents = ["touchstart", "touchend", "click", "keydown"];
+      const unlockEvents = [
+        "pointerdown",
+        "mousedown",
+        "click",
+        "touchstart",
+        "touchend",
+        "keydown",
+      ];
       unlockEvents.forEach((evt) => {
         window.removeEventListener(evt, this._onUserInteractionUnlock, { capture: true });
       });
     }
     // If we are currently supposed to be playing, attempt to resume with user gesture
-    if (this._isAudioPlaying && this._audio && this._audio.paused && !this._wasInterrupted) {
+    if (this._isAudioPlaying && this._audio && this._audio.paused) {
       const playPromise = this._audio.play();
       if (playPromise !== undefined) {
         playPromise
@@ -288,8 +307,8 @@ export class YampMediaSessionManager {
   }
 
   _attachUnlockListeners() {
-    if (this._unlocked || typeof window === "undefined") return;
-    const unlockEvents = ["touchstart", "touchend", "click", "keydown"];
+    if (typeof window === "undefined") return;
+    const unlockEvents = ["pointerdown", "mousedown", "click", "touchstart", "touchend", "keydown"];
     unlockEvents.forEach((evt) => {
       window.addEventListener(evt, this._onUserInteractionUnlock, { capture: true, passive: true });
     });
@@ -458,9 +477,17 @@ export class YampMediaSessionManager {
       return;
     }
 
+    // If a new track or entity starts playing, automatically clear any prior interruption
+    const currentEntityOrTrackKey = `${targetEntityId}|${stateObj.attributes?.media_title || ""}|${stateObj.attributes?.media_artist || ""}`;
+    if (this._lastTrackKey !== currentEntityOrTrackKey) {
+      this._lastTrackKey = currentEntityOrTrackKey;
+      this._wasInterrupted = false;
+      this._wasEvicted = false;
+    }
+
     // If an external interruption occurred (e.g. user started playing Spotify on phone),
     // stay disconnected so we don't fight for audio focus or pause the user's phone music.
-    // Cleared when user interacts with YAMP or toggles lock screen controls.
+    // Cleared when user interacts with YAMP, toggles lock screen controls, or track changes.
     if (this._wasInterrupted) {
       return;
     }
@@ -525,20 +552,28 @@ export class YampMediaSessionManager {
       this._lastMetadata = metaKey;
       const artwork = absoluteArtwork
         ? [
+            { src: absoluteArtwork, sizes: "96x96" },
             { src: absoluteArtwork, sizes: "128x128" },
             { src: absoluteArtwork, sizes: "192x192" },
             { src: absoluteArtwork, sizes: "256x256" },
             { src: absoluteArtwork, sizes: "384x384" },
             { src: absoluteArtwork, sizes: "512x512" },
+            { src: absoluteArtwork },
           ]
         : [];
 
-      navigator.mediaSession.metadata = new MediaMetadata({
-        title: resolvedTitle,
-        artist: resolvedArtist,
-        album: resolvedAlbum,
-        artwork,
-      });
+      if (typeof MediaMetadata !== "undefined") {
+        try {
+          navigator.mediaSession.metadata = new MediaMetadata({
+            title: resolvedTitle,
+            artist: resolvedArtist,
+            album: resolvedAlbum,
+            artwork,
+          });
+        } catch (_e) {
+          // Fallback or ignore metadata constructor error
+        }
+      }
     }
 
     // Update position state for seek bar
@@ -554,9 +589,9 @@ export class YampMediaSessionManager {
       if (typeof navigator.mediaSession.setPositionState === "function") {
         try {
           navigator.mediaSession.setPositionState({
-            duration,
+            duration: Math.max(1, Math.round(duration)),
             playbackRate: 1.0,
-            position,
+            position: Math.max(0, Math.min(Math.round(position), Math.round(duration))),
           });
         } catch (_e) {
           // Ignore unsupported setPositionState

@@ -616,10 +616,9 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   get _isEditorPreview() {
-    return (
-      this.preview === true ||
-      this.hasAttribute("preview") ||
-      Boolean(typeof this.closest === "function" && this.closest("hui-card-preview"))
+    return Boolean(
+      (typeof this.closest === "function" && this.closest("hui-card-preview")) ||
+      (this.parentElement && this.parentElement.tagName && this.parentElement.tagName.toLowerCase() === "hui-card-preview")
     );
   }
 
