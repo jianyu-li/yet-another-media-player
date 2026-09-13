@@ -117,11 +117,14 @@ export class YampMediaSessionManager {
       /iPhone|iPod|iPad|Macintosh|MacIntel/i.test(navigator.userAgent);
 
     this._lastReportedState = null;
+    this._wasEvicted = false;
+    this._hasUserInteraction = false;
 
     /** @type {((state: 'ready'|'connecting'|null) => void)|null} */
     this.onReadyChange = null;
 
     this._onUserInteractionUnlock = this._onUserInteractionUnlock.bind(this);
+    this._onAudioTimeUpdate = this._onAudioTimeUpdate.bind(this);
     this._onAudioPlaying = this._onAudioPlaying.bind(this);
     this._onAudioPause = this._onAudioPause.bind(this);
     this._onVisibilityChange = this._onVisibilityChange.bind(this);
@@ -185,6 +188,7 @@ export class YampMediaSessionManager {
     this._audio.setAttribute("playsinline", "");
     this._audio.setAttribute("webkit-playsinline", "");
 
+    this._audio.addEventListener("timeupdate", this._onAudioTimeUpdate);
     this._audio.addEventListener("playing", this._onAudioPlaying);
     this._audio.addEventListener("pause", this._onAudioPause);
 
@@ -205,6 +209,14 @@ export class YampMediaSessionManager {
     }
   }
 
+  _onAudioTimeUpdate() {
+    // Loop cleanly before EOF (at 28s out of 30s) to prevent browser from firing
+    // 'ended' or 'pause' events at the buffer boundary which disconnects mediaSession
+    if (this._audio && this._audio.currentTime >= 28.0) {
+      this._audio.currentTime = 1.0;
+    }
+  }
+
   _onAudioPlaying() {
     this._hasStartedPlaying = true;
     this._autoplayBlocked = false;
@@ -214,7 +226,6 @@ export class YampMediaSessionManager {
 
   _onAudioPause() {
     if (this._isInternalPause) {
-      this._notifyStateChange();
       return;
     }
     // If audio has not successfully started playing yet (e.g. autoplay blocked on page load),
@@ -236,15 +247,20 @@ export class YampMediaSessionManager {
 
   _onVisibilityChange() {
     if (typeof document !== "undefined" && document.visibilityState === "visible") {
-      if (this._wasInterrupted) {
-        this._wasInterrupted = false;
+      if (this._autoplayBlocked) {
         this._autoplayBlocked = false;
-        // Re-check and re-evaluate lock screen controls
-        setTimeout(() => {
-          this.card?.requestUpdate?.();
-        }, 0);
       }
     }
+  }
+
+  /**
+   * Resets interruption / eviction flags when the user explicitly interacts with this card.
+   */
+  resumeFromUserGesture() {
+    this._wasInterrupted = false;
+    this._autoplayBlocked = false;
+    this._wasEvicted = false;
+    this._hasUserInteraction = true;
   }
 
   _onUserInteractionUnlock() {
@@ -312,7 +328,7 @@ export class YampMediaSessionManager {
     }
   }
 
-  _pauseAudio() {
+  _pauseAudio(silent = false) {
     if (!this._isAudioPlaying && (!this._audio || this._audio.paused)) {
       return;
     }
@@ -325,7 +341,9 @@ export class YampMediaSessionManager {
         this._isInternalPause = false;
       }, 100);
     }
-    this._notifyStateChange();
+    if (!silent) {
+      this._notifyStateChange();
+    }
   }
 
   _registerActionHandlers(targetEntityId) {
@@ -334,7 +352,7 @@ export class YampMediaSessionManager {
     const session = navigator.mediaSession;
 
     session.setActionHandler("play", () => {
-      this._wasInterrupted = false;
+      this.resumeFromUserGesture();
       this.card._onControlClick?.("play_pause");
     });
 
@@ -352,10 +370,12 @@ export class YampMediaSessionManager {
     });
 
     session.setActionHandler("nexttrack", () => {
+      this.resumeFromUserGesture();
       this.card._onControlClick?.("next");
     });
 
     session.setActionHandler("previoustrack", () => {
+      this.resumeFromUserGesture();
       this.card._onControlClick?.("prev");
     });
 
@@ -438,9 +458,10 @@ export class YampMediaSessionManager {
       return;
     }
 
-    // If an external interruption occurred and the document is in the background,
-    // do not fight for audio focus; keep disconnected until user returns to the app
-    if (this._wasInterrupted && typeof document !== "undefined" && document.hidden) {
+    // If an external interruption occurred (e.g. user started playing Spotify on phone),
+    // stay disconnected so we don't fight for audio focus or pause the user's phone music.
+    // Cleared when user interacts with YAMP or toggles lock screen controls.
+    if (this._wasInterrupted) {
       return;
     }
 
@@ -451,8 +472,20 @@ export class YampMediaSessionManager {
     // If active and playing/paused, claim active manager
     if (isPlaying || isPaused) {
       if (currentActiveManager && currentActiveManager !== this) {
-        currentActiveManager.reset();
+        // If current active manager is playing and this manager is only paused, do not steal
+        if (currentActiveManager._isAudioPlaying && isPaused && !isPlaying) {
+          return;
+        }
+        // If this manager was previously evicted by another manager, don't steal back
+        // unless user interacted with this card or this manager just transitioned to playing
+        if (this._wasEvicted && !this._hasUserInteraction && !isPlaying) {
+          return;
+        }
+        currentActiveManager._wasEvicted = true;
+        currentActiveManager.reset(true /* silent */);
       }
+      this._wasEvicted = false;
+      this._hasUserInteraction = false;
       currentActiveManager = this;
     } else {
       if (currentActiveManager === this) {
@@ -492,51 +525,45 @@ export class YampMediaSessionManager {
       this._lastMetadata = metaKey;
       const artwork = absoluteArtwork
         ? [
-            { src: absoluteArtwork, sizes: "96x96" },
             { src: absoluteArtwork, sizes: "128x128" },
             { src: absoluteArtwork, sizes: "192x192" },
             { src: absoluteArtwork, sizes: "256x256" },
             { src: absoluteArtwork, sizes: "384x384" },
             { src: absoluteArtwork, sizes: "512x512" },
-            { src: absoluteArtwork },
           ]
         : [];
 
-      if (typeof MediaMetadata !== "undefined") {
-        try {
-          navigator.mediaSession.metadata = new MediaMetadata({
-            title: resolvedTitle,
-            artist: resolvedArtist,
-            album: resolvedAlbum,
-            artwork,
-          });
-        } catch (_e) {
-          // Fallback for browsers with non-standard MediaMetadata constructors
-        }
-      }
+      navigator.mediaSession.metadata = new MediaMetadata({
+        title: resolvedTitle,
+        artist: resolvedArtist,
+        album: resolvedAlbum,
+        artwork,
+      });
     }
 
-    // Update position state for timeline scrub bar on lock screen
+    // Update position state for seek bar
     const duration = stateObj.attributes?.media_duration;
-    if (typeof navigator.mediaSession.setPositionState === "function") {
-      if (typeof duration === "number" && Number.isFinite(duration) && duration > 0) {
-        let position = stateObj.attributes?.media_position || 0;
-        if (isPlaying && stateObj.attributes?.media_position_updated_at) {
-          const updatedMs = new Date(stateObj.attributes.media_position_updated_at).getTime();
-          position += Math.max(0, (Date.now() - updatedMs) / 1000);
-        }
-        position = Math.min(duration, Math.max(0, position));
+    if (duration != null && duration > 0) {
+      let position = stateObj.attributes?.media_position || 0;
+      if (isPlaying && stateObj.attributes?.media_position_updated_at) {
+        const updatedMs = new Date(stateObj.attributes.media_position_updated_at).getTime();
+        position += Math.max(0, (Date.now() - updatedMs) / 1000);
+      }
+      position = Math.min(position, duration);
 
+      if (typeof navigator.mediaSession.setPositionState === "function") {
         try {
           navigator.mediaSession.setPositionState({
-            duration: Math.max(1, Math.round(duration)),
+            duration,
             playbackRate: 1.0,
-            position: Math.round(position),
+            position,
           });
         } catch (_e) {
-          // Ignore invalid position/duration error
+          // Ignore unsupported setPositionState
         }
-      } else {
+      }
+    } else {
+      if (typeof navigator.mediaSession.setPositionState === "function") {
         try {
           navigator.mediaSession.setPositionState();
         } catch (_e) {
@@ -547,25 +574,26 @@ export class YampMediaSessionManager {
   }
 
   /**
-   * Resets the system Media Session and pauses background audio
+   * Resets the system Media Session and pauses background audio.
+   * @param {boolean} [silent=false] If true, skips notifying card of state change to prevent re-render loops.
    */
-  reset() {
+  reset(silent = false) {
     if (currentActiveManager === this) {
       currentActiveManager = null;
     }
 
-    this._pauseAudio();
+    this._pauseAudio(silent);
 
     if (this.isSupported) {
       const session = navigator.mediaSession;
-      session.metadata = null;
-      session.playbackState = "none";
-      if (typeof session.setPositionState === "function") {
-        try {
+      try {
+        session.metadata = null;
+        session.playbackState = "none";
+        if (typeof session.setPositionState === "function") {
           session.setPositionState();
-        } catch (_e) {
-          // Ignore clear error
         }
+      } catch (_e) {
+        // Ignore clear error
       }
 
       const actions = [
@@ -591,7 +619,9 @@ export class YampMediaSessionManager {
       clearTimeout(this._pauseDebounceTimer);
       this._pauseDebounceTimer = null;
     }
-    this._notifyStateChange();
+    if (!silent) {
+      this._notifyStateChange();
+    }
   }
 
   /**
@@ -609,6 +639,7 @@ export class YampMediaSessionManager {
       document.removeEventListener("visibilitychange", this._onVisibilityChange);
     }
     if (this._audio) {
+      this._audio.removeEventListener("timeupdate", this._onAudioTimeUpdate);
       this._audio.removeEventListener("playing", this._onAudioPlaying);
       this._audio.removeEventListener("pause", this._onAudioPause);
       if (this._audio.parentNode) {

@@ -615,7 +615,18 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     return this._cardType !== "default";
   }
 
+  get _isEditorPreview() {
+    return (
+      this.preview === true ||
+      this.hasAttribute("preview") ||
+      Boolean(typeof this.closest === "function" && this.closest("hui-card-preview"))
+    );
+  }
+
   get _isMediaSessionEnabled() {
+    if (this._isEditorPreview) {
+      return false;
+    }
     if (this._mediaSessionOverride !== null) {
       return this._mediaSessionOverride;
     }
@@ -625,10 +636,19 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   constructor() {
     super();
     this._mediaSessionOverride = null;
+    this._mediaSessionUpdatePending = false;
     this._mediaSessionManager = new YampMediaSessionManager(this);
     this._mediaSessionManager.onReadyChange = () => {
-      if (this._isMediaSessionEnabled) {
-        this.requestUpdate();
+      if (this._isMediaSessionEnabled && !this._isEditorPreview) {
+        if (!this._mediaSessionUpdatePending) {
+          this._mediaSessionUpdatePending = true;
+          setTimeout(() => {
+            this._mediaSessionUpdatePending = false;
+            if (this._isMediaSessionEnabled && !this._isEditorPreview) {
+              this.requestUpdate();
+            }
+          }, 50);
+        }
       }
     };
     this._selectedIndex = 0;
@@ -7446,15 +7466,19 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         mainState?.attributes?.media_album_name ||
         "";
 
-      this._mediaSessionManager.update({
-        enabled: this._isMediaSessionEnabled,
-        stateObj: playbackState,
-        targetEntityId: activePlaybackEntity,
-        artworkUrl,
-        title,
-        artist,
-        album,
-      });
+      if (this._isEditorPreview) {
+        this._mediaSessionManager.reset(true);
+      } else {
+        this._mediaSessionManager.update({
+          enabled: this._isMediaSessionEnabled,
+          stateObj: playbackState,
+          targetEntityId: activePlaybackEntity,
+          artworkUrl,
+          title,
+          artist,
+          album,
+        });
+      }
     }
 
     // Update idle state after all other state checks
@@ -7642,6 +7666,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _onChipClick(idx) {
+    this._mediaSessionManager?.resumeFromUserGesture();
     // Ignore the synthetic click that fires immediately after a long‑press pin.
     if (this._holdToPin && this._justPinned) {
       this._justPinned = false;
@@ -7819,7 +7844,9 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     ) {
       const currentlyEnabled = this._isMediaSessionEnabled;
       this._mediaSessionOverride = !currentlyEnabled;
-      if (!this._mediaSessionOverride) {
+      if (this._mediaSessionOverride) {
+        this._mediaSessionManager?.resumeFromUserGesture();
+      } else {
         this._mediaSessionManager?.reset();
       }
       this.requestUpdate();
@@ -8124,6 +8151,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   async _onControlClick(action) {
+    this._mediaSessionManager?.resumeFromUserGesture();
     // Use the unified entity resolution system for control actions
     const targetEntity = this._getEntityForPurpose(this._selectedIndex, 'playback_control');
     if (!targetEntity) return;
@@ -8890,13 +8918,28 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       if (typeof iconColor === "string" && (iconColor.includes("{{") || iconColor.includes("{%") || iconColor.trim().startsWith("[[["))) {
         iconColor = resolveStringTemplateSync(this.hass, iconColor, this._getTemplateContext()) || "";
       }
+      let icon = action.icon;
+      if (!icon) {
+        if (action.action === "toggle_media_session" || action.action === "toggle_lock_screen_controls") {
+          icon = this._isMediaSessionEnabled ? "mdi:cellphone-lock" : "mdi:cellphone-wireless";
+        } else if (action.action === "toggle_lyrics") {
+          icon = "mdi:script-text-outline";
+        } else if (action.action === "remote_control") {
+          icon = "mdi:remote";
+        } else {
+          icon = "mdi:rhombus-outline";
+        }
+      }
+      if (!iconColor && (action.action === "toggle_media_session" || action.action === "toggle_lock_screen_controls") && this._isMediaSessionEnabled) {
+        iconColor = "var(--custom-accent, var(--accent-color, #ff9800))";
+      }
       return html`
         <button
           class="volume-icon-btn favorite-volume-btn custom-bottom-action"
           @click=${(e) => { e.stopPropagation(); this._onActionChipClick(idx); }}
           title="${label}"
         >
-          <ha-icon style=${styleMap({ color: iconColor || undefined })} .icon=${action.icon || "mdi:rhombus-outline"}></ha-icon>
+          <ha-icon style=${styleMap({ color: iconColor || undefined })} .icon=${icon}></ha-icon>
         </button>
       `;
     };
