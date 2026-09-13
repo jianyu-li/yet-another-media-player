@@ -510,7 +510,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     _lastLyricsEntityId: { state: true },
     _showSourceMenu: { state: true },
     _volumeDraggingEntity: { state: true },
-    _dragVolume: { state: true }
+    _dragVolume: { state: true },
+    _mediaSessionOverride: { state: true }
   };
 
   static styles = yampCardStyles;
@@ -614,11 +615,19 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     return this._cardType !== "default";
   }
 
+  get _isMediaSessionEnabled() {
+    if (this._mediaSessionOverride !== null) {
+      return this._mediaSessionOverride;
+    }
+    return this.config?.lock_screen_controls === true;
+  }
+
   constructor() {
     super();
+    this._mediaSessionOverride = null;
     this._mediaSessionManager = new YampMediaSessionManager(this);
     this._mediaSessionManager.onReadyChange = () => {
-      if (this.config?.lock_screen_controls === true) {
+      if (this._isMediaSessionEnabled) {
         this.requestUpdate();
       }
     };
@@ -5394,6 +5403,9 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const templateName = rawConfig.template || "custom";
     const templateBase = TEMPLATE_CONFIGS[templateName] || {};
     const config = { ...templateBase, ...rawConfig };
+    if (oldConfig?.lock_screen_controls !== config.lock_screen_controls) {
+      this._mediaSessionOverride = null;
+    }
     this.config = config;
     this._swapPauseForStop = config.swap_pause_for_stop === true;
     this._holdToPin = !!config.hold_to_pin;
@@ -7435,7 +7447,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         "";
 
       this._mediaSessionManager.update({
-        enabled: this.config?.lock_screen_controls === true,
+        enabled: this._isMediaSessionEnabled,
         stateObj: playbackState,
         targetEntityId: activePlaybackEntity,
         artworkUrl,
@@ -7801,6 +7813,19 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       return;
     }
 
+    if (
+      action.action === "toggle_media_session" ||
+      action.action === "toggle_lock_screen_controls"
+    ) {
+      const currentlyEnabled = this._isMediaSessionEnabled;
+      this._mediaSessionOverride = !currentlyEnabled;
+      if (!this._mediaSessionOverride) {
+        this._mediaSessionManager?.reset();
+      }
+      this.requestUpdate();
+      return;
+    }
+
     if (action.action === "prev_entity" || action.action === "next_entity") {
       const sortedIds = this.sortedEntityIds;
       if (sortedIds && sortedIds.length > 0) {
@@ -8081,6 +8106,18 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       action.action === "navigate"
     ) {
       return iconOnly ? "" : "Navigate";
+    }
+    if (action.action === "toggle_lyrics") {
+      return iconOnly ? "" : localize("editor.action_types.toggle_lyrics") || "Toggle Lyrics Overlay";
+    }
+    if (action.action === "remote_control") {
+      return iconOnly ? "" : localize("editor.action_types.remote_control") || "Open Remote Controls Overlay";
+    }
+    if (
+      action.action === "toggle_media_session" ||
+      action.action === "toggle_lock_screen_controls"
+    ) {
+      return iconOnly ? "" : localize("editor.action_types.toggle_media_session") || "Toggle Media Session Controls";
     }
     if (action.service) return iconOnly ? "" : action.service;
     return iconOnly ? "" : "Action";
@@ -9701,7 +9738,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         adaptiveControls: this._adaptiveControls,
         controlLayout: this._controlLayout,
         swapPauseForStop: this._controlLayout === "modern" && this._swapPauseForStop,
-        lockScreenState: this.config?.lock_screen_controls === true ? this._mediaSessionManager?.lockScreenState : null,
+        lockScreenState: this._isMediaSessionEnabled ? this._mediaSessionManager?.lockScreenState : null,
       })}
                 </div>
                 ${renderVolumeRow({

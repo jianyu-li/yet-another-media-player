@@ -372,6 +372,7 @@ export default {
       select_entity: "Vybrať entitu z pomocníka",
       toggle_lyrics: "Prepnúť prekrytie textov piesní",
       remote_control: "Otvoriť prekrývanie diaľkového ovládania",
+      toggle_media_session: "Prepnúť ovládacie prvky relácie médií / uzamknutej obrazovky",
     },
     action_helpers: {
       sync_selected_entity: "Synchronizovať vybranú entitu →",

@@ -372,6 +372,7 @@ export default {
       select_entity: "Entität aus Helper auswählen",
       toggle_lyrics: "Liedtext-Overlay ein-/ausschalten",
       remote_control: "Fernbedienungs-Overlay öffnen",
+      toggle_media_session: "Mediensitzung / Sperrbildschirm-Steuerung umschalten",
     },
     action_helpers: {
       sync_selected_entity: "Entität synchronisieren →",

@@ -363,6 +363,7 @@ export default {
       select_entity: "Sélectionner l'entité depuis le helper",
       toggle_lyrics: "Activer/Désactiver la superposition des paroles",
       remote_control: "Ouvrir l'overlay télécommande",
+      toggle_media_session: "Basculer la session multimédia / l'écran de verrouillage",
     },
     action_helpers: {
       sync_selected_entity: "Synchroniser l'entité sélectionnée →",

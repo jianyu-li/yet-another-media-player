@@ -357,6 +357,7 @@ export default {
       select_entity: "Selecionar entidade do helper",
       toggle_lyrics: "Alternar sobreposição de letras",
       remote_control: "Abrir sobreposição do controlo remoto",
+      toggle_media_session: "Alternar sessão de multimédia / controlos de ecrã de bloqueio",
     },
     action_helpers: {
       sync_selected_entity: "Sincronizar entidade selecionada →",

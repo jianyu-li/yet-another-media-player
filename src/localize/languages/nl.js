@@ -382,6 +382,7 @@ export default {
       select_entity: "Selecteer entiteit uit helper",
       toggle_lyrics: "Wisselen tussen songtekst-overlay",
       remote_control: "Afstandsbediening overlay openen",
+      toggle_media_session: "Wisselen van mediasessie / vergrendelschermbediening",
     },
     action_helpers: {
       sync_selected_entity: "Geselecteerde entiteit synchroniseren",

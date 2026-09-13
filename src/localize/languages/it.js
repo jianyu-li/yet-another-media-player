@@ -356,6 +356,7 @@ export default {
       select_entity: "Seleziona entità da helper",
       toggle_lyrics: "Attiva/disattiva sovrapposizione testi",
       remote_control: "Apri sovrapposizione telecomando",
+      toggle_media_session: "Attiva/disattiva sessione multimediale / schermata di blocco",
     },
     action_helpers: {
       sync_selected_entity: "Sincronizza entità selezionata →",

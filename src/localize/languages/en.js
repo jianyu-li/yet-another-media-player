@@ -367,6 +367,7 @@ export default {
       select_entity: "Select Entity from Helper",
       toggle_lyrics: "Toggle Lyrics Overlay",
       remote_control: "Open Remote Controls Overlay",
+      toggle_media_session: "Toggle Media Session Controls",
     },
     action_helpers: {
       sync_selected_entity: "Sync Selected Entity →",

@@ -353,6 +353,7 @@ export default {
       select_entity: "Izberi entiteto iz pomočnika",
       toggle_lyrics: "Preklopi prekrivanje besedila",
       remote_control: "Odpri prekrivanje daljinskega upravljalnika",
+      toggle_media_session: "Preklopi sejo predstavnosti / kontrole zaklenjenega zaslona",
     },
     action_helpers: {
       sync_selected_entity: "Sinhroniziraj izbrano entiteto →",

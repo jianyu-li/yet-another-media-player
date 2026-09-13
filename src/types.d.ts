@@ -147,7 +147,22 @@ export interface ArtworkOverrideRule {
 
 export interface ActionConfig {
   action?:
-    "call-service" | "navigate" | "url" | "more-info" | "toggle" | "none" | "custom" | string;
+    | "call-service"
+    | "navigate"
+    | "url"
+    | "more-info"
+    | "toggle"
+    | "none"
+    | "custom"
+    | "toggle_lyrics"
+    | "remote_control"
+    | "prev_entity"
+    | "next_entity"
+    | "select_entity"
+    | "sync_selected_entity"
+    | "toggle_media_session"
+    | "toggle_lock_screen_controls"
+    | string;
   service?: string;
   service_data?: Record<string, any>;
   data?: Record<string, any>;
