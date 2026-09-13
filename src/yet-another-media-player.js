@@ -10448,7 +10448,6 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
             </div>
           `;
         })()}
-        </div>
       </div>
     `;
   }
