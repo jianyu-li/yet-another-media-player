@@ -2808,6 +2808,115 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     }
   }
 
+  _handleHeaderWheel(e, pinSearchHeaders) {
+    if (pinSearchHeaders) return;
+    if (e.deltaY > 6) {
+      this._setSearchHeadersRetracted(true);
+    } else if (e.deltaY < -6) {
+      this._setSearchHeadersRetracted(false);
+    }
+  }
+
+  _handleHeaderTouchStart(e) {
+    if (e.touches && e.touches.length === 1) {
+      this._headerTouchStartY = e.touches[0].clientY;
+      this._headerTouchStartX = e.touches[0].clientX;
+    }
+  }
+
+  _handleHeaderTouchMove(e, pinSearchHeaders) {
+    if (pinSearchHeaders || this._headerTouchStartY == null) return;
+    if (!e.touches || e.touches.length !== 1) return;
+
+    const currentY = e.touches[0].clientY;
+    const currentX = e.touches[0].clientX;
+    const deltaY = currentY - this._headerTouchStartY;
+    const deltaX = currentX - this._headerTouchStartX;
+
+    // Discriminate vertical gesture to avoid conflicting with horizontal chip scroll
+    if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > 10) {
+      if (deltaY < -10) {
+        this._setSearchHeadersRetracted(true);
+      } else if (deltaY > 10) {
+        this._setSearchHeadersRetracted(false);
+      }
+    }
+  }
+
+  _handleHeaderTouchEnd() {
+    this._headerTouchStartY = null;
+    this._headerTouchStartX = null;
+  }
+
+  _handleHeaderMouseDown(e) {
+    if (e.target.tagName === "INPUT" || e.target.closest("button") || e.target.closest(".chip")) return;
+    this._headerMouseDown = true;
+    this._headerMouseStartY = e.clientY;
+  }
+
+  _handleHeaderMouseMove(e, pinSearchHeaders) {
+    if (pinSearchHeaders || !this._headerMouseDown || this._headerMouseStartY == null) return;
+    const deltaY = e.clientY - this._headerMouseStartY;
+    if (deltaY < -12) {
+      this._setSearchHeadersRetracted(true);
+      this._headerMouseDown = false;
+    } else if (deltaY > 12) {
+      this._setSearchHeadersRetracted(false);
+      this._headerMouseDown = false;
+    }
+  }
+
+  _handleHeaderMouseUp() {
+    this._headerMouseDown = false;
+    this._headerMouseStartY = null;
+  }
+
+  _handleSearchContainerWheel(e, pinSearchHeaders) {
+    if (pinSearchHeaders) return;
+    if (e.deltaY < -6) {
+      const results = this.shadowRoot?.querySelector(
+        ".virtualized-results-wrapper, .queue-results-wrapper, .search-sheet-results"
+      );
+      if (!results || results.scrollTop <= 5) {
+        this._setSearchHeadersRetracted(false);
+      }
+    }
+  }
+
+  _handleSearchResultsWheel(e, pinSearchHeaders) {
+    if (pinSearchHeaders) return;
+    const el = e.currentTarget || e.target;
+    const scrollTop = el ? el.scrollTop : 0;
+    if (e.deltaY < -6 && scrollTop <= 5) {
+      this._setSearchHeadersRetracted(false);
+    }
+  }
+
+  _handleResultsTouchStart(e) {
+    if (e.touches && e.touches.length === 1) {
+      this._resultsTouchStartY = e.touches[0].clientY;
+      this._resultsTouchStartX = e.touches[0].clientX;
+    }
+  }
+
+  _handleResultsTouchMove(e, pinSearchHeaders) {
+    if (pinSearchHeaders || this._resultsTouchStartY == null) return;
+    if (!e.touches || e.touches.length !== 1) return;
+    const el = e.currentTarget;
+    const scrollTop = el ? el.scrollTop : 0;
+    const deltaY = e.touches[0].clientY - this._resultsTouchStartY;
+    const deltaX = e.touches[0].clientX - this._resultsTouchStartX;
+
+    if (Math.abs(deltaY) > Math.abs(deltaX) && deltaY > 12 && scrollTop <= 5) {
+      this._setSearchHeadersRetracted(false);
+    }
+  }
+
+  _handleResultsTouchEnd() {
+    this._resultsTouchStartY = null;
+    this._resultsTouchStartX = null;
+  }
+
   // Check if a search result is clickable for hierarchical navigation
   _isClickableSearchResult(item) {
     if (!item) return false;
@@ -10298,8 +10407,17 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   _renderSearchInOptions(showSearchHeaders, pinSearchHeaders = false) {
     const isRetracted = !pinSearchHeaders && this._searchHeadersRetracted;
     return html`
-      <div class="entity-options-search" style="margin-top:${this._cardType === 'up_next' ? '0' : '12px'};">
-        <div class="search-header-panel ${isRetracted ? 'retracted' : ''}">
+      <div class="entity-options-search"
+           @wheel=${(e) => this._handleSearchContainerWheel(e, pinSearchHeaders)}
+           style="margin-top:${this._cardType === 'up_next' ? '0' : '12px'};">
+        <div class="search-header-panel ${isRetracted ? 'retracted' : ''}"
+             @wheel=${(e) => this._handleHeaderWheel(e, pinSearchHeaders)}
+             @touchstart=${(e) => this._handleHeaderTouchStart(e)}
+             @touchmove=${(e) => this._handleHeaderTouchMove(e, pinSearchHeaders)}
+             @touchend=${() => this._handleHeaderTouchEnd()}
+             @mousedown=${(e) => this._handleHeaderMouseDown(e)}
+             @mousemove=${(e) => this._handleHeaderMouseMove(e, pinSearchHeaders)}
+             @mouseup=${() => this._handleHeaderMouseUp()}>
           ${this._searchHierarchy.length > 0 ? html`
               <button class="entity-options-item close-item" @click=${() => this._goBackInSearch()}>
                 ${localize('common.back')}
@@ -10448,7 +10566,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
           if (this._searchAttempted && currentResults.length === 0 && !this._searchLoading) {
             return html`
-              <div class="${this._showSearchInSheet ? 'search-sheet-results' : 'entity-options-search-results'}">
+              <div class="${this._showSearchInSheet ? 'search-sheet-results' : 'entity-options-search-results'}"
+                   @wheel=${(e) => this._handleSearchResultsWheel(e, pinSearchHeaders)}
+                   @touchstart=${(e) => this._handleResultsTouchStart(e)}
+                   @touchmove=${(e) => this._handleResultsTouchMove(e, pinSearchHeaders)}
+                   @touchend=${() => this._handleResultsTouchEnd()}>
                 <div class="entity-options-search-empty">${localize('common.no_results')}</div>
               </div>
             `;
@@ -10458,6 +10580,10 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
             return html`
               <div class="${this._showSearchInSheet ? 'search-sheet-results' : 'entity-options-search-results'} queue-results-wrapper ${isGridMode ? 'grid-mode' : ''}"
                    @scroll=${(e) => this._handleSearchResultsScroll(e, pinSearchHeaders)}
+                   @wheel=${(e) => this._handleSearchResultsWheel(e, pinSearchHeaders)}
+                   @touchstart=${(e) => this._handleResultsTouchStart(e)}
+                   @touchmove=${(e) => this._handleResultsTouchMove(e, pinSearchHeaders)}
+                   @touchend=${() => this._handleResultsTouchEnd()}
                    style="${(this.config.search_view === 'card' || this.config.search_view === 'card_minimal' || isGridMode) ? `--search-card-columns: ${isGridMode ? 5 /* MINI_GRID_COLUMNS */ : (this.config.search_card_columns || 4)};` : ''}">
                 <div class="queue-sortable-container ${(isCard || isGridMode) ? 'is-card-layout' : ''} ${isGridMode ? 'grid-mode' : ''}"
                   @pointerdown=${(e) => this._onQueueDragStart(e)}
@@ -10492,6 +10618,10 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           return html`
             <div class="${this._showSearchInSheet ? 'search-sheet-results' : 'entity-options-search-results'} virtualized-results-wrapper ${isGridMode ? 'grid-mode' : ''}"
                  @scroll=${(e) => this._handleSearchResultsScroll(e, pinSearchHeaders)}
+                 @wheel=${(e) => this._handleSearchResultsWheel(e, pinSearchHeaders)}
+                 @touchstart=${(e) => this._handleResultsTouchStart(e)}
+                 @touchmove=${(e) => this._handleResultsTouchMove(e, pinSearchHeaders)}
+                 @touchend=${() => this._handleResultsTouchEnd()}
                  style="${(this.config.search_view === 'card' || this.config.search_view === 'card_minimal' || isGridMode) ? `--search-card-columns: ${isGridMode ? 5 /* MINI_GRID_COLUMNS */ : (this.config.search_card_columns || 4)};` : ''}">
               ${(isCard || isGridMode)
                 ? virtualize({

@@ -3486,6 +3486,7 @@ export const yampCardStyles = css`
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    touch-action: pan-y;
     transition:
       max-height 0.28s cubic-bezier(0.4, 0, 0.2, 1),
       opacity 0.2s ease,
