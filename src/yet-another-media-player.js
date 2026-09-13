@@ -510,8 +510,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     _lastLyricsEntityId: { state: true },
     _showSourceMenu: { state: true },
     _volumeDraggingEntity: { state: true },
-    _dragVolume: { state: true },
-    _lockScreenStatus: { state: true }
+    _dragVolume: { state: true }
   };
 
   static styles = yampCardStyles;
@@ -617,50 +616,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
   constructor() {
     super();
-    this._lockScreenStatus = null;
-    this._lockScreenDismissTimeout = null;
     this._mediaSessionManager = new YampMediaSessionManager(this);
-    this._mediaSessionManager.onReadyChange = (state) => {
-      setTimeout(() => {
-        if (this.config?.lock_screen_controls !== true) {
-          if (this._lockScreenStatus !== null) {
-            this._lockScreenStatus = null;
-            this.requestUpdate();
-          }
-          return;
-        }
-        if (this._lockScreenStatus === state) {
-          return;
-        }
-        if (state === "connecting") {
-          if (this._lockScreenDismissTimeout) {
-            clearTimeout(this._lockScreenDismissTimeout);
-            this._lockScreenDismissTimeout = null;
-          }
-          this._lockScreenStatus = "connecting";
-          this.requestUpdate();
-        } else if (state === "ready") {
-          if (this._lockScreenDismissTimeout) {
-            clearTimeout(this._lockScreenDismissTimeout);
-          }
-          this._lockScreenStatus = "ready";
-          this.requestUpdate();
-          this._lockScreenDismissTimeout = setTimeout(() => {
-            this._lockScreenStatus = null;
-            this._lockScreenDismissTimeout = null;
-            this.requestUpdate();
-          }, 4000);
-        } else {
-          if (this._lockScreenDismissTimeout) {
-            clearTimeout(this._lockScreenDismissTimeout);
-            this._lockScreenDismissTimeout = null;
-          }
-          if (this._lockScreenStatus !== null) {
-            this._lockScreenStatus = null;
-            this.requestUpdate();
-          }
-        }
-      }, 0);
+    this._mediaSessionManager.onReadyChange = () => {
+      if (this.config?.lock_screen_controls === true) {
+        this.requestUpdate();
+      }
     };
     this._selectedIndex = 0;
     this._lastSyncedEntityId = null;
@@ -9840,20 +9800,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
                       Re-ordering ${this._queueOpsCompleted} / ${this._queueOpsTotal}
                     </div>
                   ` : nothing}
-                  ${this._lyricsActive && !this._isIdle && this._fetchingLyrics
-                    ? html`
-                        <div class="queue-ops-progress" style="position: absolute !important; bottom: -20px !important; left: 50% !important; transform: translate(-50%, 0) !important; z-index: 1000 !important; width: max-content !important; pointer-events: none !important; color: var(--search-text-secondary) !important;">
-                          ${localize("lyrics.finding")}
-                        </div>
-                      `
-                    : (this._lockScreenStatus && this.config?.lock_screen_controls === true
-                      ? html`
-                          <div class="queue-ops-progress" style="position: absolute !important; bottom: -20px !important; left: 50% !important; transform: translate(-50%, 0) !important; z-index: 1000 !important; width: max-content !important; pointer-events: none !important; color: var(--search-text-secondary) !important;">
-                            <ha-icon .icon=${this._lockScreenStatus === 'connecting' ? 'mdi:cellphone-wireless' : 'mdi:cellphone-lock'} style="--mdc-icon-size: 13px; margin-right: 2px; ${this._lockScreenStatus !== 'connecting' ? 'color: var(--custom-accent);' : ''}"></ha-icon>
-                            ${this._lockScreenStatus === 'connecting' ? localize("card.media_controls.lock_screen_connecting") : localize("card.media_controls.lock_screen_ready")}
-                          </div>
-                        `
-                      : nothing)}
+                  ${this._lyricsActive && !this._isIdle && this._fetchingLyrics ? html`
+                    <div class="queue-ops-progress" style="position: absolute !important; bottom: -20px !important; left: 50% !important; transform: translate(-50%, 0) !important; z-index: 1000 !important; width: max-content !important; pointer-events: none !important; color: var(--search-text-secondary) !important;">
+                      ${localize("lyrics.finding")}
+                    </div>
+                  ` : nothing}
                 </div>
                 ${(() => {
             const idx = this._selectedIndex;
@@ -9895,22 +9846,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
               Re-ordering ${this._queueOpsCompleted} / ${this._queueOpsTotal}
             </div>
           ` : ""}
-          ${(!this._showEntityOptions || !shouldShowPersistentControls)
-            ? (this._lyricsActive && !this._isIdle && this._fetchingLyrics
-              ? html`
-                  <div class="queue-ops-progress" style="position: absolute !important; bottom: 2px !important; left: 50% !important; transform: translate(-50%, 0) !important; z-index: 1000 !important; width: max-content !important; pointer-events: none !important; color: var(--search-text-secondary) !important;">
-                    ${localize("lyrics.finding")}
-                  </div>
-                `
-              : (this._lockScreenStatus && this.config?.lock_screen_controls === true
-                ? html`
-                    <div class="queue-ops-progress" style="position: absolute !important; bottom: 2px !important; left: 50% !important; transform: translate(-50%, 0) !important; z-index: 1000 !important; width: max-content !important; pointer-events: none !important; color: var(--search-text-secondary) !important;">
-                      <ha-icon .icon=${this._lockScreenStatus === 'connecting' ? 'mdi:cellphone-wireless' : 'mdi:cellphone-lock'} style="--mdc-icon-size: 13px; margin-right: 2px; ${this._lockScreenStatus !== 'connecting' ? 'color: var(--custom-accent);' : ''}"></ha-icon>
-                      ${this._lockScreenStatus === 'connecting' ? localize("card.media_controls.lock_screen_connecting") : localize("card.media_controls.lock_screen_ready")}
-                    </div>
-                  `
-                : nothing))
-            : nothing}
+          ${(!this._showEntityOptions || !shouldShowPersistentControls) && this._lyricsActive && !this._isIdle && this._fetchingLyrics ? html`
+            <div class="queue-ops-progress" style="position: absolute !important; bottom: 2px !important; left: 50% !important; transform: translate(-50%, 0) !important; z-index: 1000 !important; width: max-content !important; pointer-events: none !important; color: var(--search-text-secondary) !important;">
+              ${localize("lyrics.finding")}
+            </div>
+          ` : ""}
           </div>
     </ha-card>
   `;
@@ -11182,10 +11122,6 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     if (this._lyricsFetchTimeout) {
       clearTimeout(this._lyricsFetchTimeout);
       this._lyricsFetchTimeout = null;
-    }
-    if (this._lockScreenDismissTimeout) {
-      clearTimeout(this._lockScreenDismissTimeout);
-      this._lockScreenDismissTimeout = null;
     }
     if (this._mediaSessionManager) {
       this._mediaSessionManager.destroy();
