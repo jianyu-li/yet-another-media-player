@@ -498,7 +498,6 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     _queueOpsCompleted: { state: true },
     _showResolvedEntities: { state: true },
     _showSearchInSheet: { state: true },
-    _searchHeadersRetracted: { state: true },
     _addToPlaylistTarget: { state: true },
     _showMediaTitleOptions: { state: true },
     _dismissMenuAfterPlaylistAdd: { state: false },
