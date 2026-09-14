@@ -11400,7 +11400,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       this._lyricsFetchTimeout = null;
     }
     if (this._mediaSessionManager) {
-      this._mediaSessionManager.detach();
+      this._mediaSessionManager.destroy();
     }
     if (this._mediaSessionUpdateTimer) {
       clearTimeout(this._mediaSessionUpdateTimer);
