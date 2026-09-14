@@ -119,6 +119,9 @@ export class YampMediaSessionManager {
     this._lastReportedState = null;
     this._wasEvicted = false;
     this._hasUserInteraction = false;
+    this._lastTrackKey = null;
+    this._lastPlaybackState = null;
+    this._unlockListenersAttached = false;
 
     /** @type {((state: 'ready'|'connecting'|null) => void)|null} */
     this.onReadyChange = null;
@@ -128,6 +131,8 @@ export class YampMediaSessionManager {
     this._onAudioPlaying = this._onAudioPlaying.bind(this);
     this._onAudioPause = this._onAudioPause.bind(this);
     this._onVisibilityChange = this._onVisibilityChange.bind(this);
+
+    this._attachUnlockListeners();
   }
 
   get isSupported() {
@@ -234,11 +239,13 @@ export class YampMediaSessionManager {
 
   _onAudioPause() {
     if (this._isInternalPause) {
+      this._isInternalPause = false;
       return;
     }
     // If audio has not successfully started playing yet (e.g. autoplay blocked on page load),
+    // or if audio is not supposed to be playing (e.g. HA is paused/idle),
     // do not treat this initial pause as an external interruption!
-    if (!this._hasStartedPlaying) {
+    if (!this._isAudioPlaying || !this._hasStartedPlaying) {
       return;
     }
     // External interruption: another app (Spotify, YouTube, phone call, Siri)
@@ -273,33 +280,23 @@ export class YampMediaSessionManager {
     this._autoplayBlocked = false;
     this._wasEvicted = false;
     this._hasUserInteraction = true;
+    this._attachUnlockListeners();
   }
 
   _onUserInteractionUnlock() {
     this._unlocked = true;
     this._autoplayBlocked = false;
     this._initAudio();
-    if (typeof window !== "undefined") {
-      const unlockEvents = [
-        "pointerdown",
-        "mousedown",
-        "click",
-        "touchstart",
-        "touchend",
-        "keydown",
-      ];
-      unlockEvents.forEach((evt) => {
-        window.removeEventListener(evt, this._onUserInteractionUnlock, { capture: true });
-      });
-    }
-    // If we are currently supposed to be playing, attempt to resume with user gesture
+    // If playback is supposed to be active, attempt to resume with user gesture
     if (this._isAudioPlaying && this._audio && this._audio.paused) {
       const playPromise = this._audio.play();
       if (playPromise !== undefined) {
         playPromise
           .then(() => {
             this._hasStartedPlaying = true;
+            this._autoplayBlocked = false;
             this._notifyStateChange();
+            this._detachUnlockListeners();
           })
           .catch(() => {});
       }
@@ -307,11 +304,21 @@ export class YampMediaSessionManager {
   }
 
   _attachUnlockListeners() {
-    if (typeof window === "undefined") return;
+    if (typeof window === "undefined" || this._unlockListenersAttached) return;
     const unlockEvents = ["pointerdown", "mousedown", "click", "touchstart", "touchend", "keydown"];
     unlockEvents.forEach((evt) => {
       window.addEventListener(evt, this._onUserInteractionUnlock, { capture: true, passive: true });
     });
+    this._unlockListenersAttached = true;
+  }
+
+  _detachUnlockListeners() {
+    if (typeof window === "undefined" || !this._unlockListenersAttached) return;
+    const unlockEvents = ["pointerdown", "mousedown", "click", "touchstart", "touchend", "keydown"];
+    unlockEvents.forEach((evt) => {
+      window.removeEventListener(evt, this._onUserInteractionUnlock, { capture: true });
+    });
+    this._unlockListenersAttached = false;
   }
 
   _startAudio() {
@@ -324,6 +331,7 @@ export class YampMediaSessionManager {
 
     // If autoplay was already blocked and we are awaiting user touch, don't keep calling play() on every update
     if (this._autoplayBlocked) {
+      this._attachUnlockListeners();
       return;
     }
 
@@ -336,6 +344,7 @@ export class YampMediaSessionManager {
           this._hasStartedPlaying = true;
           this._autoplayBlocked = false;
           this._notifyStateChange();
+          this._detachUnlockListeners();
         })
         .catch((_err) => {
           // Autoplay blocked: wait for user interaction unlock
@@ -356,12 +365,51 @@ export class YampMediaSessionManager {
     if (this._audio) {
       this._isInternalPause = true;
       this._audio.pause();
-      setTimeout(() => {
-        this._isInternalPause = false;
-      }, 100);
     }
     if (!silent) {
       this._notifyStateChange();
+    }
+  }
+
+  /**
+   * Directly initiates audio playback from a user gesture (e.g. tapping play/pause, next, prev, preset).
+   * Synchronously invokes this._audio.play() in the user gesture call stack to bypass browser autoplay restrictions.
+   * @param {string} [targetEntityId]
+   */
+  startPlaybackGesture(targetEntityId) {
+    if (!this.isSupported || !this.card?._isMediaSessionEnabled) return;
+    this.resumeFromUserGesture();
+    this._initAudio();
+    if (!this._audio) return;
+
+    if (currentActiveManager && currentActiveManager !== this) {
+      currentActiveManager._wasEvicted = true;
+      currentActiveManager.reset(true /* silent */);
+    }
+    currentActiveManager = this;
+    this._wasEvicted = false;
+    this._isAudioPlaying = true;
+    this._notifyStateChange();
+
+    const playPromise = this._audio.play();
+    if (playPromise !== undefined) {
+      playPromise
+        .then(() => {
+          this._hasStartedPlaying = true;
+          this._autoplayBlocked = false;
+          this._notifyStateChange();
+          this._detachUnlockListeners();
+        })
+        .catch((_err) => {
+          this._autoplayBlocked = true;
+          this._hasStartedPlaying = false;
+          this._attachUnlockListeners();
+          this._notifyStateChange();
+        });
+    }
+
+    if (targetEntityId) {
+      this._registerActionHandlers(targetEntityId);
     }
   }
 
@@ -376,13 +424,9 @@ export class YampMediaSessionManager {
     });
 
     session.setActionHandler("pause", () => {
-      // If external audio interruption occurred or audio is paused externally, ignore
-      if (this._wasInterrupted || (this._audio && this._audio.paused && !this._isInternalPause)) {
-        return;
-      }
+      this._isInternalPause = true;
       if (this._pauseDebounceTimer) clearTimeout(this._pauseDebounceTimer);
       this._pauseDebounceTimer = setTimeout(() => {
-        if (this._wasInterrupted) return;
         this.card._onControlClick?.("play_pause");
         this._pauseDebounceTimer = null;
       }, 200);
@@ -485,16 +529,29 @@ export class YampMediaSessionManager {
       this._wasEvicted = false;
     }
 
-    // If an external interruption occurred (e.g. user started playing Spotify on phone),
-    // stay disconnected so we don't fight for audio focus or pause the user's phone music.
-    // Cleared when user interacts with YAMP, toggles lock screen controls, or track changes.
-    if (this._wasInterrupted) {
-      return;
-    }
-
     const state = stateObj.state;
     const isPlaying = state === "playing";
     const isPaused = state === "paused";
+
+    // If playback transitions from not playing to playing, or if document is visible,
+    // clear any prior interruption
+    if (isPlaying && this._lastPlaybackState !== "playing") {
+      this._wasInterrupted = false;
+      this._wasEvicted = false;
+      this._autoplayBlocked = false;
+    }
+    this._lastPlaybackState = state;
+
+    if (typeof document !== "undefined" && !document.hidden) {
+      this._wasInterrupted = false;
+    }
+
+    // If an external interruption occurred and the document is in the background,
+    // stay disconnected so we don't fight for audio focus or pause the user's phone music.
+    // Cleared when user interacts with YAMP, returns to the app, toggles controls, or track changes.
+    if (this._wasInterrupted && typeof document !== "undefined" && document.hidden) {
+      return;
+    }
 
     // If active and playing/paused, claim active manager
     if (isPlaying || isPaused) {
@@ -650,6 +707,7 @@ export class YampMediaSessionManager {
     }
 
     this._lastMetadata = null;
+    this._lastPlaybackState = null;
     if (this._pauseDebounceTimer) {
       clearTimeout(this._pauseDebounceTimer);
       this._pauseDebounceTimer = null;
@@ -664,12 +722,7 @@ export class YampMediaSessionManager {
    */
   destroy() {
     this.reset();
-    if (typeof window !== "undefined") {
-      const unlockEvents = ["touchstart", "touchend", "click", "keydown"];
-      unlockEvents.forEach((evt) => {
-        window.removeEventListener(evt, this._onUserInteractionUnlock, { capture: true });
-      });
-    }
+    this._detachUnlockListeners();
     if (typeof document !== "undefined") {
       document.removeEventListener("visibilitychange", this._onVisibilityChange);
     }

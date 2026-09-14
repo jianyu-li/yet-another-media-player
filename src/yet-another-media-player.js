@@ -381,6 +381,9 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     window.addEventListener("resize", this._handleViewportResize, { passive: true });
     this._updateViewportFlags();
     this._updateAdaptiveTextObserverState();
+    if (this._mediaSessionManager && this._isMediaSessionEnabled) {
+      this._mediaSessionManager._attachUnlockListeners?.();
+    }
   }
 
   // Scroll to first source option starting with the given letter
@@ -2387,6 +2390,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     }
     const targetEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
     const targetEntityId = await this._resolveTemplateAtActionTime(targetEntityIdTemplate, this.currentEntityId);
+    this._mediaSessionManager?.startPlaybackGesture(targetEntityId);
     this._searchError = "";
     const playbackStarted = await this._performSearchPlayback(item, targetEntityId);
 
@@ -2605,6 +2609,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
   async _invokePlayMedia(targetEntityId, item) {
     try {
+      this._mediaSessionManager?.startPlaybackGesture(targetEntityId);
       if (this._radioModeActive) {
         await this.hass.callService("music_assistant", "play_media", {
           entity_id: targetEntityId,
@@ -8002,7 +8007,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       const currentlyEnabled = this._isMediaSessionEnabled;
       this._mediaSessionOverride = !currentlyEnabled;
       if (this._mediaSessionOverride) {
-        this._mediaSessionManager?.resumeFromUserGesture();
+        this._mediaSessionManager?.startPlaybackGesture(this.currentEntityId);
       } else {
         this._mediaSessionManager?.reset();
       }
@@ -8076,6 +8081,10 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       } else {
         data.entity_id = this.currentEntityId;
       }
+    }
+
+    if (domain === "media_player" && (service === "media_play" || service === "media_play_pause")) {
+      this._mediaSessionManager?.startPlaybackGesture(data.entity_id || this.currentEntityId);
     }
 
     this.hass.callService(domain, service, data);
@@ -8334,6 +8343,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           this.requestUpdate();
           setTimeout(() => { this._optimisticPlayback = null; this.requestUpdate(); }, 1200);
         } else {
+          this._mediaSessionManager?.startPlaybackGesture(targetEntity);
           this.hass.callService("media_player", "media_play", { entity_id: targetEntity });
           // On resume, clear the paused entity tracking since we're now playing
           if (this._lastPlayingEntityIdByChip) {
@@ -8351,10 +8361,12 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         }
         break;
       case "next":
+        this._mediaSessionManager?.startPlaybackGesture(targetEntity);
         this._advanceQueueInUI(null, true); // Manual advance
         this.hass.callService("media_player", "media_next_track", { entity_id: targetEntity });
         break;
       case "prev":
+        this._mediaSessionManager?.startPlaybackGesture(targetEntity);
         this.hass.callService("media_player", "media_previous_track", { entity_id: targetEntity });
         break;
       case "stop":
