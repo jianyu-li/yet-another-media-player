@@ -382,7 +382,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._updateViewportFlags();
     this._updateAdaptiveTextObserverState();
     if (this._mediaSessionManager && this._isMediaSessionEnabled) {
-      this._mediaSessionManager._attachUnlockListeners?.();
+      this._mediaSessionManager.attach();
     }
   }
 
@@ -644,7 +644,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       if (this._isMediaSessionEnabled && !this._isEditorPreview) {
         if (!this._mediaSessionUpdatePending) {
           this._mediaSessionUpdatePending = true;
-          setTimeout(() => {
+          this._mediaSessionUpdateTimer = setTimeout(() => {
+            this._mediaSessionUpdateTimer = null;
             this._mediaSessionUpdatePending = false;
             if (this._isMediaSessionEnabled && !this._isEditorPreview) {
               this.requestUpdate();
@@ -11399,7 +11400,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       this._lyricsFetchTimeout = null;
     }
     if (this._mediaSessionManager) {
-      this._mediaSessionManager.destroy();
+      this._mediaSessionManager.detach();
+    }
+    if (this._mediaSessionUpdateTimer) {
+      clearTimeout(this._mediaSessionUpdateTimer);
+      this._mediaSessionUpdateTimer = null;
     }
     super.disconnectedCallback?.();
     if (this._progressTimer) {

@@ -112,6 +112,7 @@ export class YampMediaSessionManager {
     this._pauseDebounceTimer = null;
     this._lastSeekPos = null;
     this._lastSeekTimeout = null;
+    this._internalPauseTimer = null;
     this._isApplePlatform =
       typeof navigator !== "undefined" &&
       /iPhone|iPod|iPad|Macintosh|MacIntel/i.test(navigator.userAgent);
@@ -224,7 +225,9 @@ export class YampMediaSessionManager {
       } catch (_e) {
         // Ignore seek error
       }
-      setTimeout(() => {
+      if (this._internalPauseTimer) clearTimeout(this._internalPauseTimer);
+      this._internalPauseTimer = setTimeout(() => {
+        this._internalPauseTimer = null;
         this._isInternalPause = false;
       }, 500);
     }
@@ -719,20 +722,49 @@ export class YampMediaSessionManager {
       clearTimeout(this._pauseDebounceTimer);
       this._pauseDebounceTimer = null;
     }
+    if (this._lastSeekTimeout) {
+      clearTimeout(this._lastSeekTimeout);
+      this._lastSeekTimeout = null;
+      this._lastSeekPos = null;
+    }
+    if (this._internalPauseTimer) {
+      clearTimeout(this._internalPauseTimer);
+      this._internalPauseTimer = null;
+    }
     if (!silent) {
       this._notifyStateChange();
     }
   }
 
   /**
-   * Completely tears down the manager and removes the audio element
+   * Re-attaches event listeners after the card reconnects to the DOM.
+   * Lighter than creating a new manager — preserves audio element and state.
    */
-  destroy() {
+  attach() {
+    this._attachUnlockListeners();
+    if (typeof document !== "undefined") {
+      document.addEventListener("visibilitychange", this._onVisibilityChange);
+    }
+  }
+
+  /**
+   * Detaches event listeners when the card disconnects from the DOM.
+   * Preserves the audio element for potential reconnection via attach().
+   */
+  detach() {
     this.reset();
     this._detachUnlockListeners();
     if (typeof document !== "undefined") {
       document.removeEventListener("visibilitychange", this._onVisibilityChange);
     }
+  }
+
+  /**
+   * Completely tears down the manager and removes the audio element.
+   * Use detach() for temporary disconnections; use destroy() for permanent removal.
+   */
+  destroy() {
+    this.detach();
     if (this._audio) {
       this._audio.removeEventListener("timeupdate", this._onAudioTimeUpdate);
       this._audio.removeEventListener("playing", this._onAudioPlaying);
