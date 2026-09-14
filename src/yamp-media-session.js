@@ -248,7 +248,7 @@ export class YampMediaSessionManager {
   }
 
   _onAudioPause() {
-    if (this._isInternalPause) {
+    if (this._isInternalPause || (this._audio && this._audio.seeking)) {
       this._isInternalPause = false;
       return;
     }
@@ -258,7 +258,7 @@ export class YampMediaSessionManager {
     if (!this._isAudioPlaying || !this._hasStartedPlaying) {
       return;
     }
-    // External interruption: another app (Spotify, YouTube, phone call, Siri)
+    // External interruption: another app (Spotify, YouTube, Facebook, phone call, Siri)
     // stole audio focus. Disconnect YAMP from phone media session to yield audio focus
     // without sending a pause command to Home Assistant!
     this._wasInterrupted = true;
@@ -434,12 +434,19 @@ export class YampMediaSessionManager {
     });
 
     session.setActionHandler("pause", () => {
-      this._isInternalPause = true;
+      // If external audio interruption occurred or audio is paused externally, ignore
+      if (this._wasInterrupted || (this._audio && this._audio.paused && !this._isInternalPause)) {
+        return;
+      }
       if (this._pauseDebounceTimer) clearTimeout(this._pauseDebounceTimer);
       this._pauseDebounceTimer = setTimeout(() => {
+        if (this._wasInterrupted || (this._audio && this._audio.paused && !this._isInternalPause)) {
+          this._pauseDebounceTimer = null;
+          return;
+        }
         this.card._onControlClick?.("play_pause");
         this._pauseDebounceTimer = null;
-      }, 200);
+      }, 350);
     });
 
     session.setActionHandler("nexttrack", () => {
@@ -532,34 +539,36 @@ export class YampMediaSessionManager {
     }
 
     // If a new track or entity starts playing, automatically clear any prior interruption
+    // only when the document is visible to prevent background track changes from stealing focus
     const currentEntityOrTrackKey = `${targetEntityId}|${stateObj.attributes?.media_title || ""}|${stateObj.attributes?.media_artist || ""}`;
     if (this._lastTrackKey !== currentEntityOrTrackKey) {
       this._lastTrackKey = currentEntityOrTrackKey;
-      this._wasInterrupted = false;
-      this._wasEvicted = false;
+      if (typeof document !== "undefined" && !document.hidden) {
+        this._wasInterrupted = false;
+        this._wasEvicted = false;
+      }
     }
 
     const state = stateObj.state;
     const isPlaying = state === "playing";
     const isPaused = state === "paused";
 
-    // If playback transitions from not playing to playing, or if document is visible,
-    // clear any prior interruption
-    if (isPlaying && this._lastPlaybackState !== "playing") {
+    // If playback transitions from not playing (paused/idle/off) to playing:
+    if (
+      isPlaying &&
+      (this._lastPlaybackState === "paused" ||
+        this._lastPlaybackState === "idle" ||
+        this._lastPlaybackState === "off")
+    ) {
       this._wasInterrupted = false;
       this._wasEvicted = false;
       this._autoplayBlocked = false;
     }
     this._lastPlaybackState = state;
 
-    if (typeof document !== "undefined" && !document.hidden) {
-      this._wasInterrupted = false;
-    }
-
-    // If an external interruption occurred and the document is in the background,
-    // stay disconnected so we don't fight for audio focus or pause the user's phone music.
-    // Cleared when user interacts with YAMP, returns to the app, toggles controls, or track changes.
-    if (this._wasInterrupted && typeof document !== "undefined" && document.hidden) {
+    // If an external interruption occurred, stay disconnected until the user interacts with YAMP,
+    // returns to the app, toggles controls, or track changes while visible.
+    if (this._wasInterrupted) {
       return;
     }
 
