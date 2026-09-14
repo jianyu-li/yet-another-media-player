@@ -231,6 +231,13 @@ export class YampMediaSessionManager {
   }
 
   _onAudioPlaying() {
+    if (!this._isAudioPlaying) {
+      if (this._audio) {
+        this._isInternalPause = true;
+        this._audio.pause();
+      }
+      return;
+    }
     this._hasStartedPlaying = true;
     this._autoplayBlocked = false;
     this._wasInterrupted = false;
