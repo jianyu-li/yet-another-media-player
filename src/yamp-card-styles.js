@@ -3610,8 +3610,8 @@ export const yampCardStyles = css`
   .entity-options-sheet[data-pin-search-headers="true"] .group-list-scroll,
   .entity-options-sheet[data-pin-search-headers="true"] .search-sheet-results,
   .entity-options-sheet[data-pin-search-headers="true"] .entity-options-search-results {
-    margin-bottom: 0px;
-    padding-bottom: 80px;
+    margin-bottom: 72px;
+    padding-bottom: 0px;
     background: none;
   }
 
@@ -3622,61 +3622,27 @@ export const yampCardStyles = css`
     background: none;
   }
 
-  /* Adjust spacing when persistent controls are hidden */
+  /* Adjust spacing when persistent controls are hidden (e.g. disabled in config or layout constraints) */
+  :host([data-hide-persistent-controls="true"]) .entity-options-sheet.search-mode,
   :host([data-hide-persistent-controls="true"])
     .entity-options-sheet[data-pin-search-headers="true"],
+  :host([data-hide-menu-player="true"]) .entity-options-sheet.search-mode,
   :host([data-hide-menu-player="true"]) .entity-options-sheet[data-pin-search-headers="true"] {
     padding-bottom: 12px;
   }
 
+  :host([data-hide-persistent-controls="true"]) .entity-options-sheet .entity-options-scroll,
+  :host([data-hide-persistent-controls="true"]) .entity-options-sheet .entity-options-search,
+  :host([data-hide-persistent-controls="true"]) .entity-options-sheet .search-sheet-results,
   :host([data-hide-persistent-controls="true"])
-    .entity-options-sheet[data-pin-search-headers="true"]
-    .entity-options-scroll,
-  :host([data-hide-persistent-controls="true"])
-    .entity-options-sheet[data-pin-search-headers="true"]
-    .entity-options-search,
-  :host([data-hide-persistent-controls="true"])
-    .entity-options-sheet[data-pin-search-headers="true"]
-    .group-list-scroll,
-  :host([data-hide-persistent-controls="true"])
-    .entity-options-sheet[data-pin-search-headers="true"]
-    .search-sheet-results,
-  :host([data-hide-persistent-controls="true"])
-    .entity-options-sheet[data-pin-search-headers="true"]
+    .entity-options-sheet
     .entity-options-search-results,
-  :host([data-hide-menu-player="true"])
-    .entity-options-sheet[data-pin-search-headers="true"]
-    .entity-options-scroll,
-  :host([data-hide-menu-player="true"])
-    .entity-options-sheet[data-pin-search-headers="true"]
-    .entity-options-search,
-  :host([data-hide-menu-player="true"])
-    .entity-options-sheet[data-pin-search-headers="true"]
-    .group-list-scroll,
-  :host([data-hide-menu-player="true"])
-    .entity-options-sheet[data-pin-search-headers="true"]
-    .search-sheet-results,
-  :host([data-hide-menu-player="true"])
-    .entity-options-sheet[data-pin-search-headers="true"]
-    .entity-options-search-results {
-    margin-bottom: 0px;
-    padding-bottom: 0px;
-  }
-
-  /* Remove bottom clearance for unpinned mode when persistent controls are hidden */
-  :host([data-hide-persistent-controls="true"])
-    .entity-options-sheet:not([data-pin-search-headers="true"])
-    .search-sheet-results,
-  :host([data-hide-persistent-controls="true"])
-    .entity-options-sheet:not([data-pin-search-headers="true"])
-    .entity-options-search-results,
-  :host([data-hide-menu-player="true"])
-    .entity-options-sheet:not([data-pin-search-headers="true"])
-    .search-sheet-results,
-  :host([data-hide-menu-player="true"])
-    .entity-options-sheet:not([data-pin-search-headers="true"])
-    .entity-options-search-results {
-    padding-bottom: 0px;
+  :host([data-hide-menu-player="true"]) .entity-options-sheet .entity-options-scroll,
+  :host([data-hide-menu-player="true"]) .entity-options-sheet .entity-options-search,
+  :host([data-hide-menu-player="true"]) .entity-options-sheet .search-sheet-results,
+  :host([data-hide-menu-player="true"]) .entity-options-sheet .entity-options-search-results {
+    margin-bottom: 0px !important;
+    padding-bottom: 0px !important;
   }
   /* Hide scrollbars for Webkit browsers (Chrome, Safari, etc.) */
 
@@ -3928,7 +3894,8 @@ export const yampCardStyles = css`
   .entity-options-sheet:not([data-pin-search-headers="true"]):not(.search-mode)
     .entity-options-search-results {
     overflow-y: visible;
-    padding-bottom: 80px;
+    margin-bottom: 72px;
+    padding-bottom: 0px;
     flex: none;
     min-height: auto;
   }
