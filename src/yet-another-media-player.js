@@ -691,6 +691,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._lastResolvedEntityIdByChip = {};
     // Show search-in-sheet flag for entity options sheet
     this._showSearchInSheet = false;
+    this._searchHeadersRetracted = false;
+    this._lastSearchResultsScrollTop = 0;
     this._showResolvedEntities = false;
     // Queue success message
     this._showQueueSuccessMessage = false;
@@ -1678,6 +1680,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   // Show search sheet inside entity options
   _showSearchSheetInOptions(mode = "default") {
     this._showSearchInSheet = true;
+    this._searchHeadersRetracted = false;
+    this._lastSearchResultsScrollTop = 0;
     this._searchInputAutoFocused = false;
     this._searchError = "";
     this._searchResults = [];
@@ -1800,6 +1804,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     if (this._cardType === "search" || this._cardType === "up_next") return;
     this._openedSearchFromNowPlaying = false;
     this._showSearchInSheet = false;
+    this._searchHeadersRetracted = false;
+    this._lastSearchResultsScrollTop = 0;
     this._searchError = "";
     this._searchResults = [];
     this._searchQuery = "";
@@ -2012,6 +2018,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   async _doSearch(mediaType = null, searchParams = {}) {
     this._searchAttempted = true;
     this._closeMenuIfOpen();
+    this._setSearchHeadersRetracted(false);
+    this._lastSearchResultsScrollTop = 0;
     // Set the current filter - but don't use "favorites" as a media type
     this._searchMediaClassFilter = (mediaType && mediaType !== 'favorites') ? mediaType : 'all';
 
@@ -2756,6 +2764,156 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         this._doSearch('track');
       }
     }
+  }
+
+  _scrollToTop() {
+    const results = this.shadowRoot?.querySelector(".search-sheet-results");
+    if (results) results.scrollTop = 0;
+    this._setSearchHeadersRetracted(false);
+    this._lastSearchResultsScrollTop = 0;
+  }
+
+  _handleSearchResultsScroll(e, pinSearchHeaders) {
+    if (pinSearchHeaders) return;
+    const el = e.currentTarget || e.target;
+    if (!el) return;
+
+    const currentScrollTop = el.scrollTop;
+    const lastScrollTop = this._lastSearchResultsScrollTop || 0;
+    const delta = currentScrollTop - lastScrollTop;
+
+    if (currentScrollTop <= 10) {
+      this._setSearchHeadersRetracted(false);
+    } else if (delta > 12 && currentScrollTop > 30) {
+      this._setSearchHeadersRetracted(true);
+    } else if (delta < -12) {
+      this._setSearchHeadersRetracted(false);
+    }
+    this._lastSearchResultsScrollTop = currentScrollTop;
+  }
+
+  _setSearchHeadersRetracted(retracted) {
+    if (this._searchHeadersRetracted === retracted) return;
+    this._searchHeadersRetracted = retracted;
+    const panel = this.shadowRoot?.querySelector(".search-header-panel");
+    if (panel) {
+      panel.classList.toggle("retracted", retracted);
+      if (retracted) {
+        const input = panel.querySelector("#search-input-box");
+        if (input && document.activeElement === input) {
+          input.blur();
+        }
+      }
+    }
+  }
+
+  _handleHeaderWheel(e, pinSearchHeaders) {
+    if (pinSearchHeaders) return;
+    if (e.deltaY > 6) {
+      this._setSearchHeadersRetracted(true);
+    } else if (e.deltaY < -6) {
+      this._setSearchHeadersRetracted(false);
+    }
+  }
+
+  _handleHeaderTouchStart(e) {
+    if (e.touches && e.touches.length === 1) {
+      this._headerTouchStartY = e.touches[0].clientY;
+      this._headerTouchStartX = e.touches[0].clientX;
+    }
+  }
+
+  _handleHeaderTouchMove(e, pinSearchHeaders) {
+    if (pinSearchHeaders || this._headerTouchStartY == null) return;
+    if (!e.touches || e.touches.length !== 1) return;
+
+    const currentY = e.touches[0].clientY;
+    const currentX = e.touches[0].clientX;
+    const deltaY = currentY - this._headerTouchStartY;
+    const deltaX = currentX - this._headerTouchStartX;
+
+    // Discriminate vertical gesture to avoid conflicting with horizontal chip scroll
+    if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > 10) {
+      if (deltaY < -10) {
+        this._setSearchHeadersRetracted(true);
+      } else if (deltaY > 10) {
+        this._setSearchHeadersRetracted(false);
+      }
+    }
+  }
+
+  _handleHeaderTouchEnd() {
+    this._headerTouchStartY = null;
+    this._headerTouchStartX = null;
+  }
+
+  _handleHeaderMouseDown(e) {
+    if (e.target.tagName === "INPUT" || e.target.closest("button") || e.target.closest(".chip")) return;
+    this._headerMouseDown = true;
+    this._headerMouseStartY = e.clientY;
+  }
+
+  _handleHeaderMouseMove(e, pinSearchHeaders) {
+    if (pinSearchHeaders || !this._headerMouseDown || this._headerMouseStartY == null) return;
+    const deltaY = e.clientY - this._headerMouseStartY;
+    if (deltaY < -12) {
+      this._setSearchHeadersRetracted(true);
+      this._headerMouseDown = false;
+    } else if (deltaY > 12) {
+      this._setSearchHeadersRetracted(false);
+      this._headerMouseDown = false;
+    }
+  }
+
+  _handleHeaderMouseUp() {
+    this._headerMouseDown = false;
+    this._headerMouseStartY = null;
+  }
+
+  _handleSearchContainerWheel(e, pinSearchHeaders) {
+    if (pinSearchHeaders) return;
+    if (e.deltaY < -6) {
+      const results = this.shadowRoot?.querySelector(
+        ".virtualized-results-wrapper, .queue-results-wrapper, .search-sheet-results"
+      );
+      if (!results || results.scrollTop <= 5) {
+        this._setSearchHeadersRetracted(false);
+      }
+    }
+  }
+
+  _handleSearchResultsWheel(e, pinSearchHeaders) {
+    if (pinSearchHeaders) return;
+    const el = e.currentTarget || e.target;
+    const scrollTop = el ? el.scrollTop : 0;
+    if (e.deltaY < -6 && scrollTop <= 5) {
+      this._setSearchHeadersRetracted(false);
+    }
+  }
+
+  _handleResultsTouchStart(e) {
+    if (e.touches && e.touches.length === 1) {
+      this._resultsTouchStartY = e.touches[0].clientY;
+      this._resultsTouchStartX = e.touches[0].clientX;
+    }
+  }
+
+  _handleResultsTouchMove(e, pinSearchHeaders) {
+    if (pinSearchHeaders || this._resultsTouchStartY == null) return;
+    if (!e.touches || e.touches.length !== 1) return;
+    const el = e.currentTarget;
+    const scrollTop = el ? el.scrollTop : 0;
+    const deltaY = e.touches[0].clientY - this._resultsTouchStartY;
+    const deltaX = e.touches[0].clientX - this._resultsTouchStartX;
+
+    if (Math.abs(deltaY) > Math.abs(deltaX) && deltaY > 12 && scrollTop <= 5) {
+      this._setSearchHeadersRetracted(false);
+    }
+  }
+
+  _handleResultsTouchEnd() {
+    this._resultsTouchStartY = null;
+    this._resultsTouchStartX = null;
   }
 
   // Check if a search result is clickable for hierarchical navigation
@@ -9692,7 +9850,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       ${this._showEntityOptions ? html`
       <div class="entity-options-overlay entity-options-overlay-opening" @click=${(e) => this._closeEntityOptions(e)}>
         <div class="entity-options-container entity-options-container-opening" style="${this._showSearchInSheet ? 'height:100%;' : ''}">
-          <div class="entity-options-sheet${(showChipsInMenu || reserveChipSpaceInMenu) ? ' chips-mode' : ''} entity-options-sheet-opening" 
+          <div class="entity-options-sheet${(showChipsInMenu || reserveChipSpaceInMenu) ? ' chips-mode' : ''}${this._showSearchInSheet ? ' search-mode' : ''} entity-options-sheet-opening" 
                @click=${e => e.stopPropagation()}
                data-pin-search-headers="${effectivePinHeaders}">
             ${(showChipsInMenu || reserveChipSpaceInMenu) ? html`
@@ -9843,6 +10001,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const isMinHeight = hasSingleEntity && this._alwaysCollapsed && config.expand_on_search !== true;
     const effectivePinHeaders = config.pin_search_headers === true && !isMinHeight;
     host.setAttribute("data-pin-search-headers", String(effectivePinHeaders));
+    host.setAttribute("data-in-search", String(this._showSearchInSheet));
 
     if (hasCustomCardHeight) {
       host.setAttribute("data-has-custom-height", "true");
@@ -10245,114 +10404,126 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _renderSearchInOptions(showSearchHeaders, pinSearchHeaders = false) {
+    const isRetracted = !pinSearchHeaders && this._searchHeadersRetracted;
     return html`
-      <div class="entity-options-search" style="margin-top:${this._cardType === 'up_next' ? '0' : '12px'};">
-        ${this._searchHierarchy.length > 0 ? html`
-            <button class="entity-options-item close-item" @click=${() => this._goBackInSearch()}>
-              ${localize('common.back')}
-            </button>
-            <div class="entity-options-divider"></div>
-          ` : nothing
-      }
-        ${this._searchBreadcrumb ? html`
-            <div class="entity-options-search-breadcrumb">
-              <div class="entity-options-search-breadcrumb-text">${this._searchBreadcrumb}</div>
-              ${!this._isSelectionFlow ? html`
-                <button class="entity-options-search-breadcrumb-play" @click=${() => this._playCurrentCollection()} title="${localize('search.play_collection')}">
-                  <ha-icon icon="mdi:play"></ha-icon>
-                </button>
+      <div class="entity-options-search"
+           @wheel=${(e) => this._handleSearchContainerWheel(e, pinSearchHeaders)}
+           style="margin-top:${this._cardType === 'up_next' ? '0' : '12px'};">
+        <div class="search-header-panel ${isRetracted ? 'retracted' : ''}"
+             @wheel=${(e) => this._handleHeaderWheel(e, pinSearchHeaders)}
+             @touchstart=${(e) => this._handleHeaderTouchStart(e)}
+             @touchmove=${(e) => this._handleHeaderTouchMove(e, pinSearchHeaders)}
+             @touchend=${() => this._handleHeaderTouchEnd()}
+             @mousedown=${(e) => this._handleHeaderMouseDown(e)}
+             @mousemove=${(e) => this._handleHeaderMouseMove(e, pinSearchHeaders)}
+             @mouseup=${() => this._handleHeaderMouseUp()}>
+          ${this._searchHierarchy.length > 0 ? html`
+              <button class="entity-options-item close-item" @click=${() => this._goBackInSearch()}>
+                ${localize('common.back')}
+              </button>
+              <div class="entity-options-divider"></div>
+            ` : nothing
+        }
+          ${this._searchBreadcrumb ? html`
+              <div class="entity-options-search-breadcrumb">
+                <div class="entity-options-search-breadcrumb-text">${this._searchBreadcrumb}</div>
+                ${!this._isSelectionFlow ? html`
+                  <button class="entity-options-search-breadcrumb-play" @click=${() => this._playCurrentCollection()} title="${localize('search.play_collection')}">
+                    <ha-icon icon="mdi:play"></ha-icon>
+                  </button>
+                ` : nothing}
+              </div>
+            ` : (showSearchHeaders && this._cardType !== 'up_next' ? html`<div class="entity-options-search-skeleton"></div>` : nothing)
+        }
+          ${showSearchHeaders && this._cardType !== 'up_next' ? html`
+            <div class="entity-options-search-row">
+              <div class="search-input-wrapper">
+                <input
+                  type="text"
+                  id="search-input-box"
+                  ?autofocus=${!this._disableSearchAutofocus}
+                  class="entity-options-search-input"
+                  .value=${this._searchQuery}
+                  @input=${e => { this._searchQuery = e.target.value; this.requestUpdate(); }}
+                  @keydown=${e => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              this._handleSearchSubmit();
+            }
+            else if (e.key === "Escape") { e.preventDefault(); this._hideSearchSheetInOptions(); }
+          }}
+                  placeholder="${localize('editor.placeholders.search')}"
+                />
+                ${this._searchQuery ? html`
+                  <button
+                    class="search-input-clear"
+                    @click=${() => {
+                      if (this._searchHierarchy.length > 0) {
+                        this._searchQuery = "";
+                        this.requestUpdate();
+                      } else {
+                        this._showSearchSheetInOptions();
+                      }
+                    }}
+                    title="${localize('common.clear')}">
+                    <ha-icon icon="mdi:close"></ha-icon>
+                  </button>
+                ` : nothing}
+              </div>
+              <button
+                class="entity-options-item icon-only"
+                style="min-width:48px; padding: 0;"
+                @click=${() => this._handleSearchSubmit()}
+                title="${localize('common.search')}"
+                aria-label="${localize('common.search')}"
+                ?disabled=${this._searchLoading}>
+                <ha-icon icon="mdi:magnify"></ha-icon>
+              </button>
+              ${this._cardType !== "search" && this._cardType !== "up_next" ? html`
+              <button
+                class="entity-options-item icon-only"
+                style="min-width:48px; padding: 0;"
+                title="${localize('common.cancel')}"
+                aria-label="${localize('common.cancel')}"
+                @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._hideSearchSheetInOptions(); } }}>
+                <ha-icon icon="mdi:close"></ha-icon>
+              </button>
               ` : nothing}
             </div>
-          ` : (showSearchHeaders && this._cardType !== 'up_next' ? html`<div class="entity-options-search-skeleton"></div>` : nothing)
-      }
-        ${showSearchHeaders && this._cardType !== 'up_next' ? html`
-          <div class="entity-options-search-row">
-            <div class="search-input-wrapper">
-              <input
-                type="text"
-                id="search-input-box"
-                ?autofocus=${!this._disableSearchAutofocus}
-                class="entity-options-search-input"
-                .value=${this._searchQuery}
-                @input=${e => { this._searchQuery = e.target.value; this.requestUpdate(); }}
-                @keydown=${e => {
-          if (e.key === "Enter") {
-            e.preventDefault();
-            this._handleSearchSubmit();
-          }
-          else if (e.key === "Escape") { e.preventDefault(); this._hideSearchSheetInOptions(); }
-        }}
-                placeholder="${localize('editor.placeholders.search')}"
-              />
-              ${this._searchQuery ? html`
-                <button
-                  class="search-input-clear"
-                  @click=${() => {
-                    if (this._searchHierarchy.length > 0) {
-                      this._searchQuery = "";
-                      this.requestUpdate();
-                    } else {
-                      this._showSearchSheetInOptions();
-                    }
-                  }}
-                  title="${localize('common.clear')}">
-                  <ha-icon icon="mdi:close"></ha-icon>
-                </button>
-              ` : nothing}
-            </div>
-            <button
-              class="entity-options-item icon-only"
-              style="min-width:48px; padding: 0;"
-              @click=${() => this._handleSearchSubmit()}
-              title="${localize('common.search')}"
-              aria-label="${localize('common.search')}"
-              ?disabled=${this._searchLoading}>
-              <ha-icon icon="mdi:magnify"></ha-icon>
-            </button>
-            ${this._cardType !== "search" && this._cardType !== "up_next" ? html`
-            <button
-              class="entity-options-item icon-only"
-              style="min-width:48px; padding: 0;"
-              title="${localize('common.cancel')}"
-              aria-label="${localize('common.cancel')}"
-              @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._hideSearchSheetInOptions(); } }}>
-              <ha-icon icon="mdi:close"></ha-icon>
-            </button>
-            ` : nothing}
-          </div>
-        ` : nothing}
-        <!--FILTER CHIPS-->
-        ${showSearchHeaders && this._cardType !== 'up_next' ? (() => {
-        const classes = this._getVisibleSearchFilterClasses();
-        const filter = this._searchMediaClassFilter || "all";
+          ` : nothing}
+          <!--FILTER CHIPS-->
+          ${showSearchHeaders && this._cardType !== 'up_next' ? (() => {
+          const classes = this._getVisibleSearchFilterClasses();
+          const filter = this._searchMediaClassFilter || "all";
 
-        if (this._searchHierarchy.length > 0) return nothing;
-        if (classes.length < 2 && !this._usingMusicAssistant) return nothing;
+          if (this._searchHierarchy.length > 0) return nothing;
+          if (classes.length < 2 && !this._usingMusicAssistant) return nothing;
 
-        return html`
-            <div class="chip-row search-filter-chips" id="search-filter-chip-row" style="margin-bottom:12px; justify-content: center; align-items: center;">
-                <button
-                  class="chip"
-                  ?selected=${filter === 'all'}
-                  @click=${() => this._doSearch()}
-                >${localize('search.filters.all')}</button>
-                ${classes.map(c => html`
+          return html`
+              <div class="chip-row search-filter-chips" id="search-filter-chip-row" style="margin-bottom:12px; justify-content: center; align-items: center;">
                   <button
                     class="chip"
-                    ?selected=${filter === c}
-                    @click=${() => this._doSearch(c)}
-                  >
-                    ${localize(`search.filters.${c}`)}
-                  </button>
-                `)}
-            </div>
-          `;
-      })() : nothing}
-        
-        ${this._searchLoading ? html`<div class="entity-options-search-loading">${localize('common.loading')}</div>` : nothing}
-        ${this._searchError ? html`<div class="entity-options-search-error">${this._searchError}</div>` : nothing}
-        
-        ${this._renderSearchSubFilters(showSearchHeaders)}
+                    ?selected=${filter === 'all'}
+                    @click=${() => this._doSearch()}
+                  >${localize('search.filters.all')}</button>
+                  ${classes.map(c => html`
+                    <button
+                      class="chip"
+                      ?selected=${filter === c}
+                      @click=${() => this._doSearch(c)}
+                    >
+                      ${localize(`search.filters.${c}`)}
+                    </button>
+                  `)}
+              </div>
+            `;
+        })() : nothing}
+          
+          ${this._searchLoading ? html`<div class="entity-options-search-loading">${localize('common.loading')}</div>` : nothing}
+          ${this._searchError ? html`<div class="entity-options-search-error">${this._searchError}</div>` : nothing}
+          
+          ${this._renderSearchSubFilters(showSearchHeaders)}
+        </div>
  
         ${(() => {
           const isQueueDragAndDrop = this._upcomingFilterActive && this._massQueueAvailable;
@@ -10394,7 +10565,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
           if (this._searchAttempted && currentResults.length === 0 && !this._searchLoading) {
             return html`
-              <div class="${this._showSearchInSheet ? 'search-sheet-results' : 'entity-options-search-results'}">
+              <div class="${this._showSearchInSheet ? 'search-sheet-results' : 'entity-options-search-results'}"
+                   @wheel=${(e) => this._handleSearchResultsWheel(e, pinSearchHeaders)}
+                   @touchstart=${(e) => this._handleResultsTouchStart(e)}
+                   @touchmove=${(e) => this._handleResultsTouchMove(e, pinSearchHeaders)}
+                   @touchend=${() => this._handleResultsTouchEnd()}>
                 <div class="entity-options-search-empty">${localize('common.no_results')}</div>
               </div>
             `;
@@ -10403,6 +10578,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           if (isQueueDragAndDrop) {
             return html`
               <div class="${this._showSearchInSheet ? 'search-sheet-results' : 'entity-options-search-results'} queue-results-wrapper ${isGridMode ? 'grid-mode' : ''}"
+                   @scroll=${(e) => this._handleSearchResultsScroll(e, pinSearchHeaders)}
+                   @wheel=${(e) => this._handleSearchResultsWheel(e, pinSearchHeaders)}
+                   @touchstart=${(e) => this._handleResultsTouchStart(e)}
+                   @touchmove=${(e) => this._handleResultsTouchMove(e, pinSearchHeaders)}
+                   @touchend=${() => this._handleResultsTouchEnd()}
                    style="${(this.config.search_view === 'card' || this.config.search_view === 'card_minimal' || isGridMode) ? `--search-card-columns: ${isGridMode ? 5 /* MINI_GRID_COLUMNS */ : (this.config.search_card_columns || 4)};` : ''}">
                 <div class="queue-sortable-container ${(isCard || isGridMode) ? 'is-card-layout' : ''} ${isGridMode ? 'grid-mode' : ''}"
                   @pointerdown=${(e) => this._onQueueDragStart(e)}
@@ -10436,19 +10616,23 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
           return html`
             <div class="${this._showSearchInSheet ? 'search-sheet-results' : 'entity-options-search-results'} virtualized-results-wrapper ${isGridMode ? 'grid-mode' : ''}"
+                 @scroll=${(e) => this._handleSearchResultsScroll(e, pinSearchHeaders)}
+                 @wheel=${(e) => this._handleSearchResultsWheel(e, pinSearchHeaders)}
+                 @touchstart=${(e) => this._handleResultsTouchStart(e)}
+                 @touchmove=${(e) => this._handleResultsTouchMove(e, pinSearchHeaders)}
+                 @touchend=${() => this._handleResultsTouchEnd()}
                  style="${(this.config.search_view === 'card' || this.config.search_view === 'card_minimal' || isGridMode) ? `--search-card-columns: ${isGridMode ? 5 /* MINI_GRID_COLUMNS */ : (this.config.search_card_columns || 4)};` : ''}">
               ${(isCard || isGridMode)
                 ? virtualize({
                   items: currentResults,
                   renderItem: renderItemFn,
                   layout: this._cachedSearchGridLayout,
-                  scroller: pinSearchHeaders
+                  scroller: true
                 })
-                : virtualize({ items: currentResults, renderItem: renderItemFn, scroller: pinSearchHeaders })}
+                : virtualize({ items: currentResults, renderItem: renderItemFn, scroller: true })}
             </div>
           `;
         })()}
-        </div>
       </div>
     `;
   }
