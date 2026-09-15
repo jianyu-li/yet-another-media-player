@@ -159,7 +159,8 @@ export default {
       swap_pause_stop: "Replace the pause button with stop while using the modern layout.",
       show_album: "Display the album name next to the artist in the player details.",
       lock_screen_controls:
-        "Keep controls and track metadata active on your device lock screen (iOS / Android / macOS) when backgrounding the app.",
+        "Keep controls and track metadata active on your device lock screen (iOS / Android / macOS) when backgrounding the app. Note: This feature is experimental.",
+      toggle_media_session: "Note: Lock screen and media session controls are experimental.",
       adaptive_controls: "Let the playback buttons grow or shrink to fit the available space.",
       hide_menu_player:
         "When chips live in the menu, hide the entity label at the bottom of the card.",
@@ -268,7 +269,7 @@ export default {
       display_timestamps: "Display Timestamps",
       swap_pause_stop: "Swap Pause with Stop",
       show_album: "Show Album Name",
-      lock_screen_controls: "Lock Screen Media Controls",
+      lock_screen_controls: "Lock Screen Media Controls (Experimental)",
       adaptive_controls: "Adaptive Control Size",
       hide_active_entity: "Hide Active Entity Label",
       hide_active_entity_on_idle: "Hide Active Entity Label on Idle",
@@ -367,7 +368,7 @@ export default {
       select_entity: "Select Entity from Helper",
       toggle_lyrics: "Toggle Lyrics Overlay",
       remote_control: "Open Remote Controls Overlay",
-      toggle_media_session: "Toggle Media Session Controls",
+      toggle_media_session: "Toggle Media Session Controls (Experimental)",
     },
     action_helpers: {
       sync_selected_entity: "Sync Selected Entity →",

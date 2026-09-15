@@ -166,7 +166,8 @@ export default {
       swap_pause_stop: "Vervang de pauzeknop door stop bij gebruik van de moderne lay-out.",
       show_album: "Toon de albumnaam naast de artiest in de spelerdetails.",
       lock_screen_controls:
-        "Houd bedieningselementen en trackmetagegevens actief op het vergrendelingsscherm van je apparaat (iOS / Android / macOS) wanneer de app op de achtergrond wordt uitgevoerd.",
+        "Houd bedieningselementen en trackmetagegevens actief op het vergrendelingsscherm van je apparaat (iOS / Android / macOS) wanneer de app op de achtergrond wordt uitgevoerd. Let op: deze functie is experimenteel.",
+      toggle_media_session: "Let op: vergrendelscherm- en mediasessiebediening zijn experimenteel.",
       adaptive_controls:
         "Laat de afspeelknoppen groeien of krimpen om in de beschikbare ruimte te passen.",
       hide_menu_player:
@@ -283,7 +284,7 @@ export default {
       display_timestamps: "Tijdstempels Weergeven",
       swap_pause_stop: "Pauze vervangen door Stop",
       show_album: "Toon albumnaam",
-      lock_screen_controls: "Mediabediening vergrendelscherm",
+      lock_screen_controls: "Mediabediening vergrendelscherm (Experimenteel)",
       adaptive_controls: "Adaptieve Knoppen Grootte",
       hide_active_entity: "Label van Actieve Entiteit verbergen",
       hide_active_entity_on_idle: "Actieve entiteitslabel verbergen bij inactiviteit",
@@ -382,7 +383,7 @@ export default {
       select_entity: "Selecteer entiteit uit helper",
       toggle_lyrics: "Wisselen tussen songtekst-overlay",
       remote_control: "Afstandsbediening overlay openen",
-      toggle_media_session: "Wisselen van mediasessie / vergrendelschermbediening",
+      toggle_media_session: "Wisselen van mediasessie / vergrendelschermbediening (Experimenteel)",
     },
     action_helpers: {
       sync_selected_entity: "Geselecteerde entiteit synchroniseren",

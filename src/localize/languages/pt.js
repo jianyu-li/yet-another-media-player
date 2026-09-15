@@ -154,7 +154,9 @@ export default {
       swap_pause_stop: "Substituir pausa por stop no design moderno.",
       show_album: "Exibir o nome do álbum ao lado do artista nos detalhes do reprodutor.",
       lock_screen_controls:
-        "Mantenha os controles e os metadados da faixa ativos na tela de bloqueio do seu dispositivo (iOS / Android / macOS) quando o aplicativo estiver em segundo plano.",
+        "Mantenha os controles e os metadados da faixa ativos na tela de bloqueio do seu dispositivo (iOS / Android / macOS) quando o aplicativo estiver em segundo plano. Nota: Esta funcionalidade é experimental.",
+      toggle_media_session:
+        "Nota: Os controlos de ecrã de bloqueio e sessão multimédia são experimentais.",
       adaptive_controls: "Permitir que os botões se adaptem ao espaço.",
       hide_menu_player: "Ocultar nome da entidade quando no menu.",
       hide_reorder_progress:
@@ -258,7 +260,7 @@ export default {
       display_timestamps: "Mostrar carimbos de tempo",
       swap_pause_stop: "Substituir Pausa por Stop",
       show_album: "Mostrar nome do álbum",
-      lock_screen_controls: "Controles de mídia na tela de bloqueio",
+      lock_screen_controls: "Controles de mídia na tela de bloqueio (Experimental)",
       adaptive_controls: "Tamanho adaptativo",
       hide_active_entity: "Ocultar nome da entidade ativa",
       hide_active_entity_on_idle: "Ocultar etiqueta de entidade ativa quando inativo",
@@ -357,7 +359,8 @@ export default {
       select_entity: "Selecionar entidade do helper",
       toggle_lyrics: "Alternar sobreposição de letras",
       remote_control: "Abrir sobreposição do controlo remoto",
-      toggle_media_session: "Alternar sessão de multimédia / controlos de ecrã de bloqueio",
+      toggle_media_session:
+        "Alternar sessão de multimédia / controlos de ecrã de bloqueio (Experimental)",
     },
     action_helpers: {
       sync_selected_entity: "Sincronizar entidade selecionada →",

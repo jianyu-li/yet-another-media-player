@@ -3396,7 +3396,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
         </div>
         <div
           class="form-row"
-          data-search-keys="lock_screen_controls media_session lock screen ios controls"
+          data-search-keys="lock_screen_controls media_session lock screen ios controls experimental"
         >
           <div>
             <ha-switch
@@ -4703,7 +4703,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                     value: "toggle_media_session",
                     label:
                       localize("editor.action_types.toggle_media_session") ||
-                      "Toggle Media Session Controls",
+                      "Toggle Media Session Controls (Experimental)",
                   },
                 ],
               },
@@ -4806,6 +4806,20 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
         </div>
 
         
+        ${
+          actionMode === "toggle_media_session"
+            ? html`
+                <div class="form-row">
+                  <div class="config-subtitle">
+                    ${
+                      localize("editor.subtitles.toggle_media_session") ||
+                      "Note: Lock screen and media session controls are experimental."
+                    }
+                  </div>
+                </div>
+              `
+            : nothing
+        }
         ${
           actionMode === "menu"
             ? html`
@@ -5161,7 +5175,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
       return `${localize("editor.action_types.remote_control") || "Open Remote Controls Overlay"}${placementText}${triggerText}`;
     }
     if (act?.action === "toggle_media_session" || act?.action === "toggle_lock_screen_controls") {
-      return `${localize("editor.action_types.toggle_media_session") || "Toggle Media Session Controls"}${placementText}${triggerText}`;
+      return `${localize("editor.action_types.toggle_media_session") || "Toggle Media Session Controls (Experimental)"}${placementText}${triggerText}`;
     }
     if (act?.menu_item) {
       return `Open Menu Item: ${act.menu_item}${placementText}${triggerText}`;

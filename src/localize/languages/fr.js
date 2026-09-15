@@ -160,7 +160,9 @@ export default {
       swap_pause_stop: "Remplacer le bouton pause par stop en mode moderne.",
       show_album: "Afficher le nom de l'album à côté de l'artiste dans les détails du lecteur.",
       lock_screen_controls:
-        "Gardez les contrôles et les métadonnées de la piste actifs sur l'écran de verrouillage de votre appareil (iOS / Android / macOS) lorsque l'application est en arrière-plan.",
+        "Gardez les contrôles et les métadonnées de la piste actifs sur l'écran de verrouillage de votre appareil (iOS / Android / macOS) lorsque l'application est en arrière-plan. Remarque : cette fonctionnalité est expérimentale.",
+      toggle_media_session:
+        "Remarque : les contrôles de session multimédia et d'écran de verrouillage sont expérimentaux.",
       adaptive_controls: "Laisser les boutons s'adapter à l'espace disponible.",
       hide_menu_player:
         "Masquer l'étiquette de l'entité en bas quand les jetons sont dans le menu.",
@@ -264,7 +266,7 @@ export default {
       display_timestamps: "Afficher les horodatages",
       swap_pause_stop: "Remplacer Pause par Stop",
       show_album: "Afficher le nom de l'album",
-      lock_screen_controls: "Contrôles multimédias sur l'écran de verrouillage",
+      lock_screen_controls: "Contrôles multimédias sur l'écran de verrouillage (Expérimental)",
       adaptive_controls: "Taille adaptative",
       hide_active_entity: "Masquer l'étiquette active",
       hide_active_entity_on_idle: "Masquer l'étiquette de l'entité active en mode veille",
@@ -363,7 +365,8 @@ export default {
       select_entity: "Sélectionner l'entité depuis le helper",
       toggle_lyrics: "Activer/Désactiver la superposition des paroles",
       remote_control: "Ouvrir l'overlay télécommande",
-      toggle_media_session: "Basculer la session multimédia / l'écran de verrouillage",
+      toggle_media_session:
+        "Basculer la session multimédia / l'écran de verrouillage (Expérimental)",
     },
     action_helpers: {
       sync_selected_entity: "Synchroniser l'entité sélectionnée →",
