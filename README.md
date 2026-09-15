@@ -10,7 +10,7 @@ YAMP is a full-featured Home Assistant media card for controlling multiple entit
 ## Features
 
 - **Multi-Player Control** — Switch between media players in a single card with chip-based selection. Control volume individually or as a group
-- **Lock Screen Controls** — Pause, skip tracks, scrub through songs, and see live album artwork right from your phone's lock screen, notification shade, or desktop media keys.
+- **Lock Screen Controls (Experimental)** — Pause, skip tracks, scrub through songs, and see live album artwork right from your phone's lock screen, notification shade, or desktop media keys.
 - **Quick Grouping Mode** — Double-click any player chip to enter quick grouping mode, allowing you to quickly join or unjoin entities from the active group without opening menus.
 - **Gesture Controls** — Tap, double-tap, hold, or swipe the artwork to trigger any action. Skip tracks, play/pause, adjust volume, or launch custom scripts
 - **Music Assistant Integration** — Full search and queue management
@@ -73,7 +73,7 @@ Below you will find a list of all configuration options.
 | `expand_on_search`         | boolean      | No           | `false`     | Temporarily expand the card when search is open (only available when `always_collapsed` is `true`) |
 | `hide_menu_player`         | boolean      | No           | `false`     | Hide the persistent media controls in the bottom sheet menu to reclaim space (only available when `always_collapsed` is `false`) |
 | `hide_reorder_progress`   | boolean      | No           | `false`     | Hide the floating queue re-ordering progress indicator at the bottom (also hidden if `hide_menu_player` is `true`) |
-| `lock_screen_controls`     | boolean      | No           | `false`     | Enable lock screen and system media controls (Media Session API) for active playback on mobile and desktop devices (see [Lock Screen Controls](#lock-screen--media-session-controls)) |
+| `lock_screen_controls` *(Experimental)* | boolean      | No           | `false`     | Enable lock screen and system media controls (Media Session API) *(Experimental)* for active playback on mobile and desktop devices (see [Lock Screen Controls](#lock-screen--media-session-controls)) |
 | `idle_screen`              | choice       | No           | `default`   | Choose the idle experience: `default` keeps the artwork splash, `search` opens the search sheet immediately, `search-recently-played` jumps to the Recently Played view, and `search-next-up` opens the Next Up queue |
 | `dim_chips_on_idle`        | boolean      | No           | `true`      | Dim entity and action chips when the media player is idle                                       |
 | `always_show_quick_group` | boolean      | No           | `false`     | When `true`, Quick Grouping Mode will be active by default. You can still toggle it manually via double-tap. |
@@ -135,7 +135,7 @@ Below you will find a list of all configuration options.
 | `icon`                     | string       | No           | —           | MDI or custom icon for the action chip                                                          |
 | `service`                  | string       | No           | —           | Home Assistant service to call (e.g., `media_player.play_media`)                                |
 | `service_data`             | object       | No           | —           | Data to send with the service call                                                              |
-| `action`                   | string       | No           | —           | Set to `navigate` for navigation shortcuts, `sync_selected_entity` to sync the active entity to a helper, `select_entity` to read a helper and activate the matching chip, `prev_entity`/`next_entity` to navigate chips, or `toggle_lock_screen_controls` to toggle lock screen controls |
+| `action`                   | string       | No           | —           | Set to `navigate` for navigation shortcuts, `sync_selected_entity` to sync the active entity to a helper, `select_entity` to read a helper and activate the matching chip, `prev_entity`/`next_entity` to navigate chips, or `toggle_lock_screen_controls` to toggle lock screen controls *(Experimental)* |
 | `navigation_path`          | string       | No           | —           | Destination for navigation shortcuts (supports anchors like `#pop-up-menu`, relative paths, or full URLs) |
 | `navigation_new_tab`       | boolean      | No           | `false`     | When `true`, external URLs open in a new browser tab instead of replacing the current view      |
 | `menu_item`                | string       | No           | —           | Opens a card menu by type: `search`, `search-recently-played`, `search-next-up`, `source`, `more-info`, `group-players`, `transfer-queue`, `main-menu` |
@@ -438,9 +438,13 @@ entities:
 
 # Behavior
 
-## Lock Screen & Media Session Controls
+<a id="lock-screen--media-session-controls"></a>
+## Lock Screen & Media Session Controls (Experimental)
 
 > Control playback and view live metadata directly from your phone's lock screen.
+
+> [!NOTE]
+> Lock screen controls and Media Session integration are currently experimental. Background playback persistence and browser media key handling may vary by device and operating system.
 
 When enabled (`lock_screen_controls: true`), YAMP connects to your phone or computer's native media controls (iOS Lock Screen, Control Center, Dynamic Island, Android notifications, and desktop media keys) so you can pause, skip, and see what's playing without opening Home Assistant.
 

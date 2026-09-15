@@ -154,7 +154,9 @@ export default {
       swap_pause_stop: "Sostituisci pausa con stop nel design moderno.",
       show_album: "Visualizza il nome dell'album accanto all'artista nei dettagli del lettore.",
       lock_screen_controls:
-        "Mantieni i controlli e i metadati della traccia attivi sulla schermata di blocco del dispositivo (iOS / Android / macOS) quando l'app è in background.",
+        "Mantieni i controlli e i metadati della traccia attivi sulla schermata di blocco del dispositivo (iOS / Android / macOS) quando l'app è in background. Nota: Questa funzione è sperimentale.",
+      toggle_media_session:
+        "Nota: I controlli della sessione multimediale e della schermata di blocco sono sperimentali.",
       adaptive_controls: "Permetti ai pulsanti di adattarsi allo spazio.",
       hide_menu_player: "Nascondi nome entità quando è nel menu.",
       hide_reorder_progress:
@@ -257,7 +259,7 @@ export default {
       display_timestamps: "Mostra timestamp",
       swap_pause_stop: "Sostituisci Pausa con Stop",
       show_album: "Mostra nome album",
-      lock_screen_controls: "Controlli multimediali nella schermata di blocco",
+      lock_screen_controls: "Controlli multimediali nella schermata di blocco (Sperimentale)",
       adaptive_controls: "Dimensione adattativa",
       hide_active_entity: "Nascondi nome entità attiva",
       hide_active_entity_on_idle: "Nascondi etichetta entità attiva quando inattivo",
@@ -356,7 +358,8 @@ export default {
       select_entity: "Seleziona entità da helper",
       toggle_lyrics: "Attiva/disattiva sovrapposizione testi",
       remote_control: "Apri sovrapposizione telecomando",
-      toggle_media_session: "Attiva/disattiva sessione multimediale / schermata di blocco",
+      toggle_media_session:
+        "Attiva/disattiva sessione multimediale / schermata di blocco (Sperimentale)",
     },
     action_helpers: {
       sync_selected_entity: "Sincronizza entità selezionata →",
