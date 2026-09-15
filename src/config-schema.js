@@ -169,6 +169,7 @@ export const CARD_CONFIG_DEFAULTS = Object.freeze({
   swap_pause_for_stop: false,
   show_album: true,
   lyrics_background_fade: DEFAULT_LYRICS_BACKGROUND_FADE,
+  lock_screen_controls: false,
 });
 
 /**

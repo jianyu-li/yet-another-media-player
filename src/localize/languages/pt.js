@@ -153,6 +153,8 @@ export default {
       disable_mass: "Desativar integração Mass Queue.",
       swap_pause_stop: "Substituir pausa por stop no design moderno.",
       show_album: "Exibir o nome do álbum ao lado do artista nos detalhes do reprodutor.",
+      lock_screen_controls:
+        "Mantenha os controles e os metadados da faixa ativos na tela de bloqueio do seu dispositivo (iOS / Android / macOS) quando o aplicativo estiver em segundo plano.",
       adaptive_controls: "Permitir que os botões se adaptem ao espaço.",
       hide_menu_player: "Ocultar nome da entidade quando no menu.",
       hide_reorder_progress:
@@ -256,6 +258,7 @@ export default {
       display_timestamps: "Mostrar carimbos de tempo",
       swap_pause_stop: "Substituir Pausa por Stop",
       show_album: "Mostrar nome do álbum",
+      lock_screen_controls: "Controles de mídia na tela de bloqueio",
       adaptive_controls: "Tamanho adaptativo",
       hide_active_entity: "Ocultar nome da entidade ativa",
       hide_active_entity_on_idle: "Ocultar etiqueta de entidade ativa quando inativo",
@@ -354,6 +357,7 @@ export default {
       select_entity: "Selecionar entidade do helper",
       toggle_lyrics: "Alternar sobreposição de letras",
       remote_control: "Abrir sobreposição do controlo remoto",
+      toggle_media_session: "Alternar sessão de multimédia / controlos de ecrã de bloqueio",
     },
     action_helpers: {
       sync_selected_entity: "Sincronizar entidade selecionada →",
@@ -453,6 +457,8 @@ export default {
       stop: "Parar",
       next: "Seguinte",
       repeat: "Repetir",
+      lock_screen_ready: "Controlos do ecrã de bloqueio ativos",
+      lock_screen_connecting: "A ligar os controlos do ecrã de bloqueio...",
     },
     menu: {
       more_info: "Mais info",

@@ -161,6 +161,8 @@ export default {
       swap_pause_stop:
         "Nahradiť tlačidlo pauzy tlačidlom zastavenia pri použití moderného rozloženia.",
       show_album: "Zobraziť názov albumu vedľa interpreta v podrobnostiach prehrávača.",
+      lock_screen_controls:
+        "Ponechajte ovládacie prvky a metadáta stopy aktívne na uzamknutej obrazovke vášho zariadenia (iOS / Android / macOS), keď je aplikácia na pozadí.",
       adaptive_controls: "Umožniť tlačidlám prehrávania meniť veľkosť podľa dostupného priestoru.",
       hide_menu_player: "Keď sú čipy v menu, skryť názov entity v spodnej časti karty.",
       hide_reorder_progress:
@@ -271,6 +273,7 @@ export default {
       display_timestamps: "Zobraziť časové údaje",
       swap_pause_stop: "Vymeniť pauzu za stop",
       show_album: "Zobraziť názov albumu",
+      lock_screen_controls: "Ovládacie prvky médií na uzamknutej obrazovke",
       adaptive_controls: "Adaptívna veľkosť ovládania",
       hide_active_entity: "Skryť štítok aktívnej entity",
       hide_active_entity_on_idle: "Skryť štítok aktívnej entity pri nečinnosti",
@@ -369,6 +372,7 @@ export default {
       select_entity: "Vybrať entitu z pomocníka",
       toggle_lyrics: "Prepnúť prekrytie textov piesní",
       remote_control: "Otvoriť prekrývanie diaľkového ovládania",
+      toggle_media_session: "Prepnúť ovládacie prvky relácie médií / uzamknutej obrazovky",
     },
     action_helpers: {
       sync_selected_entity: "Synchronizovať vybranú entitu →",
@@ -468,6 +472,8 @@ export default {
       stop: "Zastaviť",
       next: "Nasledujúce",
       repeat: "Opakovať",
+      lock_screen_ready: "Ovládacie prvky na uzamknutej obrazovke aktívne",
+      lock_screen_connecting: "Pripájanie ovládacích prvkov na uzamknutej obrazovke...",
     },
     menu: {
       more_info: "Viac informácií",

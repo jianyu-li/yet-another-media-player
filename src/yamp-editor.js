@@ -758,6 +758,8 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     if (action.action === "navigate" || navPath) return "navigate";
     if (action.action === "toggle_lyrics") return "toggle_lyrics";
     if (action.action === "remote_control") return "remote_control";
+    if (action.action === "toggle_media_session" || action.action === "toggle_lock_screen_controls")
+      return "toggle_media_session";
     return "service";
   }
 
@@ -3332,6 +3334,20 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           </div>
           <div class="config-subtitle">${localize("editor.subtitles.show_album")}</div>
         </div>
+        <div
+          class="form-row"
+          data-search-keys="lock_screen_controls media_session lock screen ios controls"
+        >
+          <div>
+            <ha-switch
+              id="lock-screen-controls-toggle"
+              .checked=${this._config.lock_screen_controls ?? false}
+              @change=${(e) => this._updateConfig("lock_screen_controls", e.target.checked)}
+            ></ha-switch>
+            <span>${localize("editor.labels.lock_screen_controls")}</span>
+          </div>
+          <div class="config-subtitle">${localize("editor.subtitles.lock_screen_controls")}</div>
+        </div>
         <div class="form-row">
           <div>
             <ha-switch
@@ -4623,6 +4639,12 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                       localize("editor.action_types.remote_control") ||
                       "Open Remote Controls Overlay",
                   },
+                  {
+                    value: "toggle_media_session",
+                    label:
+                      localize("editor.action_types.toggle_media_session") ||
+                      "Toggle Media Session Controls",
+                  },
                 ],
               },
             }}
@@ -4704,7 +4726,11 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                   navigation_new_tab: undefined,
                   action: mode,
                 });
-              } else if (mode === "toggle_lyrics" || mode === "remote_control") {
+              } else if (
+                mode === "toggle_lyrics" ||
+                mode === "remote_control" ||
+                mode === "toggle_media_session"
+              ) {
                 this._updateActionProperties({
                   menu_item: undefined,
                   service: undefined,
@@ -5067,6 +5093,15 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     }
     if (act?.action === "next_entity") {
       return `${localize("editor.action_types.next_entity") || "Next Entity Chip"}${placementText}${triggerText}`;
+    }
+    if (act?.action === "toggle_lyrics") {
+      return `${localize("editor.action_types.toggle_lyrics") || "Toggle Lyrics Overlay"}${placementText}${triggerText}`;
+    }
+    if (act?.action === "remote_control") {
+      return `${localize("editor.action_types.remote_control") || "Open Remote Controls Overlay"}${placementText}${triggerText}`;
+    }
+    if (act?.action === "toggle_media_session" || act?.action === "toggle_lock_screen_controls") {
+      return `${localize("editor.action_types.toggle_media_session") || "Toggle Media Session Controls"}${placementText}${triggerText}`;
     }
     if (act?.menu_item) {
       return `Open Menu Item: ${act.menu_item}${placementText}${triggerText}`;

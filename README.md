@@ -10,6 +10,7 @@ YAMP is a full-featured Home Assistant media card for controlling multiple entit
 ## Features
 
 - **Multi-Player Control** — Switch between media players in a single card with chip-based selection. Control volume individually or as a group
+- **Lock Screen Controls** — Pause, skip tracks, scrub through songs, and see live album artwork right from your phone's lock screen, notification shade, or desktop media keys.
 - **Quick Grouping Mode** — Double-click any player chip to enter quick grouping mode, allowing you to quickly join or unjoin entities from the active group without opening menus.
 - **Gesture Controls** — Tap, double-tap, hold, or swipe the artwork to trigger any action. Skip tracks, play/pause, adjust volume, or launch custom scripts
 - **Music Assistant Integration** — Full search and queue management
@@ -72,6 +73,7 @@ Below you will find a list of all configuration options.
 | `expand_on_search`         | boolean      | No           | `false`     | Temporarily expand the card when search is open (only available when `always_collapsed` is `true`) |
 | `hide_menu_player`         | boolean      | No           | `false`     | Hide the persistent media controls in the bottom sheet menu to reclaim space (only available when `always_collapsed` is `false`) |
 | `hide_reorder_progress`   | boolean      | No           | `false`     | Hide the floating queue re-ordering progress indicator at the bottom (also hidden if `hide_menu_player` is `true`) |
+| `lock_screen_controls`     | boolean      | No           | `false`     | Enable lock screen and system media controls (Media Session API) for active playback on mobile and desktop devices (see [Lock Screen Controls](#lock-screen--media-session-controls)) |
 | `idle_screen`              | choice       | No           | `default`   | Choose the idle experience: `default` keeps the artwork splash, `search` opens the search sheet immediately, `search-recently-played` jumps to the Recently Played view, and `search-next-up` opens the Next Up queue |
 | `dim_chips_on_idle`        | boolean      | No           | `true`      | Dim entity and action chips when the media player is idle                                       |
 | `always_show_quick_group` | boolean      | No           | `false`     | When `true`, Quick Grouping Mode will be active by default. You can still toggle it manually via double-tap. |
@@ -133,7 +135,7 @@ Below you will find a list of all configuration options.
 | `icon`                     | string       | No           | —           | MDI or custom icon for the action chip                                                          |
 | `service`                  | string       | No           | —           | Home Assistant service to call (e.g., `media_player.play_media`)                                |
 | `service_data`             | object       | No           | —           | Data to send with the service call                                                              |
-| `action`                   | string       | No           | —           | Set to `navigate` for navigation shortcuts, `sync_selected_entity` to sync the active entity to a helper, `select_entity` to read a helper and activate the matching chip, or `prev_entity`/`next_entity` to navigate chips |
+| `action`                   | string       | No           | —           | Set to `navigate` for navigation shortcuts, `sync_selected_entity` to sync the active entity to a helper, `select_entity` to read a helper and activate the matching chip, `prev_entity`/`next_entity` to navigate chips, or `toggle_lock_screen_controls` to toggle lock screen controls |
 | `navigation_path`          | string       | No           | —           | Destination for navigation shortcuts (supports anchors like `#pop-up-menu`, relative paths, or full URLs) |
 | `navigation_new_tab`       | boolean      | No           | `false`     | When `true`, external URLs open in a new browser tab instead of replacing the current view      |
 | `menu_item`                | string       | No           | —           | Opens a card menu by type: `search`, `search-recently-played`, `search-next-up`, `source`, `more-info`, `group-players`, `transfer-queue`, `main-menu` |
@@ -435,6 +437,55 @@ entities:
 
 
 # Behavior
+
+## Lock Screen & Media Session Controls
+
+> Control playback and view live metadata directly from your phone's lock screen.
+
+When enabled (`lock_screen_controls: true`), YAMP connects to your phone or computer's native media controls (iOS Lock Screen, Control Center, Dynamic Island, Android notifications, and desktop media keys) so you can pause, skip, and see what's playing without opening Home Assistant.
+
+### What It Does
+
+- **Lock Screen & Notification Controls**: Play, pause, skip tracks, and scrub through the timeline right from your lock screen or notification shade.
+- **Track Info & Artwork**: Shows the current title, artist, album, and artwork on your device.
+- **Automatic Switching**: If you have multiple YAMP cards or speakers, whichever one is actively playing automatically takes over the lock screen.
+
+---
+
+### Things to Know & Device Limitations
+
+Because Home Assistant cards run in a browser/app webview rather than as a native music player, there are a few platform quirks to keep in mind (especially on iOS):
+
+- **How it stays active (Silent Audio)**: Mobile operating systems will only show lock screen controls if audio is actively playing. To keep the controls alive when your phone is locked or the app is backgrounded, YAMP runs a completely silent background audio loop. It uses virtually zero CPU and won't make any sound.
+- **Starting playback outside the card (Voice / Automations)**: Phones won't let web pages start background audio without a screen tap. If you start music from within YAMP (tapping Play, Next, or a playlist item), controls appear immediately. If music starts playing from an external automation, Alexa/Google voice command, or another device, just tap anywhere on the dashboard once to unlock the audio and bring up the lock screen controls.
+- **iOS background limits**: Apple is aggressive about putting background apps to sleep. If Home Assistant has been in the background for an extended period or your phone needs memory, iOS will eventually freeze the app and the lock screen controls will drop off until you reopen Home Assistant.
+- **Other audio apps (Audio Focus)**: If you play audio from Spotify, YouTube, or take a phone call on your phone, your phone will hand control over to that app. YAMP steps aside so it doesn't fight for audio, and reconnects once you return to Home Assistant or start a new track.
+
+---
+
+### Example Configuration
+
+```yaml
+type: custom:yet-another-media-player
+lock_screen_controls: true
+entities:
+  - media_player.living_room_speaker
+```
+
+You can also add an action chip (or assign a card gesture) to toggle lock screen controls on or off on the fly:
+
+```yaml
+type: custom:yet-another-media-player
+lock_screen_controls: true
+entities:
+  - media_player.living_room_speaker
+actions:
+  - name: Lock Screen
+    icon: mdi:cellphone-lock
+    action: toggle_lock_screen_controls
+```
+
+---
 
 ## Idle & Chips
 > Choose when the card goes idle and how entity chips behave.

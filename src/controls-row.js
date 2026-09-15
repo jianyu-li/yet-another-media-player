@@ -22,6 +22,7 @@ export function renderControlsRow({
   adaptiveControls = false,
   controlLayout = "classic",
   swapPauseForStop = false,
+  lockScreenState = null,
 }) {
   if (!stateObj) return nothing;
 
@@ -51,6 +52,16 @@ export function renderControlsRow({
   const swapPauseWithStop = normalizedLayout === "modern" && swapPauseForStop && canShowStop;
   const isPlayingState = stateObj.state === "playing";
   const primaryUsesStop = swapPauseWithStop && isPlayingState;
+
+  const getPlayPauseTitle = (baseTitle) => {
+    if (lockScreenState === "ready") {
+      return `${baseTitle} (${localize("card.media_controls.lock_screen_ready") || "Lock screen controls active"})`;
+    }
+    if (lockScreenState === "connecting") {
+      return `${baseTitle} (${localize("card.media_controls.lock_screen_connecting") || "Connecting lock screen controls..."})`;
+    }
+    return baseTitle;
+  };
 
   if (normalizedLayout === "modern") {
     showStopButton = false;
@@ -136,11 +147,11 @@ export function renderControlsRow({
                   <button
                     class="modern-button primary${isPlayingState ? " active" : ""}"
                     @click=${() => onControlClick(primaryUsesStop ? "stop" : "play_pause")}
-                    title="${
+                    title="${getPlayPauseTitle(
                       primaryUsesStop
                         ? localize("card.media_controls.stop")
                         : localize("card.media_controls.play_pause") || "Play/Pause"
-                    }"
+                    )}"
                   >
                     <ha-icon
                       .icon=${
@@ -206,9 +217,9 @@ export function renderControlsRow({
         showPlayPause
           ? html`
               <button
-                class="button"
+                class="button${stateObj.state === "playing" ? " active" : ""}"
                 @click=${() => onControlClick("play_pause")}
-                title="${localize("card.media_controls.play_pause")}"
+                title="${getPlayPauseTitle(localize("card.media_controls.play_pause") || "Play/Pause")}"
               >
                 <ha-icon .icon=${stateObj.state === "playing" ? "mdi:pause" : "mdi:play"}></ha-icon>
               </button>

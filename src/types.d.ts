@@ -147,7 +147,22 @@ export interface ArtworkOverrideRule {
 
 export interface ActionConfig {
   action?:
-    "call-service" | "navigate" | "url" | "more-info" | "toggle" | "none" | "custom" | string;
+    | "call-service"
+    | "navigate"
+    | "url"
+    | "more-info"
+    | "toggle"
+    | "none"
+    | "custom"
+    | "toggle_lyrics"
+    | "remote_control"
+    | "prev_entity"
+    | "next_entity"
+    | "select_entity"
+    | "sync_selected_entity"
+    | "toggle_media_session"
+    | "toggle_lock_screen_controls"
+    | string;
   service?: string;
   service_data?: Record<string, any>;
   data?: Record<string, any>;
@@ -271,6 +286,7 @@ export interface YampCardConfig {
   swap_pause_for_stop?: boolean;
   show_album?: boolean;
   lyrics_background_fade?: number | string;
+  lock_screen_controls?: boolean;
   [key: string]: any;
 }
 

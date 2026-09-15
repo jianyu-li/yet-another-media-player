@@ -14,6 +14,7 @@ import { yampCardStyles } from "./yamp-card-styles.js";
 import { QueueDragMixin } from "./yamp-queue-drag.js";
 import { parseLrc } from "./lyrics-parser.js";
 import "./lyrics-view.js";
+import { YampMediaSessionManager } from "./yamp-media-session.js";
 import {
   renderSearchOptionsOverlay,
   searchMedia,
@@ -380,6 +381,9 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     window.addEventListener("resize", this._handleViewportResize, { passive: true });
     this._updateViewportFlags();
     this._updateAdaptiveTextObserverState();
+    if (this._mediaSessionManager && this._isMediaSessionEnabled) {
+      this._mediaSessionManager.attach();
+    }
   }
 
   // Scroll to first source option starting with the given letter
@@ -509,7 +513,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     _lastLyricsEntityId: { state: true },
     _showSourceMenu: { state: true },
     _volumeDraggingEntity: { state: true },
-    _dragVolume: { state: true }
+    _dragVolume: { state: true },
+    _mediaSessionOverride: { state: true }
   };
 
   static styles = yampCardStyles;
@@ -613,8 +618,42 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     return this._cardType !== "default";
   }
 
+  get _isEditorPreview() {
+    return Boolean(
+      (typeof this.closest === "function" && this.closest("hui-card-preview")) ||
+      (this.parentElement && this.parentElement.tagName && this.parentElement.tagName.toLowerCase() === "hui-card-preview")
+    );
+  }
+
+  get _isMediaSessionEnabled() {
+    if (this._isEditorPreview) {
+      return false;
+    }
+    if (this._mediaSessionOverride !== null) {
+      return this._mediaSessionOverride;
+    }
+    return this.config?.lock_screen_controls === true;
+  }
+
   constructor() {
     super();
+    this._mediaSessionOverride = null;
+    this._mediaSessionUpdatePending = false;
+    this._mediaSessionManager = new YampMediaSessionManager(this);
+    this._mediaSessionManager.onReadyChange = () => {
+      if (this._isMediaSessionEnabled && !this._isEditorPreview) {
+        if (!this._mediaSessionUpdatePending) {
+          this._mediaSessionUpdatePending = true;
+          this._mediaSessionUpdateTimer = setTimeout(() => {
+            this._mediaSessionUpdateTimer = null;
+            this._mediaSessionUpdatePending = false;
+            if (this._isMediaSessionEnabled && !this._isEditorPreview) {
+              this.requestUpdate();
+            }
+          }, 50);
+        }
+      }
+    };
     this._selectedIndex = 0;
     this._lastSyncedEntityId = null;
     this._lastPlaying = null;
@@ -2352,6 +2391,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     }
     const targetEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
     const targetEntityId = await this._resolveTemplateAtActionTime(targetEntityIdTemplate, this.currentEntityId);
+    this._mediaSessionManager?.startPlaybackGesture(targetEntityId);
     this._searchError = "";
     const playbackStarted = await this._performSearchPlayback(item, targetEntityId);
 
@@ -2570,6 +2610,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
   async _invokePlayMedia(targetEntityId, item) {
     try {
+      this._mediaSessionManager?.startPlaybackGesture(targetEntityId);
       if (this._radioModeActive) {
         await this.hass.callService("music_assistant", "play_media", {
           entity_id: targetEntityId,
@@ -5545,6 +5586,9 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const templateName = rawConfig.template || "custom";
     const templateBase = TEMPLATE_CONFIGS[templateName] || {};
     const config = { ...templateBase, ...rawConfig };
+    if (oldConfig?.lock_screen_controls !== config.lock_screen_controls) {
+      this._mediaSessionOverride = null;
+    }
     this.config = config;
     this._swapPauseForStop = config.swap_pause_for_stop === true;
     this._holdToPin = !!config.hold_to_pin;
@@ -7546,6 +7590,60 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       }, 500);
     }
 
+    // Sync lock screen media controls (Web Media Session API)
+    if (this._mediaSessionManager) {
+      const activePlaybackEntity = this.currentActivePlaybackEntityId || this.currentEntityId;
+      const metadataState = this.metadataStateObj;
+      const mainState = this.currentStateObj;
+
+      const metadataArtwork = this._getArtworkUrl(metadataState, false);
+      const playbackArtwork = this._getArtworkUrl(playbackState, false);
+      const mainArtwork = this._getArtworkUrl(mainState, false);
+
+      const artworkUrl =
+        metadataArtwork?.url ||
+        playbackArtwork?.url ||
+        mainArtwork?.url ||
+        metadataState?.attributes?.entity_picture ||
+        playbackState?.attributes?.entity_picture ||
+        mainState?.attributes?.entity_picture ||
+        "";
+
+      const title =
+        metadataState?.attributes?.media_title ||
+        playbackState?.attributes?.media_title ||
+        mainState?.attributes?.media_title ||
+        playbackState?.attributes?.friendly_name ||
+        mainState?.attributes?.friendly_name ||
+        "";
+
+      const artist =
+        metadataState?.attributes?.media_artist ||
+        playbackState?.attributes?.media_artist ||
+        mainState?.attributes?.media_artist ||
+        "";
+
+      const album =
+        metadataState?.attributes?.media_album_name ||
+        playbackState?.attributes?.media_album_name ||
+        mainState?.attributes?.media_album_name ||
+        "";
+
+      if (this._isEditorPreview) {
+        this._mediaSessionManager.reset(true);
+      } else {
+        this._mediaSessionManager.update({
+          enabled: this._isMediaSessionEnabled,
+          stateObj: playbackState,
+          targetEntityId: activePlaybackEntity,
+          artworkUrl,
+          title,
+          artist,
+          album,
+        });
+      }
+    }
+
     // Update idle state after all other state checks
 
 
@@ -7731,6 +7829,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _onChipClick(idx) {
+    this._mediaSessionManager?.resumeFromUserGesture();
     // Ignore the synthetic click that fires immediately after a long‑press pin.
     if (this._holdToPin && this._justPinned) {
       this._justPinned = false;
@@ -7902,6 +8001,21 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       return;
     }
 
+    if (
+      action.action === "toggle_media_session" ||
+      action.action === "toggle_lock_screen_controls"
+    ) {
+      const currentlyEnabled = this._isMediaSessionEnabled;
+      this._mediaSessionOverride = !currentlyEnabled;
+      if (this._mediaSessionOverride) {
+        this._mediaSessionManager?.startPlaybackGesture(this.currentEntityId);
+      } else {
+        this._mediaSessionManager?.reset();
+      }
+      this.requestUpdate();
+      return;
+    }
+
     if (action.action === "prev_entity" || action.action === "next_entity") {
       const sortedIds = this.sortedEntityIds;
       if (sortedIds && sortedIds.length > 0) {
@@ -7968,6 +8082,10 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       } else {
         data.entity_id = this.currentEntityId;
       }
+    }
+
+    if (domain === "media_player" && (service === "media_play" || service === "media_play_pause")) {
+      this._mediaSessionManager?.startPlaybackGesture(data.entity_id || this.currentEntityId);
     }
 
     this.hass.callService(domain, service, data);
@@ -8183,11 +8301,24 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     ) {
       return iconOnly ? "" : "Navigate";
     }
+    if (action.action === "toggle_lyrics") {
+      return iconOnly ? "" : localize("editor.action_types.toggle_lyrics") || "Toggle Lyrics Overlay";
+    }
+    if (action.action === "remote_control") {
+      return iconOnly ? "" : localize("editor.action_types.remote_control") || "Open Remote Controls Overlay";
+    }
+    if (
+      action.action === "toggle_media_session" ||
+      action.action === "toggle_lock_screen_controls"
+    ) {
+      return iconOnly ? "" : localize("editor.action_types.toggle_media_session") || "Toggle Media Session Controls";
+    }
     if (action.service) return iconOnly ? "" : action.service;
     return iconOnly ? "" : "Action";
   }
 
   async _onControlClick(action) {
+    this._mediaSessionManager?.resumeFromUserGesture();
     // Use the unified entity resolution system for control actions
     const targetEntity = this._getEntityForPurpose(this._selectedIndex, 'playback_control');
     if (!targetEntity) return;
@@ -8213,6 +8344,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           this.requestUpdate();
           setTimeout(() => { this._optimisticPlayback = null; this.requestUpdate(); }, 1200);
         } else {
+          this._mediaSessionManager?.startPlaybackGesture(targetEntity);
           this.hass.callService("media_player", "media_play", { entity_id: targetEntity });
           // On resume, clear the paused entity tracking since we're now playing
           if (this._lastPlayingEntityIdByChip) {
@@ -8230,10 +8362,12 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         }
         break;
       case "next":
+        this._mediaSessionManager?.startPlaybackGesture(targetEntity);
         this._advanceQueueInUI(null, true); // Manual advance
         this.hass.callService("media_player", "media_next_track", { entity_id: targetEntity });
         break;
       case "prev":
+        this._mediaSessionManager?.startPlaybackGesture(targetEntity);
         this.hass.callService("media_player", "media_previous_track", { entity_id: targetEntity });
         break;
       case "stop":
@@ -8954,13 +9088,28 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       if (typeof iconColor === "string" && (iconColor.includes("{{") || iconColor.includes("{%") || iconColor.trim().startsWith("[[["))) {
         iconColor = resolveStringTemplateSync(this.hass, iconColor, this._getTemplateContext()) || "";
       }
+      let icon = action.icon;
+      if (!icon) {
+        if (action.action === "toggle_media_session" || action.action === "toggle_lock_screen_controls") {
+          icon = this._isMediaSessionEnabled ? "mdi:cellphone-lock" : "mdi:cellphone-wireless";
+        } else if (action.action === "toggle_lyrics") {
+          icon = "mdi:script-text-outline";
+        } else if (action.action === "remote_control") {
+          icon = "mdi:remote";
+        } else {
+          icon = "mdi:rhombus-outline";
+        }
+      }
+      if (!iconColor && (action.action === "toggle_media_session" || action.action === "toggle_lock_screen_controls") && this._isMediaSessionEnabled) {
+        iconColor = "var(--custom-accent, var(--accent-color, #ff9800))";
+      }
       return html`
         <button
           class="volume-icon-btn favorite-volume-btn custom-bottom-action"
           @click=${(e) => { e.stopPropagation(); this._onActionChipClick(idx); }}
           title="${label}"
         >
-          <ha-icon style=${styleMap({ color: iconColor || undefined })} .icon=${action.icon || "mdi:rhombus-outline"}></ha-icon>
+          <ha-icon style=${styleMap({ color: iconColor || undefined })} .icon=${icon}></ha-icon>
         </button>
       `;
     };
@@ -9802,6 +9951,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         adaptiveControls: this._adaptiveControls,
         controlLayout: this._controlLayout,
         swapPauseForStop: this._controlLayout === "modern" && this._swapPauseForStop,
+        lockScreenState: this._isMediaSessionEnabled ? this._mediaSessionManager?.lockScreenState : null,
       })}
                 </div>
                 ${renderVolumeRow({
@@ -11248,6 +11398,13 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     if (this._lyricsFetchTimeout) {
       clearTimeout(this._lyricsFetchTimeout);
       this._lyricsFetchTimeout = null;
+    }
+    if (this._mediaSessionManager) {
+      this._mediaSessionManager.destroy();
+    }
+    if (this._mediaSessionUpdateTimer) {
+      clearTimeout(this._mediaSessionUpdateTimer);
+      this._mediaSessionUpdateTimer = null;
     }
     super.disconnectedCallback?.();
     if (this._progressTimer) {
