@@ -45,6 +45,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
       _actionMode: { type: String },
       _templateModes: { type: Object },
       _serviceItems: { type: Array },
+      _searchTerm: { type: String },
     };
   }
 
@@ -94,6 +95,48 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
       }
     }
     this._tempActionIndex = null;
+  }
+
+  shouldUpdate(changedProperties) {
+    if (
+      changedProperties.has("_config") ||
+      changedProperties.has("_yamlConfig") ||
+      changedProperties.has("_activeTab") ||
+      changedProperties.has("_entityEditorIndex") ||
+      changedProperties.has("_actionEditorIndex") ||
+      changedProperties.has("_actionMode") ||
+      changedProperties.has("_templateModes") ||
+      changedProperties.has("_serviceItems") ||
+      changedProperties.has("_searchTerm")
+    ) {
+      return true;
+    }
+
+    if (changedProperties.has("hass")) {
+      const oldHass = changedProperties.get("hass");
+      if (!oldHass) {
+        return true;
+      }
+
+      const oldLang = oldHass.selectedLanguage || oldHass.language || oldHass.locale?.language;
+      const newLang =
+        this.hass?.selectedLanguage || this.hass?.language || this.hass?.locale?.language;
+      if (oldLang !== newLang) {
+        return true;
+      }
+
+      if (oldHass.services !== this.hass?.services) {
+        return true;
+      }
+
+      if (oldHass.themes !== this.hass?.themes) {
+        return true;
+      }
+
+      return false;
+    }
+
+    return true;
   }
 
   updated(changedProperties) {
@@ -271,7 +314,17 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
 
   // Helper functions for ha-generic-picker (entity selection)
   _getEntityItems(domains = [], excludeEntities = []) {
-    return () => {
+    const domainKey = domains.join(",");
+    const excludeKey = excludeEntities.join(",");
+    const states = this.hass?.states;
+    const statesCount = states ? Object.keys(states).length : 0;
+    const cacheKey = `${domainKey}|${excludeKey}|${statesCount}`;
+
+    if (this._entityItemsCacheKey === cacheKey && this._cachedEntityItemsFn) {
+      return this._cachedEntityItemsFn;
+    }
+
+    const itemsFn = () => {
       if (!this.hass?.states) return [];
       return Object.keys(this.hass.states)
         .filter((entityId) => {
@@ -289,6 +342,13 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           };
         });
     };
+
+    if (domains.length <= 1 && excludeEntities.length === 0) {
+      this._entityItemsCacheKey = cacheKey;
+      this._cachedEntityItemsFn = itemsFn;
+    }
+
+    return itemsFn;
   }
 
   _entityValueRenderer(entityId) {

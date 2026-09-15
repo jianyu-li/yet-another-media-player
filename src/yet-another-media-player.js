@@ -377,6 +377,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
   connectedCallback() {
     super.connectedCallback();
+    this._isEditorPreviewCached = undefined;
     window.addEventListener("scroll", this._handleGlobalScroll, { passive: true });
     window.addEventListener("resize", this._handleViewportResize, { passive: true });
     this._updateViewportFlags();
@@ -619,10 +620,23 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   get _isEditorPreview() {
-    return Boolean(
+    if (this._isEditorPreviewCached !== undefined) {
+      return this._isEditorPreviewCached;
+    }
+    if (this.preview === true) {
+      return (this._isEditorPreviewCached = true);
+    }
+    if (!this.isConnected) {
+      return false;
+    }
+    const isPreview = Boolean(
       (typeof this.closest === "function" && this.closest("hui-card-preview")) ||
-      (this.parentElement && this.parentElement.tagName && this.parentElement.tagName.toLowerCase() === "hui-card-preview")
+      (this.parentElement && this.parentElement.tagName && this.parentElement.tagName.toLowerCase() === "hui-card-preview") ||
+      (this.getRootNode && this.getRootNode()?.host?.closest?.("hui-card-preview")) ||
+      (this.getRootNode && this.getRootNode()?.host?.parentElement?.tagName?.toLowerCase() === "hui-card-preview")
     );
+    this._isEditorPreviewCached = isPreview;
+    return isPreview;
   }
 
   get _isMediaSessionEnabled() {
@@ -7629,9 +7643,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         mainState?.attributes?.media_album_name ||
         "";
 
-      if (this._isEditorPreview) {
-        this._mediaSessionManager.reset(true);
-      } else {
+      if (!this._isEditorPreview) {
         this._mediaSessionManager.update({
           enabled: this._isMediaSessionEnabled,
           stateObj: playbackState,
@@ -10847,22 +10859,13 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _updateIdleState(changedProps) {
-    // Defer idle state if user is actively browsing menus
-    if (this.isAnyMenuOpen) {
-      if (this._idleTimeout) {
-        clearTimeout(this._idleTimeout);
-        this._idleTimeout = null;
-      }
-      return;
-    }
-
     // Consider both main and Music Assistant entities so we can wake from idle
     // even if the active selection is frozen while idle.
     const isAnyUnrestrictedPlaying = this.entityIds.some((id, idx) => {
       if (this._isAutoSelectDisabled(idx)) return false;
 
       const activeId = this._getEntityForPurpose(idx, 'sorting');
-      return this._isEntityPlaying(this.hass.states[activeId]);
+      return this._isEntityPlaying(this.hass?.states?.[activeId]);
     });
 
     const isCurrentPlaying = this._isCurrentEntityPlaying();
@@ -10876,7 +10879,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
     let shouldBeActiveImmediately;
     if (this._isIdle || !this._hasSeenPlayback) {
-      shouldBeActiveImmediately = isAnyUnrestrictedPlaying;
+      shouldBeActiveImmediately = isAnyUnrestrictedPlaying || isCurrentPlaying;
     } else {
       shouldBeActiveImmediately = isCurrentPlayingValidForActive;
     }
@@ -10891,6 +10894,16 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         this._resetIdleScreen();
         this.requestUpdate();
       }
+      return;
+    }
+
+    // Defer idle state if user is actively browsing menus
+    if (this.isAnyMenuOpen) {
+      if (this._idleTimeout) {
+        clearTimeout(this._idleTimeout);
+        this._idleTimeout = null;
+      }
+      return;
     } else {
       // Current is not playing, or nothing is playing.
       if (!this._hasSeenPlayback) {
@@ -11378,6 +11391,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   disconnectedCallback() {
+    this._isEditorPreviewCached = undefined;
     if (this._activeDragCleanup) {
       this._activeDragCleanup();
     }

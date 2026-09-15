@@ -133,7 +133,9 @@ export class YampMediaSessionManager {
     this._onAudioPause = this._onAudioPause.bind(this);
     this._onVisibilityChange = this._onVisibilityChange.bind(this);
 
-    this._attachUnlockListeners();
+    if (!this.card?._isEditorPreview) {
+      this._attachUnlockListeners();
+    }
   }
 
   get isSupported() {
@@ -165,13 +167,11 @@ export class YampMediaSessionManager {
   }
 
   _initAudio() {
+    if (this.card?._isEditorPreview) return;
     if (this._audio) {
-      if (!this._audio.parentNode && typeof document !== "undefined") {
+      if (!this._audio.parentNode && typeof document !== "undefined" && document.body) {
         try {
-          const target = this.card?.shadowRoot || document.body;
-          if (target) {
-            target.appendChild(this._audio);
-          }
+          document.body.appendChild(this._audio);
         } catch (_e) {
           // Ignore append error
         }
@@ -202,15 +202,12 @@ export class YampMediaSessionManager {
       document.addEventListener("visibilitychange", this._onVisibilityChange);
     }
 
-    // Append to card shadow root or document body
-    try {
-      const target = this.card?.shadowRoot || document.body;
-      if (target) {
-        target.appendChild(this._audio);
-      }
-    } catch (_e) {
-      if (typeof document !== "undefined" && document.body) {
+    // Always append directly to document.body outside of LitElement rendering lifecycle
+    if (typeof document !== "undefined" && document.body) {
+      try {
         document.body.appendChild(this._audio);
+      } catch (_e) {
+        // Ignore append error
       }
     }
   }
@@ -248,7 +245,7 @@ export class YampMediaSessionManager {
   }
 
   _onAudioPause() {
-    if (this._isInternalPause || (this._audio && this._audio.seeking)) {
+    if (this._wasEvicted || this._isInternalPause || (this._audio && this._audio.seeking)) {
       this._isInternalPause = false;
       return;
     }
@@ -286,6 +283,7 @@ export class YampMediaSessionManager {
    * Resets interruption / eviction flags when the user explicitly interacts with this card.
    */
   resumeFromUserGesture() {
+    if (this.card?._isEditorPreview) return;
     this._wasInterrupted = false;
     this._autoplayBlocked = false;
     this._wasEvicted = false;
@@ -294,11 +292,20 @@ export class YampMediaSessionManager {
   }
 
   _onUserInteractionUnlock() {
+    if (this.card?._isEditorPreview) return;
     this._unlocked = true;
     this._autoplayBlocked = false;
-    this._initAudio();
-    // If playback is supposed to be active, attempt to resume with user gesture
+    // Only attempt to start audio if THIS manager is supposed to be playing
+    // and is either currentActiveManager or there is no playing manager yet
     if (this._isAudioPlaying && this._audio && this._audio.paused) {
+      if (
+        currentActiveManager &&
+        currentActiveManager !== this &&
+        currentActiveManager._isAudioPlaying
+      ) {
+        return;
+      }
+      this._initAudio();
       const playPromise = this._audio.play();
       if (playPromise !== undefined) {
         playPromise
@@ -314,6 +321,7 @@ export class YampMediaSessionManager {
   }
 
   _attachUnlockListeners() {
+    if (this.card?._isEditorPreview) return;
     if (typeof window === "undefined" || this._unlockListenersAttached) return;
     const unlockEvents = ["pointerdown", "mousedown", "click", "touchstart", "touchend", "keydown"];
     unlockEvents.forEach((evt) => {
@@ -332,6 +340,7 @@ export class YampMediaSessionManager {
   }
 
   _startAudio() {
+    if (this.card?._isEditorPreview) return;
     this._initAudio();
     if (!this._audio) return;
 
@@ -529,7 +538,7 @@ export class YampMediaSessionManager {
    * @param {string|null} [options.album] Optional override album from rich metadata
    */
   update({ enabled, stateObj, targetEntityId, artworkUrl, title, artist, album }) {
-    if (!this.isSupported) return;
+    if (!this.isSupported || this.card?._isEditorPreview) return;
 
     if (!enabled || !stateObj) {
       if (currentActiveManager === this) {
@@ -577,6 +586,11 @@ export class YampMediaSessionManager {
       if (currentActiveManager && currentActiveManager !== this) {
         // If current active manager is playing and this manager is only paused, do not steal
         if (currentActiveManager._isAudioPlaying && isPaused && !isPlaying) {
+          return;
+        }
+        // If current active manager is already actively playing and this manager is also playing without explicit interaction,
+        // do not steal to prevent multi-card ping-pong loops on shared dashboards
+        if (currentActiveManager._isAudioPlaying && isPlaying && !this._hasUserInteraction) {
           return;
         }
         // If this manager was previously evicted by another manager, don't steal back
@@ -689,13 +703,14 @@ export class YampMediaSessionManager {
    * @param {boolean} [silent=false] If true, skips notifying card of state change to prevent re-render loops.
    */
   reset(silent = false) {
-    if (currentActiveManager === this) {
+    const wasActive = currentActiveManager === this;
+    if (wasActive) {
       currentActiveManager = null;
     }
 
     this._pauseAudio(silent);
 
-    if (this.isSupported) {
+    if (this.isSupported && wasActive) {
       const session = navigator.mediaSession;
       try {
         session.metadata = null;
@@ -704,7 +719,7 @@ export class YampMediaSessionManager {
           session.setPositionState();
         }
       } catch (_e) {
-        // Ignore clear error
+        // Ignore reset error
       }
 
       const actions = [
@@ -720,7 +735,7 @@ export class YampMediaSessionManager {
         try {
           session.setActionHandler(action, null);
         } catch (_e) {
-          // Ignore action unregister error
+          // Ignore action handler clear error
         }
       });
     }
@@ -750,6 +765,7 @@ export class YampMediaSessionManager {
    * Lighter than creating a new manager — preserves audio element and state.
    */
   attach() {
+    if (this.card?._isEditorPreview) return;
     this._attachUnlockListeners();
     if (typeof document !== "undefined") {
       document.addEventListener("visibilitychange", this._onVisibilityChange);
