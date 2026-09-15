@@ -10904,9 +10904,10 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         this._idleTimeout = null;
       }
       return;
-    } else {
-      // Current is not playing, or nothing is playing.
-      if (!this._hasSeenPlayback) {
+    }
+
+    // Current is not playing, or nothing is playing.
+    if (!this._hasSeenPlayback) {
         // Initial load with nothing playing - go idle immediately
         if (this._idleTimeoutMs > 0) {
           if (!this._isIdle) {
@@ -10966,7 +10967,6 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         this._resetIdleScreen();
         this.requestUpdate();
       }
-    }
   }
 
   _handleIdleTimeoutCallback() {

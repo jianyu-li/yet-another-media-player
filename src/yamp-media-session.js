@@ -295,9 +295,12 @@ export class YampMediaSessionManager {
     if (this.card?._isEditorPreview) return;
     this._unlocked = true;
     this._autoplayBlocked = false;
-    // Only attempt to start audio if THIS manager is supposed to be playing
-    // and is either currentActiveManager or there is no playing manager yet
+    // Only attempt to start audio if THIS manager is supposed to be playing.
     if (this._isAudioPlaying && this._audio && this._audio.paused) {
+      // STEALING GUARD: In a multi-card dashboard, multiple instances might receive
+      // a global user interaction unlock event simultaneously. We prevent this inactive
+      // manager from starting its audio element if another active manager is already
+      // playing, avoiding a 'ping-pong' eviction loop between instances.
       if (
         currentActiveManager &&
         currentActiveManager !== this &&
