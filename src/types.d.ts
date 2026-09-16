@@ -136,6 +136,16 @@ export interface HomeAssistant {
     sendMessagePromise<T = any>(message: Record<string, any>): Promise<T>;
   };
   localize(key: string, ...args: any[]): string;
+  formatEntityName?: (
+    stateObj: HassEntity,
+    name?:
+      | { type: "entity" | "device" | "parent_device" | "area" | "floor" }
+      | { type: "text"; text: string }
+      | Array<
+          | { type: "entity" | "device" | "parent_device" | "area" | "floor" }
+          | { type: "text"; text: string }
+        >
+  ) => string | undefined;
 }
 
 export interface ArtworkOverrideRule {
@@ -331,3 +341,8 @@ export interface LyricsLine {
   text: string;
   isInstrumental?: boolean;
 }
+
+export function getEntityName(
+  hass?: HomeAssistant | null,
+  stateOrEntityId?: HassEntity | string | null
+): string;

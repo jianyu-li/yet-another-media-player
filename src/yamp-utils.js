@@ -21,6 +21,36 @@ export function getValidArtworkAttr(attrs, key) {
 }
 
 /**
+ * Safely resolves the display name for an entity or state object, adhering to
+ * Home Assistant's formatEntityName helper when available, falling back
+ * to friendly_name or entity_id.
+ *
+ * @param {import("./types").HomeAssistant|null|undefined} hass - The Home Assistant instance
+ * @param {import("./types").HassEntity|string|null|undefined} stateOrEntityId - Entity state object or entity ID
+ * @returns {string} Formatted entity name
+ */
+export function getEntityName(hass, stateOrEntityId) {
+  if (!stateOrEntityId) return "";
+  const stateObj =
+    typeof stateOrEntityId === "string" ? hass?.states?.[stateOrEntityId] : stateOrEntityId;
+
+  if (!stateObj) {
+    return typeof stateOrEntityId === "string" ? stateOrEntityId : "";
+  }
+
+  if (typeof hass?.formatEntityName === "function") {
+    try {
+      const formatted = hass.formatEntityName(stateObj);
+      if (formatted) return formatted;
+    } catch {
+      // Gracefully fall back if unsupported arguments or error
+    }
+  }
+
+  return stateObj.attributes?.friendly_name || stateObj.entity_id || "";
+}
+
+/**
  * Resolve a Jinja template string at runtime
  * @param {Object} hass - Home Assistant object
  * @param {string} templateString - The template string to resolve
@@ -226,31 +256,31 @@ export function findAssociatedButtonEntities(hass, maEntityId) {
   // Look for button entities that might be associated with this MA entity
   // Common patterns: device_id matching, friendly_name similarity, or device_class
   const maDeviceId = maEntity.attributes?.device_id;
-  const maFriendlyName = maEntity.attributes?.friendly_name || maEntityId;
+  const maDisplayName = getEntityName(hass, maEntity) || maEntityId;
 
   // Search through all button entities
   for (const [entityId, state] of Object.entries(hass.states)) {
     if (entityId.startsWith("button.") && state.attributes) {
       const buttonDeviceId = state.attributes.device_id;
-      const buttonFriendlyName = state.attributes.friendly_name || entityId;
+      const buttonDisplayName = getEntityName(hass, state) || entityId;
 
       // Check if this button is associated with the same device
       if (maDeviceId && buttonDeviceId === maDeviceId) {
         buttonEntities.push({
           entity_id: entityId,
-          friendly_name: buttonFriendlyName,
+          friendly_name: buttonDisplayName,
           device_class: state.attributes.device_class,
           reason: "same_device",
         });
       }
       // Check for name similarity (e.g., "HomePod Favorite" button for "HomePod" MA entity)
       else if (
-        buttonFriendlyName.toLowerCase().includes(maFriendlyName.toLowerCase()) ||
-        maFriendlyName.toLowerCase().includes(buttonFriendlyName.toLowerCase())
+        buttonDisplayName.toLowerCase().includes(maDisplayName.toLowerCase()) ||
+        maDisplayName.toLowerCase().includes(buttonDisplayName.toLowerCase())
       ) {
         buttonEntities.push({
           entity_id: entityId,
-          friendly_name: buttonFriendlyName,
+          friendly_name: buttonDisplayName,
           device_class: state.attributes.device_class,
           reason: "name_similarity",
         });
@@ -259,7 +289,7 @@ export function findAssociatedButtonEntities(hass, maEntityId) {
       else if (entityId.toLowerCase().includes(maEntityId.split(".")[1].toLowerCase())) {
         buttonEntities.push({
           entity_id: entityId,
-          friendly_name: buttonFriendlyName,
+          friendly_name: buttonDisplayName,
           device_class: state.attributes.device_class,
           reason: "entity_id_match",
         });
