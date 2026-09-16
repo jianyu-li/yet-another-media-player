@@ -42,7 +42,8 @@ import {
   isMusicAssistantEntity,
   getArtworkUrl,
   isValidArtworkUrl,
-  getValidArtworkAttr
+  getValidArtworkAttr,
+  getEntityName
 } from "./yamp-utils.js";
 import { localize, setHassLanguage } from "./localize/localize.js";
 
@@ -3868,8 +3869,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       const displayState = maState || mainState;
       const configuredName = obj?.name;
       const displayName = configuredName ||
-        mainState?.attributes?.friendly_name ||
-        maState?.attributes?.friendly_name ||
+        getEntityName(this.hass, mainState) ||
+        getEntityName(this.hass, maState) ||
         obj.entity_id;
 
       targets.push({
@@ -6185,8 +6186,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   getChipName(entity_id) {
     const obj = this.entityObjs.find(e => e.entity_id === entity_id);
     if (obj && obj.name) return obj.name;
-    const state = this.hass.states[entity_id];
-    return state?.attributes.friendly_name || entity_id;
+    const state = this.hass?.states?.[entity_id];
+    return getEntityName(this.hass, state || entity_id);
   }
 
   // Return group master (includes all others in group_members)
@@ -6936,7 +6937,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           <div class="entity-options-resolved-entities-list ${isGridMode ? 'grid-menu' : ''}">
             ${this._getResolvedEntitiesForCurrentChip().map(entityId => {
         const state = this.hass?.states?.[entityId];
-        const name = state?.attributes?.friendly_name || entityId;
+        const name = getEntityName(this.hass, state || entityId);
         const icon = state?.attributes?.icon || "mdi:help-circle";
 
         const idx = this._selectedIndex;
@@ -7627,8 +7628,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         metadataState?.attributes?.media_title ||
         playbackState?.attributes?.media_title ||
         mainState?.attributes?.media_title ||
-        playbackState?.attributes?.friendly_name ||
-        mainState?.attributes?.friendly_name ||
+        getEntityName(this.hass, playbackState) ||
+        getEntityName(this.hass, mainState) ||
         "";
 
       const artist =

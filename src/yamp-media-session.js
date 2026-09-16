@@ -6,6 +6,8 @@
  * active when backgrounding or locking the device.
  */
 
+import { getEntityName } from "./yamp-utils.js";
+
 let cachedInaudibleWavUrl = null;
 
 /**
@@ -631,7 +633,10 @@ export class YampMediaSessionManager {
 
     // Update track metadata
     const resolvedTitle =
-      title || stateObj.attributes?.media_title || stateObj.attributes?.friendly_name || "Media";
+      title ||
+      stateObj.attributes?.media_title ||
+      getEntityName(this.card?.hass, stateObj) ||
+      "Media";
     const resolvedArtist = artist || stateObj.attributes?.media_artist || "";
     const resolvedAlbum = album || stateObj.attributes?.media_album_name || "";
     const rawArtwork =

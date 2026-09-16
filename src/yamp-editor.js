@@ -3,7 +3,7 @@ import * as yaml from "js-yaml";
 import { localize, setHassLanguage } from "./localize/localize.js";
 
 import { SUPPORT_GROUPING, TEMPLATE_CONFIGS, DEFAULT_LYRICS_BACKGROUND_FADE } from "./constants.js";
-import { isMusicAssistantEntity, getActionPlacement } from "./yamp-utils.js";
+import { isMusicAssistantEntity, getActionPlacement, getEntityName } from "./yamp-utils.js";
 import "./yamp-sortable.js";
 
 const getAdaptiveTextSelectorOptions = () => [
@@ -337,7 +337,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           const stateObj = this.hass.states[entityId];
           return {
             id: entityId,
-            primary: stateObj?.attributes?.friendly_name || entityId,
+            primary: getEntityName(this.hass, stateObj || entityId),
             secondary: entityId,
           };
         });
@@ -354,7 +354,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
   _entityValueRenderer(entityId) {
     if (!entityId) return "";
     const stateObj = this.hass?.states?.[entityId];
-    return stateObj?.attributes?.friendly_name || entityId;
+    return getEntityName(this.hass, stateObj || entityId);
   }
 
   _entityRowRenderer(item) {
@@ -1953,9 +1953,10 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                                         stateObj?.attributes
                                                           ?.entity_picture_local ||
                                                         stateObj?.attributes?.album_art;
-                                                      const name =
-                                                        stateObj?.attributes?.friendly_name ||
-                                                        entId;
+                                                      const name = getEntityName(
+                                                        this.hass,
+                                                        stateObj || entId
+                                                      );
                                                       const ratio =
                                                         this._entityRatios &&
                                                         this._entityRatios[entId];
