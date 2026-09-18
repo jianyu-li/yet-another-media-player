@@ -296,7 +296,7 @@ export interface YampCardConfig {
   swap_pause_for_stop?: boolean;
   show_album?: boolean;
   lyrics_background_fade?: number | string;
-  lock_screen_controls?: boolean;
+  lock_screen_controls?: boolean | string;
   [key: string]: any;
 }
 

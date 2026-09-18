@@ -206,6 +206,7 @@ export const TEMPLATE_SUPPORTED_FIELDS = Object.freeze(
     "background_image",
     "font_color",
     "lyrics_background_fade",
+    "lock_screen_controls",
   ])
 );
 

@@ -640,6 +640,20 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     return isPreview;
   }
 
+  get _lockScreenControls() {
+    const raw = this.config?.lock_screen_controls;
+    if (typeof raw === 'string' && (raw.includes('{{') || raw.includes('{%') || raw.trim().startsWith('[[['))) {
+      const resolved = this._lockScreenControlsResolveCache?.['card']?.value;
+      if (resolved !== undefined && resolved !== null && resolved !== "") {
+        if (typeof resolved === 'boolean') return resolved;
+        const lower = String(resolved).trim().toLowerCase();
+        return lower === "true" || lower === "1" || lower === "on" || lower === "yes";
+      }
+      return false; // Default until template resolves
+    }
+    return raw === true;
+  }
+
   get _isMediaSessionEnabled() {
     if (this._isEditorPreview) {
       return false;
@@ -647,7 +661,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     if (this._mediaSessionOverride !== null) {
       return this._mediaSessionOverride;
     }
-    return this.config?.lock_screen_controls === true;
+    return this._lockScreenControls;
   }
 
   constructor() {
@@ -709,6 +723,9 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._lyricsBackgroundFadeTemplateValue = {};
     this._lyricsBackgroundFadeResolveCache = {};
     this._lastLyricsBackgroundFadeContextKey = null;
+    this._lockScreenControlsTemplateValue = {};
+    this._lockScreenControlsResolveCache = {};
+    this._lastLockScreenControlsContextKey = null;
     this._transferQueuePendingTarget = null;
     this._transferQueueStatus = null;
     this._hasTransferQueueForCurrent = false;
@@ -999,6 +1016,10 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       currentCache = this._lyricsBackgroundFadeTemplateValue[idx];
       templateVals = this._lyricsBackgroundFadeTemplateValue;
       cache = this._lyricsBackgroundFadeResolveCache;
+    } else if (type === 'lock_screen_controls') {
+      currentCache = this._lockScreenControlsTemplateValue[idx];
+      templateVals = this._lockScreenControlsTemplateValue;
+      cache = this._lockScreenControlsResolveCache;
     }
 
     // Check if there's already an active subscription for this exact template
@@ -1036,7 +1057,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
         if (type === 'ma' || type === 'vol' || type === 'remote') {
           isValid = resolved && /^([a-z0-9_]+)\.[a-zA-Z0-9_]+$/.test(resolved);
-        } else if (type === 'action_in_menu' || type === 'always_collapsed' || type === 'control_layout' || type === 'card_height' || type === 'lyrics_background_fade' || type === 'hidden_controls') {
+        } else if (type === 'action_in_menu' || type === 'always_collapsed' || type === 'control_layout' || type === 'card_height' || type === 'lyrics_background_fade' || type === 'lock_screen_controls' || type === 'hidden_controls') {
           isValid = true; // Any string result is valid
         }
 
@@ -1052,7 +1073,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
             cache[idx] = { id: resolved, ts: Date.now() };
             shouldUpdate = true;
           }
-        } else if (type === 'action_in_menu' || type === 'always_collapsed' || type === 'control_layout' || type === 'card_height' || type === 'lyrics_background_fade' || type === 'hidden_controls') {
+        } else if (type === 'action_in_menu' || type === 'always_collapsed' || type === 'control_layout' || type === 'card_height' || type === 'lyrics_background_fade' || type === 'lock_screen_controls' || type === 'hidden_controls') {
           const currentCached = cache[idx]?.value;
           if (isValid && currentCached !== resolved) {
             cache[idx] = { value: resolved, ts: Date.now() };
@@ -1263,6 +1284,10 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       templateVals = this._lyricsBackgroundFadeTemplateValue;
       cache = this._lyricsBackgroundFadeResolveCache;
       contextKeyName = '_lastLyricsBackgroundFadeContextKey';
+    } else if (type === 'lock_screen_controls') {
+      templateVals = this._lockScreenControlsTemplateValue;
+      cache = this._lockScreenControlsResolveCache;
+      contextKeyName = '_lastLockScreenControlsContextKey';
     } else {
       return;
     }
@@ -1306,7 +1331,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       }
     };
 
-    if (type === 'always_collapsed' || type === 'control_layout' || type === 'card_height' || type === 'lyrics_background_fade') {
+    if (type === 'always_collapsed' || type === 'control_layout' || type === 'card_height' || type === 'lyrics_background_fade' || type === 'lock_screen_controls') {
       processItem('card', rawConfigData);
     } else if (type === 'action_in_menu') {
       const actions = rawConfigData || [];
@@ -7338,6 +7363,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._syncTemplateSubscriptions('control_layout', currentContext, this.config?.control_layout);
     this._syncTemplateSubscriptions('card_height', currentContext, this.config?.card_height);
     this._syncTemplateSubscriptions('lyrics_background_fade', currentContext, this.config?.lyrics_background_fade);
+    this._syncTemplateSubscriptions('lock_screen_controls', currentContext, this.config?.lock_screen_controls);
     this._syncEntityTemplateSubscriptions('ma', currentContext);
     this._syncEntityTemplateSubscriptions('vol', currentContext);
     this._syncEntityTemplateSubscriptions('remote', currentContext);
