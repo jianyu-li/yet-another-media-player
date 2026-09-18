@@ -744,6 +744,7 @@ All templates have access to standard Home Assistant template functions (`states
 | `is_options` | `boolean` | `true` if the entity options menu is open. |
 | `is_transfer_queue` | `boolean` | `true` if the transfer queue menu is open. |
 | `is_dark_mode` | `boolean` | `true` if Home Assistant is currently in dark mode. |
+| `is_mobile` | `boolean` | `true` if the user is on a mobile device or mobile viewport (width &le; 768px). |
 
 ## Examples
 
