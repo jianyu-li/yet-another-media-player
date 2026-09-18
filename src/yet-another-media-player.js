@@ -828,6 +828,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._handleGlobalScroll = this._handleGlobalScroll.bind(this);
     this._handleViewportResize = this._handleViewportResize.bind(this);
     this._isNarrowViewport = false;
+    this._lastIsMobile = false;
 
     // Collapse on load if nothing is playing (but respect linger state and idle_timeout_ms)
     // In specialized card modes, skip idle and auto-open dedicated view
@@ -1222,14 +1223,14 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         this._compiledJsTemplates[code] = new Function(
           "hass", "states", "user", "is_state", "state_attr", "context",
           "current", "is_idle", "is_playing", "is_search", "is_grouping",
-          "is_source", "is_lyrics", "is_options", "is_transfer_queue", "is_any_menu_open", "is_dark_mode",
+          "is_source", "is_lyrics", "is_options", "is_transfer_queue", "is_any_menu_open", "is_dark_mode", "is_mobile",
           body
         );
       }
       return this._compiledJsTemplates[code](
         hass, states, user, is_state, state_attr, context,
         context.current, context.is_idle, context.is_playing, context.is_search, context.is_grouping,
-        context.is_source, context.is_lyrics, context.is_options, context.is_transfer_queue, context.is_any_menu_open, context.is_dark_mode
+        context.is_source, context.is_lyrics, context.is_options, context.is_transfer_queue, context.is_any_menu_open, context.is_dark_mode, context.is_mobile
       );
     } catch (err) {
       console.warn("yamp: failed to evaluate JS template:", templateStr, err);
@@ -4659,8 +4660,20 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const docWidth = typeof document !== "undefined" ? document.documentElement?.clientWidth : 0;
     const viewportWidth = window.innerWidth || docWidth || 0;
     const isNarrow = viewportWidth > 0 ? viewportWidth <= 520 : this._isNarrowViewport;
+    const isMobile = this._isMobile;
+    let needsUpdate = false;
     if (isNarrow !== this._isNarrowViewport) {
       this._isNarrowViewport = isNarrow;
+      needsUpdate = true;
+    }
+    if (isMobile !== this._lastIsMobile) {
+      this._lastIsMobile = isMobile;
+      if (this._idleImageTemplate) this._idleImageTemplateNeedsResolve = true;
+      if (this._backgroundImageTemplate) this._backgroundImageTemplateNeedsResolve = true;
+      if (this._fontColorTemplate) this._fontColorTemplateNeedsResolve = true;
+      needsUpdate = true;
+    }
+    if (needsUpdate) {
       this.requestUpdate();
     }
   }
@@ -5288,6 +5301,18 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     }
   }
 
+  get _isMobile() {
+    if (typeof window === "undefined") return false;
+    const docWidth = typeof document !== "undefined" ? document.documentElement?.clientWidth : 0;
+    const viewportWidth = window.innerWidth || docWidth || 0;
+    const isMobileWidth = viewportWidth > 0 ? viewportWidth <= 768 : false;
+    const isMobileUserAgent =
+      typeof navigator !== "undefined" &&
+      (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent || "") ||
+        (Boolean(navigator.maxTouchPoints && navigator.maxTouchPoints > 1) && /Macintosh/i.test(navigator.userAgent || "")));
+    return Boolean(isMobileWidth || isMobileUserAgent);
+  }
+
   _getTemplateContext() {
     const isDarkMode = Boolean(
       this.hass?.themes?.darkMode ??
@@ -5305,6 +5330,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       is_transfer_queue: this._showTransferQueue,
       is_any_menu_open: this.isAnyMenuOpen,
       is_dark_mode: isDarkMode,
+      is_mobile: this._isMobile,
       current: this.currentActivePlaybackEntityId || this.currentEntityId || '',
     };
   }
@@ -5400,9 +5426,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         this._controlLayout
       );
       if (controls > 6) {
-        // Check if we're on a mobile screen (width <= 768px is typical mobile breakpoint)
-        const isMobile = window.innerWidth <= 768;
-        if (isMobile) {
+        // Check if we're on a mobile device or mobile screen breakpoint
+        if (this._isMobile) {
           // Make artwork smaller on mobile when there are many controls
           return "width: 60px; height: 60px; object-fit: var(--yamp-artwork-fit, cover); border-radius: 8px;";
         }
