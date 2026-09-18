@@ -3395,20 +3395,70 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           </div>
           <div class="config-subtitle">${localize("editor.subtitles.show_album")}</div>
         </div>
-        <div
-          class="form-row"
-          data-search-keys="lock_screen_controls media_session lock screen ios controls experimental"
-        >
-          <div>
-            <ha-switch
-              id="lock-screen-controls-toggle"
-              .checked=${this._config.lock_screen_controls ?? false}
-              @change=${(e) => this._updateConfig("lock_screen_controls", e.target.checked)}
-            ></ha-switch>
-            <span>${localize("editor.labels.lock_screen_controls")}</span>
-          </div>
-          <div class="config-subtitle">${localize("editor.subtitles.lock_screen_controls")}</div>
-        </div>
+        ${
+          this._isTemplateMode("lock_screen_controls", this._config.lock_screen_controls)
+            ? html`
+                <div
+                  class="form-row"
+                  data-search-keys="lock_screen_controls media_session lock screen ios controls experimental"
+                >
+                  <div class="editor-field-wrapper">
+                    <div class="grow-children" style="flex-direction: column;">
+                      <span class="form-label"
+                        >${localize("editor.labels.lock_screen_controls")}</span
+                      >
+                      <ha-code-editor
+                        lint
+                        .hass=${this.hass}
+                        mode="jinja2"
+                        autocomplete-entities
+                        label="${localize("editor.labels.lock_screen_controls")}"
+                        .value=${
+                          typeof this._config.lock_screen_controls === "string"
+                            ? this._config.lock_screen_controls
+                            : ""
+                        }
+                        @value-changed=${(e) =>
+                          this._updateConfig("lock_screen_controls", e.detail.value)}
+                      ></ha-code-editor>
+                    </div>
+                    <div class="field-actions">
+                      ${this._renderTemplateToggle(
+                        "lock_screen_controls",
+                        this._config.lock_screen_controls,
+                        (v) => this._updateConfig("lock_screen_controls", v)
+                      )}
+                    </div>
+                  </div>
+                  <div class="config-subtitle">
+                    ${localize("editor.subtitles.lock_screen_controls")}
+                  </div>
+                </div>
+              `
+            : html`
+                <div
+                  class="form-row"
+                  data-search-keys="lock_screen_controls media_session lock screen ios controls experimental"
+                >
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <ha-switch
+                      id="lock-screen-controls-toggle"
+                      .checked=${this._config.lock_screen_controls === true}
+                      @change=${(e) => this._updateConfig("lock_screen_controls", e.target.checked)}
+                    ></ha-switch>
+                    <span>${localize("editor.labels.lock_screen_controls")}</span>
+                    ${this._renderTemplateToggle(
+                      "lock_screen_controls",
+                      this._config.lock_screen_controls,
+                      (v) => this._updateConfig("lock_screen_controls", v)
+                    )}
+                  </div>
+                  <div class="config-subtitle">
+                    ${localize("editor.subtitles.lock_screen_controls")}
+                  </div>
+                </div>
+              `
+        }
         <div class="form-row">
           <div>
             <ha-switch

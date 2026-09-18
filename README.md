@@ -73,7 +73,7 @@ Below you will find a list of all configuration options.
 | `expand_on_search`         | boolean      | No           | `false`     | Temporarily expand the card when search is open (only available when `always_collapsed` is `true`) |
 | `hide_menu_player`         | boolean      | No           | `false`     | Hide the persistent media controls in the bottom sheet menu to reclaim space (only available when `always_collapsed` is `false`) |
 | `hide_reorder_progress`   | boolean      | No           | `false`     | Hide the floating queue re-ordering progress indicator at the bottom (also hidden if `hide_menu_player` is `true`) |
-| `lock_screen_controls` *(Experimental)* | boolean      | No           | `false`     | Enable lock screen and system media controls (Media Session API) *(Experimental)* for active playback on mobile and desktop devices (see [Lock Screen Controls](#lock-screen--media-session-controls)) |
+| `lock_screen_controls` *(Experimental)* | boolean / string | No       | `false`     | Enable lock screen and system media controls (Media Session API) *(Experimental)* for active playback on mobile and desktop devices ([Supports Templates](#template-support), see [Lock Screen Controls](#lock-screen--media-session-controls)) |
 | `idle_screen`              | choice       | No           | `default`   | Choose the idle experience: `default` keeps the artwork splash, `search` opens the search sheet immediately, `search-recently-played` jumps to the Recently Played view, and `search-next-up` opens the Next Up queue |
 | `dim_chips_on_idle`        | boolean      | No           | `true`      | Dim entity and action chips when the media player is idle                                       |
 | `always_show_quick_group` | boolean      | No           | `false`     | When `true`, Quick Grouping Mode will be active by default. You can still toggle it manually via double-tap. |
@@ -476,6 +476,16 @@ entities:
   - media_player.living_room_speaker
 ```
 
+`lock_screen_controls` also [supports templates](#template-support) (Jinja2 and JavaScript). For example, enable controls only on mobile devices:
+
+```yaml
+# Enable only on mobile phones / tablets
+lock_screen_controls: "{{ is_mobile }}"
+
+# Or with JavaScript:
+# lock_screen_controls: "[[[ return is_mobile; ]]]"
+```
+
 You can also add an action chip (or assign a card gesture) to toggle lock screen controls on or off on the fly:
 
 ```yaml
@@ -723,6 +733,7 @@ The following configuration keys support templates:
 - **`volume_entity`**: Dynamically select which entity controls volume for a specific player.
 - **`music_assistant_entity`**: Dynamically select the companion Music Assistant entity.
 - **`always_collapsed`**: Dynamically determine if the card should be fully collapsed.
+- **`lock_screen_controls`**: Dynamically enable or disable lock screen controls.
 - **`control_layout`**: Dynamically select the control layout style (`classic` or `modern`).
 - **`in_menu`**: Dynamically determine where an action is placed (`true`, `false`, or `hidden`).
 - **`image_url` / `missing_art_url`**: (Inside `media_artwork_overrides`) Dynamically determine artwork.
@@ -848,6 +859,19 @@ font_color: |
   [[[
     return is_dark_mode ? "#ffffff" : "#222222";
   ]]]
+```
+
+### Conditional Lock Screen Controls
+Enable lock screen and system media controls dynamically (e.g., only on mobile devices or tablets).
+
+**Jinja2 (Server-Side)**
+```yaml
+lock_screen_controls: "{{ is_mobile }}"
+```
+
+**JavaScript (Client-Side)**
+```yaml
+lock_screen_controls: "[[[ return is_mobile; ]]]"
 ```
 
 ## Controls & Typography
