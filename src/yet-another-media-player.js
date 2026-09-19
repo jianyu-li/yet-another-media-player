@@ -9503,6 +9503,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const actionRowReserve = collapsed && rowActions.length > 0 ? 40 : 0;
     const reservedTopSpace = chipRowReserve + actionRowReserve;
 
+    const activeTopChipReserve = (showChipsInline && !chipsHiddenInline) ? (collapsed ? 48 : 58) : 0;
+    const activeActionReserve = (rowActions.length > 0) ? (collapsed ? 40 : 42) : 0;
+    const totalTopReserve = activeTopChipReserve + activeActionReserve;
+    const effectiveCustomLowerHeight = hasCustomCardHeight ? Math.max(0, customCardHeight - totalTopReserve) : null;
+
     // Calculate available height for lower content
     const lowerContentAvailableHeight = hasCustomCardHeight
       ? Math.max(100, customCardHeight - reservedTopSpace)
@@ -9607,7 +9612,9 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     }
 
     const idleMinHeight = hideControlsNow
-      ? (collapsed ? (this._collapsedBaselineHeight || 220) : 325)
+      ? (collapsed
+          ? (this._collapsedBaselineHeight || 220)
+          : (hasCustomCardHeight ? effectiveCustomLowerHeight : 325))
       : null;
 
     this._lastRenderedCollapsed = collapsed;
@@ -9685,7 +9692,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const hasRightPlaceholder = this._controlLayout === "modern";
     const hasLeadingControl = leadingVolumeControl !== nothing && leadingVolumeControl !== undefined && leadingVolumeControl !== null;
 
-    const volumeRowWillCollapse = isVolumeHiddenByConfig && !isCompactVolume && !hasLeadingControl && !hasRightPlaceholder;
+    const volumeRowWillCollapse = isVolumeHiddenByConfig && !hasLeadingControl && !hasRightPlaceholder;
 
     const detailsHasAdaptiveText = !!this._adaptiveTextTargets?.has("details");
     this._lastSpacerRendered = !!(showCollapsedPlaceholder || (!collapsed && (!detailsHasAdaptiveText || hasSpacerContent)));
@@ -9798,7 +9805,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         }
         styles.push(`min-height: ${collapsed
           ? (hideControlsNow ? `${this._collapsedBaselineHeight || 220}px` : '0px')
-          : (hasCustomCardHeight ? `${customCardHeight}px` : '350px')}`);
+          : (hasCustomCardHeight ? `${effectiveCustomLowerHeight}px` : '350px')}`);
         styles.push('transition: min-height 0.4s cubic-bezier(0.6,0,0.4,1), background 0.4s');
         return styles.join('; ');
       })()}"
@@ -9808,7 +9815,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         if (!hideControlsNow) return '';
         return collapsed
           ? `min-height: ${this._collapsedBaselineHeight || 220}px;`
-          : `min-height: ${hasCustomCardHeight ? `${customCardHeight}px` : `${this._lastNonLyricsLowerContentHeight || 350}px`};`;
+          : `min-height: ${hasCustomCardHeight ? `${effectiveCustomLowerHeight}px` : `${this._lastNonLyricsLowerContentHeight || 350}px`};`;
       })()}">
                 ${collapsed && artworkUrl && collapsedArtworkSize > 0 && isValidArtworkUrl(artworkUrl) ? html`
                   <div
@@ -10039,7 +10046,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         muteSlotTemplate: shouldHideVolumeControls ? (muteSlotTemplate !== nothing ? html`<div style="visibility:hidden; opacity:0; pointer-events:none;">${muteSlotTemplate}</div>` : nothing) : muteSlotTemplate,
         hideVolume: isVolumeHidden,
         collapseRow: volumeRowWillCollapse,
-        moreInfoMenu: (!this._showEntityOptions && !isCompactVolume && !volumeRowWillCollapse) ? html`
+        moreInfoMenu: (!this._showEntityOptions && !volumeRowWillCollapse) ? html`
           <div class="more-info-menu">
             <button class="more-info-btn" @click=${async () => await this._openEntityOptions()}>
               <span class="more-info-icon">&#9776;</span>
@@ -10047,7 +10054,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           </div>
         ` : nothing,
       })}
-            ${(volumeRowWillCollapse && !this._showEntityOptions && !isCompactVolume) ? html`
+            ${(volumeRowWillCollapse && !this._showEntityOptions) ? html`
               <div class="more-info-menu volume-collapsed">
                 <button class="more-info-btn" @click=${async () => await this._openEntityOptions()}>
                   <span class="more-info-icon">&#9776;</span>
