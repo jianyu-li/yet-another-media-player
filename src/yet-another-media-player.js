@@ -10084,7 +10084,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         moreInfoMenu: (!this._showEntityOptions && !volumeRowWillCollapse) ? html`
           <div class="more-info-menu">
             <button class="more-info-btn" @click=${async () => await this._openEntityOptions()}>
-              <span class="more-info-icon">&#9776;</span>
+              <span class="more-info-icon" style="${this._artworkGradientDisabled ? 'color: var(--yamp-icon-color, var(--primary-text, #444));' : ''}">&#9776;</span>
             </button>
           </div>
         ` : nothing,
@@ -10092,7 +10092,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
             ${(volumeRowWillCollapse && !this._showEntityOptions) ? html`
               <div class="more-info-menu volume-collapsed">
                 <button class="more-info-btn" @click=${async () => await this._openEntityOptions()}>
-                  <span class="more-info-icon">&#9776;</span>
+                  <span class="more-info-icon" style="${this._artworkGradientDisabled ? 'color: var(--yamp-icon-color, var(--primary-text, #444));' : ''}">&#9776;</span>
                 </button>
               </div>
             ` : nothing}

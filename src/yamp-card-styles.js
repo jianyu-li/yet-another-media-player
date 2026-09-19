@@ -426,6 +426,14 @@ export const yampCardStyles = css`
     color: #fff;
   }
 
+  :host([data-disable-artwork-gradient="true"]) .more-info-icon {
+    color: var(--yamp-icon-color, var(--primary-text, #444));
+  }
+
+  :host([data-disable-artwork-gradient="true"]) .dim-idle .more-info-icon {
+    color: var(--secondary-text, #9ea2a8);
+  }
+
   /* Card artwork spacer */
   .card-artwork-spacer {
     width: 100%;
