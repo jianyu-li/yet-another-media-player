@@ -725,3 +725,98 @@ export function getActionPlacement(action, index) {
   if (action?.in_menu === true) return "menu";
   return "chip";
 }
+
+/**
+ * Checks if a given media title is a generic placeholder (such as "AirPlay" or the entity's friendly name)
+ * rather than genuine track/media metadata.
+ *
+ * @param {string|null|undefined} title - The media title to test
+ * @param {string|null|undefined} [friendlyName] - The entity's friendly name
+ * @returns {boolean} True if the title is considered a placeholder
+ */
+export function isPlaceholderMediaTitle(title, friendlyName) {
+  if (!title || typeof title !== "string") return true;
+  const trimmed = title.trim().toLowerCase();
+  if (trimmed === "" || trimmed === "airplay") return true;
+  if (
+    friendlyName &&
+    typeof friendlyName === "string" &&
+    trimmed === friendlyName.trim().toLowerCase()
+  ) {
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Determines whether two paired media player entities are playing the same media/content.
+ * Used when both the main entity and its paired Music Assistant entity are reporting playing state,
+ * allowing the card to prioritize the main entity (e.g. Apple TV outputting audio to a HomePod).
+ *
+ * @param {import("./types").HassEntity|null|undefined} mainState - Main entity state object
+ * @param {import("./types").HassEntity|null|undefined} maState - Music Assistant entity state object
+ * @returns {boolean} True if both entities are determined to be playing the same media
+ */
+export function areEntitiesPlayingSameMedia(mainState, maState) {
+  if (!mainState || !maState) return false;
+
+  const mainAttrs = mainState.attributes || {};
+  const maAttrs = maState.attributes || {};
+
+  const mainTitle =
+    typeof mainAttrs.media_title === "string" ? mainAttrs.media_title.trim().toLowerCase() : "";
+  const maTitle =
+    typeof maAttrs.media_title === "string" ? maAttrs.media_title.trim().toLowerCase() : "";
+
+  // 1. Both entities have media_title and they match (case-insensitive)
+  if (mainTitle && maTitle && mainTitle === maTitle) {
+    return true;
+  }
+
+  // 2. Both entities have matching media_content_id
+  const mainContentId = mainAttrs.media_content_id;
+  const maContentId = maAttrs.media_content_id;
+  if (mainContentId && maContentId && mainContentId === maContentId) {
+    return true;
+  }
+
+  // 3. AirPlay receiver / sender indicators
+  const mainName =
+    typeof mainAttrs.friendly_name === "string" ? mainAttrs.friendly_name.trim().toLowerCase() : "";
+  const maName =
+    typeof maAttrs.friendly_name === "string" ? maAttrs.friendly_name.trim().toLowerCase() : "";
+  const mainApp =
+    typeof mainAttrs.app_name === "string" ? mainAttrs.app_name.trim().toLowerCase() : "";
+  const maApp = typeof maAttrs.app_name === "string" ? maAttrs.app_name.trim().toLowerCase() : "";
+  const mainSource =
+    typeof mainAttrs.source === "string" ? mainAttrs.source.trim().toLowerCase() : "";
+  const maSource = typeof maAttrs.source === "string" ? maAttrs.source.trim().toLowerCase() : "";
+
+  if (maTitle === "airplay" || maApp === "airplay" || maSource === "airplay") {
+    return true;
+  }
+  if (mainTitle === "airplay" || mainApp === "airplay" || mainSource === "airplay") {
+    return true;
+  }
+
+  // 4. Cross-reference: one entity's title or source is the other's friendly_name
+  if (mainName && (maTitle === mainName || maSource === mainName)) {
+    return true;
+  }
+  if (maName && (mainTitle === maName || mainSource === maName)) {
+    return true;
+  }
+
+  // 5. Main entity is playing with a title, but MA entity has no title
+  // (Common when Apple TV AirPlays video/app audio to HomePod, which lacks track metadata)
+  if (mainTitle && !maTitle) {
+    return true;
+  }
+
+  // 6. Neither entity has a media_title (e.g. system sounds, video games, live streams)
+  if (!mainTitle && !maTitle) {
+    return true;
+  }
+
+  return false;
+}
