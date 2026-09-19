@@ -43,7 +43,9 @@ import {
   getArtworkUrl,
   isValidArtworkUrl,
   getValidArtworkAttr,
-  getEntityName
+  getEntityName,
+  areEntitiesPlayingSameMedia,
+  isPlaceholderMediaTitle
 } from "./yamp-utils.js";
 import { localize, setHassLanguage } from "./localize/localize.js";
 
@@ -5904,6 +5906,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     return entityTemplate;
   }
 
+  // Helper to determine if main and paired MA entities are playing the same media
+  _areEntitiesPlayingSameMedia(mainState, maState) {
+    return areEntitiesPlayingSameMedia(mainState, maState);
+  }
+
   // Get active playback entity for a specific index
   _getActivePlaybackEntityForIndex(idx) {
     const obj = this.entityObjs[idx];
@@ -5957,8 +5964,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const maPlaying = this._isEntityPlaying(maState);
     const mainPlaying = this._isEntityPlaying(mainState);
 
-    // If both are playing, be sticky
+    // If both are playing, prioritize main entity if they are playing the same thing; otherwise be sticky
     if (maPlaying && mainPlaying) {
+      if (this._areEntitiesPlayingSameMedia(mainState, maState)) {
+        return resolve(mainId);
+      }
       if (lastResolved === mainId) return resolve(mainId);
       if (lastResolved === maId) return resolve(maId);
       return resolve(maId); // Default to MA
@@ -6072,8 +6082,17 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const maWasRecent = maWasPlayingUntilNow || (now - maPlayTime) < 5000;
     const mainWasRecent = mainWasPlayingUntilNow || (now - mainPlayTime) < 5000;
 
+    const maPlaying = this._isEntityPlaying(maState);
+    const mainPlaying = this._isEntityPlaying(mainState);
+
+    // If both are playing the same thing, prioritize the main entity
+    if (maPlaying && mainPlaying && this._areEntitiesPlayingSameMedia(mainState, maState)) {
+      this._lastActiveEntityIdByChip[idx] = mainId;
+      return mainId;
+    }
+
     // Prioritize the Music Assistant entity when it's playing
-    if (this._isEntityPlaying(maState)) {
+    if (maPlaying) {
       this._lastActiveEntityIdByChip[idx] = maId;
       return maId;
     }
@@ -6518,16 +6537,21 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         const playbackArtwork = this._getArtworkUrl(playbackState);
         const mainArtwork = this._getArtworkUrl(mainState);
 
-        const displaySource = metadataState || playbackState || mainState;
-        const displayTitle = displaySource?.attributes?.media_title;
+        const isPlayingSameMedia = this._areEntitiesPlayingSameMedia(mainState, playbackState);
 
-        // Prioritize metadata artwork, then fall back to others only if they match the displayed title
+        const metaTitle = metadataState?.attributes?.media_title;
+        const isMetaPlaceholder = isPlaceholderMediaTitle(metaTitle, metadataState?.attributes?.friendly_name);
+        const effectiveMetaTitle = (!isMetaPlaceholder && metaTitle) ? metaTitle : null;
+        const displayTitle = effectiveMetaTitle || playbackState?.attributes?.media_title || mainState?.attributes?.media_title || metaTitle;
+
+        // Prioritize metadata artwork, then fall back to others only if they match the displayed title or are playing the same media
         let artObj = metadataArtwork;
-        if (displayTitle && (!artObj || !artObj.url) && playbackArtwork?.url && playbackState?.attributes?.media_title === displayTitle) {
-          artObj = playbackArtwork;
-        }
-        if (displayTitle && (!artObj || !artObj.url) && mainArtwork?.url && mainState?.attributes?.media_title === displayTitle) {
-          artObj = mainArtwork;
+        if (displayTitle && (!artObj || !artObj.url)) {
+          if (playbackArtwork?.url && (playbackState?.attributes?.media_title === displayTitle || isPlayingSameMedia)) {
+            artObj = playbackArtwork;
+          } else if (mainArtwork?.url && (mainState?.attributes?.media_title === displayTitle || isPlayingSameMedia)) {
+            artObj = mainArtwork;
+          }
         }
 
         return artObj || playbackArtwork || mainArtwork;
@@ -8942,6 +8966,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       let targetEntity;
       if (this._controlFocusEntityId && (this._controlFocusEntityId === maId || this._controlFocusEntityId === mainId)) {
         targetEntity = this._controlFocusEntityId;
+      } else if (this._isEntityPlaying(maState) && this._isEntityPlaying(mainState) && this._areEntitiesPlayingSameMedia(mainState, maState)) {
+        targetEntity = mainId;
       } else if (this._isEntityPlaying(maState)) {
         targetEntity = maId;
       } else if (this._isEntityPlaying(mainState)) {
@@ -9382,17 +9408,26 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const playbackArtwork = this._getArtworkUrl(playbackStateObj, forceIdleImage);
     const mainArtwork = this._getArtworkUrl(mainState, forceIdleImage);
 
-    const displayTitle = metadataStateObj?.attributes?.media_title || finalPlaybackStateObj?.attributes?.media_title || mainState?.attributes?.media_title;
+    const isPlayingSameMedia = this._areEntitiesPlayingSameMedia(mainState, playbackStateObj);
+
+    // If metadataStateObj only has a placeholder title (like 'AirPlay' or the entity name)
+    // while mainState or playbackState has real media metadata, fall back to the real metadata
+    const metaTitle = metadataStateObj?.attributes?.media_title;
+    const isMetaPlaceholder = isPlaceholderMediaTitle(metaTitle, metadataStateObj?.attributes?.friendly_name);
+    const effectiveMetaTitle = (!isMetaPlaceholder && metaTitle) ? metaTitle : null;
+
+    const displayTitle = effectiveMetaTitle || finalPlaybackStateObj?.attributes?.media_title || mainState?.attributes?.media_title || metaTitle || "";
 
     // Intelligent artwork fallback: 
     // 1. Always prefer the explicit metadata source
-    // 2. Fall back to active/main playback ONLY if they are playing the exact same track title
+    // 2. Fall back to active/main playback if they are playing the exact same track title or same media
     let selectedArt = metadataArtwork;
-    if (displayTitle && (!selectedArt || !selectedArt.url) && playbackArtwork?.url && playbackStateObj?.attributes?.media_title === displayTitle) {
-      selectedArt = playbackArtwork;
-    }
-    if (displayTitle && (!selectedArt || !selectedArt.url) && mainArtwork?.url && mainState?.attributes?.media_title === displayTitle) {
-      selectedArt = mainArtwork;
+    if (displayTitle && (!selectedArt || !selectedArt.url)) {
+      if (playbackArtwork?.url && (playbackStateObj?.attributes?.media_title === displayTitle || isPlayingSameMedia)) {
+        selectedArt = playbackArtwork;
+      } else if (mainArtwork?.url && (mainState?.attributes?.media_title === displayTitle || isPlayingSameMedia)) {
+        selectedArt = mainArtwork;
+      }
     }
     if (!selectedArt) {
       selectedArt = playbackArtwork || mainArtwork || null;
@@ -9405,7 +9440,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const shouldShowDetails = this._idleTimeoutMs === 0 ? true : isPlaying;
     // For display-only fields, fall back to the state object that actually provides the title we matched
     const displaySource =
-      (metadataStateObj?.attributes?.media_title) ? metadataStateObj :
+      (effectiveMetaTitle && metadataStateObj?.attributes?.media_title) ? metadataStateObj :
         (finalPlaybackStateObj?.attributes?.media_title) ? finalPlaybackStateObj :
           (mainState?.attributes?.media_title) ? mainState :
             (metadataStateObj || finalPlaybackStateObj || mainState);
