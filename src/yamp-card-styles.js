@@ -409,13 +409,13 @@ export const yampCardStyles = css`
   }
 
   .dim-idle .more-info-btn ha-icon {
-    color: var(--secondary-text, #9ea2a8);
+    color: #fff;
   }
 
   .more-info-icon {
     font-size: 2em;
     line-height: 1;
-    color: var(--yamp-icon-color, var(--primary-text, #fff));
+    color: #fff;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -423,7 +423,7 @@ export const yampCardStyles = css`
   }
 
   .dim-idle .more-info-icon {
-    color: var(--secondary-text, #9ea2a8);
+    color: #fff;
   }
 
   /* Card artwork spacer */
@@ -1998,7 +1998,6 @@ export const yampCardStyles = css`
 
   /* Hamburger icon (span) overrides */
   .yamp-card-inner[data-has-font-color="true"] .more-info-icon,
-  .yamp-card-inner[data-match-theme="true"] .more-info-icon,
   .yamp-card-inner[data-lyrics-active="true"] .more-info-icon,
   .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .more-info-icon {
     color: var(--primary-text);
