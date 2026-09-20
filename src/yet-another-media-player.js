@@ -9744,6 +9744,9 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const lyricsBlurPx = lyricsFade === 0 ? 0 : Math.min(5, Number(((lyricsFade / 80) * 5).toFixed(1)));
     const lyricsBackdropFilter = lyricsBlurPx === 0 ? "none" : `blur(${lyricsBlurPx}px)`;
 
+    const shouldAdaptMenuIconColor = this._artworkGradientDisabled || (this._isIdle && !hasBackgroundImage && !artworkUrl && !idleImageUrl);
+    const menuIconStyle = shouldAdaptMenuIconColor ? 'color: var(--yamp-icon-color, var(--primary-text, #444));' : '';
+
     return html`
         <ha-card class="yamp-card" 
           style=${(hasCustomCardHeight && (!collapsed || this._alwaysCollapsed)) ? `height:${customCardHeight}px;` : nothing}>
@@ -9772,7 +9775,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
             ` : nothing}
             ${artworkFullBleed && hasBackgroundImage ? html`
               <div class="full-bleed-artwork-bg" style="${sharedBackgroundStyle}"></div>
-              ${!this._artworkGradientDisabled && !(dimIdleFrame || this._lyricsActive) ? html`<div class="full-bleed-artwork-fade"></div>` : nothing}
+              ${!this._artworkGradientDisabled && !(dimIdleFrame || this._isIdle || this._lyricsActive) ? html`<div class="full-bleed-artwork-fade"></div>` : nothing}
             ` : nothing}
             ${(!useInsetArtwork && !artworkUrl && !idleImageUrl && !hasCardBg) ? html`
               <div class="media-artwork-placeholder"
@@ -9845,7 +9848,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         return styles.join('; ');
       })()}"
               ></div>
-              ${!this._artworkGradientDisabled && !(this._lyricsActive || (!artworkUrl && hasCardBg && !idleImageUrl)) && (!useInsetArtwork || activeArtworkFit === "scaled-contain") ? html`<div class="card-lower-fade" style="--yamp-lyrics-bottom-offset: ${lyricsBottomOffset}px;"></div>` : nothing}
+              ${!this._artworkGradientDisabled && !(dimIdleFrame || this._isIdle || this._lyricsActive || (!artworkUrl && hasCardBg)) && (!useInsetArtwork || activeArtworkFit === "scaled-contain") ? html`<div class="card-lower-fade" style="--yamp-lyrics-bottom-offset: ${lyricsBottomOffset}px;"></div>` : nothing}
               <div class="card-lower-content${collapsed ? ' collapsed transitioning' : ' transitioning'}${collapsed && artworkUrl && collapsedArtworkSize > 0 ? ' has-artwork' : ''}" style="${(() => {
         if (!hideControlsNow) return '';
         return collapsed
@@ -10084,7 +10087,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         moreInfoMenu: (!this._showEntityOptions && !volumeRowWillCollapse) ? html`
           <div class="more-info-menu">
             <button class="more-info-btn" @click=${async () => await this._openEntityOptions()}>
-              <span class="more-info-icon" style="${this._artworkGradientDisabled ? 'color: var(--yamp-icon-color, var(--primary-text, #444));' : ''}">&#9776;</span>
+              <span class="more-info-icon" style="${menuIconStyle}">&#9776;</span>
             </button>
           </div>
         ` : nothing,
@@ -10092,7 +10095,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
             ${(volumeRowWillCollapse && !this._showEntityOptions) ? html`
               <div class="more-info-menu volume-collapsed">
                 <button class="more-info-btn" @click=${async () => await this._openEntityOptions()}>
-                  <span class="more-info-icon" style="${this._artworkGradientDisabled ? 'color: var(--yamp-icon-color, var(--primary-text, #444));' : ''}">&#9776;</span>
+                  <span class="more-info-icon" style="${menuIconStyle}">&#9776;</span>
                 </button>
               </div>
             ` : nothing}
