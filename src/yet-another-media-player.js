@@ -5464,8 +5464,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   // Get artwork URL from entity state, supporting entity_picture_local
-  _getArtworkUrl(state, forceIdleImage = false) {
-    const isIdleImageActive = (this._isIdle || forceIdleImage) && !!this.config?.idle_image;
+  _getArtworkUrl(state, forceIdleImage = false, ignoreIdleImage = false) {
+    const isIdleImageActive = !ignoreIdleImage && (this._isIdle || forceIdleImage) && !!this.config?.idle_image;
     const res = getArtworkUrl(state, {
       hostname: this.config?.artwork_hostname || '',
       overrides: Array.isArray(this.config?.media_artwork_overrides) ? this.config.media_artwork_overrides : [],
@@ -5495,6 +5495,36 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     }
 
     return { url, sizePercentage, objectFit, objectPosition };
+  }
+
+  // Unified helper to resolve artwork with intelligent fallbacks
+  _resolveSelectedArtwork({
+    metadataArtwork,
+    playbackArtwork,
+    mainArtwork,
+    displayTitle,
+    playbackStateObj,
+    mainState,
+    isPlayingSameMedia = false,
+  }) {
+    let selectedArt = metadataArtwork;
+    if (displayTitle && (!selectedArt || !selectedArt.url)) {
+      if (playbackArtwork?.url && (playbackStateObj?.attributes?.media_title === displayTitle || isPlayingSameMedia)) {
+        selectedArt = playbackArtwork;
+      } else if (mainArtwork?.url && (mainState?.attributes?.media_title === displayTitle || isPlayingSameMedia)) {
+        selectedArt = mainArtwork;
+      }
+    }
+    if (!selectedArt || !selectedArt.url) {
+      if (playbackArtwork?.url) {
+        selectedArt = playbackArtwork;
+      } else if (mainArtwork?.url) {
+        selectedArt = mainArtwork;
+      } else {
+        selectedArt = playbackArtwork || mainArtwork || null;
+      }
+    }
+    return selectedArt;
   }
 
   _getBackgroundSizeForFit(fit) {
@@ -6545,16 +6575,15 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         const displayTitle = effectiveMetaTitle || playbackState?.attributes?.media_title || mainState?.attributes?.media_title || metaTitle;
 
         // Prioritize metadata artwork, then fall back to others only if they match the displayed title or are playing the same media
-        let artObj = metadataArtwork;
-        if (displayTitle && (!artObj || !artObj.url)) {
-          if (playbackArtwork?.url && (playbackState?.attributes?.media_title === displayTitle || isPlayingSameMedia)) {
-            artObj = playbackArtwork;
-          } else if (mainArtwork?.url && (mainState?.attributes?.media_title === displayTitle || isPlayingSameMedia)) {
-            artObj = mainArtwork;
-          }
-        }
-
-        return artObj || playbackArtwork || mainArtwork;
+        return this._resolveSelectedArtwork({
+          metadataArtwork,
+          playbackArtwork,
+          mainArtwork,
+          displayTitle,
+          playbackStateObj: playbackState,
+          mainState,
+          isPlayingSameMedia,
+        });
       },
       getIsMaActive: (id) => {
         const idx = this.entityIds.indexOf(id);
@@ -9421,17 +9450,28 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     // Intelligent artwork fallback: 
     // 1. Always prefer the explicit metadata source
     // 2. Fall back to active/main playback if they are playing the exact same track title or same media
-    let selectedArt = metadataArtwork;
-    if (displayTitle && (!selectedArt || !selectedArt.url)) {
-      if (playbackArtwork?.url && (playbackStateObj?.attributes?.media_title === displayTitle || isPlayingSameMedia)) {
-        selectedArt = playbackArtwork;
-      } else if (mainArtwork?.url && (mainState?.attributes?.media_title === displayTitle || isPlayingSameMedia)) {
-        selectedArt = mainArtwork;
-      }
-    }
-    if (!selectedArt) {
-      selectedArt = playbackArtwork || mainArtwork || null;
-    }
+    const selectedArt = this._resolveSelectedArtwork({
+      metadataArtwork,
+      playbackArtwork,
+      mainArtwork,
+      displayTitle,
+      playbackStateObj,
+      mainState,
+      isPlayingSameMedia,
+    });
+
+    // Persistent media controls track artwork:
+    // Always show the track's album artwork if available (ignoring idle image mode),
+    // falling back to placeholder icon if no track artwork is available.
+    const persistentArt = this._resolveSelectedArtwork({
+      metadataArtwork: this._getArtworkUrl(metadataStateObj, false, true),
+      playbackArtwork: this._getArtworkUrl(playbackStateObj, false, true),
+      mainArtwork: this._getArtworkUrl(mainState, false, true),
+      displayTitle,
+      playbackStateObj,
+      mainState,
+      isPlayingSameMedia,
+    });
 
 
 
@@ -10133,8 +10173,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
               <div class="persistent-media-controls" @click=${e => e.stopPropagation()}>
                 <div class="persistent-controls-artwork">
                   ${(() => {
-            // Use the same entity resolution as the main card
-            const artwork = selectedArt;
+            // Use track artwork if available, falling back to selected card artwork
+            const artwork = persistentArt?.url ? persistentArt : selectedArt;
             return artwork?.url && isValidArtworkUrl(artwork.url) ? html`
                       <img src="${artwork.url}" alt="${localize('common.album_art')}" class="persistent-artwork" onerror="this.style.display='none'">
                     ` : html`
@@ -10460,16 +10500,14 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
     const displayTitle = metadataStateObj?.attributes?.media_title || playbackStateObj?.attributes?.media_title || mainState?.attributes?.media_title;
 
-    let selectedArt = metadataArtwork;
-    if (displayTitle && (!selectedArt || !selectedArt.url) && playbackArtwork?.url && playbackStateObj?.attributes?.media_title === displayTitle) {
-      selectedArt = playbackArtwork;
-    }
-    if (displayTitle && (!selectedArt || !selectedArt.url) && mainArtwork?.url && mainState?.attributes?.media_title === displayTitle) {
-      selectedArt = mainArtwork;
-    }
-    if (!selectedArt) {
-      selectedArt = playbackArtwork || mainArtwork || null;
-    }
+    const selectedArt = this._resolveSelectedArtwork({
+      metadataArtwork,
+      playbackArtwork,
+      mainArtwork,
+      displayTitle,
+      playbackStateObj,
+      mainState,
+    });
 
     let artworkObjectFit = this._artworkObjectFit;
     if (selectedArt?.objectFit) {
