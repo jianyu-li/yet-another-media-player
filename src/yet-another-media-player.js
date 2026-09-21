@@ -5516,7 +5516,13 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       }
     }
     if (!selectedArt || !selectedArt.url) {
-      selectedArt = playbackArtwork || mainArtwork || null;
+      if (playbackArtwork?.url) {
+        selectedArt = playbackArtwork;
+      } else if (mainArtwork?.url) {
+        selectedArt = mainArtwork;
+      } else {
+        selectedArt = playbackArtwork || mainArtwork || null;
+      }
     }
     return selectedArt;
   }
@@ -10168,7 +10174,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
                 <div class="persistent-controls-artwork">
                   ${(() => {
             // Use track artwork if available, falling back to selected card artwork
-            const artwork = persistentArt || selectedArt;
+            const artwork = persistentArt?.url ? persistentArt : selectedArt;
             return artwork?.url && isValidArtworkUrl(artwork.url) ? html`
                       <img src="${artwork.url}" alt="${localize('common.album_art')}" class="persistent-artwork" onerror="this.style.display='none'">
                     ` : html`
