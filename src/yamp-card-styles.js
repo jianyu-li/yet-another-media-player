@@ -409,13 +409,13 @@ export const yampCardStyles = css`
   }
 
   .dim-idle .more-info-btn ha-icon {
-    color: #9ea2a8;
+    color: #fff;
   }
 
   .more-info-icon {
     font-size: 2em;
     line-height: 1;
-    color: #fff !important;
+    color: #fff;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -423,7 +423,15 @@ export const yampCardStyles = css`
   }
 
   .dim-idle .more-info-icon {
-    color: #9ea2a8;
+    color: #fff;
+  }
+
+  :host([data-disable-artwork-gradient="true"]) .more-info-icon {
+    color: var(--yamp-icon-color, var(--primary-text, #444));
+  }
+
+  :host([data-disable-artwork-gradient="true"]) .dim-idle .more-info-icon {
+    color: var(--secondary-text, #9ea2a8);
   }
 
   /* Card artwork spacer */
@@ -1996,11 +2004,11 @@ export const yampCardStyles = css`
     box-shadow: none; /* Cleaner look on card background */
   }
 
-  /* Hamburger icon (span) uses !important in base styles, so we override it here */
+  /* Hamburger icon (span) overrides */
   .yamp-card-inner[data-has-font-color="true"] .more-info-icon,
   .yamp-card-inner[data-lyrics-active="true"] .more-info-icon,
   .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .more-info-icon {
-    color: var(--primary-text) !important;
+    color: var(--primary-text);
   }
 
   /* Ensure active buttons still use the accent color */

@@ -43,7 +43,9 @@ import {
   getArtworkUrl,
   isValidArtworkUrl,
   getValidArtworkAttr,
-  getEntityName
+  getEntityName,
+  areEntitiesPlayingSameMedia,
+  isPlaceholderMediaTitle
 } from "./yamp-utils.js";
 import { localize, setHassLanguage } from "./localize/localize.js";
 
@@ -5904,6 +5906,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     return entityTemplate;
   }
 
+  // Helper to determine if main and paired MA entities are playing the same media
+  _areEntitiesPlayingSameMedia(mainState, maState) {
+    return areEntitiesPlayingSameMedia(mainState, maState);
+  }
+
   // Get active playback entity for a specific index
   _getActivePlaybackEntityForIndex(idx) {
     const obj = this.entityObjs[idx];
@@ -5957,8 +5964,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const maPlaying = this._isEntityPlaying(maState);
     const mainPlaying = this._isEntityPlaying(mainState);
 
-    // If both are playing, be sticky
+    // If both are playing, prioritize main entity if they are playing the same thing; otherwise be sticky
     if (maPlaying && mainPlaying) {
+      if (this._areEntitiesPlayingSameMedia(mainState, maState)) {
+        return resolve(mainId);
+      }
       if (lastResolved === mainId) return resolve(mainId);
       if (lastResolved === maId) return resolve(maId);
       return resolve(maId); // Default to MA
@@ -6072,8 +6082,17 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const maWasRecent = maWasPlayingUntilNow || (now - maPlayTime) < 5000;
     const mainWasRecent = mainWasPlayingUntilNow || (now - mainPlayTime) < 5000;
 
+    const maPlaying = this._isEntityPlaying(maState);
+    const mainPlaying = this._isEntityPlaying(mainState);
+
+    // If both are playing the same thing, prioritize the main entity
+    if (maPlaying && mainPlaying && this._areEntitiesPlayingSameMedia(mainState, maState)) {
+      this._lastActiveEntityIdByChip[idx] = mainId;
+      return mainId;
+    }
+
     // Prioritize the Music Assistant entity when it's playing
-    if (this._isEntityPlaying(maState)) {
+    if (maPlaying) {
       this._lastActiveEntityIdByChip[idx] = maId;
       return maId;
     }
@@ -6518,16 +6537,21 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         const playbackArtwork = this._getArtworkUrl(playbackState);
         const mainArtwork = this._getArtworkUrl(mainState);
 
-        const displaySource = metadataState || playbackState || mainState;
-        const displayTitle = displaySource?.attributes?.media_title;
+        const isPlayingSameMedia = this._areEntitiesPlayingSameMedia(mainState, playbackState);
 
-        // Prioritize metadata artwork, then fall back to others only if they match the displayed title
+        const metaTitle = metadataState?.attributes?.media_title;
+        const isMetaPlaceholder = isPlaceholderMediaTitle(metaTitle, metadataState?.attributes?.friendly_name);
+        const effectiveMetaTitle = (!isMetaPlaceholder && metaTitle) ? metaTitle : null;
+        const displayTitle = effectiveMetaTitle || playbackState?.attributes?.media_title || mainState?.attributes?.media_title || metaTitle;
+
+        // Prioritize metadata artwork, then fall back to others only if they match the displayed title or are playing the same media
         let artObj = metadataArtwork;
-        if (displayTitle && (!artObj || !artObj.url) && playbackArtwork?.url && playbackState?.attributes?.media_title === displayTitle) {
-          artObj = playbackArtwork;
-        }
-        if (displayTitle && (!artObj || !artObj.url) && mainArtwork?.url && mainState?.attributes?.media_title === displayTitle) {
-          artObj = mainArtwork;
+        if (displayTitle && (!artObj || !artObj.url)) {
+          if (playbackArtwork?.url && (playbackState?.attributes?.media_title === displayTitle || isPlayingSameMedia)) {
+            artObj = playbackArtwork;
+          } else if (mainArtwork?.url && (mainState?.attributes?.media_title === displayTitle || isPlayingSameMedia)) {
+            artObj = mainArtwork;
+          }
         }
 
         return artObj || playbackArtwork || mainArtwork;
@@ -8942,6 +8966,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       let targetEntity;
       if (this._controlFocusEntityId && (this._controlFocusEntityId === maId || this._controlFocusEntityId === mainId)) {
         targetEntity = this._controlFocusEntityId;
+      } else if (this._isEntityPlaying(maState) && this._isEntityPlaying(mainState) && this._areEntitiesPlayingSameMedia(mainState, maState)) {
+        targetEntity = mainId;
       } else if (this._isEntityPlaying(maState)) {
         targetEntity = maId;
       } else if (this._isEntityPlaying(mainState)) {
@@ -9382,17 +9408,26 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const playbackArtwork = this._getArtworkUrl(playbackStateObj, forceIdleImage);
     const mainArtwork = this._getArtworkUrl(mainState, forceIdleImage);
 
-    const displayTitle = metadataStateObj?.attributes?.media_title || finalPlaybackStateObj?.attributes?.media_title || mainState?.attributes?.media_title;
+    const isPlayingSameMedia = this._areEntitiesPlayingSameMedia(mainState, playbackStateObj);
+
+    // If metadataStateObj only has a placeholder title (like 'AirPlay' or the entity name)
+    // while mainState or playbackState has real media metadata, fall back to the real metadata
+    const metaTitle = metadataStateObj?.attributes?.media_title;
+    const isMetaPlaceholder = isPlaceholderMediaTitle(metaTitle, metadataStateObj?.attributes?.friendly_name);
+    const effectiveMetaTitle = (!isMetaPlaceholder && metaTitle) ? metaTitle : null;
+
+    const displayTitle = effectiveMetaTitle || finalPlaybackStateObj?.attributes?.media_title || mainState?.attributes?.media_title || metaTitle || "";
 
     // Intelligent artwork fallback: 
     // 1. Always prefer the explicit metadata source
-    // 2. Fall back to active/main playback ONLY if they are playing the exact same track title
+    // 2. Fall back to active/main playback if they are playing the exact same track title or same media
     let selectedArt = metadataArtwork;
-    if (displayTitle && (!selectedArt || !selectedArt.url) && playbackArtwork?.url && playbackStateObj?.attributes?.media_title === displayTitle) {
-      selectedArt = playbackArtwork;
-    }
-    if (displayTitle && (!selectedArt || !selectedArt.url) && mainArtwork?.url && mainState?.attributes?.media_title === displayTitle) {
-      selectedArt = mainArtwork;
+    if (displayTitle && (!selectedArt || !selectedArt.url)) {
+      if (playbackArtwork?.url && (playbackStateObj?.attributes?.media_title === displayTitle || isPlayingSameMedia)) {
+        selectedArt = playbackArtwork;
+      } else if (mainArtwork?.url && (mainState?.attributes?.media_title === displayTitle || isPlayingSameMedia)) {
+        selectedArt = mainArtwork;
+      }
     }
     if (!selectedArt) {
       selectedArt = playbackArtwork || mainArtwork || null;
@@ -9405,7 +9440,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const shouldShowDetails = this._idleTimeoutMs === 0 ? true : isPlaying;
     // For display-only fields, fall back to the state object that actually provides the title we matched
     const displaySource =
-      (metadataStateObj?.attributes?.media_title) ? metadataStateObj :
+      (effectiveMetaTitle && metadataStateObj?.attributes?.media_title) ? metadataStateObj :
         (finalPlaybackStateObj?.attributes?.media_title) ? finalPlaybackStateObj :
           (mainState?.attributes?.media_title) ? mainState :
             (metadataStateObj || finalPlaybackStateObj || mainState);
@@ -9502,6 +9537,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const chipRowReserve = collapsed && showChipsInline ? 48 : 0;
     const actionRowReserve = collapsed && rowActions.length > 0 ? 40 : 0;
     const reservedTopSpace = chipRowReserve + actionRowReserve;
+
+    const activeTopChipReserve = (showChipsInline && !chipsHiddenInline) ? (collapsed ? 48 : 58) : 0;
+    const activeActionReserve = (rowActions.length > 0) ? (collapsed ? 40 : 42) : 0;
+    const totalTopReserve = activeTopChipReserve + activeActionReserve;
+    const effectiveCustomLowerHeight = hasCustomCardHeight ? Math.max(0, customCardHeight - totalTopReserve) : null;
 
     // Calculate available height for lower content
     const lowerContentAvailableHeight = hasCustomCardHeight
@@ -9607,7 +9647,9 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     }
 
     const idleMinHeight = hideControlsNow
-      ? (collapsed ? (this._collapsedBaselineHeight || 220) : 325)
+      ? (collapsed
+          ? (this._collapsedBaselineHeight || 220)
+          : (hasCustomCardHeight ? effectiveCustomLowerHeight : 325))
       : null;
 
     this._lastRenderedCollapsed = collapsed;
@@ -9685,7 +9727,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const hasRightPlaceholder = this._controlLayout === "modern";
     const hasLeadingControl = leadingVolumeControl !== nothing && leadingVolumeControl !== undefined && leadingVolumeControl !== null;
 
-    const volumeRowWillCollapse = isVolumeHiddenByConfig && !isCompactVolume && !hasLeadingControl && !hasRightPlaceholder;
+    const volumeRowWillCollapse = isVolumeHiddenByConfig && !hasLeadingControl && !hasRightPlaceholder;
 
     const detailsHasAdaptiveText = !!this._adaptiveTextTargets?.has("details");
     this._lastSpacerRendered = !!(showCollapsedPlaceholder || (!collapsed && (!detailsHasAdaptiveText || hasSpacerContent)));
@@ -9701,6 +9743,9 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const lyricsFade = this._getLyricsBackgroundFade();
     const lyricsBlurPx = lyricsFade === 0 ? 0 : Math.min(5, Number(((lyricsFade / 80) * 5).toFixed(1)));
     const lyricsBackdropFilter = lyricsBlurPx === 0 ? "none" : `blur(${lyricsBlurPx}px)`;
+
+    const shouldAdaptMenuIconColor = this._artworkGradientDisabled || (this._isIdle && !hasBackgroundImage && !artworkUrl && !idleImageUrl);
+    const menuIconStyle = shouldAdaptMenuIconColor ? 'color: var(--yamp-icon-color, var(--primary-text, #444));' : '';
 
     return html`
         <ha-card class="yamp-card" 
@@ -9798,7 +9843,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         }
         styles.push(`min-height: ${collapsed
           ? (hideControlsNow ? `${this._collapsedBaselineHeight || 220}px` : '0px')
-          : (hasCustomCardHeight ? `${customCardHeight}px` : '350px')}`);
+          : (hasCustomCardHeight ? `${effectiveCustomLowerHeight}px` : '350px')}`);
         styles.push('transition: min-height 0.4s cubic-bezier(0.6,0,0.4,1), background 0.4s');
         return styles.join('; ');
       })()}"
@@ -9808,7 +9853,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         if (!hideControlsNow) return '';
         return collapsed
           ? `min-height: ${this._collapsedBaselineHeight || 220}px;`
-          : `min-height: ${hasCustomCardHeight ? `${customCardHeight}px` : `${this._lastNonLyricsLowerContentHeight || 350}px`};`;
+          : `min-height: ${hasCustomCardHeight ? `${effectiveCustomLowerHeight}px` : `${this._lastNonLyricsLowerContentHeight || 350}px`};`;
       })()}">
                 ${collapsed && artworkUrl && collapsedArtworkSize > 0 && isValidArtworkUrl(artworkUrl) ? html`
                   <div
@@ -10039,18 +10084,18 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         muteSlotTemplate: shouldHideVolumeControls ? (muteSlotTemplate !== nothing ? html`<div style="visibility:hidden; opacity:0; pointer-events:none;">${muteSlotTemplate}</div>` : nothing) : muteSlotTemplate,
         hideVolume: isVolumeHidden,
         collapseRow: volumeRowWillCollapse,
-        moreInfoMenu: (!this._showEntityOptions && !isCompactVolume && !volumeRowWillCollapse) ? html`
+        moreInfoMenu: (!this._showEntityOptions && !volumeRowWillCollapse) ? html`
           <div class="more-info-menu">
             <button class="more-info-btn" @click=${async () => await this._openEntityOptions()}>
-              <span class="more-info-icon">&#9776;</span>
+              <span class="more-info-icon" style="${menuIconStyle}">&#9776;</span>
             </button>
           </div>
         ` : nothing,
       })}
-            ${(volumeRowWillCollapse && !this._showEntityOptions && !isCompactVolume) ? html`
+            ${(volumeRowWillCollapse && !this._showEntityOptions) ? html`
               <div class="more-info-menu volume-collapsed">
                 <button class="more-info-btn" @click=${async () => await this._openEntityOptions()}>
-                  <span class="more-info-icon">&#9776;</span>
+                  <span class="more-info-icon" style="${menuIconStyle}">&#9776;</span>
                 </button>
               </div>
             ` : nothing}
