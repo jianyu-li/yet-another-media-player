@@ -332,7 +332,10 @@ export function getMusicAssistantState(hass, entityId) {
 export function isMusicAssistantEntity(state) {
   if (!state || !state.attributes) return false;
   return (
-    state.attributes.app_id === "music_assistant" || state.attributes.mass_player_type !== undefined
+    state.attributes.app_id === "music_assistant" ||
+    state.attributes.mass_player_type !== undefined ||
+    Boolean(state.attributes.mass_player_id) ||
+    Boolean(state.attributes.active_queue)
   );
 }
 
