@@ -314,6 +314,7 @@ export interface TemplateContext {
   is_any_menu_open?: boolean;
   is_dark_mode: boolean;
   is_mobile: boolean;
+  is_music_assistant: boolean;
   entity?: string;
   current: HassEntity | string | null;
   current_entity?: HassEntity | null;

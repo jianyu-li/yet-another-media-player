@@ -1246,14 +1246,14 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         this._compiledJsTemplates[code] = new Function(
           "hass", "states", "user", "is_state", "state_attr", "context",
           "current", "is_idle", "is_playing", "is_search", "is_grouping",
-          "is_source", "is_lyrics", "is_options", "is_transfer_queue", "is_any_menu_open", "is_dark_mode", "is_mobile",
+          "is_source", "is_lyrics", "is_options", "is_transfer_queue", "is_any_menu_open", "is_dark_mode", "is_mobile", "is_music_assistant",
           body
         );
       }
       return this._compiledJsTemplates[code](
         hass, states, user, is_state, state_attr, context,
         context.current, context.is_idle, context.is_playing, context.is_search, context.is_grouping,
-        context.is_source, context.is_lyrics, context.is_options, context.is_transfer_queue, context.is_any_menu_open, context.is_dark_mode, context.is_mobile
+        context.is_source, context.is_lyrics, context.is_options, context.is_transfer_queue, context.is_any_menu_open, context.is_dark_mode, context.is_mobile, context.is_music_assistant
       );
     } catch (err) {
       console.warn("yamp: failed to evaluate JS template:", templateStr, err);
@@ -3847,6 +3847,9 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
   // Check if current entity is a Music Assistant entity
   _isMusicAssistantEntity() {
+    const activeState = this.currentActivePlaybackStateObj || this.currentStateObj;
+    if (this._looksLikeMusicAssistantState(activeState)) return true;
+
     // Get the Music Assistant state for the current chip
     const maState = this._getMusicAssistantState();
     if (!maState) return false;
@@ -3858,14 +3861,12 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       // If we're in upcoming mode and getting queue items, assume it's MA
       (this._upcomingFilterActive && this._searchResultsByType[`${this._searchMediaClassFilter || 'all'}_upcoming_sort_default`]?.some(item => item.queue_item_id));
 
-    return hasMassAttributes;
+    return Boolean(hasMassAttributes);
   }
 
   _looksLikeMusicAssistantState(state) {
     if (!state) return false;
-    return isMusicAssistantEntity(state) ||
-      !!state.attributes?.mass_player_id ||
-      !!state.attributes?.active_queue;
+    return isMusicAssistantEntity(state);
   }
 
   _getTransferQueueTargets() {
@@ -5358,6 +5359,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       is_any_menu_open: this.isAnyMenuOpen,
       is_dark_mode: isDarkMode,
       is_mobile: this._isMobile,
+      is_music_assistant: this._isMusicAssistantEntity(),
       current: this.currentActivePlaybackEntityId || this.currentEntityId || '',
     };
   }
