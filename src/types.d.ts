@@ -315,6 +315,7 @@ export interface TemplateContext {
   is_dark_mode: boolean;
   is_mobile: boolean;
   is_music_assistant: boolean;
+  is_music: boolean;
   entity?: string;
   current: HassEntity | string | null;
   current_entity?: HassEntity | null;
