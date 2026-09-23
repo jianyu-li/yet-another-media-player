@@ -1246,14 +1246,14 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         this._compiledJsTemplates[code] = new Function(
           "hass", "states", "user", "is_state", "state_attr", "context",
           "current", "is_idle", "is_playing", "is_search", "is_grouping",
-          "is_source", "is_lyrics", "is_options", "is_transfer_queue", "is_any_menu_open", "is_dark_mode", "is_mobile", "is_music_assistant",
+          "is_source", "is_lyrics", "is_options", "is_transfer_queue", "is_any_menu_open", "is_dark_mode", "is_mobile", "is_music_assistant", "is_music",
           body
         );
       }
       return this._compiledJsTemplates[code](
         hass, states, user, is_state, state_attr, context,
         context.current, context.is_idle, context.is_playing, context.is_search, context.is_grouping,
-        context.is_source, context.is_lyrics, context.is_options, context.is_transfer_queue, context.is_any_menu_open, context.is_dark_mode, context.is_mobile, context.is_music_assistant
+        context.is_source, context.is_lyrics, context.is_options, context.is_transfer_queue, context.is_any_menu_open, context.is_dark_mode, context.is_mobile, context.is_music_assistant, context.is_music
       );
     } catch (err) {
       console.warn("yamp: failed to evaluate JS template:", templateStr, err);
@@ -3869,6 +3869,24 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     return isMusicAssistantEntity(state);
   }
 
+  // Check if current entity media content type is music
+  _isMusicContentType() {
+    const states = [
+      this.metadataStateObj,
+      this.currentActivePlaybackStateObj,
+      this.currentPlaybackStateObj,
+      this.currentStateObj,
+      this._getMusicAssistantState(),
+    ];
+    for (const state of states) {
+      const type = state?.attributes?.media_content_type;
+      if (typeof type === "string" && type.trim().length > 0) {
+        return type.trim().toLowerCase() === "music";
+      }
+    }
+    return false;
+  }
+
   _getTransferQueueTargets() {
     if (!this.hass?.services?.music_assistant?.transfer_queue) return [];
     const currentIdx = this._selectedIndex;
@@ -5360,6 +5378,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       is_dark_mode: isDarkMode,
       is_mobile: this._isMobile,
       is_music_assistant: this._isMusicAssistantEntity(),
+      is_music: this._isMusicContentType(),
       current: this.currentActivePlaybackEntityId || this.currentEntityId || '',
     };
   }

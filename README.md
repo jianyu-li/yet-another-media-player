@@ -757,6 +757,7 @@ All templates have access to standard Home Assistant template functions (`states
 | `is_dark_mode` | `boolean` | `true` if Home Assistant is currently in dark mode. |
 | `is_mobile` | `boolean` | `true` if the user is on a mobile device or mobile viewport (width &le; 768px). |
 | `is_music_assistant` | `boolean` | `true` if the active player is a Music Assistant entity. |
+| `is_music` | `boolean` | `true` if `media_content_type` is `music`. |
 
 ## Examples
 
