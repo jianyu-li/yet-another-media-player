@@ -765,6 +765,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     // Show search-in-sheet flag for entity options sheet
     this._showSearchInSheet = false;
     this._searchHeadersRetracted = false;
+    this._searchHeaderOffset = 0;
+    this._searchHeaderNaturalHeight = 0;
     this._lastSearchResultsScrollTop = 0;
     this._showResolvedEntities = false;
     // Queue success message
@@ -1763,6 +1765,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   _showSearchSheetInOptions(mode = "default") {
     this._showSearchInSheet = true;
     this._searchHeadersRetracted = false;
+    this._searchHeaderOffset = 0;
+    this._searchHeaderNaturalHeight = 0;
     this._lastSearchResultsScrollTop = 0;
     this._searchInputAutoFocused = false;
     this._searchError = "";
@@ -1887,6 +1891,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._openedSearchFromNowPlaying = false;
     this._showSearchInSheet = false;
     this._searchHeadersRetracted = false;
+    this._searchHeaderOffset = 0;
+    this._searchHeaderNaturalHeight = 0;
     this._lastSearchResultsScrollTop = 0;
     this._searchError = "";
     this._searchResults = [];
@@ -2853,51 +2859,100 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   _scrollToTop() {
     const results = this.shadowRoot?.querySelector(".search-sheet-results");
     if (results) results.scrollTop = 0;
-    this._setSearchHeadersRetracted(false);
+    this._updateSearchHeaderPosition(0, true);
     this._lastSearchResultsScrollTop = 0;
   }
 
+  _getSearchHeaderHeight() {
+    const panel = this.shadowRoot?.querySelector(".search-header-panel");
+    if (!panel) return this._searchHeaderNaturalHeight || 120;
+    const height = panel.offsetHeight;
+    if (height > 0) {
+      this._searchHeaderNaturalHeight = height;
+      return height;
+    }
+    return this._searchHeaderNaturalHeight || 120;
+  }
+
+  _updateSearchHeaderPosition(offset, animated = false) {
+    const headerHeight = this._getSearchHeaderHeight();
+    const clampedOffset = Math.max(0, Math.min(headerHeight, offset));
+    this._searchHeaderOffset = clampedOffset;
+    const isRetracted = clampedOffset >= headerHeight && headerHeight > 0;
+    this._searchHeadersRetracted = isRetracted;
+
+    const panel = this.shadowRoot?.querySelector(".search-header-panel");
+    if (!panel) return;
+
+    if (animated) {
+      panel.classList.add("smooth-transition");
+      clearTimeout(this._searchHeaderTransitionTimer);
+      this._searchHeaderTransitionTimer = setTimeout(() => {
+        panel.classList.remove("smooth-transition");
+      }, 280);
+    } else {
+      panel.classList.remove("smooth-transition");
+    }
+
+    panel.classList.toggle("retracted", isRetracted);
+    panel.style.marginTop = clampedOffset > 0 ? `-${clampedOffset}px` : "0px";
+
+    const progress = headerHeight > 0 ? clampedOffset / headerHeight : 0;
+    const opacity = Math.max(0, Math.min(1, 1 - progress));
+    panel.style.opacity = clampedOffset > 0 ? opacity.toFixed(3) : "";
+
+    if (isRetracted) {
+      panel.style.pointerEvents = "none";
+      const input = panel.querySelector("#search-input-box");
+      if (input && document.activeElement === input) {
+        input.blur();
+      }
+    } else {
+      panel.style.pointerEvents = "";
+    }
+  }
+
+  _applySearchHeaderDelta(delta) {
+    if (this.config?.pin_search_headers === true) return;
+    const headerHeight = this._getSearchHeaderHeight();
+    if (headerHeight <= 0) return;
+
+    const currentOffset = this._searchHeaderOffset || 0;
+    const newOffset = Math.max(0, Math.min(headerHeight, currentOffset + delta));
+    if (newOffset !== currentOffset) {
+      this._updateSearchHeaderPosition(newOffset, false);
+    }
+  }
+
+  _setSearchHeadersRetracted(retracted, animated = true) {
+    const headerHeight = this._getSearchHeaderHeight();
+    const targetOffset = retracted ? headerHeight : 0;
+    this._updateSearchHeaderPosition(targetOffset, animated);
+  }
+
   _handleSearchResultsScroll(e, pinSearchHeaders) {
-    if (pinSearchHeaders) return;
+    if (pinSearchHeaders || this.config?.pin_search_headers === true || this._isDragging) return;
     const el = e.currentTarget || e.target;
     if (!el) return;
 
     const currentScrollTop = el.scrollTop;
-    const lastScrollTop = this._lastSearchResultsScrollTop || 0;
+    const lastScrollTop = this._lastSearchResultsScrollTop ?? currentScrollTop;
     const delta = currentScrollTop - lastScrollTop;
-
-    if (currentScrollTop <= 10) {
-      this._setSearchHeadersRetracted(false);
-    } else if (delta > 12 && currentScrollTop > 30) {
-      this._setSearchHeadersRetracted(true);
-    } else if (delta < -12) {
-      this._setSearchHeadersRetracted(false);
-    }
     this._lastSearchResultsScrollTop = currentScrollTop;
-  }
 
-  _setSearchHeadersRetracted(retracted) {
-    if (this._searchHeadersRetracted === retracted) return;
-    this._searchHeadersRetracted = retracted;
-    const panel = this.shadowRoot?.querySelector(".search-header-panel");
-    if (panel) {
-      panel.classList.toggle("retracted", retracted);
-      if (retracted) {
-        const input = panel.querySelector("#search-input-box");
-        if (input && document.activeElement === input) {
-          input.blur();
-        }
-      }
+    if (currentScrollTop <= 0) {
+      this._updateSearchHeaderPosition(0, false);
+      return;
     }
+
+    if (delta === 0) return;
+
+    this._applySearchHeaderDelta(delta);
   }
 
   _handleHeaderWheel(e, pinSearchHeaders) {
-    if (pinSearchHeaders) return;
-    if (e.deltaY > 6) {
-      this._setSearchHeadersRetracted(true);
-    } else if (e.deltaY < -6) {
-      this._setSearchHeadersRetracted(false);
-    }
+    if (pinSearchHeaders || this.config?.pin_search_headers === true) return;
+    this._applySearchHeaderDelta(e.deltaY);
   }
 
   _handleHeaderTouchStart(e) {
@@ -2908,7 +2963,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _handleHeaderTouchMove(e, pinSearchHeaders) {
-    if (pinSearchHeaders || this._headerTouchStartY == null) return;
+    if (pinSearchHeaders || this.config?.pin_search_headers === true || this._headerTouchStartY == null) return;
     if (!e.touches || e.touches.length !== 1) return;
 
     const currentY = e.touches[0].clientY;
@@ -2917,12 +2972,10 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const deltaX = currentX - this._headerTouchStartX;
 
     // Discriminate vertical gesture to avoid conflicting with horizontal chip scroll
-    if (Math.abs(deltaY) > Math.abs(deltaX) && Math.abs(deltaY) > 10) {
-      if (deltaY < -10) {
-        this._setSearchHeadersRetracted(true);
-      } else if (deltaY > 10) {
-        this._setSearchHeadersRetracted(false);
-      }
+    if (Math.abs(deltaY) > Math.abs(deltaX)) {
+      this._applySearchHeaderDelta(-deltaY);
+      this._headerTouchStartY = currentY;
+      this._headerTouchStartX = currentX;
     }
   }
 
@@ -2938,15 +2991,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _handleHeaderMouseMove(e, pinSearchHeaders) {
-    if (pinSearchHeaders || !this._headerMouseDown || this._headerMouseStartY == null) return;
-    const deltaY = e.clientY - this._headerMouseStartY;
-    if (deltaY < -12) {
-      this._setSearchHeadersRetracted(true);
-      this._headerMouseDown = false;
-    } else if (deltaY > 12) {
-      this._setSearchHeadersRetracted(false);
-      this._headerMouseDown = false;
-    }
+    if (pinSearchHeaders || this.config?.pin_search_headers === true || !this._headerMouseDown || this._headerMouseStartY == null) return;
+    const currentY = e.clientY;
+    const deltaY = currentY - this._headerMouseStartY;
+    this._applySearchHeaderDelta(-deltaY);
+    this._headerMouseStartY = currentY;
   }
 
   _handleHeaderMouseUp() {
@@ -2955,23 +3004,23 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _handleSearchContainerWheel(e, pinSearchHeaders) {
-    if (pinSearchHeaders) return;
-    if (e.deltaY < -6) {
+    if (pinSearchHeaders || this.config?.pin_search_headers === true) return;
+    if (e.deltaY < 0) {
       const results = this.shadowRoot?.querySelector(
         ".virtualized-results-wrapper, .queue-results-wrapper, .search-sheet-results"
       );
       if (!results || results.scrollTop <= 5) {
-        this._setSearchHeadersRetracted(false);
+        this._applySearchHeaderDelta(e.deltaY);
       }
     }
   }
 
   _handleSearchResultsWheel(e, pinSearchHeaders) {
-    if (pinSearchHeaders) return;
+    if (pinSearchHeaders || this.config?.pin_search_headers === true) return;
     const el = e.currentTarget || e.target;
     const scrollTop = el ? el.scrollTop : 0;
-    if (e.deltaY < -6 && scrollTop <= 5) {
-      this._setSearchHeadersRetracted(false);
+    if (e.deltaY < 0 && scrollTop <= 5) {
+      this._applySearchHeaderDelta(e.deltaY);
     }
   }
 
@@ -2983,15 +3032,17 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _handleResultsTouchMove(e, pinSearchHeaders) {
-    if (pinSearchHeaders || this._resultsTouchStartY == null) return;
+    if (pinSearchHeaders || this.config?.pin_search_headers === true || this._resultsTouchStartY == null) return;
     if (!e.touches || e.touches.length !== 1) return;
     const el = e.currentTarget;
     const scrollTop = el ? el.scrollTop : 0;
     const deltaY = e.touches[0].clientY - this._resultsTouchStartY;
     const deltaX = e.touches[0].clientX - this._resultsTouchStartX;
 
-    if (Math.abs(deltaY) > Math.abs(deltaX) && deltaY > 12 && scrollTop <= 5) {
-      this._setSearchHeadersRetracted(false);
+    if (Math.abs(deltaY) > Math.abs(deltaX) && deltaY > 0 && scrollTop <= 5) {
+      this._applySearchHeaderDelta(-deltaY);
+      this._resultsTouchStartY = e.touches[0].clientY;
+      this._resultsTouchStartX = e.touches[0].clientX;
     }
   }
 
@@ -10722,12 +10773,21 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _renderSearchInOptions(showSearchHeaders, pinSearchHeaders = false) {
-    const isRetracted = !pinSearchHeaders && this._searchHeadersRetracted;
+    const isPinned = pinSearchHeaders || this.config?.pin_search_headers === true;
+    const currentOffset = !isPinned ? (this._searchHeaderOffset || 0) : 0;
+    const headerHeight = this._searchHeaderNaturalHeight || 120;
+    const progress = headerHeight > 0 ? currentOffset / headerHeight : 0;
+    const opacity = Math.max(0, Math.min(1, 1 - progress));
+    const isRetracted = !isPinned && (this._searchHeadersRetracted || (currentOffset >= headerHeight && headerHeight > 0));
+    const panelStyle = (!isPinned && currentOffset > 0)
+      ? `margin-top: -${currentOffset}px; opacity: ${opacity.toFixed(3)};${isRetracted ? ' pointer-events: none;' : ''}`
+      : '';
     return html`
       <div class="entity-options-search"
            @wheel=${(e) => this._handleSearchContainerWheel(e, pinSearchHeaders)}
            style="margin-top:${this._cardType === 'up_next' ? '0' : '12px'};">
         <div class="search-header-panel ${isRetracted ? 'retracted' : ''}"
+             style="${panelStyle}"
              @wheel=${(e) => this._handleHeaderWheel(e, pinSearchHeaders)}
              @touchstart=${(e) => this._handleHeaderTouchStart(e)}
              @touchmove=${(e) => this._handleHeaderTouchMove(e, pinSearchHeaders)}
@@ -10762,6 +10822,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
                   ?autofocus=${!this._disableSearchAutofocus}
                   class="entity-options-search-input"
                   .value=${this._searchQuery}
+                  @focus=${() => {
+                    if ((this._searchHeaderOffset || 0) > 0) {
+                      this._updateSearchHeaderPosition(0, true);
+                    }
+                  }}
                   @input=${e => { this._searchQuery = e.target.value; this.requestUpdate(); }}
                   @keydown=${e => {
             if (e.key === "Enter") {
