@@ -3446,6 +3446,11 @@ export const yampCardStyles = css`
     opacity: 1;
   }
 
+  .entity-options-sheet .search-filter-chips {
+    padding-top: 4px;
+    padding-bottom: 4px;
+  }
+
   .entity-options-sheet .search-filter-chips .chip {
     justify-content: center;
   }
@@ -3495,29 +3500,24 @@ export const yampCardStyles = css`
     flex-direction: column;
     overflow: hidden;
     touch-action: pan-y;
-    transition:
-      max-height 0.28s cubic-bezier(0.4, 0, 0.2, 1),
-      opacity 0.2s ease,
-      margin 0.28s cubic-bezier(0.4, 0, 0.2, 1),
-      transform 0.28s cubic-bezier(0.4, 0, 0.2, 1);
-    max-height: 350px;
     opacity: 1;
-    transform: translateY(0);
-    will-change: max-height, opacity, transform;
+    will-change: margin-top, opacity;
+  }
+
+  .search-header-panel.smooth-transition {
+    transition:
+      margin-top 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+      opacity 0.2s ease !important;
   }
 
   .search-header-panel.retracted {
-    max-height: 0 !important;
     opacity: 0 !important;
-    margin: 0 !important;
-    padding: 0 !important;
-    transform: translateY(-16px) !important;
     pointer-events: none !important;
   }
 
   .entity-options-sheet[data-pin-search-headers="true"] .search-header-panel {
-    transition: none;
-    max-height: none;
+    transition: none !important;
+    margin-top: 0px !important;
     opacity: 1 !important;
     transform: none !important;
     pointer-events: auto !important;
