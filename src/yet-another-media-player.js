@@ -2999,25 +2999,6 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._headerTouchStartX = null;
   }
 
-  _handleHeaderMouseDown(e) {
-    if (e.target.tagName === "INPUT" || e.target.closest("button") || e.target.closest(".chip")) return;
-    this._headerMouseDown = true;
-    this._headerMouseStartY = e.clientY;
-  }
-
-  _handleHeaderMouseMove(e, pinSearchHeaders) {
-    if (pinSearchHeaders || this.config?.pin_search_headers === true || !this._headerMouseDown || this._headerMouseStartY == null) return;
-    const currentY = e.clientY;
-    const deltaY = currentY - this._headerMouseStartY;
-    if (e.cancelable) e.preventDefault();
-    this._applySearchHeaderDelta(-deltaY);
-    this._headerMouseStartY = currentY;
-  }
-
-  _handleHeaderMouseUp() {
-    this._headerMouseDown = false;
-    this._headerMouseStartY = null;
-  }
 
   _handleSearchContainerWheel(e, pinSearchHeaders) {
     if (pinSearchHeaders || this.config?.pin_search_headers === true) return;
@@ -10817,10 +10798,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
              @wheel=${(e) => this._handleHeaderWheel(e, pinSearchHeaders)}
              @touchstart=${(e) => this._handleHeaderTouchStart(e)}
              @touchmove=${(e) => this._handleHeaderTouchMove(e, pinSearchHeaders)}
-             @touchend=${() => this._handleHeaderTouchEnd()}
-             @mousedown=${(e) => this._handleHeaderMouseDown(e)}
-             @mousemove=${(e) => this._handleHeaderMouseMove(e, pinSearchHeaders)}
-             @mouseup=${() => this._handleHeaderMouseUp()}>
+             @touchend=${() => this._handleHeaderTouchEnd()}>
           ${this._searchHierarchy.length > 0 ? html`
               <button class="entity-options-item close-item" @click=${() => this._goBackInSearch()}>
                 ${localize('common.back')}
