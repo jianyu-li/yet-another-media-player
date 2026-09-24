@@ -11641,6 +11641,10 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       clearTimeout(this._mediaSessionUpdateTimer);
       this._mediaSessionUpdateTimer = null;
     }
+    if (this._searchHeaderTransitionTimer) {
+      clearTimeout(this._searchHeaderTransitionTimer);
+      this._searchHeaderTransitionTimer = null;
+    }
     super.disconnectedCallback?.();
     if (this._progressTimer) {
       clearInterval(this._progressTimer);
