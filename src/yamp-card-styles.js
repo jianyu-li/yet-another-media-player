@@ -3468,6 +3468,7 @@ export const yampCardStyles = css`
     flex: 1;
     min-height: 0;
     overflow-y: auto;
+    overscroll-behavior-y: contain;
     margin: 12px 0;
     padding-bottom: 0px;
     /* Hide scrollbars */
@@ -3499,7 +3500,8 @@ export const yampCardStyles = css`
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    touch-action: pan-y;
+    touch-action: pan-x;
+    overscroll-behavior: contain;
     opacity: 1;
     will-change: margin-top, opacity;
   }
@@ -3893,6 +3895,7 @@ export const yampCardStyles = css`
     flex: 1;
     min-height: 0;
     overflow-y: auto;
+    overscroll-behavior-y: contain;
     /* Hide scrollbars */
     ${HIDE_SCROLLBAR}
   }

@@ -2912,6 +2912,12 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     }
   }
 
+  _getSearchResultsElement() {
+    return this.shadowRoot?.querySelector(
+      ".virtualized-results-wrapper, .queue-results-wrapper, .search-sheet-results, .entity-options-search-results"
+    );
+  }
+
   _applySearchHeaderDelta(delta) {
     if (this.config?.pin_search_headers === true) return;
     const headerHeight = this._getSearchHeaderHeight();
@@ -2951,7 +2957,15 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _handleHeaderWheel(e, pinSearchHeaders) {
-    if (pinSearchHeaders || this.config?.pin_search_headers === true) return;
+    if (e.cancelable) e.preventDefault();
+    e.stopPropagation();
+    if (pinSearchHeaders || this.config?.pin_search_headers === true) {
+      const results = this._getSearchResultsElement();
+      if (results) {
+        results.scrollTop += e.deltaY;
+      }
+      return;
+    }
     this._applySearchHeaderDelta(e.deltaY);
   }
 
@@ -2973,6 +2987,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
     // Discriminate vertical gesture to avoid conflicting with horizontal chip scroll
     if (Math.abs(deltaY) > Math.abs(deltaX)) {
+      if (e.cancelable) e.preventDefault();
       this._applySearchHeaderDelta(-deltaY);
       this._headerTouchStartY = currentY;
       this._headerTouchStartX = currentX;
@@ -2994,6 +3009,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     if (pinSearchHeaders || this.config?.pin_search_headers === true || !this._headerMouseDown || this._headerMouseStartY == null) return;
     const currentY = e.clientY;
     const deltaY = currentY - this._headerMouseStartY;
+    if (e.cancelable) e.preventDefault();
     this._applySearchHeaderDelta(-deltaY);
     this._headerMouseStartY = currentY;
   }
@@ -3005,13 +3021,17 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
   _handleSearchContainerWheel(e, pinSearchHeaders) {
     if (pinSearchHeaders || this.config?.pin_search_headers === true) return;
+    const headerHeight = this._getSearchHeaderHeight();
+    const currentOffset = this._searchHeaderOffset || 0;
     if (e.deltaY < 0) {
-      const results = this.shadowRoot?.querySelector(
-        ".virtualized-results-wrapper, .queue-results-wrapper, .search-sheet-results"
-      );
+      const results = this._getSearchResultsElement();
       if (!results || results.scrollTop <= 5) {
+        if (e.cancelable) e.preventDefault();
         this._applySearchHeaderDelta(e.deltaY);
       }
+    } else if (e.deltaY > 0 && currentOffset < headerHeight) {
+      if (e.cancelable) e.preventDefault();
+      this._applySearchHeaderDelta(e.deltaY);
     }
   }
 
@@ -3020,6 +3040,9 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const el = e.currentTarget || e.target;
     const scrollTop = el ? el.scrollTop : 0;
     if (e.deltaY < 0 && scrollTop <= 5) {
+      if ((this._searchHeaderOffset || 0) > 0 && e.cancelable) {
+        e.preventDefault();
+      }
       this._applySearchHeaderDelta(e.deltaY);
     }
   }
@@ -3040,6 +3063,9 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const deltaX = e.touches[0].clientX - this._resultsTouchStartX;
 
     if (Math.abs(deltaY) > Math.abs(deltaX) && deltaY > 0 && scrollTop <= 5) {
+      if ((this._searchHeaderOffset || 0) > 0 && e.cancelable) {
+        e.preventDefault();
+      }
       this._applySearchHeaderDelta(-deltaY);
       this._resultsTouchStartY = e.touches[0].clientY;
       this._resultsTouchStartX = e.touches[0].clientX;
