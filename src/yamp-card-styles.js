@@ -3446,6 +3446,11 @@ export const yampCardStyles = css`
     opacity: 1;
   }
 
+  .entity-options-sheet .search-filter-chips {
+    padding-top: 4px;
+    padding-bottom: 4px;
+  }
+
   .entity-options-sheet .search-filter-chips .chip {
     justify-content: center;
   }

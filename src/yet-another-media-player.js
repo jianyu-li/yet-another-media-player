@@ -10883,7 +10883,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           if (classes.length < 2 && !this._usingMusicAssistant) return nothing;
 
           return html`
-              <div class="chip-row search-filter-chips" id="search-filter-chip-row" style="margin-bottom:12px; justify-content: center; align-items: center;">
+              <div class="chip-row search-filter-chips" id="search-filter-chip-row" style="margin-bottom:4px; justify-content: center; align-items: center;">
                   <button
                     class="chip"
                     ?selected=${filter === 'all'}
