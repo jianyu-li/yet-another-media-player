@@ -633,8 +633,8 @@ export const yampCardStyles = css`
   .chip-row {
     display: flex;
     gap: 8px;
-    padding: 8px 12px 18px 12px;
-    margin-bottom: -6px;
+    padding: 8px 12px 6px 12px;
+    margin-bottom: 6px;
     position: relative;
     z-index: ${Z_LAYERS.STICKY_CHIPS};
     overflow-x: auto;
@@ -766,8 +766,9 @@ export const yampCardStyles = css`
 
   @media (hover: hover) {
     .chip:hover {
-      background: var(--yamp-chip-selected-bg);
-      color: var(--yamp-chip-selected-text);
+      background: var(--custom-accent) !important;
+      color: var(--yamp-chip-selected-text) !important;
+      opacity: 1;
     }
   }
 
@@ -2562,10 +2563,10 @@ export const yampCardStyles = css`
     justify-content: flex-start;
     align-items: center;
     overflow-x: auto;
-    padding: 2px 8px 2px 8px;
+    padding: 2px 8px 6px 8px;
     background: var(--ha-menu-chip-row-background, transparent);
-    -webkit-mask-image: none;
-    mask-image: none;
+    -webkit-mask-image: ${CHIP_ROW_MASK};
+    mask-image: ${CHIP_ROW_MASK};
   }
 
   .entity-options-chips-strip .chip {
