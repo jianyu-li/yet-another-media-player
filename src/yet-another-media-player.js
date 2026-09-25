@@ -2950,8 +2950,20 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const delta = currentScrollTop - lastScrollTop;
     this._lastSearchResultsScrollTop = currentScrollTop;
 
+    const maxScroll = Math.max(0, el.scrollHeight - el.clientHeight);
+    if (maxScroll <= 0) {
+      if ((this._searchHeaderOffset || 0) !== 0) {
+        this._updateSearchHeaderPosition(0, false);
+      }
+      return;
+    }
+
     if (currentScrollTop <= 0) {
       this._updateSearchHeaderPosition(0, false);
+      return;
+    }
+
+    if (currentScrollTop >= maxScroll - 6) {
       return;
     }
 
