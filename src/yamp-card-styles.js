@@ -1368,6 +1368,7 @@ export const yampCardStyles = css`
   @media (hover: hover) {
     .modern-button:hover {
       background: rgba(255, 255, 255, 0.25);
+      color: var(--custom-accent);
     }
   }
 
@@ -1397,7 +1398,15 @@ export const yampCardStyles = css`
     cursor: pointer;
     padding: 6px;
     border-radius: var(--button-border-radius);
-    transition: background var(--transition-normal);
+    transition:
+      background var(--transition-normal),
+      color var(--transition-normal);
+  }
+
+  @media (hover: hover) {
+    .button:hover {
+      color: var(--custom-accent);
+    }
   }
 
   .button:active {
