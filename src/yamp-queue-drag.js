@@ -134,7 +134,6 @@ export const QueueDragMixin = (superClass) =>
       let scrollSpeed = 0;
       let scrollAnimationFrame = null;
       let dropZoneEl = null;
-      let dropZoneRect = null;
       let dropZoneContentEl = null;
       let dropZoneIconEl = null;
       let isHoveringDropZone = false;
@@ -151,6 +150,100 @@ export const QueueDragMixin = (superClass) =>
 
       // Apply inline transforms to physically shift rows apart, creating a gap
       let dragItemHeight = 0;
+
+      const checkIsHoveringDropZone = (clientX, clientY) => {
+        if (!dropZoneEl) return false;
+        const dzRect = dropZoneEl.getBoundingClientRect();
+
+        const isPointerInDropZone =
+          clientY >= dzRect.top &&
+          clientY <= dzRect.bottom &&
+          clientX >= dzRect.left &&
+          clientX <= dzRect.right;
+
+        let isCloneInDropZone = false;
+        if (floatingClone) {
+          const cloneRect = floatingClone.getBoundingClientRect();
+          // Ghost overlaps dropzone vertically and horizontally
+          const overlapsDropZone =
+            cloneRect.bottom >= dzRect.top &&
+            cloneRect.top <= dzRect.bottom &&
+            cloneRect.right >= dzRect.left &&
+            cloneRect.left <= dzRect.right;
+
+          // Also check if ghost is dragged to the dropzone level or above
+          const isAtDropZoneLevel =
+            cloneRect.top <= dzRect.bottom && cloneRect.bottom >= dzRect.top - 30;
+
+          isCloneInDropZone = overlapsDropZone || isAtDropZoneLevel;
+        }
+
+        return isPointerInDropZone || isCloneInDropZone;
+      };
+
+      const getScrollSpeed = (clientX, clientY) => {
+        if (!scrollContainer) return 0;
+        if (isHoveringDropZone) return 0;
+
+        // Use the actual track list container for track boundary checking
+        const container = this.renderRoot.querySelector(".queue-sortable-container");
+        const listContainer =
+          (container && container.parentElement) || container || scrollContainer;
+        const trackListRect = listContainer.getBoundingClientRect();
+
+        // Check if ghost track is within the track list container
+        if (floatingClone) {
+          const cloneRect = floatingClone.getBoundingClientRect();
+
+          // Stop scrolling immediately if ghost is hovering over or at the dropzone level
+          if (dropZoneEl) {
+            const dzRect = dropZoneEl.getBoundingClientRect();
+            if (cloneRect.top <= dzRect.bottom && cloneRect.bottom >= dzRect.top - 30) {
+              return 0;
+            }
+          }
+
+          // If ghost track is completely outside the track list container bounds, stop scrolling
+          const isGhostOutside =
+            cloneRect.bottom <= trackListRect.top ||
+            cloneRect.top >= trackListRect.bottom ||
+            cloneRect.right <= trackListRect.left ||
+            cloneRect.left >= trackListRect.right;
+          if (isGhostOutside) {
+            return 0;
+          }
+          // If dragging up and the ghost track's midpoint is above the track list top, stop scrolling
+          if (cloneRect.top + cloneRect.height * 0.5 < trackListRect.top) {
+            return 0;
+          }
+          // If dragging down and the ghost track's midpoint is below the track list bottom, stop scrolling
+          if (cloneRect.top + cloneRect.height * 0.5 > trackListRect.bottom) {
+            return 0;
+          }
+        }
+
+        // Pointer must also be within the track list container bounds
+        if (
+          clientX < trackListRect.left ||
+          clientX > trackListRect.right ||
+          clientY < trackListRect.top ||
+          clientY > trackListRect.bottom
+        ) {
+          return 0;
+        }
+
+        const topDiff = clientY - trackListRect.top;
+        const bottomDiff = trackListRect.bottom - clientY;
+        const threshold = 60;
+
+        if (topDiff < threshold && topDiff >= 0) {
+          return -Math.max(2, (threshold - topDiff) * 0.3);
+        } else if (bottomDiff < threshold && bottomDiff >= 0) {
+          return Math.max(2, (threshold - bottomDiff) * 0.3);
+        }
+
+        return 0;
+      };
 
       const updateDropTarget = (clientX, clientY) => {
         if (!cachedPositions) return;
@@ -211,6 +304,8 @@ export const QueueDragMixin = (superClass) =>
 
       const scrollLoop = () => {
         if (!isDragging || !scrollContainer) return;
+        isHoveringDropZone = checkIsHoveringDropZone(lastClientX, lastClientY);
+        scrollSpeed = getScrollSpeed(lastClientX, lastClientY);
         if (scrollSpeed !== 0) {
           scrollContainer.scrollTop += scrollSpeed;
           updateDropTarget(lastClientX, lastClientY);
@@ -288,7 +383,6 @@ export const QueueDragMixin = (superClass) =>
             opacity: 0.95;
           `;
           this.renderRoot.appendChild(dropZoneEl);
-          dropZoneRect = dropZoneEl.getBoundingClientRect();
           dropZoneContentEl = dropZoneEl.querySelector(".dropzone-content");
           dropZoneIconEl = dropZoneEl.querySelector("ha-icon");
         }
@@ -357,43 +451,14 @@ export const QueueDragMixin = (superClass) =>
         lastClientY = moveEvt.clientY;
         lastClientX = moveEvt.clientX;
 
-        isHoveringDropZone = false;
-        if (dropZoneRect) {
-          if (
-            lastClientY >= dropZoneRect.top &&
-            lastClientY <= dropZoneRect.bottom &&
-            lastClientX >= dropZoneRect.left &&
-            lastClientX <= dropZoneRect.right
-          ) {
-            isHoveringDropZone = true;
-          }
-        }
-
         // Move the floating clone to follow the pointer
         if (floatingClone) {
           floatingClone.style.top = `${lastClientY - cloneOffsetY}px`;
           floatingClone.style.left = `${lastClientX - cloneOffsetX}px`;
         }
 
-        // Calculate scroll speed based on pointer position relative to scroll container
-        if (scrollContainer) {
-          if (isHoveringDropZone) {
-            scrollSpeed = 0;
-          } else {
-            const scrollRect = scrollContainer.getBoundingClientRect();
-            const topDiff = lastClientY - scrollRect.top;
-            const bottomDiff = scrollRect.bottom - lastClientY;
-            const threshold = 60;
-
-            if (topDiff < threshold && topDiff > -50) {
-              scrollSpeed = -Math.max(2, (threshold - topDiff) * 0.3);
-            } else if (bottomDiff < threshold && bottomDiff > -50) {
-              scrollSpeed = Math.max(2, (threshold - bottomDiff) * 0.3);
-            } else {
-              scrollSpeed = 0;
-            }
-          }
-        }
+        isHoveringDropZone = checkIsHoveringDropZone(lastClientX, lastClientY);
+        scrollSpeed = getScrollSpeed(lastClientX, lastClientY);
 
         updateDropTarget(lastClientX, lastClientY);
       };
@@ -493,6 +558,8 @@ export const QueueDragMixin = (superClass) =>
           cancelAnimationFrame(scrollAnimationFrame);
           scrollAnimationFrame = null;
         }
+        scrollSpeed = 0;
+        isHoveringDropZone = false;
 
         // Restore touchAction on container
         const container = this.renderRoot.querySelector(".queue-sortable-container");
@@ -511,7 +578,6 @@ export const QueueDragMixin = (superClass) =>
           dropZoneEl.remove();
         }
         dropZoneEl = null;
-        dropZoneRect = null;
         dropZoneContentEl = null;
         dropZoneIconEl = null;
 
