@@ -911,6 +911,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._searchAttempted = false;
     // Media class filter for search results
     this._searchMediaClassFilter = "all";
+    this._keepFiltersOnSearch = false;
     // Track last search chip classes for filter chip row scroll
     this._lastSearchChipClasses = "";
     // --- swipe‑to‑filter helpers ---
@@ -3187,9 +3188,13 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         await this._doSearch(currentMediaType);
       } else {
         // Restore from cache or load favorites if no search query
-        const cacheKey = `${this._searchMediaClassFilter || 'all'}`;
-        if (this._searchResultsByType[cacheKey]) {
-          this._searchResults = this._sortSearchResults(this._searchResultsByType[cacheKey]);
+        const currentMediaType = this._searchMediaClassFilter || 'all';
+        const sortMode = this._getActiveSearchDisplaySortMode();
+        const cacheKey = `${currentMediaType}_sort_${sortMode}`;
+        if (this._searchResultsByType[cacheKey] || this._searchResultsByType[currentMediaType]) {
+          this._searchResults = this._sortSearchResults(
+            this._searchResultsByType[cacheKey] || this._searchResultsByType[currentMediaType]
+          );
           this.requestUpdate();
         } else {
           // No cache, load favorites as default
@@ -3241,9 +3246,13 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         await this._doSearch(currentMediaType);
       } else {
         // Restore from cache or load favorites if no search query
-        const cacheKey = `${this._searchMediaClassFilter || 'all'}`;
-        if (this._searchResultsByType[cacheKey]) {
-          this._searchResults = this._sortSearchResults(this._searchResultsByType[cacheKey]);
+        const currentMediaType = this._searchMediaClassFilter || 'all';
+        const sortMode = this._getActiveSearchDisplaySortMode();
+        const cacheKey = `${currentMediaType}_sort_${sortMode}`;
+        if (this._searchResultsByType[cacheKey] || this._searchResultsByType[currentMediaType]) {
+          this._searchResults = this._sortSearchResults(
+            this._searchResultsByType[cacheKey] || this._searchResultsByType[currentMediaType]
+          );
           this.requestUpdate();
         } else {
           // No cache, load favorites as default
@@ -3279,7 +3288,14 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           return;
         }
 
-        await this._doSearch('all', { isRecommendations: true, clearFilters: true });
+        const targetFilter =
+          this._keepFiltersOnSearch &&
+          this._searchMediaClassFilter &&
+          this._searchMediaClassFilter !== "favorites"
+            ? this._searchMediaClassFilter
+            : "all";
+
+        await this._doSearch(targetFilter, { isRecommendations: true, clearFilters: true });
       } catch (error) {
         console.error('yamp: Error in _doSearch for recommendations:', error);
         this._searchError = "Unable to load recommendations.";
@@ -3291,10 +3307,16 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         const currentMediaType = this._searchMediaClassFilter;
         await this._doSearch(currentMediaType);
       } else {
-        const cacheKey = `${this._searchMediaClassFilter || 'all'}`;
-        if (this._searchResultsByType[cacheKey]) {
-          this._searchResults = this._sortSearchResults(this._searchResultsByType[cacheKey]);
+        const currentMediaType = this._searchMediaClassFilter || 'all';
+        const sortMode = this._getActiveSearchDisplaySortMode();
+        const cacheKey = `${currentMediaType}_sort_${sortMode}`;
+        if (this._searchResultsByType[cacheKey] || this._searchResultsByType[currentMediaType]) {
+          this._searchResults = this._sortSearchResults(
+            this._searchResultsByType[cacheKey] || this._searchResultsByType[currentMediaType]
+          );
           this.requestUpdate();
+        } else if (this._keepFiltersOnSearch && currentMediaType !== 'all') {
+          await this._doSearch(currentMediaType);
         } else {
           await this._doSearch('favorites');
         }
