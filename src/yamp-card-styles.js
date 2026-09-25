@@ -765,9 +765,12 @@ export const yampCardStyles = css`
   }
 
   @media (hover: hover) {
-    .chip:hover {
-      background: var(--custom-accent) !important;
-      color: var(--yamp-chip-selected-text) !important;
+    .chip-row .chip:hover,
+    .action-chip-row .chip:hover,
+    .entity-options-chips-strip .chip:hover,
+    .search-filter-chips .chip:hover {
+      background: var(--custom-accent);
+      color: var(--yamp-chip-selected-text);
       opacity: 1;
     }
   }
@@ -3458,8 +3461,8 @@ export const yampCardStyles = css`
 
   @media (hover: hover) {
     .entity-options-sheet .search-filter-chips .chip:hover {
-      background: var(--custom-accent) !important;
-      color: var(--yamp-chip-selected-text) !important;
+      background: var(--custom-accent);
+      color: var(--yamp-chip-selected-text);
       opacity: 1;
     }
   }

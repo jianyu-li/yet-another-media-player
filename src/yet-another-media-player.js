@@ -2913,9 +2913,12 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _getSearchResultsElement() {
-    return this.shadowRoot?.querySelector(
-      ".virtualized-results-wrapper, .queue-results-wrapper, .search-sheet-results, .entity-options-search-results"
-    );
+    if (!this._cachedSearchResultsElement || !this._cachedSearchResultsElement.isConnected) {
+      this._cachedSearchResultsElement = this.shadowRoot?.querySelector(
+        ".virtualized-results-wrapper, .queue-results-wrapper, .search-sheet-results, .entity-options-search-results"
+      );
+    }
+    return this._cachedSearchResultsElement;
   }
 
   _applySearchHeaderDelta(delta) {
