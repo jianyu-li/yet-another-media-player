@@ -134,6 +134,8 @@ export const QueueDragMixin = (superClass) =>
       let scrollSpeed = 0;
       let scrollAnimationFrame = null;
       let dropZoneEl = null;
+      let dropZoneRect = null;
+      let trackListRect = null;
       let dropZoneContentEl = null;
       let dropZoneIconEl = null;
       let isHoveringDropZone = false;
@@ -152,28 +154,31 @@ export const QueueDragMixin = (superClass) =>
       let dragItemHeight = 0;
 
       const checkIsHoveringDropZone = (clientX, clientY) => {
-        if (!dropZoneEl) return false;
-        const dzRect = dropZoneEl.getBoundingClientRect();
+        if (!dropZoneRect) return false;
 
         const isPointerInDropZone =
-          clientY >= dzRect.top &&
-          clientY <= dzRect.bottom &&
-          clientX >= dzRect.left &&
-          clientX <= dzRect.right;
+          clientY >= dropZoneRect.top &&
+          clientY <= dropZoneRect.bottom &&
+          clientX >= dropZoneRect.left &&
+          clientX <= dropZoneRect.right;
 
         let isCloneInDropZone = false;
         if (floatingClone) {
           const cloneRect = floatingClone.getBoundingClientRect();
           // Ghost overlaps dropzone vertically and horizontally
           const overlapsDropZone =
-            cloneRect.bottom >= dzRect.top &&
-            cloneRect.top <= dzRect.bottom &&
-            cloneRect.right >= dzRect.left &&
-            cloneRect.left <= dzRect.right;
+            cloneRect.bottom >= dropZoneRect.top &&
+            cloneRect.top <= dropZoneRect.bottom &&
+            cloneRect.right >= dropZoneRect.left &&
+            cloneRect.left <= dropZoneRect.right;
 
-          // Also check if ghost is dragged to the dropzone level or above
+          // Also check if ghost is dragged to the dropzone level or above,
+          // while remaining horizontally within bounds
           const isAtDropZoneLevel =
-            cloneRect.top <= dzRect.bottom && cloneRect.bottom >= dzRect.top - 30;
+            cloneRect.top <= dropZoneRect.bottom &&
+            cloneRect.bottom >= dropZoneRect.top - 30 &&
+            cloneRect.right >= dropZoneRect.left &&
+            cloneRect.left <= dropZoneRect.right;
 
           isCloneInDropZone = overlapsDropZone || isAtDropZoneLevel;
         }
@@ -182,23 +187,21 @@ export const QueueDragMixin = (superClass) =>
       };
 
       const getScrollSpeed = (clientX, clientY) => {
-        if (!scrollContainer) return 0;
+        if (!scrollContainer || !trackListRect) return 0;
         if (isHoveringDropZone) return 0;
-
-        // Use the actual track list container for track boundary checking
-        const container = this.renderRoot.querySelector(".queue-sortable-container");
-        const listContainer =
-          (container && container.parentElement) || container || scrollContainer;
-        const trackListRect = listContainer.getBoundingClientRect();
 
         // Check if ghost track is within the track list container
         if (floatingClone) {
           const cloneRect = floatingClone.getBoundingClientRect();
 
           // Stop scrolling immediately if ghost is hovering over or at the dropzone level
-          if (dropZoneEl) {
-            const dzRect = dropZoneEl.getBoundingClientRect();
-            if (cloneRect.top <= dzRect.bottom && cloneRect.bottom >= dzRect.top - 30) {
+          if (dropZoneRect) {
+            if (
+              cloneRect.top <= dropZoneRect.bottom &&
+              cloneRect.bottom >= dropZoneRect.top - 30 &&
+              cloneRect.right >= dropZoneRect.left &&
+              cloneRect.left <= dropZoneRect.right
+            ) {
               return 0;
             }
           }
@@ -328,6 +331,13 @@ export const QueueDragMixin = (superClass) =>
           container.style.setProperty("--queue-drag-item-h", `${wrapperRect.height}px`);
           container.style.touchAction = "none";
           scrollContainer = this._findScrollParent(container);
+
+          const listContainer =
+            (container && container.parentElement) || container || scrollContainer;
+          if (listContainer) {
+            trackListRect = listContainer.getBoundingClientRect();
+          }
+
           if (scrollContainer) {
             scrollAnimationFrame = requestAnimationFrame(scrollLoop);
             startScrollTop = scrollContainer.scrollTop;
@@ -383,6 +393,7 @@ export const QueueDragMixin = (superClass) =>
             opacity: 0.95;
           `;
           this.renderRoot.appendChild(dropZoneEl);
+          dropZoneRect = dropZoneEl.getBoundingClientRect();
           dropZoneContentEl = dropZoneEl.querySelector(".dropzone-content");
           dropZoneIconEl = dropZoneEl.querySelector("ha-icon");
         }
@@ -578,6 +589,8 @@ export const QueueDragMixin = (superClass) =>
           dropZoneEl.remove();
         }
         dropZoneEl = null;
+        dropZoneRect = null;
+        trackListRect = null;
         dropZoneContentEl = null;
         dropZoneIconEl = null;
 
