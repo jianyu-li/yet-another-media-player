@@ -911,6 +911,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._searchAttempted = false;
     // Media class filter for search results
     this._searchMediaClassFilter = "all";
+    this._keepFiltersOnSearch = false;
     // Track last search chip classes for filter chip row scroll
     this._lastSearchChipClasses = "";
     // --- swipe‑to‑filter helpers ---
@@ -3173,9 +3174,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     if (this._recentlyPlayedFilterActive) {
       // Clear search box since it's not used in recently played mode
       this._searchQuery = '';
-      // Load recently played items - always use "all" for recently played
+      // Load recently played items
       try {
-        await this._doSearch('all', { isRecentlyPlayed: true, clearFilters: true });
+        const currentMediaType = this._searchMediaClassFilter || 'all';
+        const targetFilter = this._keepFiltersOnSearch && currentMediaType !== 'favorites' ? currentMediaType : 'all';
+        await this._doSearch(targetFilter, { isRecentlyPlayed: true, clearFilters: true });
       } catch (error) {
         console.error('yamp: Error in _doSearch for recently played:', error);
       }
@@ -3187,10 +3190,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         await this._doSearch(currentMediaType);
       } else {
         // Restore from cache or load favorites if no search query
-        const cacheKey = `${this._searchMediaClassFilter || 'all'}`;
-        if (this._searchResultsByType[cacheKey]) {
-          this._searchResults = this._sortSearchResults(this._searchResultsByType[cacheKey]);
-          this.requestUpdate();
+        const currentMediaType = this._searchMediaClassFilter || 'all';
+        if (this._restoreSearchResultsFromCache(currentMediaType)) {
+          // Restored from cache
+        } else if (this._keepFiltersOnSearch && currentMediaType !== 'all') {
+          await this._doSearch(currentMediaType);
         } else {
           // No cache, load favorites as default
           await this._doSearch('favorites');
@@ -3225,9 +3229,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       delete this._searchResultsByType[cacheKey];
       // Subscribe to queue update events
       await this._subscribeToQueueUpdates();
-      // Load upcoming queue items - always use "all" for upcoming
+      // Load upcoming queue items
       try {
-        await this._doSearch('all', { isUpcoming: true, clearFilters: true });
+        const currentMediaType = this._searchMediaClassFilter || 'all';
+        const targetFilter = this._keepFiltersOnSearch && currentMediaType !== 'favorites' ? currentMediaType : 'all';
+        await this._doSearch(targetFilter, { isUpcoming: true, clearFilters: true });
       } catch (error) {
         console.error('yamp: Error in _doSearch for upcoming queue:', error);
       }
@@ -3241,10 +3247,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         await this._doSearch(currentMediaType);
       } else {
         // Restore from cache or load favorites if no search query
-        const cacheKey = `${this._searchMediaClassFilter || 'all'}`;
-        if (this._searchResultsByType[cacheKey]) {
-          this._searchResults = this._sortSearchResults(this._searchResultsByType[cacheKey]);
-          this.requestUpdate();
+        const currentMediaType = this._searchMediaClassFilter || 'all';
+        if (this._restoreSearchResultsFromCache(currentMediaType)) {
+          // Restored from cache
+        } else if (this._keepFiltersOnSearch && currentMediaType !== 'all') {
+          await this._doSearch(currentMediaType);
         } else {
           // No cache, load favorites as default
           await this._doSearch('favorites');
@@ -3279,7 +3286,14 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           return;
         }
 
-        await this._doSearch('all', { isRecommendations: true, clearFilters: true });
+        const targetFilter =
+          this._keepFiltersOnSearch &&
+          this._searchMediaClassFilter &&
+          this._searchMediaClassFilter !== "favorites"
+            ? this._searchMediaClassFilter
+            : "all";
+
+        await this._doSearch(targetFilter, { isRecommendations: true, clearFilters: true });
       } catch (error) {
         console.error('yamp: Error in _doSearch for recommendations:', error);
         this._searchError = "Unable to load recommendations.";
@@ -3291,15 +3305,34 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         const currentMediaType = this._searchMediaClassFilter;
         await this._doSearch(currentMediaType);
       } else {
-        const cacheKey = `${this._searchMediaClassFilter || 'all'}`;
-        if (this._searchResultsByType[cacheKey]) {
-          this._searchResults = this._sortSearchResults(this._searchResultsByType[cacheKey]);
-          this.requestUpdate();
+        const currentMediaType = this._searchMediaClassFilter || 'all';
+        if (this._restoreSearchResultsFromCache(currentMediaType)) {
+          // Restored from cache
+        } else if (this._keepFiltersOnSearch && currentMediaType !== 'all') {
+          await this._doSearch(currentMediaType);
         } else {
           await this._doSearch('favorites');
         }
       }
     }
+  }
+
+  /**
+   * Attempts to restore search results from cache based on the current media type.
+   * @param {string} currentMediaType
+   * @returns {boolean} True if restored from cache, false otherwise
+   */
+  _restoreSearchResultsFromCache(currentMediaType) {
+    const sortMode = this._getActiveSearchDisplaySortMode();
+    const cacheKey = `${currentMediaType}_sort_${sortMode}`;
+    if (this._searchResultsByType[cacheKey] || this._searchResultsByType[currentMediaType]) {
+      this._searchResults = this._sortSearchResults(
+        this._searchResultsByType[cacheKey] || this._searchResultsByType[currentMediaType]
+      );
+      this.requestUpdate();
+      return true;
+    }
+    return false;
   }
 
   // Get next track from Music Assistant (limited by Music Assistant API)
