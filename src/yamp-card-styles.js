@@ -633,8 +633,8 @@ export const yampCardStyles = css`
   .chip-row {
     display: flex;
     gap: 8px;
-    padding: 8px 12px 18px 12px;
-    margin-bottom: -6px;
+    padding: 8px 12px 6px 12px;
+    margin-bottom: 6px;
     position: relative;
     z-index: ${Z_LAYERS.STICKY_CHIPS};
     overflow-x: auto;
@@ -765,9 +765,13 @@ export const yampCardStyles = css`
   }
 
   @media (hover: hover) {
-    .chip:hover {
-      background: var(--yamp-chip-selected-bg);
+    .chip-row .chip:hover,
+    .action-chip-row .chip:hover,
+    .entity-options-chips-strip .chip:hover,
+    .search-filter-chips .chip:hover {
+      background: var(--custom-accent);
       color: var(--yamp-chip-selected-text);
+      opacity: 1;
     }
   }
 
@@ -2562,10 +2566,10 @@ export const yampCardStyles = css`
     justify-content: flex-start;
     align-items: center;
     overflow-x: auto;
-    padding: 2px 8px 2px 8px;
+    padding: 2px 8px 6px 8px;
     background: var(--ha-menu-chip-row-background, transparent);
-    -webkit-mask-image: none;
-    mask-image: none;
+    -webkit-mask-image: ${CHIP_ROW_MASK};
+    mask-image: ${CHIP_ROW_MASK};
   }
 
   .entity-options-chips-strip .chip {
@@ -3457,8 +3461,8 @@ export const yampCardStyles = css`
 
   @media (hover: hover) {
     .entity-options-sheet .search-filter-chips .chip:hover {
-      background: var(--custom-accent) !important;
-      color: var(--yamp-chip-selected-text) !important;
+      background: var(--custom-accent);
+      color: var(--yamp-chip-selected-text);
       opacity: 1;
     }
   }
@@ -3468,6 +3472,7 @@ export const yampCardStyles = css`
     flex: 1;
     min-height: 0;
     overflow-y: auto;
+    overscroll-behavior-y: contain;
     margin: 12px 0;
     padding-bottom: 0px;
     /* Hide scrollbars */
@@ -3499,7 +3504,8 @@ export const yampCardStyles = css`
     display: flex;
     flex-direction: column;
     overflow: hidden;
-    touch-action: pan-y;
+    touch-action: pan-x;
+    overscroll-behavior: contain;
     opacity: 1;
     will-change: margin-top, opacity;
   }
@@ -3893,6 +3899,7 @@ export const yampCardStyles = css`
     flex: 1;
     min-height: 0;
     overflow-y: auto;
+    overscroll-behavior-y: contain;
     /* Hide scrollbars */
     ${HIDE_SCROLLBAR}
   }

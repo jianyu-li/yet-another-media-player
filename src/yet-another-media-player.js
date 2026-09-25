@@ -2912,6 +2912,15 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     }
   }
 
+  _getSearchResultsElement() {
+    if (!this._cachedSearchResultsElement || !this._cachedSearchResultsElement.isConnected) {
+      this._cachedSearchResultsElement = this.shadowRoot?.querySelector(
+        ".virtualized-results-wrapper, .queue-results-wrapper, .search-sheet-results, .entity-options-search-results"
+      );
+    }
+    return this._cachedSearchResultsElement;
+  }
+
   _applySearchHeaderDelta(delta) {
     if (this.config?.pin_search_headers === true) return;
     const headerHeight = this._getSearchHeaderHeight();
@@ -2951,7 +2960,15 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _handleHeaderWheel(e, pinSearchHeaders) {
-    if (pinSearchHeaders || this.config?.pin_search_headers === true) return;
+    if (e.cancelable) e.preventDefault();
+    e.stopPropagation();
+    if (pinSearchHeaders || this.config?.pin_search_headers === true) {
+      const results = this._getSearchResultsElement();
+      if (results) {
+        results.scrollTop += e.deltaY;
+      }
+      return;
+    }
     this._applySearchHeaderDelta(e.deltaY);
   }
 
@@ -2973,6 +2990,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
     // Discriminate vertical gesture to avoid conflicting with horizontal chip scroll
     if (Math.abs(deltaY) > Math.abs(deltaX)) {
+      if (e.cancelable) e.preventDefault();
       this._applySearchHeaderDelta(-deltaY);
       this._headerTouchStartY = currentY;
       this._headerTouchStartX = currentX;
@@ -2984,34 +3002,20 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._headerTouchStartX = null;
   }
 
-  _handleHeaderMouseDown(e) {
-    if (e.target.tagName === "INPUT" || e.target.closest("button") || e.target.closest(".chip")) return;
-    this._headerMouseDown = true;
-    this._headerMouseStartY = e.clientY;
-  }
-
-  _handleHeaderMouseMove(e, pinSearchHeaders) {
-    if (pinSearchHeaders || this.config?.pin_search_headers === true || !this._headerMouseDown || this._headerMouseStartY == null) return;
-    const currentY = e.clientY;
-    const deltaY = currentY - this._headerMouseStartY;
-    this._applySearchHeaderDelta(-deltaY);
-    this._headerMouseStartY = currentY;
-  }
-
-  _handleHeaderMouseUp() {
-    this._headerMouseDown = false;
-    this._headerMouseStartY = null;
-  }
 
   _handleSearchContainerWheel(e, pinSearchHeaders) {
     if (pinSearchHeaders || this.config?.pin_search_headers === true) return;
+    const headerHeight = this._getSearchHeaderHeight();
+    const currentOffset = this._searchHeaderOffset || 0;
     if (e.deltaY < 0) {
-      const results = this.shadowRoot?.querySelector(
-        ".virtualized-results-wrapper, .queue-results-wrapper, .search-sheet-results"
-      );
+      const results = this._getSearchResultsElement();
       if (!results || results.scrollTop <= 5) {
+        if (e.cancelable) e.preventDefault();
         this._applySearchHeaderDelta(e.deltaY);
       }
+    } else if (e.deltaY > 0 && currentOffset < headerHeight) {
+      if (e.cancelable) e.preventDefault();
+      this._applySearchHeaderDelta(e.deltaY);
     }
   }
 
@@ -3020,6 +3024,9 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const el = e.currentTarget || e.target;
     const scrollTop = el ? el.scrollTop : 0;
     if (e.deltaY < 0 && scrollTop <= 5) {
+      if ((this._searchHeaderOffset || 0) > 0 && e.cancelable) {
+        e.preventDefault();
+      }
       this._applySearchHeaderDelta(e.deltaY);
     }
   }
@@ -3040,6 +3047,9 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const deltaX = e.touches[0].clientX - this._resultsTouchStartX;
 
     if (Math.abs(deltaY) > Math.abs(deltaX) && deltaY > 0 && scrollTop <= 5) {
+      if ((this._searchHeaderOffset || 0) > 0 && e.cancelable) {
+        e.preventDefault();
+      }
       this._applySearchHeaderDelta(-deltaY);
       this._resultsTouchStartY = e.touches[0].clientY;
       this._resultsTouchStartX = e.touches[0].clientX;
@@ -10791,10 +10801,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
              @wheel=${(e) => this._handleHeaderWheel(e, pinSearchHeaders)}
              @touchstart=${(e) => this._handleHeaderTouchStart(e)}
              @touchmove=${(e) => this._handleHeaderTouchMove(e, pinSearchHeaders)}
-             @touchend=${() => this._handleHeaderTouchEnd()}
-             @mousedown=${(e) => this._handleHeaderMouseDown(e)}
-             @mousemove=${(e) => this._handleHeaderMouseMove(e, pinSearchHeaders)}
-             @mouseup=${() => this._handleHeaderMouseUp()}>
+             @touchend=${() => this._handleHeaderTouchEnd()}>
           ${this._searchHierarchy.length > 0 ? html`
               <button class="entity-options-item close-item" @click=${() => this._goBackInSearch()}>
                 ${localize('common.back')}
