@@ -482,7 +482,7 @@ export const QueueDragMixin = (superClass) =>
         window.removeEventListener("pointermove", onPointerMove);
         window.removeEventListener("pointerup", onPointerUp);
         window.removeEventListener("pointercancel", onPointerCancel);
-        window.removeEventListener("touchmove", onTouchMove, { passive: false });
+        window.removeEventListener("touchmove", onTouchMove);
 
         if (holdTimer) {
           clearTimeout(holdTimer);

@@ -476,8 +476,8 @@ function _findArtworkOverride(state, overrides, resolveOverrideSource, options =
             const parts = expected.split(":");
             if (
               parts.length === 2 &&
-              !isNaN(parts[0]) &&
-              !isNaN(parts[1]) &&
+              !isNaN(Number(parts[0])) &&
+              !isNaN(Number(parts[1])) &&
               parseFloat(parts[1]) !== 0
             ) {
               targetRatio = parseFloat(parts[0]) / parseFloat(parts[1]);
@@ -594,6 +594,8 @@ function _findArtworkOverride(state, overrides, resolveOverrideSource, options =
  * @param {string} [options.fallbackArtwork] - Fallback artwork strategy ('smart' or direct URL)
  * @param {string} [options.artworkObjectFit] - Fit strategy; if "no_artwork", returns null URL
  * @param {Function} [options.resolveOverrideSource] - Callback for template override resolution
+ * @param {Record<string, number>} [options.aspectRatioCache] - Cache of aspect ratios
+ * @param {boolean} [options.isIdleImageActive] - Whether an idle image is actively displayed
  * @returns {Object} { url: string|null, sizePercentage: number|null, objectFit: string|null }
  */
 export function getArtworkUrl(

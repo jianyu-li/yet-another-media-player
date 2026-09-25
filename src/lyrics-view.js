@@ -124,11 +124,16 @@ export class YampLyricsView extends LitElement {
     }
   }
 
+  /**
+   * @param {ScrollBehavior} [behavior]
+   */
   _scrollToActive(behavior = "smooth") {
     if (this._isScrolling && behavior === "smooth") return;
 
     const container = this.renderRoot.querySelector(".lyrics-scroll-container");
-    const activeEl = container?.querySelector(".lyric-line.active");
+    const activeEl = /** @type {HTMLElement | null} */ (
+      container?.querySelector(".lyric-line.active")
+    );
 
     if (container && activeEl) {
       const containerCenter = container.clientHeight / 2;

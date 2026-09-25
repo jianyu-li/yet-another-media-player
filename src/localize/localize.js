@@ -90,7 +90,7 @@ function getBrowserLanguage() {
 export function getActiveLanguage() {
   const haElement =
     typeof document !== "undefined" ? document.querySelector("home-assistant") : null;
-  const haHass = haElement?.hass;
+  const haHass = /** @type {any} */ (haElement)?.hass;
 
   const rawLang = (
     getStoredLanguage() ||
@@ -107,6 +107,12 @@ export function getActiveLanguage() {
   return languages[rawLang] ? rawLang : rawLang.split("_")[0];
 }
 
+/**
+ * @param {string} string - Localization key path.
+ * @param {string | Record<string, any>} [search] - Search string or map of search->replace pairs.
+ * @param {string} [replace] - Replacement string if search is a string.
+ * @returns {string}
+ */
 export function localize(string, search = "", replace = "") {
   const lang = getActiveLanguage();
 

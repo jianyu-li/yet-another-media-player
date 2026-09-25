@@ -61,6 +61,10 @@ export function getSearchResultSubtitle(
     : "";
 }
 
+/**
+ * @param {any} limit
+ * @param {{ cap?: number, floor?: number }} [options]
+ */
 const resolveLimitValue = (limit, { cap, floor } = {}) => {
   const numericLimit = Number(limit);
   if (!Number.isFinite(numericLimit) || numericLimit <= 0) {
@@ -221,22 +225,23 @@ export function transformMusicAssistantItem(item) {
 }
 
 /**
- * Renders the search sheet UI for media search.
- *
+ * Renders action buttons for a single search result item.
  * @param {Object} opts
- * @param {boolean} opts.open - Whether the search sheet is visible.
- * @param {string} opts.query - Current search query value.
- * @param {Function} opts.onQueryInput - Handler for query input change.
- * @param {Function} opts.onSearch - Handler for search action.
- * @param {Function} opts.onClose - Handler for closing the sheet.
- * @param {boolean} opts.loading - Loading state for search.
- * @param {Array} opts.results - Search result items (array of media items).
- * @param {Function} opts.onPlay - Handler to play a media item.
- * @param {Function} opts.onQueue - Handler to add a media item to queue.
- * @param {string} [opts.error] - Optional error message.
- * @param {boolean} [opts.showQueueSuccess] - Whether to show queue success message.
- * @param {boolean} [opts.matchTheme] - Whether to match the theme of the parent.
- * @param {boolean} [opts.disableAutofocus] - Whether to disable search input autofocus.
+ * @param {any} opts.item
+ * @param {Function} [opts.onPlay]
+ * @param {Function} [opts.onOptionsToggle]
+ * @param {boolean} [opts.upcomingFilterActive]
+ * @param {boolean} [opts.isMusicAssistant]
+ * @param {boolean} [opts.massQueueAvailable]
+ * @param {string} [opts.searchView]
+ * @param {boolean} [opts.isInline]
+ * @param {string} [opts.queueControlsStyle]
+ * @param {Function} [opts.onMoveUp]
+ * @param {Function} [opts.onMoveDown]
+ * @param {Function} [opts.onMoveNext]
+ * @param {Function} [opts.onRemove]
+ * @param {boolean} [opts.minimal]
+ * @param {boolean} [opts.hideActions]
  */
 export function renderSearchResultActions({
   item,
@@ -872,13 +877,13 @@ export async function searchMedia(
                 type: "call_service",
                 domain: "music_assistant",
                 service: "get_library",
-                service_data: {
+                service_data: /** @type {Record<string, any>} */ ({
                   ...(configEntryId &&
                     configEntryId !== "auto" && { config_entry_id: configEntryId }),
                   media_type: mt,
                   favorite: true,
                   search: query,
-                },
+                }),
                 return_response: true,
               };
               const favoritesLimit = resolveLimitValue(searchResultsLimit);
@@ -927,11 +932,11 @@ export async function searchMedia(
             type: "call_service",
             domain: "music_assistant",
             service: "get_library",
-            service_data: {
+            service_data: /** @type {Record<string, any>} */ ({
               ...(configEntryId && configEntryId !== "auto" && { config_entry_id: configEntryId }),
               media_type: mediaType,
               // favorite param omitted to get ALL items
-            },
+            }),
             return_response: true,
           };
 
@@ -966,10 +971,10 @@ export async function searchMedia(
         query && query.trim() !== ""
           ? query
           : searchParams.album || (mediaType === "album" ? "" : searchParams.artist || "");
-      const serviceData = {
+      const serviceData = /** @type {Record<string, any>} */ ({
         name: searchQuery,
         ...(configEntryId && configEntryId !== "auto" && { config_entry_id: configEntryId }),
-      };
+      });
       const searchLimit = resolveLimitValue(searchResultsLimit, {
         cap: mediaType === "all" ? 8 : undefined,
       });
@@ -1051,11 +1056,11 @@ export async function getRecentlyPlayed(
       type: "call_service",
       domain: "music_assistant",
       service: "get_library",
-      service_data: {
+      service_data: /** @type {Record<string, any>} */ ({
         ...(configEntryId && configEntryId !== "auto" && { config_entry_id: configEntryId }),
         media_type: mt,
         order_by: "last_played_desc",
-      },
+      }),
       return_response: true,
     };
     const appliedLimit = resolveLimitValue(searchResultsLimit, limitArgs);
@@ -1113,11 +1118,11 @@ export async function getFavorites(
       type: "call_service",
       domain: "music_assistant",
       service: "get_library",
-      service_data: {
+      service_data: /** @type {Record<string, any>} */ ({
         ...(configEntryId && configEntryId !== "auto" && { config_entry_id: configEntryId }),
         media_type: type,
         favorite: true,
-      },
+      }),
       return_response: true,
     };
     const favoritesLimit = resolveLimitValue(searchResultsLimit, {
@@ -1281,12 +1286,12 @@ export async function isTrackFavorited(
           type: "call_service",
           domain: "music_assistant",
           service: "get_library",
-          service_data: {
+          service_data: /** @type {Record<string, any>} */ ({
             ...(configEntryId && configEntryId !== "auto" && { config_entry_id: configEntryId }),
             media_type: "track",
             favorite: true,
             ...(trackName && { search: trackName.trim() }),
-          },
+          }),
           return_response: true,
         };
         const appliedLimit = resolveLimitValue(searchResultsLimit, { cap: 10 });

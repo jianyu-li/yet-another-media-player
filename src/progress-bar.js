@@ -33,11 +33,11 @@ export function formatTime(seconds, showHoursOrDuration = false) {
 }
 
 export function renderProgressBar({
-  progress,
-  seekEnabled,
-  onSeek,
-  collapsed,
-  accent,
+  progress = 0,
+  seekEnabled = false,
+  onSeek = undefined,
+  collapsed = false,
+  accent = undefined,
   height = DEFAULT_PROGRESS_BAR_HEIGHT,
   style = "",
   displayTimestamps = false,

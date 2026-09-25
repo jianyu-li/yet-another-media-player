@@ -80,7 +80,7 @@ function getInaudibleWavUrl() {
 
 /**
  * Resolves any relative Home Assistant asset URL to a fully-qualified absolute URL
- * @param {string} url
+ * @param {string | { url?: string }} url
  * @returns {string}
  */
 function toAbsoluteUrl(url) {
@@ -541,6 +541,7 @@ export class YampMediaSessionManager {
    * @param {string|null} [options.title] Optional override title from rich metadata
    * @param {string|null} [options.artist] Optional override artist from rich metadata
    * @param {string|null} [options.album] Optional override album from rich metadata
+   * @param {string | { url?: string } | null} [options.artworkUrl] Optional override artwork URL
    */
   update({ enabled, stateObj, targetEntityId, artworkUrl, title, artist, album }) {
     if (!this.isSupported || this.card?._isEditorPreview) return;
@@ -730,6 +731,7 @@ export class YampMediaSessionManager {
         // Ignore reset error
       }
 
+      /** @type {MediaSessionAction[]} */
       const actions = [
         "play",
         "pause",
