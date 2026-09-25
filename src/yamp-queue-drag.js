@@ -134,8 +134,7 @@ export const QueueDragMixin = (superClass) =>
       let scrollSpeed = 0;
       let scrollAnimationFrame = null;
       let dropZoneEl = null;
-      let dropZoneRect = null;
-      let trackListRect = null;
+      let trackListEl = null;
       let dropZoneContentEl = null;
       let dropZoneIconEl = null;
       let isHoveringDropZone = false;
@@ -154,31 +153,33 @@ export const QueueDragMixin = (superClass) =>
       let dragItemHeight = 0;
 
       const checkIsHoveringDropZone = (clientX, clientY) => {
-        if (!dropZoneRect) return false;
+        if (!dropZoneEl) return false;
+        const dzRect = dropZoneEl.getBoundingClientRect();
+        if (!dzRect || dzRect.width === 0) return false;
 
         const isPointerInDropZone =
-          clientY >= dropZoneRect.top &&
-          clientY <= dropZoneRect.bottom &&
-          clientX >= dropZoneRect.left &&
-          clientX <= dropZoneRect.right;
+          clientY >= dzRect.top &&
+          clientY <= dzRect.bottom &&
+          clientX >= dzRect.left &&
+          clientX <= dzRect.right;
 
         let isCloneInDropZone = false;
         if (floatingClone) {
           const cloneRect = floatingClone.getBoundingClientRect();
           // Ghost overlaps dropzone vertically and horizontally
           const overlapsDropZone =
-            cloneRect.bottom >= dropZoneRect.top &&
-            cloneRect.top <= dropZoneRect.bottom &&
-            cloneRect.right >= dropZoneRect.left &&
-            cloneRect.left <= dropZoneRect.right;
+            cloneRect.bottom >= dzRect.top &&
+            cloneRect.top <= dzRect.bottom &&
+            cloneRect.right >= dzRect.left &&
+            cloneRect.left <= dzRect.right;
 
           // Also check if ghost is dragged to the dropzone level or above,
           // while remaining horizontally within bounds
           const isAtDropZoneLevel =
-            cloneRect.top <= dropZoneRect.bottom &&
-            cloneRect.bottom >= dropZoneRect.top - 30 &&
-            cloneRect.right >= dropZoneRect.left &&
-            cloneRect.left <= dropZoneRect.right;
+            cloneRect.top <= dzRect.bottom &&
+            cloneRect.bottom >= dzRect.top - 30 &&
+            cloneRect.right >= dzRect.left &&
+            cloneRect.left <= dzRect.right;
 
           isCloneInDropZone = overlapsDropZone || isAtDropZoneLevel;
         }
@@ -187,56 +188,66 @@ export const QueueDragMixin = (superClass) =>
       };
 
       const getScrollSpeed = (clientX, clientY) => {
-        if (!scrollContainer || !trackListRect) return 0;
+        if (!scrollContainer || !trackListEl) return 0;
         if (isHoveringDropZone) return 0;
+
+        // Compute live rect — the tracklist moves as the container scrolls
+        const tlRect = trackListEl.getBoundingClientRect();
 
         // Check if ghost track is within the track list container
         if (floatingClone) {
           const cloneRect = floatingClone.getBoundingClientRect();
 
           // Stop scrolling immediately if ghost is hovering over or at the dropzone level
-          if (dropZoneRect) {
+          if (dropZoneEl) {
+            const dzRect = dropZoneEl.getBoundingClientRect();
             if (
-              cloneRect.top <= dropZoneRect.bottom &&
-              cloneRect.bottom >= dropZoneRect.top - 30 &&
-              cloneRect.right >= dropZoneRect.left &&
-              cloneRect.left <= dropZoneRect.right
+              cloneRect.top <= dzRect.bottom &&
+              cloneRect.bottom >= dzRect.top - 30 &&
+              cloneRect.right >= dzRect.left &&
+              cloneRect.left <= dzRect.right
             ) {
               return 0;
             }
           }
 
+          // If ghost is dragged horizontally outside the tracklist bounds, stop scrolling
+          const cloneMidX = cloneRect.left + cloneRect.width * 0.5;
+          if (cloneMidX < tlRect.left || cloneMidX > tlRect.right) {
+            return 0;
+          }
+
           // If ghost track is completely outside the track list container bounds, stop scrolling
           const isGhostOutside =
-            cloneRect.bottom <= trackListRect.top ||
-            cloneRect.top >= trackListRect.bottom ||
-            cloneRect.right <= trackListRect.left ||
-            cloneRect.left >= trackListRect.right;
+            cloneRect.bottom <= tlRect.top ||
+            cloneRect.top >= tlRect.bottom ||
+            cloneRect.right <= tlRect.left ||
+            cloneRect.left >= tlRect.right;
           if (isGhostOutside) {
             return 0;
           }
           // If dragging up and the ghost track's midpoint is above the track list top, stop scrolling
-          if (cloneRect.top + cloneRect.height * 0.5 < trackListRect.top) {
+          if (cloneRect.top + cloneRect.height * 0.5 < tlRect.top) {
             return 0;
           }
           // If dragging down and the ghost track's midpoint is below the track list bottom, stop scrolling
-          if (cloneRect.top + cloneRect.height * 0.5 > trackListRect.bottom) {
+          if (cloneRect.top + cloneRect.height * 0.5 > tlRect.bottom) {
             return 0;
           }
         }
 
         // Pointer must also be within the track list container bounds
         if (
-          clientX < trackListRect.left ||
-          clientX > trackListRect.right ||
-          clientY < trackListRect.top ||
-          clientY > trackListRect.bottom
+          clientX < tlRect.left ||
+          clientX > tlRect.right ||
+          clientY < tlRect.top ||
+          clientY > tlRect.bottom
         ) {
           return 0;
         }
 
-        const topDiff = clientY - trackListRect.top;
-        const bottomDiff = trackListRect.bottom - clientY;
+        const topDiff = clientY - tlRect.top;
+        const bottomDiff = tlRect.bottom - clientY;
         const threshold = 60;
 
         if (topDiff < threshold && topDiff >= 0) {
@@ -332,11 +343,8 @@ export const QueueDragMixin = (superClass) =>
           container.style.touchAction = "none";
           scrollContainer = this._findScrollParent(container);
 
-          const listContainer =
-            (container && container.parentElement) || container || scrollContainer;
-          if (listContainer) {
-            trackListRect = listContainer.getBoundingClientRect();
-          }
+          // Cache the element reference for live rect computation in getScrollSpeed
+          trackListEl = (container && container.parentElement) || container || scrollContainer;
 
           if (scrollContainer) {
             scrollAnimationFrame = requestAnimationFrame(scrollLoop);
@@ -393,7 +401,6 @@ export const QueueDragMixin = (superClass) =>
             opacity: 0.95;
           `;
           this.renderRoot.appendChild(dropZoneEl);
-          dropZoneRect = dropZoneEl.getBoundingClientRect();
           dropZoneContentEl = dropZoneEl.querySelector(".dropzone-content");
           dropZoneIconEl = dropZoneEl.querySelector("ha-icon");
         }
@@ -589,8 +596,7 @@ export const QueueDragMixin = (superClass) =>
           dropZoneEl.remove();
         }
         dropZoneEl = null;
-        dropZoneRect = null;
-        trackListRect = null;
+        trackListEl = null;
         dropZoneContentEl = null;
         dropZoneIconEl = null;
 
