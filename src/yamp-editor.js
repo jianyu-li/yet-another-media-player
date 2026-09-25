@@ -34,23 +34,37 @@ const LYRICS_BACKGROUND_FADE_SELECTOR = Object.freeze({
 });
 
 export class YetAnotherMediaPlayerEditor extends LitElement {
-  static get properties() {
-    return {
-      hass: {},
-      _config: {},
-      _yamlConfig: {},
-      _activeTab: { type: String },
-      _entityEditorIndex: { type: Number },
-      _actionEditorIndex: { type: Number },
-      _actionMode: { type: String },
-      _templateModes: { type: Object },
-      _serviceItems: { type: Array },
-      _searchTerm: { type: String },
-    };
-  }
+  static properties = {
+    hass: {},
+    _config: {},
+    _yamlConfig: {},
+    _activeTab: { type: String },
+    _entityEditorIndex: { type: Number },
+    _actionEditorIndex: { type: Number },
+    _actionMode: { type: String },
+    _templateModes: { type: Object },
+    _serviceItems: { type: Array },
+    _searchTerm: { type: String },
+  };
 
   constructor() {
     super();
+    /** @type {import("./types.d.ts").HomeAssistant | undefined} */
+    this.hass = undefined;
+    /** @type {import("./types.d.ts").YampCardConfig | undefined} */
+    this._config = undefined;
+    /** @type {any} */
+    this._yamlConfig = {};
+    /** @type {Record<string, any>} */
+    this._preTemplateConfig = {};
+    /** @type {Record<string, boolean>} */
+    this._templateModes = {};
+    /** @type {any[]} */
+    this._serviceItems = [];
+    /** @type {string} */
+    this._searchTerm = "";
+    /** @type {string | undefined} */
+    this._actionMode = undefined;
     this._activeTab = "entities";
     this._entityEditorIndex = null;
     this._actionEditorIndex = null;
@@ -509,7 +523,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     if (this._config.entities && Array.isArray(this._config.entities)) {
       entities = [
         ...entities,
-        ...this._config.entities.map((e) => (typeof e === "string" ? e : e.entity_id)),
+        ...this._config.entities.map((e) => (typeof e === "string" ? e : e.entity || e.entity_id)),
       ];
     }
     entities = [...new Set(entities)].filter((e) => e);
@@ -674,7 +688,9 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
       entityId =
         this._config.entity ||
         (this._config.entities &&
-          (this._config.entities[0]?.entity_id || this._config.entities[0]));
+          (typeof this._config.entities[0] === "string"
+            ? this._config.entities[0]
+            : this._config.entities[0]?.entity || this._config.entities[0]?.entity_id));
     }
 
     if (!entityId || !this.hass.states[entityId]) return;
@@ -767,7 +783,9 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     const entities = [...(this._config.entities ?? [])];
     const idx = this._tempEntityIndex !== null ? this._tempEntityIndex : this._entityEditorIndex;
     if (entities[idx]) {
-      entities[idx] = { ...entities[idx], ...properties };
+      const existing =
+        typeof entities[idx] === "string" ? { entity: entities[idx] } : entities[idx];
+      entities[idx] = { ...existing, ...properties };
       this._updateConfig("entities", entities);
     }
   }
@@ -2367,7 +2385,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             sectionHasMatch = true;
           }
         });
-        section.style.display = sectionHasMatch ? "" : "none";
+        /** @type {HTMLElement} */ (section).style.display = sectionHasMatch ? "" : "none";
       });
     }
   }
@@ -2416,9 +2434,10 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
 
   _renderEntitiesTab() {
     if (!this._config) return html``;
+    const getEntId = (e) => (typeof e === "string" ? e : e?.entity || e?.entity_id || "");
     let entities = [...(this._config.entities ?? [])];
-    if (entities.length === 0 || entities[entities.length - 1].entity_id) {
-      entities.push({ entity_id: "" });
+    if (entities.length === 0 || getEntId(entities[entities.length - 1])) {
+      entities.push({ entity: "" });
     }
     return html`
       <div class="entity-group">
@@ -2445,14 +2464,14 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                         class="full-width"
                         style="display: block; width: 100%;"
                         .hass=${this.hass}
-                        .value=${ent.entity_id || ""}
+                        .value=${getEntId(ent)}
                         .label=${localize("common.media_player")}
                         .valueRenderer=${(v) => this._entityValueRenderer(v)}
                         .rowRenderer=${(item) => this._entityRowRenderer(item)}
                         .getItems=${this._getEntityItems(
                           ["media_player"],
-                          idx === entities.length - 1 && !ent.entity_id
-                            ? (this._config.entities?.map((e) => e.entity_id) ?? [])
+                          idx === entities.length - 1 && !getEntId(ent)
+                            ? (this._config.entities?.map(getEntId) ?? [])
                             : []
                         )}
                         @value-changed=${(e) => this._onEntityChanged(idx, e.detail.value)}
@@ -2461,7 +2480,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                     </div>
                     <div class="entity-row-actions">
                       <ha-icon
-                        class="icon-button ${!ent.entity_id ? "icon-button-disabled" : ""}"
+                        class="icon-button ${!getEntId(ent) ? "icon-button-disabled" : ""}"
                         icon="mdi:pencil"
                         title="${localize("common.edit_entity")}"
                         @click=${() => this._onEditEntity(idx)}
@@ -5163,11 +5182,16 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
       // Remove empty row
       updated.splice(index, 1);
     } else {
-      updated[index] = { ...updated[index], entity_id: newValue };
+      const existing =
+        typeof updated[index] === "string" ? { entity: updated[index] } : updated[index];
+      updated[index] = { ...existing, entity: newValue, entity_id: newValue };
     }
 
     // Always strip blank row before writing to config
-    const cleaned = updated.filter((e) => e.entity_id && e.entity_id.trim() !== "");
+    const cleaned = updated.filter((e) => {
+      const id = typeof e === "string" ? e : e?.entity || e?.entity_id;
+      return id && id.trim() !== "";
+    });
 
     this._updateConfig("entities", cleaned);
   }

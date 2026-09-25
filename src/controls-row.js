@@ -9,6 +9,22 @@ import {
   SUPPORT_TURN_OFF,
 } from "./constants.js";
 
+/**
+ * @param {Object} params
+ * @param {any} params.stateObj
+ * @param {boolean} [params.showStop]
+ * @param {boolean} [params.shuffleActive]
+ * @param {boolean} [params.repeatActive]
+ * @param {Function} [params.onControlClick]
+ * @param {Function} [params.supportsFeature]
+ * @param {boolean} [params.showFavorite]
+ * @param {boolean} [params.favoriteActive]
+ * @param {Record<string, boolean>} [params.hiddenControls]
+ * @param {boolean} [params.adaptiveControls]
+ * @param {string} [params.controlLayout]
+ * @param {boolean} [params.swapPauseForStop]
+ * @param {string | null} [params.lockScreenState]
+ */
 export function renderControlsRow({
   stateObj,
   showStop,
@@ -80,7 +96,8 @@ export function renderControlsRow({
 
   const baseRowClass = adaptiveControls ? "controls-row adaptive" : "controls-row";
   const rowClass = normalizedLayout === "modern" ? `${baseRowClass} modern` : baseRowClass;
-  let rowStyle = adaptiveControls ? `--yamp-control-count:${Math.max(controlCount, 1)};` : nothing;
+  /** @type {string | typeof nothing} */
+  let rowStyle = nothing;
 
   if (adaptiveControls) {
     const sizing = (() => {
@@ -98,7 +115,8 @@ export function renderControlsRow({
       }
       return { icon: 32, minWidth: 44, maxWidth: 88, minHeight: 48, padding: 6, gap: 6 };
     })();
-    rowStyle += [
+    rowStyle = [
+      `--yamp-control-count:${Math.max(controlCount, 1)}`,
       `--yamp-control-gap:${sizing.gap}px`,
       `--yamp-control-min-width:${sizing.minWidth}px`,
       `--yamp-control-max-width:${sizing.maxWidth}px`,

@@ -5,12 +5,13 @@ import { localize } from "./localize/localize.js";
  * Supports basic [mm:ss.xx] and [mm:ss:xx] formats.
  *
  * @param {string} lrcString - The raw LRC text.
- * @returns {Array<{text: string, time: number}>} Array of parsed lyric lines.
+ * @returns {import("./types.d.ts").LyricsLine[]} Array of parsed lyric lines.
  */
 export function parseLrc(lrcString) {
   if (!lrcString || typeof lrcString !== "string") return [];
 
   const lines = lrcString.split(/\r?\n/);
+  /** @type {import("./types.d.ts").LyricsLine[]} */
   const parsedLyrics = [];
 
   // Regex to match [mm:ss.xx] or [mm:ss:xx]

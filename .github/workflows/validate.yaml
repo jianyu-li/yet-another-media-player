@@ -27,8 +27,8 @@ jobs:
           node-version: '24'
       - name: Install dependencies
         run: npm ci
-      - name: Build bundle
-        run: npm run build
+      - name: Validate pipeline (Lint, Format, Typecheck, Build)
+        run: npm run validate
 
   validate-hacs:
     name: HACS Validation

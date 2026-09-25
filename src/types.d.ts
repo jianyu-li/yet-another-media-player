@@ -218,6 +218,7 @@ export interface ShortcutConfig {
 
 export interface YampEntityConfig {
   entity: string;
+  entity_id?: string;
   name?: string;
   icon?: string;
   artwork_override?: string | ArtworkOverrideRule[];
@@ -349,3 +350,18 @@ export function getEntityName(
   hass?: HomeAssistant | null,
   stateOrEntityId?: HassEntity | string | null
 ): string;
+
+declare global {
+  const __VERSION__: string;
+  interface Window {
+    customCards?: Array<{
+      type: string;
+      name: string;
+      description: string;
+      preview?: boolean;
+      documentationURL?: string;
+      getEntitySuggestion?: (hass?: any, entityId?: any) => any;
+      [key: string]: any;
+    }>;
+  }
+}

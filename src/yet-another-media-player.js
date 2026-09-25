@@ -1628,7 +1628,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
   /**
    * Resolve a media URI (album or artist) from Music Assistant
-   * @param {"album"|"artist"} mediaType
+   * @param {"album"|"artist"|"playlist"|string} mediaType
    * @param {string} name
    * @param {Record<string, any>} extraParams
    * @param {string} entityId
@@ -4698,7 +4698,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       return;
     }
     this._textResizeObserver = new ResizeObserver(() => this._updateAdaptiveTextScale());
-    this._textResizeObserver.observe(this);
+    this._textResizeObserver.observe(/** @type {Element} */ (/** @type {unknown} */ (this)));
     this._updateAdaptiveTextScale();
   }
 
@@ -7197,8 +7197,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       if (configSource === "mass") {
         console.warn(`YAMP: ${localize('lyrics.admin_only_mass')}`);
 
-        const event = new Event("hass-notification", { bubbles: true, composed: true });
-        event.detail = { message: localize('lyrics.admin_only_mass') };
+        const event = new CustomEvent("hass-notification", {
+          bubbles: true,
+          composed: true,
+          detail: { message: localize("lyrics.admin_only_mass") },
+        });
         this.dispatchEvent(event);
 
         this._fetchingLyrics = false;
@@ -9182,7 +9185,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       ? (customCardHeightInput.includes('px') ? parseFloat(customCardHeightInput) : Number(customCardHeightInput))
       : Number(customCardHeightInput);
     const isValidCardHeightNumber = typeof customCardHeight === "number" && Number.isFinite(customCardHeight) && customCardHeight > 0;
-    const hasCustomCardHeight = isValidCardHeightNumber || (typeof customCardHeight === "string" && customCardHeight.trim() !== "");
+    const hasCustomCardHeight =
+      isValidCardHeightNumber ||
+      (typeof customCardHeightInput === "string" &&
+        customCardHeightInput.trim() !== "" &&
+        customCardHeightInput !== "auto");
 
     const collapsedBaselineHeight = this._collapsedBaselineHeight || 220;
 
@@ -9315,6 +9322,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       `;
     };
 
+    /** @type {import('lit').TemplateResult | typeof nothing} */
     let leadingVolumeControl = nothing;
     if (showModernPowerButton) {
       if (replacePowerAction) {
@@ -9346,6 +9354,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       }
     }
 
+    /** @type {import('lit').TemplateResult | typeof nothing} */
     let rightSlotTemplate = nothing;
     if (replaceFavoriteAction) {
       rightSlotTemplate = renderCustomBottomAction(replaceFavoriteAction);
@@ -9364,6 +9373,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       `;
     }
 
+    /** @type {import('lit').TemplateResult | typeof nothing} */
     let muteSlotTemplate = nothing;
     if (replaceMuteAction) {
       muteSlotTemplate = renderCustomBottomAction(replaceMuteAction);
@@ -9419,7 +9429,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const playbackEntityId = this._getEntityForPurpose(this._selectedIndex, 'playback_control');
     const playbackStateObj = this.hass?.states?.[playbackEntityId];
     const isCurrentPlayingForIdle = this._isEntityPlaying(playbackStateObj);
-    const forceIdleImage = this.config.show_idle_artwork_when_not_playing === true && !isCurrentPlayingForIdle && normalizedIdleImageInput;
+    const forceIdleImage = !!(
+      this.config.show_idle_artwork_when_not_playing === true &&
+      !isCurrentPlayingForIdle &&
+      normalizedIdleImageInput
+    );
 
     let idleImageUrl = null;
     if (normalizedIdleImageInput && (this._isIdle || forceIdleImage)) {
@@ -10400,7 +10414,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       ? this._evaluateJsTemplate(config.idle_image)
       : (this._idleImageTemplate ? this._idleImageTemplateResult : (config.idle_image ? resolveStringTemplateSync(this.hass, config.idle_image, this._getTemplateContext()) : null));
     const normalizedIdleImageInput = this._normalizeImageSourceValue(rawIdleImageInput);
-    const forceIdleImage = config.show_idle_artwork_when_not_playing === true && !isCurrentPlayingForIdle && normalizedIdleImageInput;
+    const forceIdleImage = !!(
+      config.show_idle_artwork_when_not_playing === true &&
+      !isCurrentPlayingForIdle &&
+      normalizedIdleImageInput
+    );
 
     const isActuallyPlaying = this._isCurrentEntityPlaying();
 
@@ -12593,4 +12611,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
 }
 
-customElements.define("yet-another-media-player", YetAnotherMediaPlayerCard);
+customElements.define(
+  "yet-another-media-player",
+  /** @type {CustomElementConstructor} */ (/** @type {unknown} */ (YetAnotherMediaPlayerCard))
+);
