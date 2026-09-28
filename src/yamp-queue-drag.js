@@ -121,6 +121,8 @@ export const QueueDragMixin = (superClass) =>
 
       // Stop propagation to prevent HA dashboard from reacting
       e.stopPropagation();
+      // Prevent native browser behaviors like text selection drag and native edge auto-scrolling
+      e.preventDefault();
 
       const startY = e.clientY;
       const startX = e.clientX;
