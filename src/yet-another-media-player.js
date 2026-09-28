@@ -548,7 +548,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         try {
            resolved = resolveStringTemplateSync(this.hass, raw, this._getTemplateContext());
         } catch(e) {
-           console.debug("YAMP template eval fallback error", e);
+           // Ignore sync evaluation error
         }
       }
       
@@ -584,7 +584,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         try {
           resolved = resolveStringTemplateSync(this.hass, raw, this._getTemplateContext());
         } catch (e) {
-          console.debug("YAMP template eval fallback error", e);
+          // Ignore sync evaluation error
         }
       }
       if (resolved !== undefined && resolved !== null && resolved !== "") {
