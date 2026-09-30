@@ -98,6 +98,65 @@ function toAbsoluteUrl(url) {
 
 // Module-level active coordinator to prevent multiple YAMP cards from colliding
 let currentActiveManager = null;
+let sharedAudioElement = null;
+
+/**
+ * Returns or creates the single page-level inaudible <audio> element.
+ * All YAMP cards on the dashboard share this single element so that WebKit
+ * and macOS MediaRemote only ever see one media player from Safari.
+ * @returns {HTMLAudioElement|null}
+ */
+function getOrCreateSharedAudio() {
+  if (sharedAudioElement) {
+    if (!sharedAudioElement.parentNode && typeof document !== "undefined" && document.body) {
+      try {
+        document.body.appendChild(sharedAudioElement);
+      } catch (_e) {
+        // Ignore append error
+      }
+    }
+    return sharedAudioElement;
+  }
+
+  const audioUrl = getInaudibleWavUrl();
+  if (!audioUrl || typeof document === "undefined") return null;
+
+  sharedAudioElement = document.createElement("audio");
+  sharedAudioElement.src = audioUrl;
+  sharedAudioElement.loop = true;
+  sharedAudioElement.preload = "auto";
+  // Keep offscreen without display:none so iOS WebKit preserves background audio
+  sharedAudioElement.setAttribute(
+    "style",
+    "position:fixed;width:0;height:0;opacity:0;pointer-events:none;bottom:0;right:0;"
+  );
+  sharedAudioElement.setAttribute("playsinline", "");
+  sharedAudioElement.setAttribute("webkit-playsinline", "");
+
+  // Route events to the currently active manager
+  sharedAudioElement.addEventListener("timeupdate", () => {
+    currentActiveManager?._onAudioTimeUpdate();
+  });
+  sharedAudioElement.addEventListener("playing", () => {
+    currentActiveManager?._onAudioPlaying();
+  });
+  sharedAudioElement.addEventListener("pause", () => {
+    currentActiveManager?._onAudioPause();
+  });
+  sharedAudioElement.addEventListener("seeked", () => {
+    currentActiveManager?._onAudioSeeked();
+  });
+
+  if (document.body) {
+    try {
+      document.body.appendChild(sharedAudioElement);
+    } catch (_e) {
+      // Ignore append error
+    }
+  }
+
+  return sharedAudioElement;
+}
 
 export class YampMediaSessionManager {
   /**
@@ -105,7 +164,6 @@ export class YampMediaSessionManager {
    */
   constructor(card) {
     this.card = card;
-    this._audio = null;
     this._isAudioPlaying = false;
     this._isInternalPause = false;
     this._hasStartedPlaying = false;
@@ -143,7 +201,15 @@ export class YampMediaSessionManager {
 
     if (!this.card?._isEditorPreview && this.card?._isMediaSessionEnabled) {
       this._attachUnlockListeners();
+      if (typeof document !== "undefined") {
+        document.addEventListener("visibilitychange", this._onVisibilityChange);
+      }
     }
+  }
+
+  get _audio() {
+    if (this.card?._isEditorPreview) return null;
+    return getOrCreateSharedAudio();
   }
 
   get isSupported() {
@@ -176,49 +242,7 @@ export class YampMediaSessionManager {
 
   _initAudio() {
     if (this.card?._isEditorPreview) return;
-    if (this._audio) {
-      if (!this._audio.parentNode && typeof document !== "undefined" && document.body) {
-        try {
-          document.body.appendChild(this._audio);
-        } catch (_e) {
-          // Ignore append error
-        }
-      }
-      return;
-    }
-
-    const audioUrl = getInaudibleWavUrl();
-    if (!audioUrl) return;
-
-    this._audio = document.createElement("audio");
-    this._audio.src = audioUrl;
-    this._audio.loop = true;
-    this._audio.preload = "auto";
-    // Keep offscreen without display:none so iOS WebKit preserves background audio
-    this._audio.setAttribute(
-      "style",
-      "position:fixed;width:0;height:0;opacity:0;pointer-events:none;bottom:0;right:0;"
-    );
-    this._audio.setAttribute("playsinline", "");
-    this._audio.setAttribute("webkit-playsinline", "");
-
-    this._audio.addEventListener("timeupdate", this._onAudioTimeUpdate);
-    this._audio.addEventListener("playing", this._onAudioPlaying);
-    this._audio.addEventListener("pause", this._onAudioPause);
-    this._audio.addEventListener("seeked", this._onAudioSeeked);
-
-    if (typeof document !== "undefined") {
-      document.addEventListener("visibilitychange", this._onVisibilityChange);
-    }
-
-    // Always append directly to document.body outside of LitElement rendering lifecycle
-    if (typeof document !== "undefined" && document.body) {
-      try {
-        document.body.appendChild(this._audio);
-      } catch (_e) {
-        // Ignore append error
-      }
-    }
+    getOrCreateSharedAudio();
   }
 
   _onAudioTimeUpdate() {
@@ -338,8 +362,9 @@ export class YampMediaSessionManager {
       ) {
         return;
       }
+      currentActiveManager = this;
       this._initAudio();
-      const playPromise = this._audio.play();
+      const playPromise = this._audio?.play();
       if (playPromise !== undefined) {
         playPromise
           .then(() => {
@@ -842,20 +867,21 @@ export class YampMediaSessionManager {
   }
 
   /**
-   * Completely tears down the manager and removes the audio element.
-   * Use detach() for temporary disconnections; use destroy() for permanent removal.
+   * Completely tears down the manager and pauses background audio if active.
+   * Preserves the shared audio element for other cards or reconnection.
    */
   destroy() {
     this.detach();
-    if (this._audio) {
-      this._audio.removeEventListener("timeupdate", this._onAudioTimeUpdate);
-      this._audio.removeEventListener("playing", this._onAudioPlaying);
-      this._audio.removeEventListener("pause", this._onAudioPause);
-      this._audio.removeEventListener("seeked", this._onAudioSeeked);
-      if (this._audio.parentNode) {
-        this._audio.parentNode.removeChild(this._audio);
+    if (currentActiveManager === this) {
+      currentActiveManager = null;
+      if (sharedAudioElement) {
+        this._isInternalPause = true;
+        try {
+          sharedAudioElement.pause();
+        } catch (_e) {
+          // Ignore pause error
+        }
       }
-      this._audio = null;
     }
   }
 }
