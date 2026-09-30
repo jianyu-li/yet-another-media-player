@@ -11,11 +11,13 @@ import { getEntityName } from "./yamp-utils.js";
 let cachedInaudibleWavUrl = null;
 
 /**
- * Generates an in-memory 8000Hz 16-bit mono WAV Blob.
- * Generates a 30-second continuous inaudible 16Hz sine wave at -62dB (amplitude 24).
- * At 8000Hz, 16Hz has exactly 500 samples per period, meaning 30 seconds contains
- * exactly 480 full cycles with zero phase discontinuity at the loop boundary.
- * Continuous non-zero PCM samples prevent iOS CoreAudio silence detection from powering
+ * Generates an in-memory 48000Hz 16-bit mono WAV Blob.
+ * Generates a 10-second continuous inaudible 24Hz sine wave at -62dB (amplitude 24).
+ * 48000Hz matches the native hardware sample rate on Apple Silicon, modern Macs, iOS,
+ * and Android, eliminating real-time software resampling and time-stretching overhead in CoreAudio.
+ * At 48000Hz, 24Hz has exactly 2000 samples per period, meaning 10 seconds contains
+ * exactly 240 full cycles with zero phase discontinuity at the loop boundary.
+ * Continuous non-zero PCM samples prevent iOS/macOS CoreAudio silence detection from powering
  * down audio hardware or terminating background audio execution.
  * @returns {string} Blob URL for the audio
  */
@@ -24,8 +26,8 @@ function getInaudibleWavUrl() {
     return cachedInaudibleWavUrl;
   }
 
-  const sampleRate = 8000;
-  const duration = 30; // seconds
+  const sampleRate = 48000;
+  const duration = 10; // seconds
   const numChannels = 1;
   const bitsPerSample = 16;
   const numSamples = sampleRate * duration;
@@ -50,8 +52,8 @@ function getInaudibleWavUrl() {
   view.setUint16(20, 1, true); // AudioFormat (1 = PCM)
   view.setUint16(22, numChannels, true);
   view.setUint32(24, sampleRate, true);
-  view.setUint32(28, sampleRate * numChannels * (bitsPerSample / 8), true); // ByteRate
-  view.setUint16(32, numChannels * (bitsPerSample / 8), true); // BlockAlign
+  view.setUint32(28, sampleRate * numChannels * (bitsPerSample / 8), true); // ByteRate (96000)
+  view.setUint16(32, numChannels * (bitsPerSample / 8), true); // BlockAlign (2)
   view.setUint16(34, bitsPerSample, true);
 
   // data subchunk
@@ -60,9 +62,9 @@ function getInaudibleWavUrl() {
 
   let offset = 44;
   for (let i = 0; i < numSamples; i++) {
-    // Continuous 16 Hz sine wave at ~ -62dB (amplitude 24 out of 32767)
-    // 8000 / 16 = exactly 500 samples per period, guaranteeing seamless loop boundary
-    const sample = Math.round(Math.sin((2 * Math.PI * 16 * i) / sampleRate) * 24);
+    // Continuous 24 Hz sine wave at ~ -62dB (amplitude 24 out of 32767)
+    // 48000 / 24 = exactly 2000 samples per period, guaranteeing seamless loop boundary
+    const sample = Math.round(Math.sin((2 * Math.PI * 24 * i) / sampleRate) * 24);
     view.setInt16(offset, sample, true);
     offset += 2;
   }
@@ -125,6 +127,9 @@ export class YampMediaSessionManager {
     this._lastTrackKey = null;
     this._lastPlaybackState = null;
     this._unlockListenersAttached = false;
+    this._isSeeking = false;
+    this._lastRegisteredTargetEntityId = null;
+    this._lastPositionStateKey = null;
 
     /** @type {((state: 'ready'|'connecting'|null) => void)|null} */
     this.onReadyChange = null;
@@ -133,9 +138,10 @@ export class YampMediaSessionManager {
     this._onAudioTimeUpdate = this._onAudioTimeUpdate.bind(this);
     this._onAudioPlaying = this._onAudioPlaying.bind(this);
     this._onAudioPause = this._onAudioPause.bind(this);
+    this._onAudioSeeked = this._onAudioSeeked.bind(this);
     this._onVisibilityChange = this._onVisibilityChange.bind(this);
 
-    if (!this.card?._isEditorPreview) {
+    if (!this.card?._isEditorPreview && this.card?._isMediaSessionEnabled) {
       this._attachUnlockListeners();
     }
   }
@@ -199,6 +205,7 @@ export class YampMediaSessionManager {
     this._audio.addEventListener("timeupdate", this._onAudioTimeUpdate);
     this._audio.addEventListener("playing", this._onAudioPlaying);
     this._audio.addEventListener("pause", this._onAudioPause);
+    this._audio.addEventListener("seeked", this._onAudioSeeked);
 
     if (typeof document !== "undefined") {
       document.addEventListener("visibilitychange", this._onVisibilityChange);
@@ -215,21 +222,37 @@ export class YampMediaSessionManager {
   }
 
   _onAudioTimeUpdate() {
-    // Loop cleanly before EOF (at 28s out of 30s) to prevent browser from firing
+    // If a seek is already in progress, avoid issuing concurrent seeks to prevent
+    // CoreAudio / WebKit GPU process buffer stalls and work loop starvation
+    if (this._isSeeking) return;
+
+    // Loop cleanly before EOF (at 8.0s out of 10s buffer) to prevent browser from firing
     // 'ended' or 'pause' events at the buffer boundary which disconnects mediaSession
-    if (this._audio && this._audio.currentTime >= 28.0) {
+    if (this._audio && this._audio.currentTime >= 8.0) {
+      this._isSeeking = true;
       this._isInternalPause = true;
       try {
-        this._audio.currentTime = 1.0;
+        this._audio.currentTime = 0.5;
       } catch (_e) {
-        // Ignore seek error
+        this._isSeeking = false;
+        this._isInternalPause = false;
       }
       if (this._internalPauseTimer) clearTimeout(this._internalPauseTimer);
       this._internalPauseTimer = setTimeout(() => {
         this._internalPauseTimer = null;
         this._isInternalPause = false;
-      }, 500);
+        this._isSeeking = false;
+      }, 600);
     }
+  }
+
+  _onAudioSeeked() {
+    this._isSeeking = false;
+    if (this._internalPauseTimer) clearTimeout(this._internalPauseTimer);
+    this._internalPauseTimer = setTimeout(() => {
+      this._internalPauseTimer = null;
+      this._isInternalPause = false;
+    }, 200);
   }
 
   _onAudioPlaying() {
@@ -247,7 +270,12 @@ export class YampMediaSessionManager {
   }
 
   _onAudioPause() {
-    if (this._wasEvicted || this._isInternalPause || (this._audio && this._audio.seeking)) {
+    if (
+      this._wasEvicted ||
+      this._isInternalPause ||
+      this._isSeeking ||
+      (this._audio && this._audio.seeking)
+    ) {
       this._isInternalPause = false;
       return;
     }
@@ -326,7 +354,7 @@ export class YampMediaSessionManager {
   }
 
   _attachUnlockListeners() {
-    if (this.card?._isEditorPreview) return;
+    if (this.card?._isEditorPreview || !this.card?._isMediaSessionEnabled) return;
     if (typeof window === "undefined" || this._unlockListenersAttached) return;
     const unlockEvents = ["pointerdown", "mousedown", "click", "touchstart", "touchend", "keydown"];
     unlockEvents.forEach((evt) => {
@@ -433,6 +461,7 @@ export class YampMediaSessionManager {
     }
 
     if (targetEntityId) {
+      this._lastRegisteredTargetEntityId = targetEntityId;
       this._registerActionHandlers(targetEntityId);
     }
   }
@@ -547,6 +576,7 @@ export class YampMediaSessionManager {
     if (!this.isSupported || this.card?._isEditorPreview) return;
 
     if (!enabled || !stateObj) {
+      this._detachUnlockListeners();
       if (currentActiveManager === this) {
         this.reset();
       }
@@ -629,8 +659,11 @@ export class YampMediaSessionManager {
       navigator.mediaSession.playbackState = "none";
     }
 
-    // Register or update action handlers
-    this._registerActionHandlers(targetEntityId);
+    // Register or update action handlers only when target entity changes to prevent IPC churn
+    if (this._lastRegisteredTargetEntityId !== targetEntityId) {
+      this._lastRegisteredTargetEntityId = targetEntityId;
+      this._registerActionHandlers(targetEntityId);
+    }
 
     // Update track metadata
     const resolvedTitle =
@@ -675,33 +708,44 @@ export class YampMediaSessionManager {
       }
     }
 
-    // Update position state for seek bar
+    // Update position state for seek bar only when values change to avoid WebKit IPC spam
     const duration = stateObj.attributes?.media_duration;
-    if (duration != null && duration > 0) {
+    if (duration != null && Number.isFinite(duration) && duration > 0) {
       let position = stateObj.attributes?.media_position || 0;
       if (isPlaying && stateObj.attributes?.media_position_updated_at) {
         const updatedMs = new Date(stateObj.attributes.media_position_updated_at).getTime();
-        position += Math.max(0, (Date.now() - updatedMs) / 1000);
+        if (Number.isFinite(updatedMs)) {
+          position += Math.max(0, (Date.now() - updatedMs) / 1000);
+        }
       }
-      position = Math.min(position, duration);
+      if (!Number.isFinite(position)) position = 0;
+      const finalDuration = Math.max(1, Math.round(duration));
+      const finalPosition = Math.max(0, Math.min(Math.round(position), finalDuration));
+      const posKey = `${finalDuration}|${finalPosition}|${isPlaying}`;
 
-      if (typeof navigator.mediaSession.setPositionState === "function") {
-        try {
-          navigator.mediaSession.setPositionState({
-            duration: Math.max(1, Math.round(duration)),
-            playbackRate: 1.0,
-            position: Math.max(0, Math.min(Math.round(position), Math.round(duration))),
-          });
-        } catch (_e) {
-          // Ignore unsupported setPositionState
+      if (this._lastPositionStateKey !== posKey) {
+        this._lastPositionStateKey = posKey;
+        if (typeof navigator.mediaSession.setPositionState === "function") {
+          try {
+            navigator.mediaSession.setPositionState({
+              duration: finalDuration,
+              playbackRate: 1.0,
+              position: finalPosition,
+            });
+          } catch (_e) {
+            // Ignore unsupported setPositionState
+          }
         }
       }
     } else {
-      if (typeof navigator.mediaSession.setPositionState === "function") {
-        try {
-          navigator.mediaSession.setPositionState();
-        } catch (_e) {
-          // Ignore unsupported setPositionState
+      if (this._lastPositionStateKey !== "none") {
+        this._lastPositionStateKey = "none";
+        if (typeof navigator.mediaSession.setPositionState === "function") {
+          try {
+            navigator.mediaSession.setPositionState();
+          } catch (_e) {
+            // Ignore unsupported setPositionState
+          }
         }
       }
     }
@@ -752,6 +796,9 @@ export class YampMediaSessionManager {
 
     this._lastMetadata = null;
     this._lastPlaybackState = null;
+    this._lastRegisteredTargetEntityId = null;
+    this._lastPositionStateKey = null;
+    this._isSeeking = false;
     if (this._pauseDebounceTimer) {
       clearTimeout(this._pauseDebounceTimer);
       this._pauseDebounceTimer = null;
@@ -775,7 +822,7 @@ export class YampMediaSessionManager {
    * Lighter than creating a new manager — preserves audio element and state.
    */
   attach() {
-    if (this.card?._isEditorPreview) return;
+    if (this.card?._isEditorPreview || !this.card?._isMediaSessionEnabled) return;
     this._attachUnlockListeners();
     if (typeof document !== "undefined") {
       document.addEventListener("visibilitychange", this._onVisibilityChange);
@@ -804,6 +851,7 @@ export class YampMediaSessionManager {
       this._audio.removeEventListener("timeupdate", this._onAudioTimeUpdate);
       this._audio.removeEventListener("playing", this._onAudioPlaying);
       this._audio.removeEventListener("pause", this._onAudioPause);
+      this._audio.removeEventListener("seeked", this._onAudioSeeked);
       if (this._audio.parentNode) {
         this._audio.parentNode.removeChild(this._audio);
       }
