@@ -736,20 +736,27 @@ export class YampMediaSessionManager {
     // Update position state for seek bar only when values change to avoid WebKit IPC spam
     const duration = stateObj.attributes?.media_duration;
     if (duration != null && Number.isFinite(duration) && duration > 0) {
-      let position = stateObj.attributes?.media_position || 0;
-      if (isPlaying && stateObj.attributes?.media_position_updated_at) {
-        const updatedMs = new Date(stateObj.attributes.media_position_updated_at).getTime();
-        if (Number.isFinite(updatedMs)) {
-          position += Math.max(0, (Date.now() - updatedMs) / 1000);
-        }
-      }
-      if (!Number.isFinite(position)) position = 0;
+      const reportedPosition = stateObj.attributes?.media_position || 0;
+      const reportedUpdated = stateObj.attributes?.media_position_updated_at || 0;
       const finalDuration = Math.max(1, Math.round(duration));
-      const finalPosition = Math.max(0, Math.min(Math.round(position), finalDuration));
-      const posKey = `${finalDuration}|${finalPosition}|${isPlaying}`;
+
+      // Use static HA values for the cache key so unrelated entity updates don't trigger IPC
+      const posKey = `${finalDuration}|${reportedPosition}|${reportedUpdated}|${isPlaying}`;
 
       if (this._lastPositionStateKey !== posKey) {
         this._lastPositionStateKey = posKey;
+
+        // Calculate the extrapolated position only when state actually changed
+        let position = reportedPosition;
+        if (isPlaying && reportedUpdated) {
+          const updatedMs = new Date(reportedUpdated).getTime();
+          if (Number.isFinite(updatedMs)) {
+            position += Math.max(0, (Date.now() - updatedMs) / 1000);
+          }
+        }
+        if (!Number.isFinite(position)) position = 0;
+        const finalPosition = Math.max(0, Math.min(Math.round(position), finalDuration));
+
         if (typeof navigator.mediaSession.setPositionState === "function") {
           try {
             navigator.mediaSession.setPositionState({
