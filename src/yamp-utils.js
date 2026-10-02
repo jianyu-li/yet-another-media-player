@@ -241,6 +241,89 @@ export function resolveStringTemplateSync(hass, templateString, context = {}) {
 }
 
 /**
+ * Evaluates a client-side JavaScript template string enclosed within [[[ ... ]]].
+ *
+ * @param {string} templateStr - The template string to evaluate.
+ * @param {import('./types.d.ts').HomeAssistant} hass - Home Assistant object.
+ * @param {Record<string, any>} [context] - Context variables (e.g. from _getTemplateContext()).
+ * @param {Record<string, any>} [compiledCache] - Optional cache dictionary for compiled functions.
+ * @returns {any} Evaluated result, or undefined on error / when hass is not available, or original input if not a JS template.
+ */
+export function evaluateJsTemplate(templateStr, hass, context = {}, compiledCache = {}) {
+  if (typeof templateStr !== "string") return templateStr;
+
+  const trimmed = templateStr.trim();
+  if (!trimmed.startsWith("[[[") || !trimmed.endsWith("]]]")) {
+    return templateStr;
+  }
+
+  // Extract the JS code block
+  const code = trimmed.substring(3, trimmed.length - 3).trim();
+
+  try {
+    if (!hass) return undefined;
+
+    const states = hass.states;
+    const user = hass.user;
+    const is_state = (entity, state) => states?.[entity]?.state === state;
+    const state_attr = (entity, attr) => states?.[entity]?.attributes?.[attr];
+
+    // Compile and execute in context
+    if (!compiledCache[code]) {
+      const body = code.includes("return") ? code : `return (${code});`;
+      compiledCache[code] = new Function(
+        "hass",
+        "states",
+        "user",
+        "is_state",
+        "state_attr",
+        "context",
+        "current",
+        "is_idle",
+        "is_playing",
+        "is_search",
+        "is_grouping",
+        "is_source",
+        "is_lyrics",
+        "is_options",
+        "is_transfer_queue",
+        "is_any_menu_open",
+        "is_dark_mode",
+        "is_mobile",
+        "is_music_assistant",
+        "is_music",
+        body
+      );
+    }
+    return compiledCache[code](
+      hass,
+      states,
+      user,
+      is_state,
+      state_attr,
+      context,
+      context?.current,
+      context?.is_idle,
+      context?.is_playing,
+      context?.is_search,
+      context?.is_grouping,
+      context?.is_source,
+      context?.is_lyrics,
+      context?.is_options,
+      context?.is_transfer_queue,
+      context?.is_any_menu_open,
+      context?.is_dark_mode,
+      context?.is_mobile,
+      context?.is_music_assistant,
+      context?.is_music
+    );
+  } catch (err) {
+    console.warn("yamp: failed to evaluate JS template:", templateStr, err);
+    return undefined;
+  }
+}
+
+/**
  * Find button entities associated with a Music Assistant entity
  * @param {Object} hass - Home Assistant object
  * @param {string} maEntityId - Music Assistant entity ID
