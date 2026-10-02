@@ -35,6 +35,7 @@ import {
   resolveTemplateAtActionTime,
   resolveStringTemplate,
   resolveStringTemplateSync,
+  resolveSelectedArtwork,
   evaluateJsTemplate,
   getActionPlacement,
   findAssociatedButtonEntities,
@@ -5595,33 +5596,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   // Unified helper to resolve artwork with intelligent fallbacks
-  _resolveSelectedArtwork({
-    metadataArtwork,
-    playbackArtwork,
-    mainArtwork,
-    displayTitle,
-    playbackStateObj,
-    mainState,
-    isPlayingSameMedia = false,
-  }) {
-    let selectedArt = metadataArtwork;
-    if (displayTitle && (!selectedArt || !selectedArt.url)) {
-      if (playbackArtwork?.url && (playbackStateObj?.attributes?.media_title === displayTitle || isPlayingSameMedia)) {
-        selectedArt = playbackArtwork;
-      } else if (mainArtwork?.url && (mainState?.attributes?.media_title === displayTitle || isPlayingSameMedia)) {
-        selectedArt = mainArtwork;
-      }
-    }
-    if (!selectedArt || !selectedArt.url) {
-      if (playbackArtwork?.url) {
-        selectedArt = playbackArtwork;
-      } else if (mainArtwork?.url) {
-        selectedArt = mainArtwork;
-      } else {
-        selectedArt = playbackArtwork || mainArtwork || null;
-      }
-    }
-    return selectedArt;
+  _resolveSelectedArtwork(options) {
+    return resolveSelectedArtwork(options);
   }
 
   _getBackgroundSizeForFit(fit) {
