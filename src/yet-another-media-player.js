@@ -35,6 +35,7 @@ import {
   resolveTemplateAtActionTime,
   resolveStringTemplate,
   resolveStringTemplateSync,
+  evaluateJsTemplate,
   getActionPlacement,
   findAssociatedButtonEntities,
   getMusicAssistantState,
@@ -974,6 +975,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._queueOpsTotal = 0;
     this._queueOpsCompleted = 0;
     this._queueOpsTimeout = null;
+    /** @type {Record<string, any>} */
+    this._compiledJsTemplates = {};
   }
 
   // Subscribe to a template and update properties reactively
@@ -1222,46 +1225,13 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _evaluateJsTemplate(templateStr) {
-    if (typeof templateStr !== "string") return templateStr;
-
-    const trimmed = templateStr.trim();
-    if (!trimmed.startsWith("[[[") || !trimmed.endsWith("]]]")) {
-      return templateStr;
-    }
-
-    // Extract the JS code block
-    const code = trimmed.substring(3, trimmed.length - 3).trim();
-
-    try {
-      const hass = this.hass;
-      if (!hass) return undefined;
-
-      const states = hass.states;
-      const user = hass.user;
-      const is_state = (entity, state) => states[entity]?.state === state;
-      const state_attr = (entity, attr) => states[entity]?.attributes?.[attr];
-
-      // Compile and execute in context
-      const context = this._getTemplateContext();
-      if (!this._compiledJsTemplates) this._compiledJsTemplates = {};
-      if (!this._compiledJsTemplates[code]) {
-        const body = code.includes("return") ? code : `return (${code});`;
-        this._compiledJsTemplates[code] = new Function(
-          "hass", "states", "user", "is_state", "state_attr", "context",
-          "current", "is_idle", "is_playing", "is_search", "is_grouping",
-          "is_source", "is_lyrics", "is_options", "is_transfer_queue", "is_any_menu_open", "is_dark_mode", "is_mobile", "is_music_assistant", "is_music",
-          body
-        );
-      }
-      return this._compiledJsTemplates[code](
-        hass, states, user, is_state, state_attr, context,
-        context.current, context.is_idle, context.is_playing, context.is_search, context.is_grouping,
-        context.is_source, context.is_lyrics, context.is_options, context.is_transfer_queue, context.is_any_menu_open, context.is_dark_mode, context.is_mobile, context.is_music_assistant, context.is_music
-      );
-    } catch (err) {
-      console.warn("yamp: failed to evaluate JS template:", templateStr, err);
-      return undefined;
-    }
+    if (!this._compiledJsTemplates) this._compiledJsTemplates = {};
+    return evaluateJsTemplate(
+      templateStr,
+      this.hass,
+      this._getTemplateContext(),
+      this._compiledJsTemplates
+    );
   }
 
   // Unified helper for resolving and subscribing to UI templates
