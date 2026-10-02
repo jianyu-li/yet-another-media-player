@@ -8,11 +8,13 @@
     "noEmit": true,
     "strict": false,
     "noImplicitAny": false,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "types": ["node"]
   },
   "include": [
     "src/**/*",
-    "src/types.d.ts"
+    "src/types.d.ts",
+    "tests/**/*"
   ],
   "exclude": [
     "node_modules",

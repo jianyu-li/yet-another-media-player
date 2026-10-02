@@ -30,4 +30,14 @@ export default [
       ...litPlugin.configs.recommended.rules,
     },
   },
+  {
+    files: ["tests/**/*.js"],
+    languageOptions: {
+      ecmaVersion: "latest",
+      sourceType: "module",
+      globals: {
+        ...globals.node,
+      },
+    },
+  },
 ];
