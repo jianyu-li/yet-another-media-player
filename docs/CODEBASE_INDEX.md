@@ -18,6 +18,7 @@ This document provides a comprehensive structural mapping of subsystems, state l
 | **Search & Media Browser** | [`src/search-sheet.js`](../src/search-sheet.js) | `renderSearchOptionsOverlay`, `searchMedia`, `renderSearchResultItem` | Standalone and embedded search sheet, Music Assistant favorites, and track dispatching. |
 | **Lyrics Synchronization** | [`src/lyrics-view.js`](../src/lyrics-view.js), [`src/lyrics-parser.js`](../src/lyrics-parser.js) | `parseLrc`, `_syncActiveLyric` | Synchronized LRC parser, auto-scroll lyrics overlay, time-based highlights, and dynamic absolute layout. |
 | **Queue & Drag-and-Drop** | [`src/yamp-queue-drag.js`](../src/yamp-queue-drag.js), [`src/yamp-sortable.js`](../src/yamp-sortable.js) | `QueueDragMixin`, `initSortable` | Virtualized queue list, drag reordering, track removal, and play-next handlers. |
+| **Lock Screen & Media Session** | [`src/yamp-media-session.js`](../src/yamp-media-session.js) | `YampMediaSessionManager`, `updateMetadata`, `updatePlaybackState`, `destroy` | Web Media Session API integration and audio loop for OS lock screen and control center integration. |
 | **Card Editor** | [`src/yamp-editor.js`](../src/yamp-editor.js) | `render`, `_renderTemplateToggle`, `_valueChanged` | Visual configuration editor with tabbed settings, searchable options, and Jinja/JS template toggles. |
 | **Styles** | [`src/yamp-card-styles.js`](../src/yamp-card-styles.js) | `yampCardStyles` | Master CSS stylesheet for cards, chips, controls, search overlays, and themes. |
 
