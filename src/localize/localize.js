@@ -36,7 +36,7 @@ export function setHassLanguage(lang) {
 }
 
 function getStoredLanguage() {
-  if (typeof localStorage === "undefined") return "";
+  if (typeof window === "undefined" || typeof localStorage === "undefined") return "";
   try {
     const raw = localStorage.getItem("selectedLanguage");
     if (!raw) return "";
@@ -143,7 +143,7 @@ export function localize(string, search = "", replace = "") {
     for (const [s, r] of Object.entries(search)) {
       translated = translated.replaceAll(s, r);
     }
-  } else if (search !== "" && replace !== "") {
+  } else if (typeof search === "string" && search !== "" && replace !== "") {
     translated = translated.replaceAll(search, replace);
   }
   return translated;
