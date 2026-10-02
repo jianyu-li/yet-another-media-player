@@ -1,6 +1,6 @@
 import { LitElement, html, nothing } from "lit";
 import { classMap } from "lit/directives/class-map.js";
-import { lyricsStyles } from "./yamp-card-styles.js";
+import { lyricsStyles } from "./styles/lyrics.js";
 import { localize } from "./localize/localize.js";
 
 export class YampLyricsView extends LitElement {
@@ -19,9 +19,7 @@ export class YampLyricsView extends LitElement {
     };
   }
 
-  static get styles() {
-    return lyricsStyles;
-  }
+  static styles = lyricsStyles;
 
   constructor() {
     super();
