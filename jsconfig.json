@@ -9,6 +9,7 @@
     "strict": false,
     "noImplicitAny": false,
     "skipLibCheck": true,
+    "lib": ["DOM", "DOM.Iterable", "ES2022"],
     "types": ["node"]
   },
   "include": [
