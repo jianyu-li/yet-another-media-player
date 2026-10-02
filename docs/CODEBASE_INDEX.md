@@ -20,7 +20,7 @@ This document provides a comprehensive structural mapping of subsystems, state l
 | **Queue & Drag-and-Drop** | [`src/yamp-queue-drag.js`](../src/yamp-queue-drag.js), [`src/yamp-sortable.js`](../src/yamp-sortable.js) | `QueueDragMixin`, `initSortable` | Virtualized queue list, drag reordering, track removal, and play-next handlers. |
 | **Lock Screen & Media Session** | [`src/yamp-media-session.js`](../src/yamp-media-session.js) | `YampMediaSessionManager`, `updateMetadata`, `updatePlaybackState`, `destroy` | Web Media Session API integration and audio loop for OS lock screen and control center integration. |
 | **Card Editor** | [`src/yamp-editor.js`](../src/yamp-editor.js) | `render`, `_renderTemplateToggle`, `_valueChanged` | Visual configuration editor with tabbed settings, searchable options, and Jinja/JS template toggles. |
-| **Styles** | [`src/yamp-card-styles.js`](../src/yamp-card-styles.js) | `yampCardStyles` | Master CSS stylesheet for cards, chips, controls, search overlays, and themes. |
+| **Styles** | [`src/styles/`](../src/styles/), [`src/yamp-card-styles.js`](../src/yamp-card-styles.js) | `yampCardStyles`, `baseCardStyles`, `chipStyles`, `controlsStyles`, `volumeProgressStyles`, `menusSheetsStyles`, `searchSheetStyles`, `lyricsStyles`, `editorStyles` | Modular CSS stylesheets for card container, chips, controls, volume/progress, menus/sheets, search sheets, lyrics, and editor. |
 | **Automated Unit Testing** | [`tests/`](../tests/) | `node:test`, `node:assert/strict` | Pure logic testing suite covering lyrics parser, config schema, yamp-utils, template engine sandbox, and multi-entity artwork fallback. |
 
 ---
