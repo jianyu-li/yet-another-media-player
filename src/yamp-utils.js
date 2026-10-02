@@ -908,3 +908,71 @@ export function areEntitiesPlayingSameMedia(mainState, maState) {
 
   return false;
 }
+
+/**
+ * @typedef {Object} ArtworkObject
+ * @property {string|null} [url]
+ * @property {number|null} [sizePercentage]
+ * @property {string|null} [objectFit]
+ * @property {string|null} [objectPosition]
+ */
+
+/**
+ * Resolves artwork among metadata, playback, and main sources with intelligent fallbacks.
+ * Prevents stale artwork from leaking when track titles mismatch.
+ *
+ * @param {Object} options
+ * @param {ArtworkObject|null} [options.metadataArtwork] - Artwork object from the metadata entity.
+ * @param {ArtworkObject|null} [options.playbackArtwork] - Artwork object from the playback control entity.
+ * @param {ArtworkObject|null} [options.mainArtwork] - Artwork object from the main entity.
+ * @param {string|null} [options.displayTitle] - The currently displayed track title.
+ * @param {import("./types").HassEntity|null} [options.playbackStateObj] - State of playback entity.
+ * @param {import("./types").HassEntity|null} [options.mainState] - State of main entity.
+ * @param {boolean} [options.isPlayingSameMedia=false] - Whether entities are playing the same media.
+ * @returns {ArtworkObject|null} Resolved artwork object or null.
+ */
+export function resolveSelectedArtwork({
+  metadataArtwork = null,
+  playbackArtwork = null,
+  mainArtwork = null,
+  displayTitle = null,
+  playbackStateObj = null,
+  mainState = null,
+  isPlayingSameMedia = false,
+}) {
+  let selectedArt = metadataArtwork?.url ? metadataArtwork : null;
+
+  const matchesTitle = (titleA, titleB) =>
+    typeof titleA === "string" &&
+    typeof titleB === "string" &&
+    titleA.trim().toLowerCase() === titleB.trim().toLowerCase();
+
+  // If a track title is actively displayed and metadata artwork is missing,
+  // allow fallback to playback/main entity ONLY if they match the displayed title or are verified to play the same media.
+  if (displayTitle && !selectedArt) {
+    if (
+      playbackArtwork?.url &&
+      (matchesTitle(playbackStateObj?.attributes?.media_title, displayTitle) || isPlayingSameMedia)
+    ) {
+      selectedArt = playbackArtwork;
+    } else if (
+      mainArtwork?.url &&
+      (matchesTitle(mainState?.attributes?.media_title, displayTitle) || isPlayingSameMedia)
+    ) {
+      selectedArt = mainArtwork;
+    }
+  }
+
+  // When no display title is present (e.g. system sounds, gaming, idle), fall back to any available artwork.
+  if (!displayTitle && !selectedArt) {
+    if (playbackArtwork?.url) {
+      selectedArt = playbackArtwork;
+    } else if (mainArtwork?.url) {
+      selectedArt = mainArtwork;
+    } else {
+      selectedArt = playbackArtwork || mainArtwork || null;
+    }
+  }
+
+  return selectedArt || (metadataArtwork?.url ? metadataArtwork : null);
+}
