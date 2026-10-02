@@ -21,6 +21,7 @@ This document provides a comprehensive structural mapping of subsystems, state l
 | **Lock Screen & Media Session** | [`src/yamp-media-session.js`](../src/yamp-media-session.js) | `YampMediaSessionManager`, `updateMetadata`, `updatePlaybackState`, `destroy` | Web Media Session API integration and audio loop for OS lock screen and control center integration. |
 | **Card Editor** | [`src/yamp-editor.js`](../src/yamp-editor.js) | `render`, `_renderTemplateToggle`, `_valueChanged` | Visual configuration editor with tabbed settings, searchable options, and Jinja/JS template toggles. |
 | **Styles** | [`src/yamp-card-styles.js`](../src/yamp-card-styles.js) | `yampCardStyles` | Master CSS stylesheet for cards, chips, controls, search overlays, and themes. |
+| **Automated Unit Testing** | [`tests/`](../tests/) | `node:test`, `node:assert/strict` | Pure logic testing suite covering lyrics parser, config schema, yamp-utils, template engine sandbox, and multi-entity artwork fallback. |
 
 ---
 
@@ -64,3 +65,5 @@ flowchart TD
    When a setting is not applicable due to another option, render it with `.disabled=${true}` rather than hiding it entirely.
 3. **Search Rendering Consistency:**
    Shared search result items are rendered via `renderSearchResultItem` in [`src/search-sheet.js`](../src/search-sheet.js).
+4. **Automated Unit Testing & Pre-Flight Validation:**
+   Pure logic additions or refactors (parsers, utility functions, template evaluation, state algorithms) must be accompanied by unit tests in `tests/`. All pre-flight checks (`npm run validate`) run the full unit test suite (`npm test`) alongside linting, formatting, type checking, and bundling.

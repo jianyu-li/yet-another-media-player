@@ -1519,19 +1519,22 @@ YAMP is built using the following core dependencies:
 - [SortableJS](https://sortablejs.github.io/Sortable/) - For drag-and-drop interactions
 
 ### Development Dependencies
-The following dependencies are used for static analysis and formatting during development. These are checked manually using the code review workflow:
+The following dependencies and tools are used for static analysis, type checking, testing, and formatting during development:
 - [ESLint](https://eslint.org/) - For static code analysis and identifying problematic patterns
 - [Prettier](https://prettier.io/) - For code formatting
 - [eslint-plugin-lit](https://www.npmjs.com/package/eslint-plugin-lit) - Lit-specific linting rules
+- [TypeScript](https://www.typescriptlang.org/) - For strict type contract checking (`npm run typecheck`)
+- [Node.js Test Runner](https://nodejs.org/api/test.html) (`node:test` + `node:assert/strict`) - Built-in native ESM unit test suite (`npm test`)
 
 ## Contributing
 
 Contributions are welcome! Please follow these steps so reviews go smoothly:
 
-1. **Fork and branch** – Fork the repo on GitHub, clone your fork, then work off a feature branch.
+1. **Fork and branch** – Fork the repo on GitHub, clone your fork, then work off a feature branch branched off `beta`.
 2. **Install dependencies** – Run `npm install` (or `npm ci` if you need an exact lockfile sync) in the project root before touching the sources.
 3. **Develop in `src/`** – Only edit files under `src/`. 
-4. **Commit + PR** – Use concise, imperative commit messages. Rebase on `main` if needed, push your branch to your fork, then open a pull request against `main` that explains the change, shows any relevant screenshots, and notes how you tested.
+4. **Test & Validate** – Run `npm test` to execute automated unit tests. Run the full pre-flight validation pipeline via `npm run validate` (linting, formatting, type checking, unit tests, and production build) to ensure zero errors.
+5. **Commit + PR** – Use concise, imperative commit messages. Push your branch to your fork, then open a pull request against `beta` explaining the change, detailing any user-facing impacts, and providing verification results.
 
 ### Adding Translations
 
