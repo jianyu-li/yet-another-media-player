@@ -85,6 +85,10 @@ export default {
           title: "Splošne nastavitve",
           description: "Globalni nadzor nad prikazom in pridobivanjem grafike.",
         },
+        background: {
+          title: "Slika ozadja",
+          description: "Konfigurirajte trajno sliko ozadja za kartico za vsebino predvajanja.",
+        },
         idle: {
           title: "Grafika v mirovanju",
           description: "Prikaži statično sliko ali posnetek entitete, ko se nič ne predvaja.",
@@ -151,6 +155,10 @@ export default {
       disable_mass: "Onemogoči integracijo Mass Queue.",
       swap_pause_stop: "Zamenjaj gumb pavze z gumbom zaustavitve med uporabo moderne postavitve.",
       show_album: "Prikaži ime albuma zraven izvajalca v podrobnostih predvajalnika.",
+      lock_screen_controls:
+        "Ohranite kontrolnike in metapodatke skladbe aktivne na zaklenjenem zaslonu vaše naprave (iOS / Android / macOS), ko je aplikacija v ozadju. Opomba: Ta funkcija je eksperimentalna.",
+      toggle_media_session:
+        "Opomba: Kontrolniki zaklenjenega zaslona in seje predstavnosti so eksperimentalni.",
       adaptive_controls: "Prilagodi velikost gumbov glede na prostor.",
       hide_menu_player: "Skrij oznako entitete v meniju.",
       hide_reorder_progress:
@@ -207,14 +215,19 @@ export default {
         "Music Assistant zahteva integracijo mass_queue za pridobivanje besedil iz svojega notranjega mehanizma metapodatkov.",
       lyrics_pre_roll:
         "Zamaknite časovno uskladitev označevanja besedila. Pozitivne vrednosti ga pospešijo, negativne pa upočasnijo (privzeto: 0).",
+      lyrics_background_fade:
+        "Prilagodite prelivanje ozadja in motnost zatemnitve prekrivne plošče z besedilom (0% za prosojno grafiko, 100% za enobarvno ozadje).",
       blurred_artwork: "Vedno zamegli ozadje",
       hide_collapsed_artwork: "Skrij majhno sliko na desni, ko je kartica strnjena",
+      disable_artwork_gradient: "Onemogoči spodnji barvni prehod na grafiki",
       show_idle_artwork_when_not_playing:
         "Ko je to omogočeno, se ob izbiri čipa, na katerem se trenutno nič ne predvaja, prikaže nastavljena slika za nedejavnost namesto aktivne grafike predvajanja.",
       prefer_ma_metadata:
         "Za naslov skladbe, izvajalca in grafiko vedno uporabi seznanjeno entiteto Music Assistant, tudi če se predvaja primarna entiteta.",
       show_volume_overlay:
         "Ob spremembi glasnosti za kratek čas prikaže velik indikator glasnosti čez naslovnico.",
+      font_color_helper:
+        "Prilagodite barve besedila in ikon. Sprejema šestnajstiško, imena CSS, rgba ali predloge (privzeto: barva teme).",
       queue_controls_style:
         "Izberite, ali želite prikazati ročaj za vlečenje ali posamezne gumbe za premikanje elementov čakalne vrste.",
     },
@@ -243,6 +256,7 @@ export default {
       display_timestamps: "Prikaži časovne oznake",
       swap_pause_stop: "Zamenjaj pavzo z zaustavitvijo",
       show_album: "Prikaži ime albuma",
+      lock_screen_controls: "Predstavnostni kontrolniki na zaklenjenem zaslonu (Eksperimentalno)",
       adaptive_controls: "Prilagodljiva velikost gumbov",
       hide_active_entity: "Skrij oznako aktivne entitete",
       hide_active_entity_on_idle: "Skrij oznako aktivne entitete ob mirovanju",
@@ -263,8 +277,10 @@ export default {
       lyrics_mode: "Način besedila",
       lyrics_source: "Vir besedil",
       lyrics_pre_roll: "Pre-roll besedila (sekunde)",
+      lyrics_background_fade: "Prelivanje ozadja besedila",
       blurred_artwork: "Zamegljena grafika",
       hide_collapsed_artwork: "Skrij skrčeno grafika",
+      disable_artwork_gradient: "Onemogoči prehod grafike",
       show_idle_artwork_when_not_playing: "Prikaži sliko za nedejavnost, ko se ne predvaja",
       prefer_ma_metadata: "Prednost metapodatkom Music Assistant",
       show_volume_overlay: "Prikaži prekrivno ploščo za glasnost",
@@ -285,7 +301,12 @@ export default {
       card_height: "Višina kartice (px)",
       control_layout: "Postavitev kontrolnikov",
       idle_image: "Slika v mirovanju",
-
+      background_image: "Slika ozadja",
+      background_image_entity: "Entiteta slike ozadja",
+      font_color: "Barva pisave",
+      font_color_entity: "Barva pisave",
+      background_position: "Položaj ozadja",
+      background_fit: "Prilagajanje ozadja",
       image_url: "URL slike",
       fallback_image_url: "Rezervni URL slike",
       move_to_main: "Premakni dejanje na glavno vrstico",
@@ -321,6 +342,7 @@ export default {
       appearance: "Videz",
       no_artwork_option: "Brez grafike",
       details_alignment: "Poravnava podrobnosti",
+      lyrics_background_fade: "Prelivanje ozadja besedila (%)",
       queue_controls_style: "Slog kontrol čakalne vrste",
     },
     action_types: {
@@ -333,6 +355,8 @@ export default {
       select_entity: "Izberi entiteto iz pomočnika",
       toggle_lyrics: "Preklopi prekrivanje besedila",
       remote_control: "Odpri prekrivanje daljinskega upravljalnika",
+      toggle_media_session:
+        "Preklopi sejo predstavnosti / kontrole zaklenjenega zaslona (Eksperimentalno)",
     },
     action_helpers: {
       sync_selected_entity: "Sinhroniziraj izbrano entiteto →",
@@ -399,6 +423,24 @@ export default {
       center: "Sredina",
       bottom: "Spodaj",
     },
+    background_fit: {
+      cover: "Prekrij",
+      contain: "Prilagodi",
+      fill: "Zapolni",
+      "scale-down": "Pomanjšaj",
+      none: "Brez",
+    },
+    background_position: {
+      center: "Sredina",
+      top: "Zgoraj",
+      bottom: "Spodaj",
+      "center left": "Sredina levo",
+      "center right": "Sredina desno",
+      "top left": "Zgoraj levo",
+      "top right": "Zgoraj desno",
+      "bottom left": "Spodaj levo",
+      "bottom right": "Spodaj desno",
+    },
   },
   card: {
     sections: {
@@ -414,6 +456,8 @@ export default {
       stop: "Ustavi",
       next: "Naslednje",
       repeat: "Ponovi",
+      lock_screen_ready: "Kontrole zaklenjenega zaslona aktivne",
+      lock_screen_connecting: "Povezovanje kontrol zaklenjenega zaslona...",
     },
     menu: {
       more_info: "Več informacij",
@@ -503,9 +547,11 @@ export default {
       podcast: "Podcast",
       audiobook: "Zvočna knjiga",
     },
-    search_artist: "Išči tega izvajalca",
+    search_artist: "Prebrskaj albume tega izvajalca",
+    browse_artist: "Prebrskaj albume izvajalca {artist}",
     search_album: "Prebrskaj skladbe iz tega albuma",
     browse_album: "Prebrskaj skladbe iz {album}",
+    browse_playlist: "Prebrskaj skladbe iz {playlist}",
     play_collection: "Predvajaj to zbirko",
     play_collection_error: "Te zbirke ni mogoče predvajati neposredno",
     play_item: "Predvajaj {item}",

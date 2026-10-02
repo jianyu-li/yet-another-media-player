@@ -1,6 +1,6 @@
 {
   "name": "yet-another-media-player",
-  "version": "2026.9.0",
+  "version": "2026.10.0",
   "description": "Home Assistant media card for controlling multiple entities with customizable actions.",
   "main": "rollup.config.js",
   "type": "module",
@@ -18,8 +18,8 @@
     "eslint": "^10.11.0",
     "eslint-plugin-lit": "^2.3.1",
     "globals": "^17.12.0",
-    "prettier": "^3.9.8",
-    "rollup": "^4.63.4",
+    "prettier": "^3.9.9",
+    "rollup": "^4.63.5",
     "rollup-plugin-esbuild": "^6.2.1",
     "typescript": "^7.0.2"
   },

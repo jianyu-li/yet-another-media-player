@@ -8,6 +8,7 @@
 export const DEFAULT_PROGRESS_BAR_HEIGHT = 6;
 export const DEFAULT_IDLE_TIMEOUT_MS = 60000;
 export const DEFAULT_VOLUME_STEP = 0.05;
+export const DEFAULT_LYRICS_BACKGROUND_FADE = 75;
 
 /**
  * Predefined card configuration presets
@@ -134,11 +135,16 @@ export const CARD_CONFIG_DEFAULTS = Object.freeze({
   idle_timeout_ms: DEFAULT_IDLE_TIMEOUT_MS,
   idle_screen: "default",
   idle_image: "",
+  background_image: "",
+  font_color: "",
+  background_position: "center center",
+  background_fit: "cover",
   artwork_position: "top center",
   artwork_object_fit: "cover",
   extend_artwork: false,
   blurred_artwork: false,
   hide_collapsed_artwork: false,
+  disable_artwork_gradient: false,
   match_theme: false,
   search_view: "card",
   search_card_columns: 2,
@@ -162,6 +168,8 @@ export const CARD_CONFIG_DEFAULTS = Object.freeze({
   hide_active_entity_label_on_idle: false,
   swap_pause_for_stop: false,
   show_album: true,
+  lyrics_background_fade: DEFAULT_LYRICS_BACKGROUND_FADE,
+  lock_screen_controls: false,
 });
 
 /**
@@ -195,6 +203,10 @@ export const TEMPLATE_SUPPORTED_FIELDS = Object.freeze(
     "subtitle",
     "idle_artwork",
     "idle_image",
+    "background_image",
+    "font_color",
+    "lyrics_background_fade",
+    "lock_screen_controls",
   ])
 );
 

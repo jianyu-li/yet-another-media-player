@@ -10,12 +10,13 @@ YAMP is a full-featured Home Assistant media card for controlling multiple entit
 ## Features
 
 - **Multi-Player Control** — Switch between media players in a single card with chip-based selection. Control volume individually or as a group
+- **Lock Screen Controls (Experimental)** — Pause, skip tracks, scrub through songs, and see live album artwork right from your phone's lock screen, notification shade, or desktop media keys.
 - **Quick Grouping Mode** — Double-click any player chip to enter quick grouping mode, allowing you to quickly join or unjoin entities from the active group without opening menus.
 - **Gesture Controls** — Tap, double-tap, hold, or swipe the artwork to trigger any action. Skip tracks, play/pause, adjust volume, or launch custom scripts
 - **Music Assistant Integration** — Full search and queue management
 - **Configuration Search** — Search the configuration editor to quickly find what you're looking for. 
 - **Lyrics** - Synced lyric support
-- **mass_queue Support** — Advanced queue controls and integrated Music Assistant lyrics with the optional [mass_queue](https://github.com/droans/mass_queue) integration
+- **mass_queue Support** — Advanced queue controls, album tracklists, and integrated Music Assistant lyrics with the optional [mass_queue](https://github.com/droans/mass_queue) integration
 - **Adaptive Visual Theming** — Customize artwork scaling with various fit modes and add custom artwork overrides
 - **Many Layouts** — Collapse the card when idle or keep it compact while playing, change text sizing, and more to match your dashboard style
 - **Custom Actions** — Add action chips or menu items that call any Home Assistant action or script, with full access to the currently selected entity
@@ -72,6 +73,7 @@ Below you will find a list of all configuration options.
 | `expand_on_search`         | boolean      | No           | `false`     | Temporarily expand the card when search is open (only available when `always_collapsed` is `true`) |
 | `hide_menu_player`         | boolean      | No           | `false`     | Hide the persistent media controls in the bottom sheet menu to reclaim space (only available when `always_collapsed` is `false`) |
 | `hide_reorder_progress`   | boolean      | No           | `false`     | Hide the floating queue re-ordering progress indicator at the bottom (also hidden if `hide_menu_player` is `true`) |
+| `lock_screen_controls` *(Experimental)* | boolean / string | No       | `false`     | Enable lock screen and system media controls (Media Session API) *(Experimental)* for active playback on mobile and desktop devices ([Supports Templates](#template-support), see [Lock Screen Controls](#lock-screen--media-session-controls)) |
 | `idle_screen`              | choice       | No           | `default`   | Choose the idle experience: `default` keeps the artwork splash, `search` opens the search sheet immediately, `search-recently-played` jumps to the Recently Played view, and `search-next-up` opens the Next Up queue |
 | `dim_chips_on_idle`        | boolean      | No           | `true`      | Dim entity and action chips when the media player is idle                                       |
 | `always_show_quick_group` | boolean      | No           | `false`     | When `true`, Quick Grouping Mode will be active by default. You can still toggle it manually via double-tap. |
@@ -102,20 +104,26 @@ Below you will find a list of all configuration options.
 | `adaptive_controls`        | boolean      | No           | `false`     | Control buttons expand to fill extra horizontal space, giving you larger tap targets when there’s room |
 | `control_layout`           | choice       | No           | `classic`   | `classic` keeps the legacy evenly sized controls, while `modern` adopts Home Assistant’s more-info layout (shuffle/prev/play/next/repeat) and moves the favorite and power buttons along the bottom of the card ([Supports Templates](#template-support)) |
 | `swap_pause_for_stop`      | boolean      | No           | `false`     | Only for `control_layout: modern`; when `true`, the center pause button is replaced with a stop button |
-| `show_album`               | boolean      | No           | `true`      | Display the album name next to the artist in player details (clickable to quick-browse album tracks) |
+| `show_album`               | boolean      | No           | `true`      | Display the album name next to the artist in player details (clickable to quick-browse album tracks; most accurate with [mass_queue](#optional-music-assistant-queue-actions-mass_queue)) |
 | `adaptive_text`            | boolean/array| No           | `false`     | Set to `true` to scale all text, or supply a list of targets (`details`, `menu`, `action_chips`) to choose exactly which sections adapt |
 | `hide_active_entity_label` | boolean      | No           | `false`     | Hide the small entity name label shown at the bottom center when chips are placed in the menu |
 | `details_alignment`        | choice       | No           | `left`      | Align the track title and artist (`left`, `center`, `right`). Set to `none` to completely hide the details section. |
+| `font_color`               | color/string | No           | —           | Custom color for text and icons (hex, rgba, named, or template) ([Supports Templates](#template-support)) |
 | `card_height`              | number/string| No           | —           | Override the card height (in px) ([Supports Templates](#template-support)) |
+| `lyrics_background_fade`   | number/string| No           | `80`        | Opacity percentage (0–100%) for the lyrics overlay background and artwork gradient ([Supports Templates](#template-support)) |
 | `search_view`              | choice       | No           | `list`      | Choose the default layout for search results: `list`, `card`, or `card_minimal` |
 | `search_card_columns`      | number       | No           | `4`         | Number of columns for search results when `search_view` is set to `card` or `card_minimal` |
 | `queue_controls_style`     | choice       | No           | `drag_handle` | Style of queue controls: `drag_handle` replaces movement buttons with a single drag handle, `icons` shows classic up/down/next buttons |
 |                                                                                                 |
 | **Artwork**                |              |              |             |                                                                                                 |
+| `background_image`         | image/url/string | No       | —           | Persistent card background image URL, gradient, or color ([Supports Templates](#template-support)) |
+| `background_fit`           | choice       | No           | `cover`     | Control background image scaling: `cover`, `contain`, `fill`, `scale-down`, or `none`           |
+| `background_position`      | choice       | No           | `center center`| Control background image alignment: `center`, `top`, `bottom`, `center left`, `center right`, `top left`, `top right`, `bottom left`, `bottom right` |
 | `artwork_hostname`         | string       | No           | —           | Hostname URL (e.g., `http://192.168.1.50:8123`) prepended to relative artwork URLs; required when Casting to external devices |
 | `artwork_object_fit`       | choice       | No           | `cover`     | Control how artwork scales: `cover`, `contain`, `scaled-contain`, `scaled-contain-alternate`, `fill`, `scale-down`, `none`, or `no_artwork` |
 | `artwork_position`         | choice       | No           | `top center`| Control artwork alignment: `top center`, `center center`, or `bottom center`                     |
 | `extend_artwork`           | boolean      | No           | `false`     | When `true`, extends the artwork background up behind the chip and action rows for a full-bleed look |
+| `disable_artwork_gradient` | boolean      | No           | `false`     | When `true`, disables the bottom fade/gradient overlay on the artwork                          |
 | `media_artwork_overrides`  | array        | No           | —           | Ordered artwork override rules. Provide an `image_url` and a single match key (title, artist, album, content id, channel, app name, content type, aspect ratio, entity, or idle image) or supply `missing_art_url`; optional `size_percentage`, `object_fit`, and `object_position` can be used to style the replacement. `image_url`/`missing_art_url` can be literal URLs or templates that resolve to one |
 | `idle_image`               | image/camera/url/string | No           | —           | Background image when player is idle ([Supports Templates](#template-support)) |
 | `idle_timeout_ms`          | number       | No           | `60000`         | Timeout in milliseconds before showing idle image (0 = never go idle)                           |
@@ -127,7 +135,7 @@ Below you will find a list of all configuration options.
 | `icon`                     | string       | No           | —           | MDI or custom icon for the action chip                                                          |
 | `service`                  | string       | No           | —           | Home Assistant service to call (e.g., `media_player.play_media`)                                |
 | `service_data`             | object       | No           | —           | Data to send with the service call                                                              |
-| `action`                   | string       | No           | —           | Set to `navigate` for navigation shortcuts, `sync_selected_entity` to sync the active entity to a helper, `select_entity` to read a helper and activate the matching chip, or `prev_entity`/`next_entity` to navigate chips |
+| `action`                   | string       | No           | —           | Set to `navigate` for navigation shortcuts, `sync_selected_entity` to sync the active entity to a helper, `select_entity` to read a helper and activate the matching chip, `prev_entity`/`next_entity` to navigate chips, or `toggle_lock_screen_controls` to toggle lock screen controls *(Experimental)* |
 | `navigation_path`          | string       | No           | —           | Destination for navigation shortcuts (supports anchors like `#pop-up-menu`, relative paths, or full URLs) |
 | `navigation_new_tab`       | boolean      | No           | `false`     | When `true`, external URLs open in a new browser tab instead of replacing the current view      |
 | `menu_item`                | string       | No           | —           | Opens a card menu by type: `search`, `search-recently-played`, `search-next-up`, `source`, `more-info`, `group-players`, `transfer-queue`, `main-menu` |
@@ -430,6 +438,69 @@ entities:
 
 # Behavior
 
+<a id="lock-screen--media-session-controls"></a>
+## Lock Screen & Media Session Controls (Experimental)
+
+> Control playback and view live metadata directly from your phone's lock screen.
+
+> [!NOTE]
+> Lock screen controls and Media Session integration are currently experimental. Background playback persistence and browser media key handling may vary by device and operating system.
+
+When enabled (`lock_screen_controls: true`), YAMP connects to your phone or computer's native media controls (iOS Lock Screen, Control Center, Dynamic Island, Android notifications, and desktop media keys) so you can pause, skip, and see what's playing without opening Home Assistant.
+
+### What It Does
+
+- **Lock Screen & Notification Controls**: Play, pause, skip tracks, and scrub through the timeline right from your lock screen or notification shade.
+- **Track Info & Artwork**: Shows the current title, artist, album, and artwork on your device.
+- **Automatic Switching**: If you have multiple YAMP cards or speakers, whichever one is actively playing automatically takes over the lock screen.
+
+---
+
+### Things to Know & Device Limitations
+
+Because Home Assistant cards run in a browser/app webview rather than as a native music player, there are a few platform quirks to keep in mind (especially on iOS):
+
+- **How it stays active (Silent Audio)**: Mobile operating systems will only show lock screen controls if audio is actively playing. To keep the controls alive when your phone is locked or the app is backgrounded, YAMP runs a completely silent background audio loop. It uses virtually zero CPU and won't make any sound.
+- **Starting playback outside the card (Voice / Automations)**: Phones won't let web pages start background audio without a screen tap. If you start music from within YAMP (tapping Play, Next, or a playlist item), controls appear immediately. If music starts playing from an external automation, Alexa/Google voice command, or another device, just tap anywhere on the dashboard once to unlock the audio and bring up the lock screen controls.
+- **iOS background limits**: Apple is aggressive about putting background apps to sleep. If Home Assistant has been in the background for an extended period or your phone needs memory, iOS will eventually freeze the app and the lock screen controls will drop off until you reopen Home Assistant.
+- **Other audio apps (Audio Focus)**: If you play audio from Spotify, YouTube, or take a phone call on your phone, your phone will hand control over to that app. YAMP steps aside so it doesn't fight for audio, and reconnects once you return to Home Assistant or start a new track.
+
+---
+
+### Example Configuration
+
+```yaml
+type: custom:yet-another-media-player
+lock_screen_controls: true
+entities:
+  - media_player.living_room_speaker
+```
+
+`lock_screen_controls` also [supports templates](#template-support) (Jinja2 and JavaScript). For example, enable controls only on mobile devices:
+
+```yaml
+# Enable only on mobile phones / tablets
+lock_screen_controls: "{{ is_mobile }}"
+
+# Or with JavaScript:
+# lock_screen_controls: "[[[ return is_mobile; ]]]"
+```
+
+You can also add an action chip (or assign a card gesture) to toggle lock screen controls on or off on the fly:
+
+```yaml
+type: custom:yet-another-media-player
+lock_screen_controls: true
+entities:
+  - media_player.living_room_speaker
+actions:
+  - name: Lock Screen
+    icon: mdi:cellphone-lock
+    action: toggle_lock_screen_controls
+```
+
+---
+
 ## Idle & Chips
 > Choose when the card goes idle and how entity chips behave.
 
@@ -523,11 +594,12 @@ For enhanced queue controls in the Search sheet (e.g., viewing and reordering th
 
 Once installed and configured, YAMP will automatically detect the integration and enable:
 - Fetching the upcoming queue with `mass_queue.get_queue_items` (the existing ```search_results_limit``` will be used for this)
+- **Accurate Album Tracklists**: Fetching complete, sequentially ordered album tracklists via `mass_queue.get_album_tracks` when clicking the album name in Now Playing or browsing an album from search results. While YAMP includes fallbacks for browsing without `mass_queue`, installing `mass_queue` guarantees the most complete and accurate tracklists.
 - Browsing playlist tracks
 - Queue item reordering: move up, move down, move next
 - Queue item removal
 
-These features are optional. Without the integration, YAMP will fall back to a basic “next up” preview when available.
+These features are optional. Without the integration, YAMP will fall back to Home Assistant's built-in `browse_media` or search-based navigation, though album tracklists may be less comprehensive or ordered differently.
 
 #### Queue Drag-and-Drop Reordering
 
@@ -556,6 +628,7 @@ Experience synchronized, real-time lyrics directly within the card. YAMP support
     - `scroll`: Synchronized auto-scrolling without line highlighting.
     - `text`: Displays the full lyrics as plain text. No auto-scrolling or highlighting.
   - `lyrics_pre_roll`: Fine-tune the highlighting sync. A value of `1.5` will highlight the line 1.5 seconds before the vocal starts, while `-0.5` will delay it.
+  - `lyrics_background_fade`: Adjust the background fade opacity percentage (`0` to `100`, default `80`). Supports templates for dynamic transparency based on player state or theme.
 - **Toggle Action**: You can assign the `toggle_lyrics` action to a chip or gesture to quickly show/hide the lyrics without opening the menu.
 - **Constraints**: The lyrics viewer is automatically disabled when the card is in `always_collapsed: true` mode to maintain layout performance.
 
@@ -652,11 +725,15 @@ YAMP supports two distinct template engines:
 The following configuration keys support templates:
 
 - **`card_height`**: Dynamically adjust the total height of the card.
+- **`lyrics_background_fade`**: Dynamically control the lyrics overlay background opacity percentage (0-100%).
 - **`idle_image`**: Change the background image shown when the player is idle.
+- **`background_image`**: Set a persistent card background image URL, gradient, or color.
+- **`font_color`**: Dynamically control text and icon color across the card.
 - **`navigation_path`**: Create dynamic navigation URLs (e.g., search IMDb or Genius).
 - **`volume_entity`**: Dynamically select which entity controls volume for a specific player.
 - **`music_assistant_entity`**: Dynamically select the companion Music Assistant entity.
 - **`always_collapsed`**: Dynamically determine if the card should be fully collapsed.
+- **`lock_screen_controls`**: Dynamically enable or disable lock screen controls.
 - **`control_layout`**: Dynamically select the control layout style (`classic` or `modern`).
 - **`in_menu`**: Dynamically determine where an action is placed (`true`, `false`, or `hidden`).
 - **`image_url` / `missing_art_url`**: (Inside `media_artwork_overrides`) Dynamically determine artwork.
@@ -677,6 +754,10 @@ All templates have access to standard Home Assistant template functions (`states
 | `is_source` | `boolean` | `true` if the source selection list is open. |
 | `is_options` | `boolean` | `true` if the entity options menu is open. |
 | `is_transfer_queue` | `boolean` | `true` if the transfer queue menu is open. |
+| `is_dark_mode` | `boolean` | `true` if Home Assistant is currently in dark mode. |
+| `is_mobile` | `boolean` | `true` if the user is on a mobile device or mobile viewport (width &le; 768px). |
+| `is_music_assistant` | `boolean` | `true` if the active player is a Music Assistant entity. |
+| `is_music` | `boolean` | `true` if `media_content_type` is `music`. |
 
 ## Examples
 
@@ -751,6 +832,48 @@ entities:
         }
         return 'media_player.living_room_atv';
       ]]]
+```
+
+### Theme & Dark Mode Adaptation
+Switch background artwork, image, or font colors automatically based on Home Assistant's dark/light theme.
+
+**Jinja2 (Server-Side)**
+```yaml
+background_image: |
+  {% if is_dark_mode %}
+    /local/image/night_media_card.png
+  {% else %}
+    /local/image/noon_media_card.png
+  {% endif %}
+font_color: |
+  {% if is_dark_mode %} #ffffff {% else %} #222222 {% endif %}
+```
+
+**JavaScript (Client-Side)**
+```yaml
+background_image: |
+  [[[
+    return is_dark_mode
+      ? "url('/local/image/night_media_card.png')"
+      : "url('/local/image/noon_media_card.png')";
+  ]]]
+font_color: |
+  [[[
+    return is_dark_mode ? "#ffffff" : "#222222";
+  ]]]
+```
+
+### Conditional Lock Screen Controls
+Enable lock screen and system media controls dynamically (e.g., only on mobile devices or tablets).
+
+**Jinja2 (Server-Side)**
+```yaml
+lock_screen_controls: "{{ is_mobile }}"
+```
+
+**JavaScript (Client-Side)**
+```yaml
+lock_screen_controls: "[[[ return is_mobile; ]]]"
 ```
 
 ## Controls & Typography

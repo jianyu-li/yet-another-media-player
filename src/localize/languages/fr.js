@@ -86,6 +86,11 @@ export default {
           title: "Paramètres Généraux",
           description: "Contrôles globaux pour l'affichage des illustrations.",
         },
+        background: {
+          title: "Image d'arrière-plan",
+          description:
+            "Configurez une image d'arrière-plan persistante pour la carte derrière le contenu en cours de lecture.",
+        },
         idle: {
           title: "Illustration au Repos",
           description: "Afficher une image statique lorsque rien n'est en lecture.",
@@ -154,6 +159,10 @@ export default {
       disable_mass: "Désactiver l'intégration Mass Queue.",
       swap_pause_stop: "Remplacer le bouton pause par stop en mode moderne.",
       show_album: "Afficher le nom de l'album à côté de l'artiste dans les détails du lecteur.",
+      lock_screen_controls:
+        "Gardez les contrôles et les métadonnées de la piste actifs sur l'écran de verrouillage de votre appareil (iOS / Android / macOS) lorsque l'application est en arrière-plan. Remarque : cette fonctionnalité est expérimentale.",
+      toggle_media_session:
+        "Remarque : les contrôles de session multimédia et d'écran de verrouillage sont expérimentaux.",
       adaptive_controls: "Laisser les boutons s'adapter à l'espace disponible.",
       hide_menu_player:
         "Masquer l'étiquette de l'entité en bas quand les jetons sont dans le menu.",
@@ -216,14 +225,19 @@ export default {
         "Music Assistant nécessite l'intégration mass_queue pour récupérer les paroles de son moteur de métadonnées interne.",
       lyrics_pre_roll:
         "Ajuste le timing de mise en évidence des paroles. Les valeurs positives l'accélèrent, les négatives le ralentissent (par défaut : 0).",
+      lyrics_background_fade:
+        "Ajuster le fondu d'arrière-plan et l'opacité d'assombrissement de la superposition des paroles (0% pour une illustration transparente, 100% pour un arrière-plan plein).",
       blurred_artwork: "Toujours flouter l'image d'arrière-plan",
       hide_collapsed_artwork: "Masquer l'image réduite sur la droite lorsque la carte est repliée",
+      disable_artwork_gradient: "Désactiver le dégradé inférieur superposé sur l'illustration",
       show_idle_artwork_when_not_playing:
         "Lorsqu'il est activé, la sélection d'un badge qui n'est pas en cours de lecture affichera l'image d'inactivité configurée à la place de l'illustration de lecture active.",
       prefer_ma_metadata:
         "Toujours utiliser l'entité Music Assistant associée pour le titre de la piste, l'artiste et l'image, même si l'entité principale est en cours de lecture.",
       show_volume_overlay:
         "Affiche brièvement un grand indicateur de volume sur l'illustration lorsque le niveau de volume change.",
+      font_color_helper:
+        "Personnalisez les couleurs du texte et des icônes. Accepte l'hexadécimal, les noms CSS, rgba ou les modèles (par défaut: couleur du thème).",
       queue_controls_style:
         "Choisissez d'afficher une poignée de glissement ou des boutons de déplacement individuels pour les éléments de la file d'attente.",
     },
@@ -252,6 +266,7 @@ export default {
       display_timestamps: "Afficher les horodatages",
       swap_pause_stop: "Remplacer Pause par Stop",
       show_album: "Afficher le nom de l'album",
+      lock_screen_controls: "Contrôles multimédias sur l'écran de verrouillage (Expérimental)",
       adaptive_controls: "Taille adaptative",
       hide_active_entity: "Masquer l'étiquette active",
       hide_active_entity_on_idle: "Masquer l'étiquette de l'entité active en mode veille",
@@ -272,8 +287,10 @@ export default {
       lyrics_mode: "Mode des paroles",
       lyrics_source: "Source des paroles",
       lyrics_pre_roll: "Pré-roll des paroles (secondes)",
+      lyrics_background_fade: "Fondu d'arrière-plan des paroles",
       blurred_artwork: "Image floutée",
       hide_collapsed_artwork: "Masquer l'image réduite",
+      disable_artwork_gradient: "Désactiver le dégradé de l'illustration",
       show_idle_artwork_when_not_playing: "Afficher l'image d'inactivité si pas de lecture",
       prefer_ma_metadata: "Préférer les métadonnées Music Assistant",
       show_volume_overlay: "Afficher la superposition de volume",
@@ -294,7 +311,12 @@ export default {
       card_height: "Hauteur (px)",
       control_layout: "Mise en page",
       idle_image: "Image de veille",
-
+      background_image: "Image d'arrière-plan",
+      background_image_entity: "Entité d'image d'arrière-plan",
+      font_color: "Couleur de police",
+      font_color_entity: "Couleur de police",
+      background_position: "Position de l'arrière-plan",
+      background_fit: "Ajustement de l'arrière-plan",
       image_url: "URL image",
       fallback_image_url: "URL de secours",
       move_to_main: "Mettre dans les jetons principaux",
@@ -330,6 +352,7 @@ export default {
       appearance: "Apparence",
       no_artwork_option: "Pas d'illustration",
       details_alignment: "Alignement des détails",
+      lyrics_background_fade: "Fondu d'arrière-plan des paroles (%)",
       queue_controls_style: "Style des commandes de file d'attente",
     },
     action_types: {
@@ -342,6 +365,8 @@ export default {
       select_entity: "Sélectionner l'entité depuis le helper",
       toggle_lyrics: "Activer/Désactiver la superposition des paroles",
       remote_control: "Ouvrir l'overlay télécommande",
+      toggle_media_session:
+        "Basculer la session multimédia / l'écran de verrouillage (Expérimental)",
     },
     action_helpers: {
       sync_selected_entity: "Synchroniser l'entité sélectionnée →",
@@ -408,6 +433,24 @@ export default {
       center: "Centre",
       bottom: "Bas",
     },
+    background_fit: {
+      cover: "Couvrir",
+      contain: "Contenir",
+      fill: "Remplir",
+      "scale-down": "Réduire",
+      none: "Aucun",
+    },
+    background_position: {
+      center: "Centre",
+      top: "Haut",
+      bottom: "Bas",
+      "center left": "Centre gauche",
+      "center right": "Centre droite",
+      "top left": "Haut gauche",
+      "top right": "Haut droite",
+      "bottom left": "Bas gauche",
+      "bottom right": "Bas droite",
+    },
   },
   card: {
     sections: {
@@ -423,6 +466,8 @@ export default {
       stop: "Arrêt",
       next: "Suivant",
       repeat: "Répéter",
+      lock_screen_ready: "Contrôles de l'écran de verrouillage actifs",
+      lock_screen_connecting: "Connexion des contrôles de l'écran de verrouillage...",
     },
     menu: {
       more_info: "Plus d'infos",
@@ -512,9 +557,11 @@ export default {
       podcast: "Podcast",
       audiobook: "Livre audio",
     },
-    search_artist: "Chercher cet artiste",
+    search_artist: "Parcourir les albums de cet artiste",
+    browse_artist: "Parcourir les albums de {artist}",
     search_album: "Parcourir les pistes de cet album",
     browse_album: "Parcourir les titres de {album}",
+    browse_playlist: "Parcourir les pistes de {playlist}",
     play_collection: "Lire cette collection",
     play_collection_error: "Impossible de lire cette collection directement",
     play_item: "Lire {item}",

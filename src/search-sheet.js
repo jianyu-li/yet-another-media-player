@@ -2,7 +2,7 @@ import { html, nothing } from "lit";
 import { isMusicAssistantEntity, applyHostnameToUrl } from "./yamp-utils.js";
 import { localize } from "./localize/localize.js";
 
-const playOptions = [
+const getPlayOptions = () => [
   { mode: "replace", icon: "mdi:playlist-remove", label: localize("search.replace") },
   { mode: "next", icon: "mdi:playlist-play", label: localize("search.play_next") },
   { mode: "replace_next", icon: "mdi:playlist-music", label: localize("search.replace_play") },
@@ -61,6 +61,10 @@ export function getSearchResultSubtitle(
     : "";
 }
 
+/**
+ * @param {any} limit
+ * @param {{ cap?: number, floor?: number }} [options]
+ */
 const resolveLimitValue = (limit, { cap, floor } = {}) => {
   const numericLimit = Number(limit);
   if (!Number.isFinite(numericLimit) || numericLimit <= 0) {
@@ -80,36 +84,44 @@ const MUSIC_ASSISTANT_CONFIG_TTL_MS = 30000;
 let cachedMusicAssistantEntryId = null;
 let cachedMusicAssistantEntryTs = 0;
 
-function _resolveIntegrationId(hass, targetEntityId, platforms) {
+export function _getDeviceConfigEntryId(device, allDevices = null) {
+  if (!device || typeof device !== "object") return null;
+  if (typeof device.config_entry_id === "string" && device.config_entry_id.length > 0) {
+    return device.config_entry_id;
+  }
+  if (Array.isArray(device.config_entries) && device.config_entries.length > 0) {
+    return device.config_entries[0];
+  }
+  if (device.parent_device_id && allDevices && allDevices[device.parent_device_id]) {
+    const parent = allDevices[device.parent_device_id];
+    return _getDeviceConfigEntryId(parent, null);
+  }
+  return null;
+}
+
+export function _resolveIntegrationId(hass, targetEntityId, platforms) {
   let resolvedId = null;
-  if (hass.entities && typeof hass.entities === "object") {
-    const entities = Object.values(hass.entities);
-    if (
-      targetEntityId &&
-      hass.entities[targetEntityId] &&
-      hass.entities[targetEntityId].device_id
-    ) {
-      const deviceId = hass.entities[targetEntityId].device_id;
-      if (
-        hass.devices &&
-        hass.devices[deviceId] &&
-        hass.devices[deviceId].config_entries &&
-        hass.devices[deviceId].config_entries.length > 0
-      ) {
-        resolvedId = hass.devices[deviceId].config_entries[0];
+  if (hass?.entities && typeof hass.entities === "object") {
+    const resolveFromEntity = (entity) => {
+      if (!entity) return null;
+      if (entity.config_entry_id) return entity.config_entry_id;
+      if (entity.device_id && hass.devices && hass.devices[entity.device_id]) {
+        return _getDeviceConfigEntryId(hass.devices[entity.device_id], hass.devices);
+      }
+      return null;
+    };
+
+    if (targetEntityId && hass.entities[targetEntityId]) {
+      const targetEntity = hass.entities[targetEntityId];
+      if (targetEntity && platforms.includes(targetEntity.platform)) {
+        resolvedId = resolveFromEntity(targetEntity);
       }
     }
     if (!resolvedId) {
+      const entities = Object.values(hass.entities);
       const entity = entities.find((e) => e && platforms.includes(e.platform));
       if (entity) {
-        if (entity.config_entry_id) {
-          resolvedId = entity.config_entry_id;
-        } else if (entity.device_id && hass.devices && hass.devices[entity.device_id]) {
-          const device = hass.devices[entity.device_id];
-          if (device.config_entries && device.config_entries.length > 0) {
-            resolvedId = device.config_entries[0];
-          }
-        }
+        resolvedId = resolveFromEntity(entity);
       }
     }
   }
@@ -213,22 +225,23 @@ export function transformMusicAssistantItem(item) {
 }
 
 /**
- * Renders the search sheet UI for media search.
- *
+ * Renders action buttons for a single search result item.
  * @param {Object} opts
- * @param {boolean} opts.open - Whether the search sheet is visible.
- * @param {string} opts.query - Current search query value.
- * @param {Function} opts.onQueryInput - Handler for query input change.
- * @param {Function} opts.onSearch - Handler for search action.
- * @param {Function} opts.onClose - Handler for closing the sheet.
- * @param {boolean} opts.loading - Loading state for search.
- * @param {Array} opts.results - Search result items (array of media items).
- * @param {Function} opts.onPlay - Handler to play a media item.
- * @param {Function} opts.onQueue - Handler to add a media item to queue.
- * @param {string} [opts.error] - Optional error message.
- * @param {boolean} [opts.showQueueSuccess] - Whether to show queue success message.
- * @param {boolean} [opts.matchTheme] - Whether to match the theme of the parent.
- * @param {boolean} [opts.disableAutofocus] - Whether to disable search input autofocus.
+ * @param {any} opts.item
+ * @param {Function} [opts.onPlay]
+ * @param {Function} [opts.onOptionsToggle]
+ * @param {boolean} [opts.upcomingFilterActive]
+ * @param {boolean} [opts.isMusicAssistant]
+ * @param {boolean} [opts.massQueueAvailable]
+ * @param {string} [opts.searchView]
+ * @param {boolean} [opts.isInline]
+ * @param {string} [opts.queueControlsStyle]
+ * @param {Function} [opts.onMoveUp]
+ * @param {Function} [opts.onMoveDown]
+ * @param {Function} [opts.onMoveNext]
+ * @param {Function} [opts.onRemove]
+ * @param {boolean} [opts.minimal]
+ * @param {boolean} [opts.hideActions]
  */
 export function renderSearchResultActions({
   item,
@@ -539,7 +552,6 @@ export function renderSearchResultItem({
   queueControlsStyle = "drag_handle",
   onPlay,
   onResultClick,
-  onResultTouch,
   onOptionsToggle,
   onPlayOption,
   onMoveUp,
@@ -662,7 +674,6 @@ export function renderSearchResultItem({
               <div class="yamp-search-result-info">
                 <span
                   class="yamp-search-result-title ${isClickable ? "clickable-search-result" : ""}"
-                  @touchstart=${(e) => onResultTouch && onResultTouch(item, e)}
                   @click=${(e) => {
                     if (isClickable || isSelectionFlow) {
                       e.stopPropagation();
@@ -675,7 +686,6 @@ export function renderSearchResultItem({
                 </span>
                 <span
                   class="yamp-search-result-subtitle ${isClickable ? "clickable-search-result" : ""}"
-                  @touchstart=${(e) => onResultTouch && onResultTouch(item, e)}
                   @click=${(e) => {
                     if (isClickable || isSelectionFlow) {
                       e.stopPropagation();
@@ -813,7 +823,7 @@ export function renderSearchOptionsOverlay({
         <div class="entity-options-sheet">
           <div class="entity-options-title">${item.title}</div>
 
-          ${playOptions
+          ${getPlayOptions()
             .filter((option) => {
               if (option.mode === "add_to_playlist") {
                 return isTrack(item) && massQueueAvailable;
@@ -867,13 +877,13 @@ export async function searchMedia(
                 type: "call_service",
                 domain: "music_assistant",
                 service: "get_library",
-                service_data: {
+                service_data: /** @type {Record<string, any>} */ ({
                   ...(configEntryId &&
                     configEntryId !== "auto" && { config_entry_id: configEntryId }),
                   media_type: mt,
                   favorite: true,
                   search: query,
-                },
+                }),
                 return_response: true,
               };
               const favoritesLimit = resolveLimitValue(searchResultsLimit);
@@ -905,7 +915,9 @@ export async function searchMedia(
         (!query || query.trim() === "") &&
         mediaType &&
         mediaType !== "all" &&
-        !searchParams.favorites
+        !searchParams.favorites &&
+        !searchParams.album &&
+        !searchParams.artist
       ) {
         // Validate media type strictly
         if (!ALLOWED_MEDIA_TYPES.includes(mediaType)) {
@@ -920,11 +932,11 @@ export async function searchMedia(
             type: "call_service",
             domain: "music_assistant",
             service: "get_library",
-            service_data: {
+            service_data: /** @type {Record<string, any>} */ ({
               ...(configEntryId && configEntryId !== "auto" && { config_entry_id: configEntryId }),
               media_type: mediaType,
               // favorite param omitted to get ALL items
-            },
+            }),
             return_response: true,
           };
 
@@ -955,10 +967,14 @@ export async function searchMedia(
         }
       }
 
-      const serviceData = {
-        name: query,
+      const searchQuery =
+        query && query.trim() !== ""
+          ? query
+          : searchParams.album || (mediaType === "album" ? "" : searchParams.artist || "");
+      const serviceData = /** @type {Record<string, any>} */ ({
+        name: searchQuery,
         ...(configEntryId && configEntryId !== "auto" && { config_entry_id: configEntryId }),
-      };
+      });
       const searchLimit = resolveLimitValue(searchResultsLimit, {
         cap: mediaType === "all" ? 8 : undefined,
       });
@@ -1040,11 +1056,11 @@ export async function getRecentlyPlayed(
       type: "call_service",
       domain: "music_assistant",
       service: "get_library",
-      service_data: {
+      service_data: /** @type {Record<string, any>} */ ({
         ...(configEntryId && configEntryId !== "auto" && { config_entry_id: configEntryId }),
         media_type: mt,
         order_by: "last_played_desc",
-      },
+      }),
       return_response: true,
     };
     const appliedLimit = resolveLimitValue(searchResultsLimit, limitArgs);
@@ -1102,11 +1118,11 @@ export async function getFavorites(
       type: "call_service",
       domain: "music_assistant",
       service: "get_library",
-      service_data: {
+      service_data: /** @type {Record<string, any>} */ ({
         ...(configEntryId && configEntryId !== "auto" && { config_entry_id: configEntryId }),
         media_type: type,
         favorite: true,
-      },
+      }),
       return_response: true,
     };
     const favoritesLimit = resolveLimitValue(searchResultsLimit, {
@@ -1160,9 +1176,11 @@ export async function getFavorites(
 
 // Fallback function for media_player search
 async function fallbackToMediaPlayerSearch(hass, entityId, query, mediaType, searchParams = {}) {
+  const searchQuery =
+    query && query.trim() !== "" ? query : searchParams.album || searchParams.artist || "";
   const fallbackData = {
     entity_id: entityId,
-    search_query: query,
+    search_query: searchQuery,
   };
 
   if (mediaType && mediaType !== "all") {
@@ -1268,12 +1286,12 @@ export async function isTrackFavorited(
           type: "call_service",
           domain: "music_assistant",
           service: "get_library",
-          service_data: {
+          service_data: /** @type {Record<string, any>} */ ({
             ...(configEntryId && configEntryId !== "auto" && { config_entry_id: configEntryId }),
             media_type: "track",
             favorite: true,
             ...(trackName && { search: trackName.trim() }),
-          },
+          }),
           return_response: true,
         };
         const appliedLimit = resolveLimitValue(searchResultsLimit, { cap: 10 });

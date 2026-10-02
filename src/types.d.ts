@@ -67,9 +67,38 @@ export interface HassEntity {
   };
 }
 
+export interface DeviceRegistryEntry {
+  id: string;
+  config_entry_id?: string | null;
+  config_subentry_id?: string | null;
+  config_entries?: string[];
+  parent_device_id?: string | null;
+  area_id?: string | null;
+  name?: string | null;
+  name_by_user?: string | null;
+  disabled_by?: string | null;
+  labels?: string[];
+  identifiers?: [string, string][];
+  [key: string]: any;
+}
+
+export interface EntityRegistryEntry {
+  id: string;
+  entity_id: string;
+  platform?: string;
+  config_entry_id?: string | null;
+  device_id?: string | null;
+  area_id?: string | null;
+  disabled_by?: string | null;
+  hidden_by?: string | null;
+  [key: string]: any;
+}
+
 export interface HomeAssistant {
   states: Record<string, HassEntity>;
   services: Record<string, Record<string, any>>;
+  entities?: Record<string, EntityRegistryEntry>;
+  devices?: Record<string, DeviceRegistryEntry>;
   user: {
     id: string;
     name: string;
@@ -77,6 +106,7 @@ export interface HomeAssistant {
     is_owner: boolean;
   };
   language: string;
+  selectedLanguage?: string | null;
   locale: {
     language: string;
     number_format?: string;
@@ -106,6 +136,16 @@ export interface HomeAssistant {
     sendMessagePromise<T = any>(message: Record<string, any>): Promise<T>;
   };
   localize(key: string, ...args: any[]): string;
+  formatEntityName?: (
+    stateObj: HassEntity,
+    name?:
+      | { type: "entity" | "device" | "parent_device" | "area" | "floor" }
+      | { type: "text"; text: string }
+      | Array<
+          | { type: "entity" | "device" | "parent_device" | "area" | "floor" }
+          | { type: "text"; text: string }
+        >
+  ) => string | undefined;
 }
 
 export interface ArtworkOverrideRule {
@@ -117,7 +157,22 @@ export interface ArtworkOverrideRule {
 
 export interface ActionConfig {
   action?:
-    "call-service" | "navigate" | "url" | "more-info" | "toggle" | "none" | "custom" | string;
+    | "call-service"
+    | "navigate"
+    | "url"
+    | "more-info"
+    | "toggle"
+    | "none"
+    | "custom"
+    | "toggle_lyrics"
+    | "remote_control"
+    | "prev_entity"
+    | "next_entity"
+    | "select_entity"
+    | "sync_selected_entity"
+    | "toggle_media_session"
+    | "toggle_lock_screen_controls"
+    | string;
   service?: string;
   service_data?: Record<string, any>;
   data?: Record<string, any>;
@@ -163,6 +218,7 @@ export interface ShortcutConfig {
 
 export interface YampEntityConfig {
   entity: string;
+  entity_id?: string;
   name?: string;
   icon?: string;
   artwork_override?: string | ArtworkOverrideRule[];
@@ -197,6 +253,10 @@ export interface YampCardConfig {
   idle_timeout_ms?: number;
   idle_screen?: "default" | "artwork" | "blank" | "collapsed" | "transparent" | string;
   idle_image?: string;
+  background_image?: string;
+  font_color?: string;
+  background_position?: "top center" | "center center" | "bottom center" | string;
+  background_fit?: "cover" | "contain" | "fill" | "scale-down" | "none" | string;
   media_artwork_overrides?: ArtworkOverrideRule[];
   artwork_position?: "top center" | "center center" | "bottom center" | string;
   artwork_object_fit?:
@@ -212,6 +272,7 @@ export interface YampCardConfig {
   extend_artwork?: boolean;
   blurred_artwork?: boolean;
   hide_collapsed_artwork?: boolean;
+  disable_artwork_gradient?: boolean;
   match_theme?: boolean;
   search_view?: "card" | "list" | string;
   search_card_columns?: number;
@@ -235,20 +296,34 @@ export interface YampCardConfig {
   hide_active_entity_label_on_idle?: boolean;
   swap_pause_for_stop?: boolean;
   show_album?: boolean;
+  lyrics_background_fade?: number | string;
+  lock_screen_controls?: boolean | string;
   [key: string]: any;
 }
 
 export interface TemplateContext {
   is_playing: boolean;
   is_idle: boolean;
-  is_paused: boolean;
-  is_off: boolean;
-  current: HassEntity | null;
-  current_entity: HassEntity | null;
-  activeEntity: string;
-  selectedIndex: number;
-  hass: HomeAssistant;
-  config: YampCardConfig;
+  is_paused?: boolean;
+  is_off?: boolean;
+  is_search?: boolean;
+  is_grouping?: boolean;
+  is_source?: boolean;
+  is_lyrics?: boolean;
+  is_options?: boolean;
+  is_transfer_queue?: boolean;
+  is_any_menu_open?: boolean;
+  is_dark_mode: boolean;
+  is_mobile: boolean;
+  is_music_assistant: boolean;
+  is_music: boolean;
+  entity?: string;
+  current: HassEntity | string | null;
+  current_entity?: HassEntity | null;
+  activeEntity?: string;
+  selectedIndex?: number;
+  hass?: HomeAssistant;
+  config?: YampCardConfig;
 }
 
 export interface MusicAssistantItem {
@@ -269,4 +344,24 @@ export interface LyricsLine {
   time: number | null;
   text: string;
   isInstrumental?: boolean;
+}
+
+export function getEntityName(
+  hass?: HomeAssistant | null,
+  stateOrEntityId?: HassEntity | string | null
+): string;
+
+declare global {
+  const __VERSION__: string;
+  interface Window {
+    customCards?: Array<{
+      type: string;
+      name: string;
+      description: string;
+      preview?: boolean;
+      documentationURL?: string;
+      getEntitySuggestion?: (hass?: any, entityId?: any) => any;
+      [key: string]: any;
+    }>;
+  }
 }

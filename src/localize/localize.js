@@ -20,15 +20,101 @@ const languages = {
   sl,
 };
 
-export function localize(string, search = "", replace = "") {
+let activeHassLanguage = null;
+
+export function setHassLanguage(lang) {
+  if (
+    typeof lang === "string" &&
+    lang.trim() !== "" &&
+    lang.trim().toLowerCase() !== "null" &&
+    lang.trim().toLowerCase() !== "undefined"
+  ) {
+    activeHassLanguage = lang.trim();
+  } else {
+    activeHassLanguage = null;
+  }
+}
+
+function getStoredLanguage() {
+  if (typeof localStorage === "undefined") return "";
+  try {
+    const raw = localStorage.getItem("selectedLanguage");
+    if (!raw) return "";
+    let val = raw;
+    try {
+      val = JSON.parse(raw);
+    } catch {
+      // raw was not JSON-encoded (e.g. set directly as a plain string in console)
+    }
+    if (typeof val === "string") {
+      const cleaned = val.replace(/['"]+/g, "").trim();
+      // JSON.parse("null") yields JS null (caught by typeof check above).
+      // This guard covers direct console entry: localStorage.setItem("selectedLanguage", "null")
+      if (
+        cleaned !== "" &&
+        cleaned.toLowerCase() !== "null" &&
+        cleaned.toLowerCase() !== "undefined"
+      ) {
+        return cleaned;
+      }
+    }
+  } catch {
+    return "";
+  }
+  return "";
+}
+
+function sanitizeLanguage(val) {
+  if (typeof val !== "string") return "";
+  const cleaned = val.replace(/['"]+/g, "").trim();
+  return cleaned !== "" && cleaned.toLowerCase() !== "null" && cleaned.toLowerCase() !== "undefined"
+    ? cleaned
+    : "";
+}
+
+function getBrowserLanguage() {
+  if (typeof navigator === "undefined") return "";
+  if (Array.isArray(navigator.languages)) {
+    for (const l of navigator.languages) {
+      if (!l || typeof l !== "string") continue;
+      const normalized = l.replace(/['"]+/g, "").replace("-", "_");
+      const base = normalized.split("_")[0];
+      if (languages[normalized] || languages[base]) {
+        return normalized;
+      }
+    }
+  }
+  return (Array.isArray(navigator.languages) && navigator.languages[0]) || navigator.language || "";
+}
+
+export function getActiveLanguage() {
+  const haElement =
+    typeof document !== "undefined" ? document.querySelector("home-assistant") : null;
+  const haHass = /** @type {any} */ (haElement)?.hass;
+
   const rawLang = (
-    localStorage.getItem("selectedLanguage") ||
-    document.querySelector("home-assistant")?.hass?.language ||
+    getStoredLanguage() ||
+    sanitizeLanguage(haHass?.selectedLanguage) ||
+    sanitizeLanguage(haHass?.language) ||
+    sanitizeLanguage(haHass?.locale?.language) ||
+    sanitizeLanguage(activeHassLanguage) ||
+    getBrowserLanguage() ||
     "en"
   )
     .replace(/['"]+/g, "")
     .replace("-", "_");
-  const lang = languages[rawLang] ? rawLang : rawLang.split("_")[0];
+
+  return languages[rawLang] ? rawLang : rawLang.split("_")[0];
+}
+
+/**
+ * @param {string} string - Localization key path.
+ * @param {string | Record<string, any>} [search] - Search string or map of search->replace pairs.
+ * @param {string} [replace] - Replacement string if search is a string.
+ * @returns {string}
+ */
+export function localize(string, search = "", replace = "") {
+  const lang = getActiveLanguage();
 
   let translated;
   const parts = string.split(".");

@@ -86,6 +86,11 @@ export default {
           title: "Impostazioni generali",
           description: "Controlli globali per la copertina.",
         },
+        background: {
+          title: "Immagine di sfondo",
+          description:
+            "Configura un'immagine di sfondo persistente per la scheda dietro il contenuto in riproduzione.",
+        },
         idle: {
           title: "Copertina in riposo",
           description: "Mostra un'immagine statica quando non c'è riproduzione.",
@@ -148,6 +153,10 @@ export default {
       disable_mass: "Disabilita integrazione Mass Queue.",
       swap_pause_stop: "Sostituisci pausa con stop nel design moderno.",
       show_album: "Visualizza il nome dell'album accanto all'artista nei dettagli del lettore.",
+      lock_screen_controls:
+        "Mantieni i controlli e i metadati della traccia attivi sulla schermata di blocco del dispositivo (iOS / Android / macOS) quando l'app è in background. Nota: Questa funzione è sperimentale.",
+      toggle_media_session:
+        "Nota: I controlli della sessione multimediale e della schermata di blocco sono sperimentali.",
       adaptive_controls: "Permetti ai pulsanti di adattarsi allo spazio.",
       hide_menu_player: "Nascondi nome entità quando è nel menu.",
       hide_reorder_progress:
@@ -209,14 +218,19 @@ export default {
         "Music Assistant richiede l'integrazione mass_queue per recuperare i testi dal suo motore di metadati interno.",
       lyrics_pre_roll:
         "Sposta il tempismo dell'evidenziazione dei testi. I valori positivi lo accelerano, quelli negativi lo ritardano (predefinito: 0).",
+      lyrics_background_fade:
+        "Regola la dissolvenza dello sfondo e l'opacità di attenuazione della sovrapposizione dei testi (0% per grafica trasparente, 100% per sfondo solido).",
       blurred_artwork: "Sfoca sempre l'immagine di sfondo",
       hide_collapsed_artwork: "Nascondi l'immagine piccola a destra quando la scheda è compressa",
+      disable_artwork_gradient: "Disattiva la sfumatura inferiore sull'immagine di copertina",
       show_idle_artwork_when_not_playing:
         "Se abilitato, selezionando un chip che non è attualmente in riproduzione verrà mostrata l'immagine inattiva configurata invece della copertina di riproduzione attiva.",
       prefer_ma_metadata:
         "Utilizza sempre l'entità Music Assistant associata per il titolo del brano, l'artista e l'artwork, anche se l'entità principale è in riproduzione.",
       show_volume_overlay:
         "Visualizza brevemente un grande indicatore del volume sopra la copertina quando il livello del volume cambia.",
+      font_color_helper:
+        "Personalizza i colori di testo e icone. Accetta esadecimale, nomi CSS, rgba o modelli (predefinito: colore del tema).",
       queue_controls_style:
         "Scegli se mostrare una maniglia di trascinamento o pulsanti di movimento singoli per gli elementi della coda.",
     },
@@ -245,6 +259,7 @@ export default {
       display_timestamps: "Mostra timestamp",
       swap_pause_stop: "Sostituisci Pausa con Stop",
       show_album: "Mostra nome album",
+      lock_screen_controls: "Controlli multimediali nella schermata di blocco (Sperimentale)",
       adaptive_controls: "Dimensione adattativa",
       hide_active_entity: "Nascondi nome entità attiva",
       hide_active_entity_on_idle: "Nascondi etichetta entità attiva quando inattivo",
@@ -265,8 +280,10 @@ export default {
       lyrics_mode: "Modalità testi",
       lyrics_source: "Sorgente testi",
       lyrics_pre_roll: "Pre-roll testi (secondi)",
+      lyrics_background_fade: "Dissolvenza sfondo testi",
       blurred_artwork: "Immagine sfocata",
       hide_collapsed_artwork: "Nascondi immagine contratta",
+      disable_artwork_gradient: "Disattiva sfumatura copertina",
       show_idle_artwork_when_not_playing: "Mostra immagine inattiva quando non in riproduzione",
       prefer_ma_metadata: "Preferisci i metadati di Music Assistant",
       show_volume_overlay: "Mostra overlay volume",
@@ -287,7 +304,12 @@ export default {
       card_height: "Altezza (px)",
       control_layout: "Design",
       idle_image: "Immagine di inattività",
-
+      background_image: "Immagine di sfondo",
+      background_image_entity: "Entità immagine di sfondo",
+      font_color: "Colore del carattere",
+      font_color_entity: "Colore del carattere",
+      background_position: "Posizione dello sfondo",
+      background_fit: "Adattamento sfondo",
       image_url: "URL immagine",
       fallback_image_url: "URL fallback",
       move_to_main: "Sposta in chip principali",
@@ -323,6 +345,7 @@ export default {
       appearance: "Aspetto",
       no_artwork_option: "Nessuna copertina",
       details_alignment: "Allineamento dei dettagli",
+      lyrics_background_fade: "Dissolvenza sfondo testi (%)",
       queue_controls_style: "Stile controlli coda",
     },
     action_types: {
@@ -335,6 +358,8 @@ export default {
       select_entity: "Seleziona entità da helper",
       toggle_lyrics: "Attiva/disattiva sovrapposizione testi",
       remote_control: "Apri sovrapposizione telecomando",
+      toggle_media_session:
+        "Attiva/disattiva sessione multimediale / schermata di blocco (Sperimentale)",
     },
     action_helpers: {
       sync_selected_entity: "Sincronizza entità selezionata →",
@@ -401,6 +426,24 @@ export default {
       center: "Centro",
       bottom: "In basso",
     },
+    background_fit: {
+      cover: "Copri",
+      contain: "Contieni",
+      fill: "Riempi",
+      "scale-down": "Riduci",
+      none: "Nessuno",
+    },
+    background_position: {
+      center: "Centro",
+      top: "In alto",
+      bottom: "In basso",
+      "center left": "Al centro a sinistra",
+      "center right": "Al centro a destra",
+      "top left": "In alto a sinistra",
+      "top right": "In alto a destra",
+      "bottom left": "In basso a sinistra",
+      "bottom right": "In basso a destra",
+    },
   },
   card: {
     sections: {
@@ -416,6 +459,8 @@ export default {
       stop: "Ferma",
       next: "Successivo",
       repeat: "Ripeti",
+      lock_screen_ready: "Controlli schermata di blocco attivi",
+      lock_screen_connecting: "Connessione controlli schermata di blocco...",
     },
     menu: {
       more_info: "Più info",
@@ -505,9 +550,11 @@ export default {
       podcast: "Podcast",
       audiobook: "Audiolibro",
     },
-    search_artist: "Cerca questo artista",
+    search_artist: "Sfoglia gli album di questo artista",
+    browse_artist: "Sfoglia gli album di {artist}",
     search_album: "Sfoglia i brani di questo album",
     browse_album: "Sfoglia i brani di {album}",
+    browse_playlist: "Sfoglia i brani di {playlist}",
     play_collection: "Riproduci questa collezione",
     play_collection_error: "Impossibile riprodurre direttamente questa collezione",
     play_item: "Riproduci {item}",

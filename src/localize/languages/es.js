@@ -86,6 +86,11 @@ export default {
           title: "Ajustes generales",
           description: "Controles globales para la portada.",
         },
+        background: {
+          title: "Imagen de fondo",
+          description:
+            "Configura una imagen de fondo persistente para la tarjeta detrás del contenido de reproducción.",
+        },
         idle: {
           title: "Portada en reposo",
           description: "Mostrar imagen estática cuando nada se reproduce.",
@@ -149,6 +154,10 @@ export default {
       disable_mass: "Desactivar integración con Mass Queue.",
       swap_pause_stop: "Cambiar pausa por stop en diseño moderno.",
       show_album: "Mostrar el nombre del álbum junto al artista en los detalles del reproductor.",
+      lock_screen_controls:
+        "Mantén los controles y los metadatos de la pista activos en la pantalla de bloqueo de tu dispositivo (iOS / Android / macOS) cuando la aplicación esté en segundo plano. Nota: Esta función es experimental.",
+      toggle_media_session:
+        "Nota: Los controles de pantalla de bloqueo y sesión multimedia son experimentales.",
       adaptive_controls: "Permitir que los botones se adapten al espacio.",
       hide_menu_player: "Ocultar nombre de entidad cuando está en el menú.",
       hide_reorder_progress:
@@ -210,15 +219,20 @@ export default {
         "Music Assistant requiere la integración de mass_queue para obtener las letras de su motor de metadatos interno.",
       lyrics_pre_roll:
         "Ajusta el tiempo de resaltado de la letra. Los valores positivos lo aceleran, los negativos lo retrasan (por defecto: 0).",
+      lyrics_background_fade:
+        "Ajustar el desvanecimiento de fondo y la opacidad de atenuación de la superposición de letras (0% para arte transparente, 100% para fondo sólido).",
       blurred_artwork: "Difuminar siempre la imagen de fondo",
       hide_collapsed_artwork:
         "Ocultar la imagen pequeña a la derecha cuando la tarjeta esté contraída",
+      disable_artwork_gradient: "Desactivar el degradado inferior superpuesto en la portada",
       show_idle_artwork_when_not_playing:
         "Cuando está habilitado, al seleccionar una ficha que no se está reproduciendo actualmente, se mostrará la imagen de inactividad configurada en lugar de la carátula de reproducción activa.",
       prefer_ma_metadata:
         "Utilizar siempre la entidad de Music Assistant emparejada para el título de la pista, el artista y el arte, incluso si la entidad primaria está reproduciendo.",
       show_volume_overlay:
         "Muestra brevemente un indicador de volumen grande sobre la carátula cuando cambia el nivel de volumen.",
+      font_color_helper:
+        "Personaliza los colores del texto y los iconos. Acepta hex, nombres CSS, rgba o plantillas (predeterminado: color del tema).",
       queue_controls_style:
         "Elige si mostrar un tirador de arrastre o botones de movimento individuales para los elementos de la cola.",
     },
@@ -247,6 +261,7 @@ export default {
       display_timestamps: "Mostrar sellos de tiempo",
       swap_pause_stop: "Cambiar Pausa por Stop",
       show_album: "Mostrar nombre del álbum",
+      lock_screen_controls: "Controles multimedia en la pantalla de bloqueo (Experimental)",
       adaptive_controls: "Tamaño adaptativo",
       hide_active_entity: "Ocultar nombre de entidad activa",
       hide_active_entity_on_idle: "Ocultar etiqueta de entidad activa al estar inactivo",
@@ -267,8 +282,10 @@ export default {
       lyrics_mode: "Modo de letras",
       lyrics_source: "Fuente de letras",
       lyrics_pre_roll: "Anticipo de letra (segundos)",
+      lyrics_background_fade: "Desvanecimiento de fondo de letras",
       blurred_artwork: "Imagen difuminada",
       hide_collapsed_artwork: "Ocultar imagen reducida",
+      disable_artwork_gradient: "Desactivar degradado de portada",
       show_idle_artwork_when_not_playing: "Mostrar imagen de inactividad cuando no se reproduce",
       prefer_ma_metadata: "Preferir metadatos de Music Assistant",
       show_volume_overlay: "Mostrar superposición de volumen",
@@ -289,7 +306,12 @@ export default {
       card_height: "Altura (px)",
       control_layout: "Diseño",
       idle_image: "Imagen de reposo",
-
+      background_image: "Imagen de fondo",
+      background_image_entity: "Entidad de imagen de fondo",
+      font_color: "Color de fuente",
+      font_color_entity: "Color de fuente",
+      background_position: "Posición del fondo",
+      background_fit: "Ajuste del fondo",
       image_url: "URL imagen",
       fallback_image_url: "URL de respaldo",
       move_to_main: "Mover a chips principales",
@@ -325,6 +347,7 @@ export default {
       appearance: "Apariencia",
       no_artwork_option: "Sin imagen",
       details_alignment: "Alineación de detalles",
+      lyrics_background_fade: "Desvanecimiento de fondo de letras (%)",
       queue_controls_style: "Estilo de controles de cola",
     },
     action_types: {
@@ -337,6 +360,8 @@ export default {
       select_entity: "Seleccionar entidad desde helper",
       toggle_lyrics: "Alternar superposición de letras",
       remote_control: "Abrir superposición de mando a distancia",
+      toggle_media_session:
+        "Alternar controles de sesión de medios / pantalla de bloqueo (Experimental)",
     },
     action_helpers: {
       sync_selected_entity: "Sincronizar entidad seleccionada →",
@@ -403,6 +428,24 @@ export default {
       center: "Centro",
       bottom: "Abajo",
     },
+    background_fit: {
+      cover: "Cubrir",
+      contain: "Contener",
+      fill: "Rellenar",
+      "scale-down": "Reducir escala",
+      none: "Ninguno",
+    },
+    background_position: {
+      center: "Centro",
+      top: "Arriba",
+      bottom: "Abajo",
+      "center left": "Centro izquierda",
+      "center right": "Centro derecha",
+      "top left": "Arriba izquierda",
+      "top right": "Arriba derecha",
+      "bottom left": "Abajo izquierda",
+      "bottom right": "Abajo derecha",
+    },
   },
   card: {
     sections: {
@@ -418,6 +461,8 @@ export default {
       stop: "Detener",
       next: "Siguiente",
       repeat: "Repetir",
+      lock_screen_ready: "Controles de pantalla de bloqueo activos",
+      lock_screen_connecting: "Conectando controles de pantalla de bloqueo...",
     },
     menu: {
       more_info: "Más info",
@@ -507,9 +552,11 @@ export default {
       podcast: "Pódcast",
       audiobook: "Audiolibro",
     },
-    search_artist: "Buscar este artista",
+    search_artist: "Explorar álbumes de este artista",
+    browse_artist: "Explorar álbumes de {artist}",
     search_album: "Explorar pistas de este álbum",
     browse_album: "Explorar pistas de {album}",
+    browse_playlist: "Explorar pistas de {playlist}",
     play_collection: "Reproducir esta colección",
     play_collection_error: "No se puede reproducir esta colección directamente",
     play_item: "Reproducir {item}",

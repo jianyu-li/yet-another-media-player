@@ -1,18 +1,18 @@
 import { LitElement, html, css, nothing } from "lit";
 import * as yaml from "js-yaml";
-import { localize } from "./localize/localize.js";
+import { localize, setHassLanguage } from "./localize/localize.js";
 
-import { SUPPORT_GROUPING, TEMPLATE_CONFIGS } from "./constants.js";
-import { isMusicAssistantEntity, getActionPlacement } from "./yamp-utils.js";
+import { SUPPORT_GROUPING, TEMPLATE_CONFIGS, DEFAULT_LYRICS_BACKGROUND_FADE } from "./constants.js";
+import { isMusicAssistantEntity, getActionPlacement, getEntityName } from "./yamp-utils.js";
 import "./yamp-sortable.js";
 
-const ADAPTIVE_TEXT_SELECTOR_OPTIONS = Object.freeze([
+const getAdaptiveTextSelectorOptions = () => [
   { value: "details", label: localize("card.sections.details") },
   { value: "menu", label: localize("card.sections.menu") },
   { value: "action_chips", label: localize("card.sections.action_chips") },
   { value: "lyrics", label: localize("card.sections.lyrics") },
-]);
-const ADAPTIVE_TEXT_SELECTOR_VALUES = ADAPTIVE_TEXT_SELECTOR_OPTIONS.map((opt) => opt.value);
+];
+const ADAPTIVE_TEXT_SELECTOR_VALUES = Object.freeze(["details", "menu", "action_chips", "lyrics"]);
 
 const VOLUME_MODE_SELECTOR = Object.freeze({
   select: {
@@ -29,23 +29,42 @@ const VOLUME_STEP_SELECTOR = Object.freeze({
   number: { min: 0.01, max: 1, step: 0.01, unit_of_measurement: "", mode: "box" },
 });
 
+const LYRICS_BACKGROUND_FADE_SELECTOR = Object.freeze({
+  number: { min: 0, max: 100, step: 1, unit_of_measurement: "%", mode: "slider" },
+});
+
 export class YetAnotherMediaPlayerEditor extends LitElement {
-  static get properties() {
-    return {
-      hass: {},
-      _config: {},
-      _yamlConfig: {},
-      _activeTab: { type: String },
-      _entityEditorIndex: { type: Number },
-      _actionEditorIndex: { type: Number },
-      _actionMode: { type: String },
-      _templateModes: { type: Object },
-      _serviceItems: { type: Array },
-    };
-  }
+  static properties = {
+    hass: {},
+    _config: {},
+    _yamlConfig: {},
+    _activeTab: { type: String },
+    _entityEditorIndex: { type: Number },
+    _actionEditorIndex: { type: Number },
+    _actionMode: { type: String },
+    _templateModes: { type: Object },
+    _serviceItems: { type: Array },
+    _searchTerm: { type: String },
+  };
 
   constructor() {
     super();
+    /** @type {import("./types.d.ts").HomeAssistant | undefined} */
+    this.hass = undefined;
+    /** @type {import("./types.d.ts").YampCardConfig | undefined} */
+    this._config = undefined;
+    /** @type {any} */
+    this._yamlConfig = {};
+    /** @type {Record<string, any>} */
+    this._preTemplateConfig = {};
+    /** @type {Record<string, boolean>} */
+    this._templateModes = {};
+    /** @type {any[]} */
+    this._serviceItems = [];
+    /** @type {string} */
+    this._searchTerm = "";
+    /** @type {string | undefined} */
+    this._actionMode = undefined;
     this._activeTab = "entities";
     this._entityEditorIndex = null;
     this._actionEditorIndex = null;
@@ -92,8 +111,55 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     this._tempActionIndex = null;
   }
 
+  shouldUpdate(changedProperties) {
+    if (
+      changedProperties.has("_config") ||
+      changedProperties.has("_yamlConfig") ||
+      changedProperties.has("_activeTab") ||
+      changedProperties.has("_entityEditorIndex") ||
+      changedProperties.has("_actionEditorIndex") ||
+      changedProperties.has("_actionMode") ||
+      changedProperties.has("_templateModes") ||
+      changedProperties.has("_serviceItems") ||
+      changedProperties.has("_searchTerm")
+    ) {
+      return true;
+    }
+
+    if (changedProperties.has("hass")) {
+      const oldHass = changedProperties.get("hass");
+      if (!oldHass) {
+        return true;
+      }
+
+      const oldLang = oldHass.selectedLanguage || oldHass.language || oldHass.locale?.language;
+      const newLang =
+        this.hass?.selectedLanguage || this.hass?.language || this.hass?.locale?.language;
+      if (oldLang !== newLang) {
+        return true;
+      }
+
+      if (oldHass.services !== this.hass?.services) {
+        return true;
+      }
+
+      if (oldHass.themes !== this.hass?.themes) {
+        return true;
+      }
+
+      return false;
+    }
+
+    return true;
+  }
+
   updated(changedProperties) {
     if (changedProperties.has("hass")) {
+      const currentLang =
+        this.hass?.selectedLanguage || this.hass?.language || this.hass?.locale?.language;
+      if (currentLang) {
+        setHassLanguage(currentLang);
+      }
       const oldHass = changedProperties.get("hass");
       if (this.hass?.services !== oldHass?.services) {
         this._serviceItems = this._getServiceItems();
@@ -262,7 +328,17 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
 
   // Helper functions for ha-generic-picker (entity selection)
   _getEntityItems(domains = [], excludeEntities = []) {
-    return () => {
+    const domainKey = domains.join(",");
+    const excludeKey = excludeEntities.join(",");
+    const states = this.hass?.states;
+    const statesCount = states ? Object.keys(states).length : 0;
+    const cacheKey = `${domainKey}|${excludeKey}|${statesCount}`;
+
+    if (this._entityItemsCacheKey === cacheKey && this._cachedEntityItemsFn) {
+      return this._cachedEntityItemsFn;
+    }
+
+    const itemsFn = () => {
       if (!this.hass?.states) return [];
       return Object.keys(this.hass.states)
         .filter((entityId) => {
@@ -275,17 +351,24 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           const stateObj = this.hass.states[entityId];
           return {
             id: entityId,
-            primary: stateObj?.attributes?.friendly_name || entityId,
+            primary: getEntityName(this.hass, stateObj || entityId),
             secondary: entityId,
           };
         });
     };
+
+    if (domains.length <= 1 && excludeEntities.length === 0) {
+      this._entityItemsCacheKey = cacheKey;
+      this._cachedEntityItemsFn = itemsFn;
+    }
+
+    return itemsFn;
   }
 
   _entityValueRenderer(entityId) {
     if (!entityId) return "";
     const stateObj = this.hass?.states?.[entityId];
-    return stateObj?.attributes?.friendly_name || entityId;
+    return getEntityName(this.hass, stateObj || entityId);
   }
 
   _entityRowRenderer(item) {
@@ -371,6 +454,37 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     return typeof val === "string" && /^[a-z_]+\.[a-zA-Z0-9_]+$/.test(val.trim());
   }
 
+  _toHexColor(val) {
+    if (!val || typeof val !== "string") return "#ffffff";
+    const trimmed = val.trim().toLowerCase();
+    if (/^#[0-9a-f]{6}$/.test(trimmed)) return trimmed;
+    if (/^#[0-9a-f]{3}$/.test(trimmed)) {
+      return "#" + trimmed[1] + trimmed[1] + trimmed[2] + trimmed[2] + trimmed[3] + trimmed[3];
+    }
+    const colorMap = {
+      black: "#000000",
+      white: "#ffffff",
+      red: "#ff0000",
+      green: "#008000",
+      blue: "#0000ff",
+      yellow: "#ffff00",
+      cyan: "#00ffff",
+      magenta: "#ff00ff",
+      orange: "#ffa500",
+      gray: "#808080",
+      grey: "#808080",
+    };
+    if (colorMap[trimmed]) return colorMap[trimmed];
+    const rgbMatch = trimmed.match(/^rgba?\((\d+)\s*,\s*(\d+)\s*,\s*(\d+)/);
+    if (rgbMatch) {
+      const r = Math.min(255, parseInt(rgbMatch[1], 10)).toString(16).padStart(2, "0");
+      const g = Math.min(255, parseInt(rgbMatch[2], 10)).toString(16).padStart(2, "0");
+      const b = Math.min(255, parseInt(rgbMatch[3], 10)).toString(16).padStart(2, "0");
+      return `#${r}${g}${b}`;
+    }
+    return "#ffffff";
+  }
+
   setConfig(config) {
     this._yamlConfig = { ...config };
     const rawEntities = config.entities ?? [];
@@ -409,7 +523,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     if (this._config.entities && Array.isArray(this._config.entities)) {
       entities = [
         ...entities,
-        ...this._config.entities.map((e) => (typeof e === "string" ? e : e.entity_id)),
+        ...this._config.entities.map((e) => (typeof e === "string" ? e : e.entity || e.entity_id)),
       ];
     }
     entities = [...new Set(entities)].filter((e) => e);
@@ -574,7 +688,9 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
       entityId =
         this._config.entity ||
         (this._config.entities &&
-          (this._config.entities[0]?.entity_id || this._config.entities[0]));
+          (typeof this._config.entities[0] === "string"
+            ? this._config.entities[0]
+            : this._config.entities[0]?.entity || this._config.entities[0]?.entity_id));
     }
 
     if (!entityId || !this.hass.states[entityId]) return;
@@ -667,7 +783,9 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     const entities = [...(this._config.entities ?? [])];
     const idx = this._tempEntityIndex !== null ? this._tempEntityIndex : this._entityEditorIndex;
     if (entities[idx]) {
-      entities[idx] = { ...entities[idx], ...properties };
+      const existing =
+        typeof entities[idx] === "string" ? { entity: entities[idx] } : entities[idx];
+      entities[idx] = { ...existing, ...properties };
       this._updateConfig("entities", entities);
     }
   }
@@ -718,6 +836,8 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     if (action.action === "navigate" || navPath) return "navigate";
     if (action.action === "toggle_lyrics") return "toggle_lyrics";
     if (action.action === "remote_control") return "remote_control";
+    if (action.action === "toggle_media_session" || action.action === "toggle_lock_screen_controls")
+      return "toggle_media_session";
     return "service";
   }
 
@@ -778,6 +898,9 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           display: flex;
           flex-wrap: wrap;
           gap: 12px;
+          min-width: 0;
+          max-width: 100%;
+          box-sizing: border-box;
         }
         .form-row-multi-column > div {
           flex: 1;
@@ -876,6 +999,8 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           gap: 8px;
           padding: 6px 0px 6px 6px;
           margin: 0px -14px 0px 0px;
+          min-width: 0;
+          box-sizing: border-box;
         }
         /* wraps the action icon, name textbox and edit button */
         .action-row-inner {
@@ -884,6 +1009,8 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           gap: 8px;
           padding: 6px 0px 6px 6px;
           margin: 0px -14px 0px 0px;
+          min-width: 0;
+          box-sizing: border-box;
         }
         .action-row-inner > ha-icon {
           margin-right: 5px;
@@ -894,10 +1021,14 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           flex: 1;
           display: flex;
           min-width: 0;
+          max-width: 100%;
+          box-sizing: border-box;
         }
         .grow-children > * {
           flex: 1;
           min-width: 0;
+          max-width: 100%;
+          box-sizing: border-box;
         }
         .entity-editor-header, .action-editor-header {
           display: flex;
@@ -1068,6 +1199,16 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           align-items: flex-start;
           gap: 8px;
           width: 100%;
+          min-width: 0;
+          max-width: 100%;
+          box-sizing: border-box;
+        }
+        ha-code-editor {
+          display: block;
+          width: 100%;
+          min-width: 0;
+          max-width: 100%;
+          box-sizing: border-box;
         }
         .icon-button-small {
           display: inline-flex;
@@ -1100,11 +1241,23 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           display: flex;
           justify-content: center;
         }
+        .artwork-row {
+          margin: 0;
+          min-width: 0;
+          max-width: 100%;
+          box-sizing: border-box;
+        }
+        .artwork-row + .artwork-row {
+          border-top: 1px solid var(--yamp-section-divider, rgba(255, 255, 255, 0.06));
+        }
         .artwork-row .artwork-fields {
           display: flex;
           flex-direction: column;
           gap: 8px;
           flex: 1;
+          min-width: 0;
+          max-width: 100%;
+          box-sizing: border-box;
         }
         .config-subtitle.small {
           font-size: 0.9em;
@@ -1138,6 +1291,13 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
 
   render() {
     if (!this._config) return html``;
+    if (this.hass) {
+      const currentLang =
+        this.hass?.selectedLanguage || this.hass?.language || this.hass?.locale?.language;
+      if (currentLang) {
+        setHassLanguage(currentLang);
+      }
+    }
 
     const currentTemplate = this._yamlConfig.template || "custom";
 
@@ -1375,6 +1535,19 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
               </div>
             </div>
           </div>
+          <div class="form-row form-row-multi-column">
+            <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
+              <ha-switch
+                id="disable-artwork-gradient-toggle"
+                .checked=${this._config.disable_artwork_gradient === true}
+                @change=${(e) => this._updateConfig("disable_artwork_gradient", e.target.checked)}
+              ></ha-switch>
+              <div style="display: flex; flex-direction: column;">
+                <label for="disable-artwork-gradient-toggle" style="font-weight: 500;">${localize("editor.labels.disable_artwork_gradient")}</label>
+                <div style="font-size: 0.85em; opacity: 0.7;">${localize("editor.subtitles.disable_artwork_gradient")}</div>
+              </div>
+            </div>
+          </div>
           <div class="form-row">
             <ha-selector
               .hass=${this.hass}
@@ -1388,6 +1561,205 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           </div>
         </div>
 
+        <div class="config-section">
+          <div class="section-header">
+            <div class="section-title">${localize("editor.sections.artwork.background.title")}</div>
+            <div class="section-description">${localize("editor.sections.artwork.background.description")}</div>
+          </div>
+          ${
+            this._isTemplateMode("background_image", this._config.background_image)
+              ? html`
+                  <div class="form-row">
+                    <div class="editor-field-wrapper">
+                      <div class="grow-children" style="flex-direction: column;">
+                        <span class="form-label"
+                          >${localize("editor.fields.background_image_entity")}</span
+                        >
+                        <ha-code-editor
+                          lint
+                          .hass=${this.hass}
+                          mode="jinja2"
+                          autocomplete-entities
+                          label="${localize("editor.sections.artwork.background.title")}"
+                          .value=${this._config.background_image ?? ""}
+                          @value-changed=${(e) => this._updateConfig("background_image", e.detail.value)}
+                        ></ha-code-editor>
+                      </div>
+                      <div class="field-actions">
+                        ${this._renderTemplateToggle(
+                          "background_image",
+                          this._config.background_image,
+                          (v) => this._updateConfig("background_image", v)
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                `
+              : html`
+                  <div class="form-row form-row-multi-column">
+                    <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
+                      <ha-switch
+                        id="background-image-url-toggle"
+                        .checked=${
+                          this._useBackgroundImageUrl ??
+                          this._looksLikeUrlOrPath(this._config.background_image)
+                        }
+                        @change=${(e) => {
+                          this._useBackgroundImageUrl = e.target.checked;
+                          this._updateConfig("background_image", "");
+                        }}
+                      ></ha-switch>
+                      <label for="background-image-url-toggle"
+                        >${localize("editor.labels.use_url_path")}</label
+                      >
+                    </div>
+                    <div style="flex: 2; display: flex; align-items: center; gap: 8px;">
+                      <div class="editor-field-wrapper">
+                        <div class="grow-children">
+                          ${
+                            (this._useBackgroundImageUrl ??
+                            this._looksLikeUrlOrPath(this._config.background_image))
+                              ? html`
+                                  <ha-selector
+                                    .hass=${this.hass}
+                                    class="full-width"
+                                    .selector=${{ text: {} }}
+                                    .value=${this._config.background_image ?? ""}
+                                    @value-changed=${(e) =>
+                                      this._updateConfig("background_image", e.detail.value)}
+                                    .label=${localize("editor.fields.image_url")}
+                                    placeholder="https://... or /local/..."
+                                    helper="${localize("editor.subtitles.image_url_helper")}"
+                                  ></ha-selector>
+                                `
+                              : html`
+                                  <ha-generic-picker
+                                    class="full-width"
+                                    .hass=${this.hass}
+                                    .value=${this._config.background_image ?? ""}
+                                    .label=${localize("editor.fields.background_image_entity")}
+                                    .valueRenderer=${(v) => this._entityValueRenderer(v)}
+                                    .rowRenderer=${(item) => this._entityRowRenderer(item)}
+                                    .getItems=${this._getEntityItems(["camera", "image"])}
+                                    @value-changed=${(e) =>
+                                      this._updateConfig("background_image", e.detail.value)}
+                                    allow-custom-value
+                                  ></ha-generic-picker>
+                                `
+                          }
+                        </div>
+                        <div class="field-actions">
+                          ${this._renderTemplateToggle(
+                            "background_image",
+                            this._config.background_image,
+                            (v) => this._updateConfig("background_image", v)
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                `
+          }
+          <div class="form-row form-row-multi-column" style="${!this._config.background_image ? "opacity: 0.4; pointer-events: none;" : ""}">
+            <div class="grow-children">
+              <ha-selector
+                .hass=${this.hass}
+                label="${localize("editor.fields.background_fit")}"
+                .disabled=${!this._config.background_image}
+                .selector=${{
+                  select: {
+                    mode: "dropdown",
+                    options: [
+                      {
+                        value: "cover",
+                        label: (localize("editor.background_fit.cover") || "Cover") + " (default)",
+                      },
+                      {
+                        value: "contain",
+                        label: localize("editor.background_fit.contain") || "Contain",
+                      },
+                      { value: "fill", label: localize("editor.background_fit.fill") || "Fill" },
+                      {
+                        value: "scale-down",
+                        label: localize("editor.background_fit.scale-down") || "Scale Down",
+                      },
+                      { value: "none", label: localize("editor.background_fit.none") || "None" },
+                    ],
+                  },
+                }}
+                .value=${this._config.background_fit ?? "cover"}
+                @value-changed=${(e) => {
+                  const value = e.detail.value;
+                  this._updateConfig("background_fit", value === "cover" ? undefined : value);
+                }}
+              ></ha-selector>
+            </div>
+            <div class="grow-children">
+              <ha-selector
+                .hass=${this.hass}
+                label="${localize("editor.fields.background_position")}"
+                .disabled=${!this._config.background_image}
+                .selector=${{
+                  select: {
+                    mode: "dropdown",
+                    options: [
+                      {
+                        value: "center center",
+                        label:
+                          (localize("editor.background_position.center") || "Center") +
+                          " (default)",
+                      },
+                      {
+                        value: "top center",
+                        label: localize("editor.background_position.top") || "Top",
+                      },
+                      {
+                        value: "bottom center",
+                        label: localize("editor.background_position.bottom") || "Bottom",
+                      },
+                      {
+                        value: "center left",
+                        label: localize("editor.background_position.center left") || "Center Left",
+                      },
+                      {
+                        value: "center right",
+                        label:
+                          localize("editor.background_position.center right") || "Center Right",
+                      },
+                      {
+                        value: "top left",
+                        label: localize("editor.background_position.top left") || "Top Left",
+                      },
+                      {
+                        value: "top right",
+                        label: localize("editor.background_position.top right") || "Top Right",
+                      },
+                      {
+                        value: "bottom left",
+                        label: localize("editor.background_position.bottom left") || "Bottom Left",
+                      },
+                      {
+                        value: "bottom right",
+                        label:
+                          localize("editor.background_position.bottom right") || "Bottom Right",
+                      },
+                    ],
+                  },
+                }}
+                .value=${this._config.background_position ?? "center center"}
+                @value-changed=${(e) => {
+                  const value = e.detail.value;
+                  this._updateConfig(
+                    "background_position",
+                    value === "center center" ? undefined : value
+                  );
+                }}
+              ></ha-selector>
+            </div>
+          </div>
+
+
+        </div>
         <div class="config-section">
           <div class="section-header">
             <div class="section-title">${localize("editor.sections.artwork.idle.title")}</div>
@@ -1450,7 +1822,8 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                     .value=${this._config.idle_image ?? ""}
                                     @value-changed=${(e) =>
                                       this._updateConfig("idle_image", e.detail.value)}
-                                    label="e.g., https://example.com/image.jpg or /local/custom/image.jpg"
+                                    .label=${localize("editor.fields.image_url")}
+                                    placeholder="https://... or /local/..."
                                     helper="${localize("editor.subtitles.image_url_helper")}"
                                   ></ha-selector>
                                 `
@@ -1514,6 +1887,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                           <div class="artwork-fields">
                             <ha-selector
                               .hass=${this.hass}
+                              class="full-width"
                               label="${localize("editor.fields.match_field")}"
                               .required=${true}
                               .selector=${{ select: { mode: "dropdown", options: matchOptions } }}
@@ -1597,9 +1971,10 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                                         stateObj?.attributes
                                                           ?.entity_picture_local ||
                                                         stateObj?.attributes?.album_art;
-                                                      const name =
-                                                        stateObj?.attributes?.friendly_name ||
-                                                        entId;
+                                                      const name = getEntityName(
+                                                        this.hass,
+                                                        stateObj || entId
+                                                      );
                                                       const ratio =
                                                         this._entityRatios &&
                                                         this._entityRatios[entId];
@@ -1748,10 +2123,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                     </div>
                                   `
                             }
-                            <div
-                              class="form-row-multi-column"
-                              style="gap:12px; flex-wrap:wrap; align-items:flex-start;"
-                            >
+                            <div class="form-row-multi-column" style="align-items:flex-start;">
                               <div class="grow-children" style="flex:1; min-width: 100px;">
                                 <ha-selector
                                   .hass=${this.hass}
@@ -1767,6 +2139,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                               <div class="grow-children" style="flex:1.5; min-width: 120px;">
                                 <ha-selector
                                   .hass=${this.hass}
+                                  class="full-width"
                                   label="${localize("editor.fields.object_fit")}"
                                   .required=${false}
                                   .selector=${{
@@ -1822,6 +2195,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                               <div class="grow-children" style="flex:1.5; min-width: 120px;">
                                 <ha-selector
                                   .hass=${this.hass}
+                                  class="full-width"
                                   label="${localize("editor.fields.artwork_position")}"
                                   .required=${false}
                                   .selector=${{
@@ -2011,7 +2385,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
             sectionHasMatch = true;
           }
         });
-        section.style.display = sectionHasMatch ? "" : "none";
+        /** @type {HTMLElement} */ (section).style.display = sectionHasMatch ? "" : "none";
       });
     }
   }
@@ -2060,9 +2434,10 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
 
   _renderEntitiesTab() {
     if (!this._config) return html``;
+    const getEntId = (e) => (typeof e === "string" ? e : e?.entity || e?.entity_id || "");
     let entities = [...(this._config.entities ?? [])];
-    if (entities.length === 0 || entities[entities.length - 1].entity_id) {
-      entities.push({ entity_id: "" });
+    if (entities.length === 0 || getEntId(entities[entities.length - 1])) {
+      entities.push({ entity: "" });
     }
     return html`
       <div class="entity-group">
@@ -2089,14 +2464,14 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                         class="full-width"
                         style="display: block; width: 100%;"
                         .hass=${this.hass}
-                        .value=${ent.entity_id || ""}
+                        .value=${getEntId(ent)}
                         .label=${localize("common.media_player")}
                         .valueRenderer=${(v) => this._entityValueRenderer(v)}
                         .rowRenderer=${(item) => this._entityRowRenderer(item)}
                         .getItems=${this._getEntityItems(
                           ["media_player"],
-                          idx === entities.length - 1 && !ent.entity_id
-                            ? (this._config.entities?.map((e) => e.entity_id) ?? [])
+                          idx === entities.length - 1 && !getEntId(ent)
+                            ? (this._config.entities?.map(getEntId) ?? [])
                             : []
                         )}
                         @value-changed=${(e) => this._onEntityChanged(idx, e.detail.value)}
@@ -2105,7 +2480,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                     </div>
                     <div class="entity-row-actions">
                       <ha-icon
-                        class="icon-button ${!ent.entity_id ? "icon-button-disabled" : ""}"
+                        class="icon-button ${!getEntId(ent) ? "icon-button-disabled" : ""}"
                         icon="mdi:pencil"
                         title="${localize("common.edit_entity")}"
                         @click=${() => this._onEditEntity(idx)}
@@ -2612,6 +2987,67 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           ></ha-selector>
         </div>
 
+        <div class="form-row" data-search-keys="font_color font color appearance text_color">
+          <div class="editor-field-wrapper">
+            ${
+              this._isTemplateMode("font_color", this._config.font_color)
+                ? html`
+                    <div class="grow-children" style="flex-direction: column;">
+                      <span class="form-label">${localize("editor.fields.font_color_entity")}</span>
+                      <ha-code-editor
+                        lint
+                        .hass=${this.hass}
+                        mode="jinja2"
+                        autocomplete-entities
+                        label="${localize("editor.fields.font_color")}"
+                        .value=${this._config.font_color ?? ""}
+                        @value-changed=${(e) => this._updateConfig("font_color", e.detail.value)}
+                      ></ha-code-editor>
+                    </div>
+                  `
+                : html`
+                    <div
+                      class="grow-children"
+                      style="display: flex; align-items: flex-start; gap: 12px;"
+                    >
+                      <div
+                        style="position: relative; width: 36px; height: 36px; border-radius: 50%; overflow: hidden; border: 2px solid var(--divider-color, rgba(255,255,255,0.2)); flex: 0 0 36px; cursor: pointer; margin-top: 8px; box-shadow: 0 1px 3px rgba(0,0,0,0.2);"
+                        title="${localize("editor.fields.font_color")}"
+                      >
+                        <input
+                          type="color"
+                          .value=${this._toHexColor(this._config.font_color)}
+                          @input=${(e) => this._updateConfig("font_color", e.target.value)}
+                          style="position: absolute; top: -50%; left: -50%; width: 200%; height: 200%; cursor: pointer; border: none; padding: 0; background: transparent;"
+                        />
+                      </div>
+                      <ha-selector
+                        .hass=${this.hass}
+                        class="full-width"
+                        style="flex: 1;"
+                        .selector=${{ text: {} }}
+                        .value=${this._config.font_color ?? ""}
+                        label="${localize("editor.fields.font_color")}"
+                        helper="${localize("editor.subtitles.font_color_helper") || "e.g., #ffffff, rgba(255, 255, 255, 0.9), white"}"
+                        @value-changed=${(e) => this._updateConfig("font_color", e.detail.value)}
+                      ></ha-selector>
+                    </div>
+                  `
+            }
+            <div class="field-actions">
+              ${this._renderTemplateToggle("font_color", this._config.font_color, (v) =>
+                this._updateConfig("font_color", v)
+              )}
+              <ha-icon
+                class="icon-button-small ${!this._config.font_color ? "icon-button-disabled" : ""}"
+                icon="mdi:restore"
+                title="${localize("common.reset_default")}"
+                @click=${() => this._updateConfig("font_color", undefined)}
+              ></ha-icon>
+            </div>
+          </div>
+        </div>
+
         <div
           data-search-keys="alternate_progress_bar always_collapsed display_timestamps"
           class="form-row form-row-multi-column"
@@ -2705,6 +3141,111 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                   `
             }
           </div>
+        </div>
+        <div
+          class="form-row"
+          data-search-keys="lyrics_background_fade lyrics background fade overlay"
+          style="${!this._isTemplateValue(this._config.always_collapsed) && this._config.always_collapsed === true ? "opacity: 0.5;" : ""}"
+          title="${
+            !this._isTemplateValue(this._config.always_collapsed) &&
+            this._config.always_collapsed === true
+              ? localize("editor.subtitles.not_available_collapsed")
+              : ""
+          }"
+        >
+          ${
+            this._isTemplateMode("lyrics_background_fade", this._config.lyrics_background_fade)
+              ? html`
+                  <div class="editor-field-wrapper">
+                    <div class="grow-children" style="flex-direction: column;">
+                      <span class="form-label"
+                        >${localize("editor.labels.lyrics_background_fade")}</span
+                      >
+                      <ha-code-editor
+                        lint
+                        .hass=${this.hass}
+                        mode="jinja2"
+                        autocomplete-entities
+                        label="${localize("editor.labels.lyrics_background_fade")}"
+                        .value=${
+                          this._config.lyrics_background_fade !== undefined &&
+                          this._config.lyrics_background_fade !== null
+                            ? String(this._config.lyrics_background_fade)
+                            : ""
+                        }
+                        @value-changed=${(e) =>
+                          this._updateConfig("lyrics_background_fade", e.detail.value)}
+                      ></ha-code-editor>
+                    </div>
+                    <div class="field-actions">
+                      ${this._renderTemplateToggle(
+                        "lyrics_background_fade",
+                        this._config.lyrics_background_fade,
+                        (v) => this._updateConfig("lyrics_background_fade", v)
+                      )}
+                      <ha-icon
+                        class="icon-button-small"
+                        icon="mdi:restore"
+                        title="${localize("common.reset_default")}"
+                        @click=${() =>
+                          this._updateConfig(
+                            "lyrics_background_fade",
+                            DEFAULT_LYRICS_BACKGROUND_FADE
+                          )}
+                      ></ha-icon>
+                    </div>
+                  </div>
+                `
+              : html`
+                  <span class="form-label"
+                    >${localize("editor.labels.lyrics_background_fade")}</span
+                  >
+                  <div class="editor-field-wrapper">
+                    <div class="grow-children">
+                      <ha-selector
+                        .hass=${this.hass}
+                        class="full-width"
+                        .selector=${LYRICS_BACKGROUND_FADE_SELECTOR}
+                        helper="${localize("editor.subtitles.lyrics_background_fade")}"
+                        .value=${this._config.lyrics_background_fade ?? DEFAULT_LYRICS_BACKGROUND_FADE}
+                        .disabled=${!this._isTemplateValue(this._config.always_collapsed) && this._config.always_collapsed === true}
+                        @value-changed=${(e) => {
+                          const raw = e.detail.value;
+                          if (raw === "" || raw === undefined) {
+                            this._updateConfig(
+                              "lyrics_background_fade",
+                              DEFAULT_LYRICS_BACKGROUND_FADE
+                            );
+                            return;
+                          }
+                          const parsed = Number(raw);
+                          this._updateConfig(
+                            "lyrics_background_fade",
+                            Number.isFinite(parsed) ? parsed : DEFAULT_LYRICS_BACKGROUND_FADE
+                          );
+                        }}
+                      ></ha-selector>
+                    </div>
+                    <div class="field-actions">
+                      ${this._renderTemplateToggle(
+                        "lyrics_background_fade",
+                        this._config.lyrics_background_fade,
+                        (v) => this._updateConfig("lyrics_background_fade", v)
+                      )}
+                      <ha-icon
+                        class="icon-button-small"
+                        icon="mdi:restore"
+                        title="${localize("common.reset_default")}"
+                        @click=${() =>
+                          this._updateConfig(
+                            "lyrics_background_fade",
+                            DEFAULT_LYRICS_BACKGROUND_FADE
+                          )}
+                      ></ha-icon>
+                    </div>
+                  </div>
+                `
+          }
         </div>
         <div class="form-row">
           <ha-selector
@@ -2873,6 +3414,70 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           </div>
           <div class="config-subtitle">${localize("editor.subtitles.show_album")}</div>
         </div>
+        ${
+          this._isTemplateMode("lock_screen_controls", this._config.lock_screen_controls)
+            ? html`
+                <div
+                  class="form-row"
+                  data-search-keys="lock_screen_controls media_session lock screen ios controls experimental"
+                >
+                  <div class="editor-field-wrapper">
+                    <div class="grow-children" style="flex-direction: column;">
+                      <span class="form-label"
+                        >${localize("editor.labels.lock_screen_controls")}</span
+                      >
+                      <ha-code-editor
+                        lint
+                        .hass=${this.hass}
+                        mode="jinja2"
+                        autocomplete-entities
+                        label="${localize("editor.labels.lock_screen_controls")}"
+                        .value=${
+                          typeof this._config.lock_screen_controls === "string"
+                            ? this._config.lock_screen_controls
+                            : ""
+                        }
+                        @value-changed=${(e) =>
+                          this._updateConfig("lock_screen_controls", e.detail.value)}
+                      ></ha-code-editor>
+                    </div>
+                    <div class="field-actions">
+                      ${this._renderTemplateToggle(
+                        "lock_screen_controls",
+                        this._config.lock_screen_controls,
+                        (v) => this._updateConfig("lock_screen_controls", v)
+                      )}
+                    </div>
+                  </div>
+                  <div class="config-subtitle">
+                    ${localize("editor.subtitles.lock_screen_controls")}
+                  </div>
+                </div>
+              `
+            : html`
+                <div
+                  class="form-row"
+                  data-search-keys="lock_screen_controls media_session lock screen ios controls experimental"
+                >
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <ha-switch
+                      id="lock-screen-controls-toggle"
+                      .checked=${this._config.lock_screen_controls === true}
+                      @change=${(e) => this._updateConfig("lock_screen_controls", e.target.checked)}
+                    ></ha-switch>
+                    <span>${localize("editor.labels.lock_screen_controls")}</span>
+                    ${this._renderTemplateToggle(
+                      "lock_screen_controls",
+                      this._config.lock_screen_controls,
+                      (v) => this._updateConfig("lock_screen_controls", v)
+                    )}
+                  </div>
+                  <div class="config-subtitle">
+                    ${localize("editor.subtitles.lock_screen_controls")}
+                  </div>
+                </div>
+              `
+        }
         <div class="form-row">
           <div>
             <ha-switch
@@ -2907,7 +3512,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
               .selector=${{
                 select: {
                   multiple: true,
-                  options: ADAPTIVE_TEXT_SELECTOR_OPTIONS,
+                  options: getAdaptiveTextSelectorOptions(),
                 },
               }}
               .value=${this._getAdaptiveTextTargetsValue()}
@@ -4164,6 +4769,12 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                       localize("editor.action_types.remote_control") ||
                       "Open Remote Controls Overlay",
                   },
+                  {
+                    value: "toggle_media_session",
+                    label:
+                      localize("editor.action_types.toggle_media_session") ||
+                      "Toggle Media Session Controls (Experimental)",
+                  },
                 ],
               },
             }}
@@ -4245,7 +4856,11 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                   navigation_new_tab: undefined,
                   action: mode,
                 });
-              } else if (mode === "toggle_lyrics" || mode === "remote_control") {
+              } else if (
+                mode === "toggle_lyrics" ||
+                mode === "remote_control" ||
+                mode === "toggle_media_session"
+              ) {
                 this._updateActionProperties({
                   menu_item: undefined,
                   service: undefined,
@@ -4261,6 +4876,20 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
         </div>
 
         
+        ${
+          actionMode === "toggle_media_session"
+            ? html`
+                <div class="form-row">
+                  <div class="config-subtitle">
+                    ${
+                      localize("editor.subtitles.toggle_media_session") ||
+                      "Note: Lock screen and media session controls are experimental."
+                    }
+                  </div>
+                </div>
+              `
+            : nothing
+        }
         ${
           actionMode === "menu"
             ? html`
@@ -4553,11 +5182,16 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
       // Remove empty row
       updated.splice(index, 1);
     } else {
-      updated[index] = { ...updated[index], entity_id: newValue };
+      const existing =
+        typeof updated[index] === "string" ? { entity: updated[index] } : updated[index];
+      updated[index] = { ...existing, entity: newValue, entity_id: newValue };
     }
 
     // Always strip blank row before writing to config
-    const cleaned = updated.filter((e) => e.entity_id && e.entity_id.trim() !== "");
+    const cleaned = updated.filter((e) => {
+      const id = typeof e === "string" ? e : e?.entity || e?.entity_id;
+      return id && id.trim() !== "";
+    });
 
     this._updateConfig("entities", cleaned);
   }
@@ -4608,6 +5242,15 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     }
     if (act?.action === "next_entity") {
       return `${localize("editor.action_types.next_entity") || "Next Entity Chip"}${placementText}${triggerText}`;
+    }
+    if (act?.action === "toggle_lyrics") {
+      return `${localize("editor.action_types.toggle_lyrics") || "Toggle Lyrics Overlay"}${placementText}${triggerText}`;
+    }
+    if (act?.action === "remote_control") {
+      return `${localize("editor.action_types.remote_control") || "Open Remote Controls Overlay"}${placementText}${triggerText}`;
+    }
+    if (act?.action === "toggle_media_session" || act?.action === "toggle_lock_screen_controls") {
+      return `${localize("editor.action_types.toggle_media_session") || "Toggle Media Session Controls (Experimental)"}${placementText}${triggerText}`;
     }
     if (act?.menu_item) {
       return `Open Menu Item: ${act.menu_item}${placementText}${triggerText}`;

@@ -42,6 +42,7 @@ const lightModeVariables = css`
   --card-bg: #fff;
   --primary-text: #222;
   --secondary-text: #666;
+  --yamp-overlay-base: #fff;
   --yamp-overlay-bg: rgba(255, 255, 255, 0.95);
   --yamp-overlay-text: #222;
   --yamp-overlay-divider: rgba(0, 0, 0, 0.1);
@@ -106,6 +107,7 @@ export const yampCardStyles = css`
     --yamp-section-description-color: #888;
 
     /* Universal theme-aware variables (default to dark) */
+    --yamp-overlay-base: #000;
     --yamp-overlay-bg: rgba(0, 0, 0, 0.82);
     --yamp-overlay-text: #fff;
     --yamp-overlay-text-shadow: none;
@@ -189,11 +191,8 @@ export const yampCardStyles = css`
     --search-queue-hover-border: var(--divider-color, #777);
 
     /* Universal theme-aware variables mapped to HA theme - used when appearance is automatic */
-    --yamp-overlay-bg: color-mix(
-      in srgb,
-      var(--ha-card-background, var(--card-background-color, #000)),
-      transparent 18%
-    );
+    --yamp-overlay-base: var(--ha-card-background, var(--card-background-color, #000));
+    --yamp-overlay-bg: color-mix(in srgb, var(--yamp-overlay-base), transparent 18%);
     --yamp-overlay-text: var(--primary-text-color, #fff);
     --yamp-overlay-text-shadow: none;
     --yamp-overlay-divider: var(--divider-color, rgba(255, 255, 255, 0.1));
@@ -245,7 +244,9 @@ export const yampCardStyles = css`
   }
 
   ha-card.yamp-card {
-    display: block;
+    display: flex;
+    flex-direction: column;
+    height: 100%;
     border-radius: var(--border-radius);
     box-shadow: var(--ha-card-box-shadow, none);
     background: transparent;
@@ -259,8 +260,12 @@ export const yampCardStyles = css`
   }
 
   /* Static background color fallback for inset artwork layouts */
-  ha-card.yamp-card:has(> .yamp-card-inner[data-artwork-fit="scaled-contain"]),
-  ha-card.yamp-card:has(> .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"]) {
+  ha-card.yamp-card:has(
+      > .yamp-card-inner[data-has-background-image="false"][data-artwork-fit="scaled-contain"]
+    ),
+  ha-card.yamp-card:has(
+      > .yamp-card-inner[data-has-background-image="false"][data-artwork-fit="scaled-contain-alternate"]
+    ) {
     background: var(--card-bg);
   }
 
@@ -268,6 +273,8 @@ export const yampCardStyles = css`
     position: relative;
     z-index: ${Z_LAYERS.FLOATING_ELEMENT};
     height: 100%;
+    min-height: 100%;
+    flex: 1 1 100%;
     display: flex;
     flex-direction: column;
     overflow: hidden;
@@ -275,6 +282,34 @@ export const yampCardStyles = css`
     border-radius: var(--border-radius);
     clip-path: inset(0 round var(--border-radius));
     transform: translateZ(0);
+  }
+
+  .card-background-image-layer {
+    position: absolute;
+    inset: 0;
+    z-index: ${Z_LAYERS.MEDIA_BACKGROUND};
+    background-repeat: no-repeat;
+    pointer-events: none;
+    transform: translateZ(0);
+  }
+
+  .card-background-image-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: ${Z_LAYERS.MEDIA_BACKGROUND};
+    pointer-events: none;
+    background: linear-gradient(
+      to bottom,
+      rgba(0, 0, 0, 0.2) 0%,
+      rgba(0, 0, 0, 0.4) 50%,
+      rgba(0, 0, 0, 0.6) 100%
+    );
+    transform: translateZ(0);
+  }
+
+  .yamp-card-inner[data-lyrics-active="true"] .card-background-image-overlay,
+  :host([data-disable-artwork-gradient="true"]) .card-background-image-overlay {
+    display: none !important;
   }
 
   .full-bleed-artwork-bg {
@@ -302,19 +337,9 @@ export const yampCardStyles = css`
     transform: translateZ(0);
   }
 
-  .yamp-card-inner[data-lyrics-active="true"] .full-bleed-artwork-fade {
-    z-index: ${Z_LAYERS.LYRICS_OVERLAY + 1};
-    background: linear-gradient(
-      to bottom,
-      transparent 0%,
-      color-mix(
-          in srgb,
-          var(--ha-card-background, var(--card-background-color, var(--card-bg, #000))) 40%,
-          transparent
-        )
-        55%,
-      var(--ha-card-background, var(--card-background-color, var(--card-bg, #000))) 100%
-    );
+  .yamp-card-inner[data-lyrics-active="true"] .full-bleed-artwork-fade,
+  :host([data-disable-artwork-gradient="true"]) .full-bleed-artwork-fade {
+    display: none !important;
   }
 
   /* Idle state dimming */
@@ -384,13 +409,13 @@ export const yampCardStyles = css`
   }
 
   .dim-idle .more-info-btn ha-icon {
-    color: #9ea2a8;
+    color: #fff;
   }
 
   .more-info-icon {
     font-size: 2em;
     line-height: 1;
-    color: #fff !important;
+    color: #fff;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -398,7 +423,15 @@ export const yampCardStyles = css`
   }
 
   .dim-idle .more-info-icon {
-    color: #9ea2a8;
+    color: #fff;
+  }
+
+  :host([data-disable-artwork-gradient="true"]) .more-info-icon {
+    color: var(--yamp-icon-color, var(--primary-text, #444));
+  }
+
+  :host([data-disable-artwork-gradient="true"]) .dim-idle .more-info-icon {
+    color: var(--secondary-text, #9ea2a8);
   }
 
   /* Card artwork spacer */
@@ -600,8 +633,8 @@ export const yampCardStyles = css`
   .chip-row {
     display: flex;
     gap: 8px;
-    padding: 8px 12px 18px 12px;
-    margin-bottom: -6px;
+    padding: 8px 12px 6px 12px;
+    margin-bottom: 6px;
     position: relative;
     z-index: ${Z_LAYERS.STICKY_CHIPS};
     overflow-x: auto;
@@ -732,9 +765,13 @@ export const yampCardStyles = css`
   }
 
   @media (hover: hover) {
-    .chip:hover {
-      background: var(--yamp-chip-selected-bg);
+    .chip-row .chip:hover,
+    .action-chip-row .chip:hover,
+    .entity-options-chips-strip .chip:hover,
+    .search-filter-chips .chip:hover {
+      background: var(--custom-accent);
       color: var(--yamp-chip-selected-text);
+      opacity: 1;
     }
   }
 
@@ -1008,6 +1045,14 @@ export const yampCardStyles = css`
     text-overflow: clip !important;
     -webkit-line-clamp: unset !important;
     text-align: left !important;
+    touch-action: pan-y;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+
+  [data-marquee-dragging="true"],
+  [data-marquee-dragging="true"] * {
+    cursor: grabbing !important;
   }
 
   /* Single marquee mode (infinite loop when only 1 element overflows) */
@@ -1028,6 +1073,16 @@ export const yampCardStyles = css`
     > .marquee-inner {
     will-change: transform, opacity;
     animation: yamp-marquee var(--yamp-marquee-duration, 8s) ease-in-out 1;
+  }
+
+  [data-marquee-paused="true"] > .marquee-inner {
+    animation-play-state: paused !important;
+  }
+
+  [data-marquee-manual="true"] > .marquee-inner {
+    animation: none !important;
+    max-width: none !important;
+    will-change: transform;
   }
 
   @media (hover: hover) {
@@ -1313,6 +1368,7 @@ export const yampCardStyles = css`
   @media (hover: hover) {
     .modern-button:hover {
       background: rgba(255, 255, 255, 0.25);
+      color: var(--custom-accent);
     }
   }
 
@@ -1342,7 +1398,15 @@ export const yampCardStyles = css`
     cursor: pointer;
     padding: 6px;
     border-radius: var(--button-border-radius);
-    transition: background var(--transition-normal);
+    transition:
+      background var(--transition-normal),
+      color var(--transition-normal);
+  }
+
+  @media (hover: hover) {
+    .button:hover {
+      color: var(--custom-accent);
+    }
   }
 
   .button:active {
@@ -1788,22 +1852,9 @@ export const yampCardStyles = css`
     );
   }
 
-  .yamp-card-inner[data-lyrics-active="true"] .card-lower-fade {
-    z-index: ${Z_LAYERS.LYRICS_OVERLAY + 1};
-    background: linear-gradient(
-      to bottom,
-      transparent 0%,
-      transparent calc(100% - var(--yamp-lyrics-bottom-offset, 180px)),
-      color-mix(
-          in srgb,
-          var(--ha-card-background, var(--card-background-color, var(--card-bg, #000))) 85%,
-          transparent
-        )
-        calc(100% - var(--yamp-lyrics-bottom-offset, 180px) + 30px),
-      var(--ha-card-background, var(--card-background-color, var(--card-bg, #000)))
-        calc(100% - var(--yamp-lyrics-bottom-offset, 180px) + 70px),
-      var(--ha-card-background, var(--card-background-color, var(--card-bg, #000))) 100%
-    );
+  .yamp-card-inner[data-lyrics-active="true"] .card-lower-fade,
+  :host([data-disable-artwork-gradient="true"]) .card-lower-fade {
+    display: none !important;
   }
 
   .card-lower-content {
@@ -1815,15 +1866,39 @@ export const yampCardStyles = css`
   }
 
   .yamp-card-inner[data-lyrics-active="true"] .card-lower-content {
+    z-index: auto;
     pointer-events: none;
   }
 
   .yamp-card-inner[data-lyrics-active="true"] .card-artwork-spacer {
     pointer-events: none !important;
+    z-index: ${Z_LAYERS.MEDIA_BACKGROUND};
   }
 
   .yamp-card-inner[data-lyrics-active="true"] .card-lower-content > :not(.card-artwork-spacer) {
+    z-index: ${Z_LAYERS.FLOATING_CONTROLS};
     pointer-events: auto;
+  }
+
+  .yamp-card-inner[data-lyrics-active="true"]
+    .card-lower-content
+    > :not(.card-artwork-spacer):not(.in-menu-active-label):not(.more-info-menu):not(
+      .collapsed-artwork-container
+    ):not(.collapsed-progress-bar) {
+    position: relative;
+  }
+
+  .yamp-card-inner[data-lyrics-active="true"] .in-menu-active-label,
+  .yamp-card-inner[data-lyrics-active="true"] .more-info-menu.volume-collapsed,
+  .yamp-card-inner[data-lyrics-active="true"] .collapsed-artwork-container,
+  .yamp-card-inner[data-lyrics-active="true"] .collapsed-progress-bar {
+    position: absolute !important;
+    z-index: ${Z_LAYERS.FLOATING_CONTROLS};
+  }
+
+  .yamp-card-inner[data-lyrics-active="true"] .in-menu-active-label,
+  .yamp-card-inner[data-lyrics-active="true"] .collapsed-progress-bar {
+    pointer-events: none !important;
   }
 
   .card-lower-content.transitioning .details,
@@ -1883,7 +1958,23 @@ export const yampCardStyles = css`
     color: #fff;
   }
 
-  /* Match Theme mode & Scaled Contain Alternate mode - use theme colors for high contrast in light/dark themes */
+  /* Custom font color, Lyrics mode & Scaled Contain Alternate mode - use custom or theme colors */
+  .yamp-card-inner[data-has-font-color="true"] .details,
+  .yamp-card-inner[data-has-font-color="true"] .title,
+  .yamp-card-inner[data-has-font-color="true"] .artist,
+  .yamp-card-inner[data-has-font-color="true"] .source-menu-btn,
+  .yamp-card-inner[data-has-font-color="true"] .source-selected,
+  .yamp-card-inner[data-has-font-color="true"] .controls-row,
+  .yamp-card-inner[data-has-font-color="true"] .button,
+  .yamp-card-inner[data-has-font-color="true"] .modern-button,
+  .yamp-card-inner[data-has-font-color="true"] .vol-stepper span,
+  .yamp-card-inner[data-has-font-color="true"] .vol-label,
+  .yamp-card-inner[data-has-font-color="true"] .more-info-btn ha-icon,
+  .yamp-card-inner[data-has-font-color="true"] .volume-icon-btn,
+  .yamp-card-inner[data-has-font-color="true"] .volume-icon-btn ha-icon,
+  .yamp-card-inner[data-has-font-color="true"] .radio-mode-button,
+  .yamp-card-inner[data-has-font-color="true"] .volume-slider-icon,
+  .yamp-card-inner[data-has-font-color="true"] .timestamps-container,
   .yamp-card-inner[data-lyrics-active="true"] .details,
   .yamp-card-inner[data-lyrics-active="true"] .title,
   .yamp-card-inner[data-lyrics-active="true"] .artist,
@@ -1919,16 +2010,18 @@ export const yampCardStyles = css`
     color: var(--primary-text);
   }
 
+  .yamp-card-inner[data-has-font-color="true"] .modern-button,
   .yamp-card-inner[data-lyrics-active="true"] .modern-button,
   .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .modern-button {
     background: color-mix(in srgb, var(--primary-text), transparent 85%);
     box-shadow: none; /* Cleaner look on card background */
   }
 
-  /* Hamburger icon (span) uses !important in base styles, so we override it here */
+  /* Hamburger icon (span) overrides */
+  .yamp-card-inner[data-has-font-color="true"] .more-info-icon,
   .yamp-card-inner[data-lyrics-active="true"] .more-info-icon,
   .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .more-info-icon {
-    color: var(--primary-text) !important;
+    color: var(--primary-text);
   }
 
   /* Ensure active buttons still use the accent color */
@@ -2232,7 +2325,8 @@ export const yampCardStyles = css`
 
   /* Expand container height when persistent controls are hidden due to layout constraints */
   :host([data-hide-persistent-controls="true"]) .entity-options-container,
-  :host([data-pin-search-headers="true"]) .entity-options-container {
+  :host([data-pin-search-headers="true"]) .entity-options-container,
+  :host([data-in-search="true"]) .entity-options-container {
     max-height: 96%;
     ${HIDE_SCROLLBAR}
   }
@@ -2439,7 +2533,7 @@ export const yampCardStyles = css`
   }
 
   .in-menu-active-label {
-    position: absolute;
+    position: absolute !important;
     left: 50%;
     bottom: 6px;
     transform: translateX(-50%);
@@ -2448,7 +2542,7 @@ export const yampCardStyles = css`
     letter-spacing: 0.05em;
     color: #fff;
     opacity: 0.78;
-    pointer-events: none;
+    pointer-events: none !important;
   }
 
   /* When always collapsed is enabled, keep menu at top */
@@ -2481,10 +2575,10 @@ export const yampCardStyles = css`
     justify-content: flex-start;
     align-items: center;
     overflow-x: auto;
-    padding: 2px 8px 2px 8px;
+    padding: 2px 8px 6px 8px;
     background: var(--ha-menu-chip-row-background, transparent);
-    -webkit-mask-image: none;
-    mask-image: none;
+    -webkit-mask-image: ${CHIP_ROW_MASK};
+    mask-image: ${CHIP_ROW_MASK};
   }
 
   .entity-options-chips-strip .chip {
@@ -3365,14 +3459,19 @@ export const yampCardStyles = css`
     opacity: 1;
   }
 
+  .entity-options-sheet .search-filter-chips {
+    padding-top: 4px;
+    padding-bottom: 4px;
+  }
+
   .entity-options-sheet .search-filter-chips .chip {
     justify-content: center;
   }
 
   @media (hover: hover) {
     .entity-options-sheet .search-filter-chips .chip:hover {
-      background: var(--custom-accent) !important;
-      color: var(--yamp-chip-selected-text) !important;
+      background: var(--custom-accent);
+      color: var(--yamp-chip-selected-text);
       opacity: 1;
     }
   }
@@ -3382,6 +3481,7 @@ export const yampCardStyles = css`
     flex: 1;
     min-height: 0;
     overflow-y: auto;
+    overscroll-behavior-y: contain;
     margin: 12px 0;
     padding-bottom: 0px;
     /* Hide scrollbars */
@@ -3401,10 +3501,41 @@ export const yampCardStyles = css`
     flex-shrink: 0;
   }
 
-  .entity-options-sheet:not([data-pin-search-headers="true"]) .entity-options-search {
+  .entity-options-sheet:not([data-pin-search-headers="true"]):not(.search-mode)
+    .entity-options-search {
     display: flex;
     flex-direction: column;
     flex-shrink: 0;
+  }
+
+  .search-header-panel {
+    flex: 0 0 auto;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    touch-action: pan-x;
+    overscroll-behavior: contain;
+    opacity: 1;
+    will-change: margin-top, opacity;
+  }
+
+  .search-header-panel.smooth-transition {
+    transition:
+      margin-top 0.25s cubic-bezier(0.4, 0, 0.2, 1),
+      opacity 0.2s ease !important;
+  }
+
+  .search-header-panel.retracted {
+    opacity: 0 !important;
+    pointer-events: none !important;
+  }
+
+  .entity-options-sheet[data-pin-search-headers="true"] .search-header-panel {
+    transition: none !important;
+    margin-top: 0px !important;
+    opacity: 1 !important;
+    transform: none !important;
+    pointer-events: auto !important;
   }
 
   .entity-options-sheet .entity-options-search-row,
@@ -3446,6 +3577,7 @@ export const yampCardStyles = css`
     }
   }
 
+  .entity-options-sheet.search-mode,
   .entity-options-sheet[data-pin-search-headers="true"] {
     overflow-y: hidden;
     display: flex;
@@ -3453,6 +3585,7 @@ export const yampCardStyles = css`
     padding-bottom: 0px;
   }
 
+  .entity-options-sheet.search-mode .entity-options-search,
   .entity-options-sheet[data-pin-search-headers="true"] .entity-options-search {
     flex: 1;
     display: flex;
@@ -3493,77 +3626,46 @@ export const yampCardStyles = css`
     ${HIDE_SCROLLBAR}
   }
 
-  /* Reserved space for persistent media controls when pinning is active */
+  /* Reserved space for persistent media controls when pinning or search mode is active */
+  .entity-options-sheet.search-mode .search-sheet-results,
+  .entity-options-sheet.search-mode .entity-options-search-results,
   .entity-options-sheet[data-pin-search-headers="true"] .entity-options-scroll,
   .entity-options-sheet[data-pin-search-headers="true"] .group-list-scroll,
   .entity-options-sheet[data-pin-search-headers="true"] .search-sheet-results,
   .entity-options-sheet[data-pin-search-headers="true"] .entity-options-search-results {
-    margin-bottom: 0px;
-    padding-bottom: 80px;
+    margin-bottom: 72px;
+    padding-bottom: 0px;
     background: none;
   }
 
+  .entity-options-sheet.search-mode .entity-options-search,
   .entity-options-sheet[data-pin-search-headers="true"] .entity-options-search {
     margin-bottom: 0px;
     padding-bottom: 0px;
     background: none;
   }
 
-  /* Adjust spacing when persistent controls are hidden */
+  /* Adjust spacing when persistent controls are hidden (e.g. disabled in config or layout constraints) */
+  :host([data-hide-persistent-controls="true"]) .entity-options-sheet.search-mode,
   :host([data-hide-persistent-controls="true"])
     .entity-options-sheet[data-pin-search-headers="true"],
+  :host([data-hide-menu-player="true"]) .entity-options-sheet.search-mode,
   :host([data-hide-menu-player="true"]) .entity-options-sheet[data-pin-search-headers="true"] {
     padding-bottom: 12px;
   }
 
+  :host([data-hide-persistent-controls="true"]) .entity-options-sheet .entity-options-scroll,
+  :host([data-hide-persistent-controls="true"]) .entity-options-sheet .entity-options-search,
+  :host([data-hide-persistent-controls="true"]) .entity-options-sheet .search-sheet-results,
   :host([data-hide-persistent-controls="true"])
-    .entity-options-sheet[data-pin-search-headers="true"]
-    .entity-options-scroll,
-  :host([data-hide-persistent-controls="true"])
-    .entity-options-sheet[data-pin-search-headers="true"]
-    .entity-options-search,
-  :host([data-hide-persistent-controls="true"])
-    .entity-options-sheet[data-pin-search-headers="true"]
-    .group-list-scroll,
-  :host([data-hide-persistent-controls="true"])
-    .entity-options-sheet[data-pin-search-headers="true"]
-    .search-sheet-results,
-  :host([data-hide-persistent-controls="true"])
-    .entity-options-sheet[data-pin-search-headers="true"]
+    .entity-options-sheet
     .entity-options-search-results,
-  :host([data-hide-menu-player="true"])
-    .entity-options-sheet[data-pin-search-headers="true"]
-    .entity-options-scroll,
-  :host([data-hide-menu-player="true"])
-    .entity-options-sheet[data-pin-search-headers="true"]
-    .entity-options-search,
-  :host([data-hide-menu-player="true"])
-    .entity-options-sheet[data-pin-search-headers="true"]
-    .group-list-scroll,
-  :host([data-hide-menu-player="true"])
-    .entity-options-sheet[data-pin-search-headers="true"]
-    .search-sheet-results,
-  :host([data-hide-menu-player="true"])
-    .entity-options-sheet[data-pin-search-headers="true"]
-    .entity-options-search-results {
-    margin-bottom: 0px;
-    padding-bottom: 0px;
-  }
-
-  /* Remove bottom clearance for unpinned mode when persistent controls are hidden */
-  :host([data-hide-persistent-controls="true"])
-    .entity-options-sheet:not([data-pin-search-headers="true"])
-    .search-sheet-results,
-  :host([data-hide-persistent-controls="true"])
-    .entity-options-sheet:not([data-pin-search-headers="true"])
-    .entity-options-search-results,
-  :host([data-hide-menu-player="true"])
-    .entity-options-sheet:not([data-pin-search-headers="true"])
-    .search-sheet-results,
-  :host([data-hide-menu-player="true"])
-    .entity-options-sheet:not([data-pin-search-headers="true"])
-    .entity-options-search-results {
-    padding-bottom: 0px;
+  :host([data-hide-menu-player="true"]) .entity-options-sheet .entity-options-scroll,
+  :host([data-hide-menu-player="true"]) .entity-options-sheet .entity-options-search,
+  :host([data-hide-menu-player="true"]) .entity-options-sheet .search-sheet-results,
+  :host([data-hide-menu-player="true"]) .entity-options-sheet .entity-options-search-results {
+    margin-bottom: 0px !important;
+    padding-bottom: 0px !important;
   }
   /* Hide scrollbars for Webkit browsers (Chrome, Safari, etc.) */
 
@@ -3806,14 +3908,18 @@ export const yampCardStyles = css`
     flex: 1;
     min-height: 0;
     overflow-y: auto;
+    overscroll-behavior-y: contain;
     /* Hide scrollbars */
     ${HIDE_SCROLLBAR}
   }
 
-  .entity-options-sheet:not([data-pin-search-headers="true"]) .search-sheet-results,
-  .entity-options-sheet:not([data-pin-search-headers="true"]) .entity-options-search-results {
+  .entity-options-sheet:not([data-pin-search-headers="true"]):not(.search-mode)
+    .search-sheet-results,
+  .entity-options-sheet:not([data-pin-search-headers="true"]):not(.search-mode)
+    .entity-options-search-results {
     overflow-y: visible;
-    padding-bottom: 80px;
+    margin-bottom: 72px;
+    padding-bottom: 0px;
     flex: none;
     min-height: auto;
   }
@@ -4521,9 +4627,12 @@ export const lyricsStyles = css`
     overflow: hidden;
     pointer-events: auto;
     touch-action: pan-y;
-    backdrop-filter: ${BLUR_5};
-    -webkit-backdrop-filter: ${BLUR_5};
-    background: var(--yamp-lyrics-bg, var(--yamp-overlay-bg));
+    backdrop-filter: var(--yamp-lyrics-backdrop-filter, ${BLUR_5});
+    -webkit-backdrop-filter: var(--yamp-lyrics-backdrop-filter, ${BLUR_5});
+    background: var(
+      --yamp-lyrics-bg,
+      color-mix(in srgb, var(--yamp-overlay-base, #000) var(--yamp-lyrics-fade, 80%), transparent)
+    );
     color: var(--yamp-lyrics-color, var(--primary-text-color, #fff));
   }
 
@@ -4620,10 +4729,53 @@ export const lyricsStyles = css`
 
   .lyric-line.is-instrumental {
     display: flex;
+    flex-direction: column;
     align-items: center;
     justify-content: center;
+    gap: 12px;
     min-height: 32px;
     filter: none;
+  }
+
+  .lyric-instrumental-text {
+    font-size: calc(
+      var(--yamp-lyrics-instrumental-font-size, 1.4rem) * var(--yamp-text-scale-lyrics, 1)
+    );
+    font-weight: 700;
+    line-height: 1.3;
+    opacity: 0.85;
+    text-align: center;
+    letter-spacing: 0.3px;
+    text-shadow: var(--yamp-overlay-text-shadow, 0 2px 4px rgba(0, 0, 0, 0.5));
+  }
+
+  /* Playing indicator animation - equalizer bars within lyricsStyles */
+  @keyframes chipPlayingBar1 {
+    0%,
+    100% {
+      height: 3px;
+    }
+    50% {
+      height: 10px;
+    }
+  }
+  @keyframes chipPlayingBar2 {
+    0%,
+    100% {
+      height: 5px;
+    }
+    50% {
+      height: 12px;
+    }
+  }
+  @keyframes chipPlayingBar3 {
+    0%,
+    100% {
+      height: 4px;
+    }
+    50% {
+      height: 8px;
+    }
   }
 
   .lyrics-playing-indicator {
@@ -4662,6 +4814,11 @@ export const lyricsStyles = css`
 
   .lyric-line.active .lyrics-playing-indicator .bar:nth-child(3) {
     animation: chipPlayingBar3 0.7s ease-in-out 0.3s infinite;
+  }
+
+  :host([data-playing="false"]) .lyrics-playing-indicator .bar,
+  .lyrics-playing-indicator.paused .bar {
+    animation-play-state: paused !important;
   }
 
   .lyrics-loading,

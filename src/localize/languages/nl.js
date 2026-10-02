@@ -85,6 +85,11 @@ export default {
           title: "Algemene Instellingen",
           description: "Globale instellingen voor hoe artwork wordt weergegeven en opgehaald.",
         },
+        background: {
+          title: "Achtergrondafbeelding",
+          description:
+            "Configureer een persistente achtergrondafbeelding voor de kaart achter de afspeelcontent.",
+        },
         idle: {
           title: "Artwork bij Inactiviteit",
           description:
@@ -160,6 +165,9 @@ export default {
         "Schakel de optionele Mass Queue integratie uit, zelfs als deze is geïnstalleerd.",
       swap_pause_stop: "Vervang de pauzeknop door stop bij gebruik van de moderne lay-out.",
       show_album: "Toon de albumnaam naast de artiest in de spelerdetails.",
+      lock_screen_controls:
+        "Houd bedieningselementen en trackmetagegevens actief op het vergrendelingsscherm van je apparaat (iOS / Android / macOS) wanneer de app op de achtergrond wordt uitgevoerd. Let op: deze functie is experimenteel.",
+      toggle_media_session: "Let op: vergrendelscherm- en mediasessiebediening zijn experimenteel.",
       adaptive_controls:
         "Laat de afspeelknoppen groeien of krimpen om in de beschikbare ruimte te passen.",
       hide_menu_player:
@@ -234,15 +242,20 @@ export default {
         "Music Assistant vereist de mass_queue-integratie om songteksten op te halen uit de interne metadata-engine.",
       lyrics_pre_roll:
         "Verschuif de timing van de songtekstmarkering. Positieve waarden versnellen het, negatieve waarden vertragen het (standaard: 0).",
+      lyrics_background_fade:
+        "Pas de achtergrondvervaging en dim-dekking van de songtekst-overlay aan (0% voor transparant artwork, 100% voor een effen achtergrond).",
       blurred_artwork: "Achtergrondafbeelding altijd vervagen",
       hide_collapsed_artwork:
         "Verberg de kleine afbeelding aan de rechterkant wanneer de kaart is ingeklapt",
+      disable_artwork_gradient: "Het verloop onderaan de albumhoes uitschakelen",
       show_idle_artwork_when_not_playing:
         "Indien ingeschakeld, zal het selecteren van een chip die momenteel niet wordt afgespeeld de geconfigureerde stand-by afbeelding weergeven in plaats van de actieve afspeel-art.",
       prefer_ma_metadata:
         "Gebruik altijd de gekoppelde Music Assistant-entiteit voor de tracktitel, artiest en artwork, zelfs als de primaire entiteit wordt afgespeeld.",
       show_volume_overlay:
         "Geef kort een grote volume-indicator weer over het artwork wanneer het volumeniveau verandert.",
+      font_color_helper:
+        "Pas tekst- en pictogramkleuren aan. Accepteert hex, CSS-namen, rgba of sjablonen (standaard: themakleur).",
       queue_controls_style:
         "Kies of u een sleephandgreep of individuele bewegingsknoppen wilt weergeven voor wachtrij-items.",
     },
@@ -271,6 +284,7 @@ export default {
       display_timestamps: "Tijdstempels Weergeven",
       swap_pause_stop: "Pauze vervangen door Stop",
       show_album: "Toon albumnaam",
+      lock_screen_controls: "Mediabediening vergrendelscherm (Experimenteel)",
       adaptive_controls: "Adaptieve Knoppen Grootte",
       hide_active_entity: "Label van Actieve Entiteit verbergen",
       hide_active_entity_on_idle: "Actieve entiteitslabel verbergen bij inactiviteit",
@@ -291,8 +305,10 @@ export default {
       lyrics_mode: "Songtekstmodus",
       lyrics_source: "Songtekstbron",
       lyrics_pre_roll: "Songtekst Pre-Roll (seconden)",
+      lyrics_background_fade: "Songtekst achtergrondvervaging",
       blurred_artwork: "Vervaagde afbeelding",
       hide_collapsed_artwork: "Verkleinde afbeelding verbergen",
+      disable_artwork_gradient: "Kleurverloop van hoes uitschakelen",
       show_idle_artwork_when_not_playing: "Toon stand-by afbeelding wanneer niet afgespeeld",
       prefer_ma_metadata: "Voorkeur voor Music Assistant-metadata",
       show_volume_overlay: "Volume-overlay weergeven",
@@ -313,7 +329,12 @@ export default {
       card_height: "Kaarthoogte (px)",
       control_layout: "Knoppen Lay-out",
       idle_image: "Rustafbeelding",
-
+      background_image: "Achtergrondafbeelding",
+      background_image_entity: "Achtergrondafbeelding Entiteit",
+      font_color: "Letterkleur",
+      font_color_entity: "Letterkleur",
+      background_position: "Achtergrondpositie",
+      background_fit: "Achtergrondpassing",
       image_url: "Afbeelding URL",
       fallback_image_url: "Fallback Afbeelding URL",
       move_to_main: "Verplaats actie naar hoofdchips",
@@ -349,6 +370,7 @@ export default {
       appearance: "Uiterlijk",
       no_artwork_option: "Geen afbeelding",
       details_alignment: "Details uitlijning",
+      lyrics_background_fade: "Songtekst achtergrondvervaging (%)",
       queue_controls_style: "Wachtrijbesturingsstijl",
     },
     action_types: {
@@ -361,6 +383,7 @@ export default {
       select_entity: "Selecteer entiteit uit helper",
       toggle_lyrics: "Wisselen tussen songtekst-overlay",
       remote_control: "Afstandsbediening overlay openen",
+      toggle_media_session: "Wisselen van mediasessie / vergrendelschermbediening (Experimenteel)",
     },
     action_helpers: {
       sync_selected_entity: "Geselecteerde entiteit synchroniseren",
@@ -427,6 +450,24 @@ export default {
       center: "Midden",
       bottom: "Onder",
     },
+    background_fit: {
+      cover: "Bedekken",
+      contain: "Passend maken",
+      fill: "Vullen",
+      "scale-down": "Verkleinen",
+      none: "Geen",
+    },
+    background_position: {
+      center: "Midden",
+      top: "Boven",
+      bottom: "Onder",
+      "center left": "Midden links",
+      "center right": "Midden rechts",
+      "top left": "Boven links",
+      "top right": "Boven rechts",
+      "bottom left": "Onder links",
+      "bottom right": "Onder rechts",
+    },
   },
   card: {
     sections: {
@@ -442,6 +483,8 @@ export default {
       stop: "Stop",
       next: "Volgende",
       repeat: "Herhalen",
+      lock_screen_ready: "Vergrendelschermbediening actief",
+      lock_screen_connecting: "Vergrendelschermbediening verbinden...",
     },
     menu: {
       more_info: "Meer Info",
@@ -531,9 +574,11 @@ export default {
       podcast: "Podcast",
       audiobook: "Luisterboek",
     },
-    search_artist: "Zoek naar deze artiest",
+    search_artist: "Blader door albums van deze artiest",
+    browse_artist: "Albums van {artist} doorzoeken",
     search_album: "Blader door nummers van dit album",
     browse_album: "Tracks van {album} doorzoeken",
+    browse_playlist: "Tracks van {playlist} doorzoeken",
     play_collection: "Speel deze collectie af",
     play_collection_error: "Kan deze collectie niet direct afspelen",
     play_item: "{item} afspelen",

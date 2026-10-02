@@ -14,6 +14,7 @@ import { yampCardStyles } from "./yamp-card-styles.js";
 import { QueueDragMixin } from "./yamp-queue-drag.js";
 import { parseLrc } from "./lyrics-parser.js";
 import "./lyrics-view.js";
+import { YampMediaSessionManager } from "./yamp-media-session.js";
 import {
   renderSearchOptionsOverlay,
   searchMedia,
@@ -22,6 +23,7 @@ import {
   getRecentlyPlayed,
   isTrackFavorited,
   getMassQueueConfigEntryId,
+  getMusicAssistantConfigEntryId,
   renderSearchResultItem,
   ALLOWED_MEDIA_TYPES,
   transformMusicAssistantItem
@@ -40,9 +42,12 @@ import {
   isMusicAssistantEntity,
   getArtworkUrl,
   isValidArtworkUrl,
-  getValidArtworkAttr
+  getValidArtworkAttr,
+  getEntityName,
+  areEntitiesPlayingSameMedia,
+  isPlaceholderMediaTitle
 } from "./yamp-utils.js";
-import { localize } from "./localize/localize.js";
+import { localize, setHassLanguage } from "./localize/localize.js";
 
 
 import {
@@ -53,6 +58,7 @@ import {
   SUPPORT_GROUPING,
   ARTWORK_OVERRIDE_MATCH_KEYS,
   DEFAULT_PROGRESS_BAR_HEIGHT,
+  DEFAULT_LYRICS_BACKGROUND_FADE,
   TEMPLATE_CONFIGS
 } from "./constants.js";
 
@@ -374,10 +380,14 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
   connectedCallback() {
     super.connectedCallback();
+    this._isEditorPreviewCached = undefined;
     window.addEventListener("scroll", this._handleGlobalScroll, { passive: true });
     window.addEventListener("resize", this._handleViewportResize, { passive: true });
     this._updateViewportFlags();
     this._updateAdaptiveTextObserverState();
+    if (this._mediaSessionManager && this._isMediaSessionEnabled) {
+      this._mediaSessionManager.attach();
+    }
   }
 
   // Scroll to first source option starting with the given letter
@@ -507,7 +517,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     _lastLyricsEntityId: { state: true },
     _showSourceMenu: { state: true },
     _volumeDraggingEntity: { state: true },
-    _dragVolume: { state: true }
+    _dragVolume: { state: true },
+    _mediaSessionOverride: { state: true }
   };
 
   static styles = yampCardStyles;
@@ -537,7 +548,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         try {
            resolved = resolveStringTemplateSync(this.hass, raw, this._getTemplateContext());
         } catch(e) {
-           console.debug("YAMP template eval fallback error", e);
+           // Ignore sync evaluation error
         }
       }
       
@@ -565,6 +576,36 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     return !!raw;
   }
 
+  get _lyricsBackgroundFade() {
+    const raw = this.config?.lyrics_background_fade;
+    if (typeof raw === "string" && (raw.includes("{{") || raw.includes("{%") || raw.trim().startsWith("[[["))) {
+      let resolved = this._lyricsBackgroundFadeResolveCache?.["card"]?.value;
+      if (resolved === undefined && raw.trim().startsWith("[[[")) {
+        try {
+          resolved = resolveStringTemplateSync(this.hass, raw, this._getTemplateContext());
+        } catch (e) {
+          // Ignore sync evaluation error
+        }
+      }
+      if (resolved !== undefined && resolved !== null && resolved !== "") {
+        const num = Number(resolved);
+        return Number.isFinite(num) ? Math.max(0, Math.min(100, num)) : DEFAULT_LYRICS_BACKGROUND_FADE;
+      }
+      return DEFAULT_LYRICS_BACKGROUND_FADE;
+    }
+    if (raw === undefined || raw === null || raw === "") return DEFAULT_LYRICS_BACKGROUND_FADE;
+    const num = Number(raw);
+    return Number.isFinite(num) ? Math.max(0, Math.min(100, num)) : DEFAULT_LYRICS_BACKGROUND_FADE;
+  }
+
+  _getLyricsBackgroundFade() {
+    return this._lyricsBackgroundFade;
+  }
+
+  get _artworkGradientDisabled() {
+    return this.config?.disable_artwork_gradient === true;
+  }
+
   get _artworkObjectFit() {
     const fit = this._baseArtworkObjectFit || "cover";
     if (fit === "scaled-contain-alternate" && this._alwaysCollapsed) {
@@ -581,8 +622,69 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     return this._cardType !== "default";
   }
 
+  get _isEditorPreview() {
+    if (this._isEditorPreviewCached !== undefined) {
+      return this._isEditorPreviewCached;
+    }
+    if (this.preview === true) {
+      return (this._isEditorPreviewCached = true);
+    }
+    if (!this.isConnected) {
+      return false;
+    }
+    const isPreview = Boolean(
+      (typeof this.closest === "function" && this.closest("hui-card-preview")) ||
+      (this.parentElement && this.parentElement.tagName && this.parentElement.tagName.toLowerCase() === "hui-card-preview") ||
+      (this.getRootNode && this.getRootNode()?.host?.closest?.("hui-card-preview")) ||
+      (this.getRootNode && this.getRootNode()?.host?.parentElement?.tagName?.toLowerCase() === "hui-card-preview")
+    );
+    this._isEditorPreviewCached = isPreview;
+    return isPreview;
+  }
+
+  get _lockScreenControls() {
+    const raw = this.config?.lock_screen_controls;
+    if (typeof raw === 'string' && (raw.includes('{{') || raw.includes('{%') || raw.trim().startsWith('[[['))) {
+      const resolved = this._lockScreenControlsResolveCache?.['card']?.value;
+      if (resolved !== undefined && resolved !== null && resolved !== "") {
+        if (typeof resolved === 'boolean') return resolved;
+        const lower = String(resolved).trim().toLowerCase();
+        return lower === "true" || lower === "1" || lower === "on" || lower === "yes";
+      }
+      return false; // Default until template resolves
+    }
+    return raw === true;
+  }
+
+  get _isMediaSessionEnabled() {
+    if (this._isEditorPreview) {
+      return false;
+    }
+    if (this._mediaSessionOverride !== null) {
+      return this._mediaSessionOverride;
+    }
+    return this._lockScreenControls;
+  }
+
   constructor() {
     super();
+    this._mediaSessionOverride = null;
+    this._mediaSessionUpdatePending = false;
+    this._mediaSessionManager = new YampMediaSessionManager(this);
+    this._mediaSessionManager.onReadyChange = () => {
+      if (this._isMediaSessionEnabled && !this._isEditorPreview) {
+        if (!this._mediaSessionUpdatePending) {
+          this._mediaSessionUpdatePending = true;
+          this._mediaSessionUpdateTimer = setTimeout(() => {
+            this._mediaSessionUpdateTimer = null;
+            this._mediaSessionUpdatePending = false;
+            if (this._isMediaSessionEnabled && !this._isEditorPreview) {
+              this.requestUpdate();
+            }
+          }, 50);
+        }
+      }
+    };
     this._selectedIndex = 0;
     this._lastSyncedEntityId = null;
     this._lastPlaying = null;
@@ -620,6 +722,12 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._cardHeightTemplateValue = {};
     this._cardHeightResolveCache = {};
     this._lastCardHeightContextKey = null;
+    this._lyricsBackgroundFadeTemplateValue = {};
+    this._lyricsBackgroundFadeResolveCache = {};
+    this._lastLyricsBackgroundFadeContextKey = null;
+    this._lockScreenControlsTemplateValue = {};
+    this._lockScreenControlsResolveCache = {};
+    this._lastLockScreenControlsContextKey = null;
     this._transferQueuePendingTarget = null;
     this._transferQueueStatus = null;
     this._hasTransferQueueForCurrent = false;
@@ -656,6 +764,10 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._lastResolvedEntityIdByChip = {};
     // Show search-in-sheet flag for entity options sheet
     this._showSearchInSheet = false;
+    this._searchHeadersRetracted = false;
+    this._searchHeaderOffset = 0;
+    this._searchHeaderNaturalHeight = 0;
+    this._lastSearchResultsScrollTop = 0;
     this._showResolvedEntities = false;
     // Queue success message
     this._showQueueSuccessMessage = false;
@@ -696,6 +808,14 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._idleImageTemplateResult = "";
     this._resolvingIdleImageTemplate = false;
     this._idleImageTemplateNeedsResolve = false;
+    this._backgroundImageTemplate = null;
+    this._backgroundImageTemplateResult = "";
+    this._resolvingBackgroundImageTemplate = false;
+    this._backgroundImageTemplateNeedsResolve = false;
+    this._fontColorTemplate = null;
+    this._fontColorTemplateResult = "";
+    this._resolvingFontColorTemplate = false;
+    this._fontColorTemplateNeedsResolve = false;
     this._artworkOverrideTemplateCache = {};
     this._artworkOverrideIndexMap = null;
     this._hideActiveEntityLabel = false;
@@ -721,10 +841,15 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._marqueeAnimationEndHandler = null;
     this._marqueeObservedElements = null;
     this._lastMarqueeKey = null;
+    this._marqueeCleanups = [];
+    this._marqueeManualResetTimers = new Map();
+    this._suppressMarqueeClick = false;
+    this._suppressMarqueeClickTimer = null;
     this._lyricsFetchTimeout = null;
     this._handleGlobalScroll = this._handleGlobalScroll.bind(this);
     this._handleViewportResize = this._handleViewportResize.bind(this);
     this._isNarrowViewport = false;
+    this._lastIsMobile = false;
 
     // Collapse on load if nothing is playing (but respect linger state and idle_timeout_ms)
     // In specialized card modes, skip idle and auto-open dedicated view
@@ -786,6 +911,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._searchAttempted = false;
     // Media class filter for search results
     this._searchMediaClassFilter = "all";
+    this._keepFiltersOnSearch = false;
     // Track last search chip classes for filter chip row scroll
     this._lastSearchChipClasses = "";
     // --- swipe‑to‑filter helpers ---
@@ -891,6 +1017,14 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       currentCache = this._cardHeightTemplateValue[idx];
       templateVals = this._cardHeightTemplateValue;
       cache = this._cardHeightResolveCache;
+    } else if (type === 'lyrics_background_fade') {
+      currentCache = this._lyricsBackgroundFadeTemplateValue[idx];
+      templateVals = this._lyricsBackgroundFadeTemplateValue;
+      cache = this._lyricsBackgroundFadeResolveCache;
+    } else if (type === 'lock_screen_controls') {
+      currentCache = this._lockScreenControlsTemplateValue[idx];
+      templateVals = this._lockScreenControlsTemplateValue;
+      cache = this._lockScreenControlsResolveCache;
     }
 
     // Check if there's already an active subscription for this exact template
@@ -928,7 +1062,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
         if (type === 'ma' || type === 'vol' || type === 'remote') {
           isValid = resolved && /^([a-z0-9_]+)\.[a-zA-Z0-9_]+$/.test(resolved);
-        } else if (type === 'action_in_menu' || type === 'always_collapsed' || type === 'control_layout' || type === 'card_height' || type === 'hidden_controls') {
+        } else if (type === 'action_in_menu' || type === 'always_collapsed' || type === 'control_layout' || type === 'card_height' || type === 'lyrics_background_fade' || type === 'lock_screen_controls' || type === 'hidden_controls') {
           isValid = true; // Any string result is valid
         }
 
@@ -944,7 +1078,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
             cache[idx] = { id: resolved, ts: Date.now() };
             shouldUpdate = true;
           }
-        } else if (type === 'action_in_menu' || type === 'always_collapsed' || type === 'control_layout' || type === 'card_height' || type === 'hidden_controls') {
+        } else if (type === 'action_in_menu' || type === 'always_collapsed' || type === 'control_layout' || type === 'card_height' || type === 'lyrics_background_fade' || type === 'lock_screen_controls' || type === 'hidden_controls') {
           const currentCached = cache[idx]?.value;
           if (isValid && currentCached !== resolved) {
             cache[idx] = { value: resolved, ts: Date.now() };
@@ -1113,16 +1247,16 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       if (!this._compiledJsTemplates[code]) {
         const body = code.includes("return") ? code : `return (${code});`;
         this._compiledJsTemplates[code] = new Function(
-          "hass", "states", "user", "is_state", "state_attr",
+          "hass", "states", "user", "is_state", "state_attr", "context",
           "current", "is_idle", "is_playing", "is_search", "is_grouping",
-          "is_source", "is_lyrics", "is_options", "is_transfer_queue", "is_any_menu_open",
+          "is_source", "is_lyrics", "is_options", "is_transfer_queue", "is_any_menu_open", "is_dark_mode", "is_mobile", "is_music_assistant", "is_music",
           body
         );
       }
       return this._compiledJsTemplates[code](
-        hass, states, user, is_state, state_attr,
+        hass, states, user, is_state, state_attr, context,
         context.current, context.is_idle, context.is_playing, context.is_search, context.is_grouping,
-        context.is_source, context.is_lyrics, context.is_options, context.is_transfer_queue, context.is_any_menu_open
+        context.is_source, context.is_lyrics, context.is_options, context.is_transfer_queue, context.is_any_menu_open, context.is_dark_mode, context.is_mobile, context.is_music_assistant, context.is_music
       );
     } catch (err) {
       console.warn("yamp: failed to evaluate JS template:", templateStr, err);
@@ -1151,6 +1285,14 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       templateVals = this._cardHeightTemplateValue;
       cache = this._cardHeightResolveCache;
       contextKeyName = '_lastCardHeightContextKey';
+    } else if (type === 'lyrics_background_fade') {
+      templateVals = this._lyricsBackgroundFadeTemplateValue;
+      cache = this._lyricsBackgroundFadeResolveCache;
+      contextKeyName = '_lastLyricsBackgroundFadeContextKey';
+    } else if (type === 'lock_screen_controls') {
+      templateVals = this._lockScreenControlsTemplateValue;
+      cache = this._lockScreenControlsResolveCache;
+      contextKeyName = '_lastLockScreenControlsContextKey';
     } else {
       return;
     }
@@ -1194,7 +1336,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       }
     };
 
-    if (type === 'always_collapsed' || type === 'control_layout' || type === 'card_height') {
+    if (type === 'always_collapsed' || type === 'control_layout' || type === 'card_height' || type === 'lyrics_background_fade' || type === 'lock_screen_controls') {
       processItem('card', rawConfigData);
     } else if (type === 'action_in_menu') {
       const actions = rawConfigData || [];
@@ -1436,29 +1578,30 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   /**
-   * Open the search sheet pre‑filled with the current track's artist and
-   * launch the search immediately (only when media_artist is present).
+   * Open the search sheet and navigate directly to the current artist's albums
+   * in hierarchical search view (only when media_artist is present).
    */
-  _searchArtistFromNowPlaying() {
+  async _searchArtistFromNowPlaying() {
     const artist = (this.currentActivePlaybackStateObj || this.currentPlaybackStateObj || this.currentStateObj)?.attributes?.media_artist || "";
-    if (!artist) return;                // nothing to search
+    if (!artist) return;
+
+    this._openedSearchFromNowPlaying = true;
 
     // Open overlay + search sheet
     this._showEntityOptions = true;
     this._showSearchInSheet = true;
     this._searchInputAutoFocused = false;
 
-    // Prefill search state
-    this._searchQuery = artist;
+    // Reset search state
     this._searchError = "";
+    this._searchResults = [];
+    this._searchQuery = "";
     this._searchAttempted = false;
-    this._searchLoading = false;
-    this._searchResultsByType = {}; // Clear cache for new search
-    this._currentSearchQuery = artist; // Set current search query
-    this._searchHierarchy = []; // Clear search hierarchy
-    this._searchBreadcrumb = ""; // Clear breadcrumb
-
-    // Clear filter states to ensure accurate artist search results
+    this._searchResultsByType = {};
+    this._currentSearchQuery = "";
+    this._searchHierarchy = [];
+    this._searchBreadcrumb = "";
+    this._usingMusicAssistant = false;
     this._favoritesFilterActive = false;
     this._recentlyPlayedFilterActive = false;
     this._upcomingFilterActive = false;
@@ -1466,19 +1609,113 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._initialFavoritesLoaded = false;
     this._lastSearchUsedServerFavorites = false;
 
-    // Render, then run search
     this.requestUpdate();
-    // Kick off search immediately so results populate without requiring user interaction.
-    this._doSearch().catch((error) => {
-      console.error('yamp: artist quick-search failed:', error);
+
+    let artistUri = null;
+    if (this._isMusicAssistantEntity()) {
+      try {
+        const searchEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
+        const searchEntityId = await this._resolveTemplateAtActionTime(searchEntityIdTemplate, this.currentEntityId);
+        artistUri = await this._resolveArtistUri(artist, searchEntityId);
+      } catch (e) {
+        console.warn("yamp: error resolving artist URI:", e);
+      }
+    }
+
+    this._searchArtistAlbums(artist, artistUri).catch((error) => {
+      console.error("yamp: artist quick-search failed:", error);
     });
+  }
+
+  /**
+   * Resolve a media URI (album or artist) from Music Assistant
+   * @param {"album"|"artist"|"playlist"|string} mediaType
+   * @param {string} name
+   * @param {Record<string, any>} extraParams
+   * @param {string} entityId
+   * @returns {Promise<string|null>}
+   */
+  async _resolveMediaUri(mediaType, name, extraParams = {}, entityId) {
+    if (!name || !this.hass) return null;
+    try {
+      const configEntryId = await getMusicAssistantConfigEntryId(this.hass, entityId);
+      if (!configEntryId) return null;
+
+      const serviceData = {
+        name,
+        media_type: [mediaType],
+        ...(configEntryId && configEntryId !== "auto" && { config_entry_id: configEntryId }),
+        ...extraParams,
+      };
+
+      const msg = {
+        type: "call_service",
+        domain: "music_assistant",
+        service: "search",
+        service_data: serviceData,
+        return_response: true,
+      };
+
+      const res = await this.hass.connection.sendMessagePromise(msg);
+      const items = res?.response?.[`${mediaType}s`] || [];
+      if (!items.length) return null;
+
+      const normName = name.trim().toLowerCase();
+      const normArtist = (extraParams.artist || "").trim().toLowerCase();
+
+      if (mediaType === "album") {
+        // Priority 1: Match both album name and artist
+        const matchBoth = items.find((a) => {
+          const aName = (a.name || "").toLowerCase();
+          const aArtistMatch = normArtist
+            ? a.artists?.some((ar) => {
+                const arName = (ar.name || "").toLowerCase();
+                return arName.includes(normArtist) || normArtist.includes(arName);
+              })
+            : true;
+          return (
+            (aName === normName || aName.includes(normName) || normName.includes(aName)) &&
+            aArtistMatch
+          );
+        });
+        if (matchBoth?.uri) return matchBoth.uri;
+      }
+
+      // Match item name
+      const exactMatch = items.find((it) => (it.name || "").toLowerCase() === normName);
+      if (exactMatch?.uri) return exactMatch.uri;
+
+      const matchName = items.find((it) => {
+        const itName = (it.name || "").toLowerCase();
+        return itName === normName || itName.includes(normName) || normName.includes(itName);
+      });
+      if (matchName?.uri) return matchName.uri;
+
+      // Fallback: First returned item
+      return items[0]?.uri || null;
+    } catch (e) {
+      console.warn(`yamp: Failed to resolve ${mediaType} URI:`, e);
+      return null;
+    }
+  }
+
+  _resolveAlbumUri(albumName, artistName, entityId) {
+    return this._resolveMediaUri("album", albumName, artistName ? { artist: artistName } : {}, entityId);
+  }
+
+  _resolveArtistUri(artistName, entityId) {
+    return this._resolveMediaUri("artist", artistName, {}, entityId);
+  }
+
+  _resolvePlaylistUri(playlistName, entityId) {
+    return this._resolveMediaUri("playlist", playlistName, {}, entityId);
   }
 
   /**
    * Open the search sheet and navigate directly to the current album's tracks
    * in hierarchical search view (only when media_album_name is present).
    */
-  _searchAlbumFromNowPlaying() {
+  async _searchAlbumFromNowPlaying() {
     const activeObj = this.currentActivePlaybackStateObj || this.currentPlaybackStateObj || this.currentStateObj;
     const album = activeObj?.attributes?.media_album_name || "";
     const artist = activeObj?.attributes?.media_artist || "";
@@ -1510,13 +1747,28 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
     this.requestUpdate();
 
-    this._searchAlbumTracks(album, artist, null).catch((error) => {
+    let albumUri = null;
+    if (this._isMusicAssistantEntity()) {
+      try {
+        const searchEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
+        const searchEntityId = await this._resolveTemplateAtActionTime(searchEntityIdTemplate, this.currentEntityId);
+        albumUri = await this._resolveAlbumUri(album, artist, searchEntityId);
+      } catch (e) {
+        console.warn("yamp: error resolving album URI:", e);
+      }
+    }
+
+    this._searchAlbumTracks(album, artist, albumUri).catch((error) => {
       console.error("yamp: album quick-search failed:", error);
     });
   }
   // Show search sheet inside entity options
   _showSearchSheetInOptions(mode = "default") {
     this._showSearchInSheet = true;
+    this._searchHeadersRetracted = false;
+    this._searchHeaderOffset = 0;
+    this._searchHeaderNaturalHeight = 0;
+    this._lastSearchResultsScrollTop = 0;
     this._searchInputAutoFocused = false;
     this._searchError = "";
     this._searchResults = [];
@@ -1639,6 +1891,10 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     if (this._cardType === "search" || this._cardType === "up_next") return;
     this._openedSearchFromNowPlaying = false;
     this._showSearchInSheet = false;
+    this._searchHeadersRetracted = false;
+    this._searchHeaderOffset = 0;
+    this._searchHeaderNaturalHeight = 0;
+    this._lastSearchResultsScrollTop = 0;
     this._searchError = "";
     this._searchResults = [];
     this._searchQuery = "";
@@ -1787,7 +2043,19 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _getDisplaySearchResults() {
-    return Array.isArray(this._searchResults) ? this._searchResults : [];
+    const results = Array.isArray(this._searchResults) ? this._searchResults : [];
+    const isInHierarchy = this._searchHierarchy.some(
+      (h) => h.type === "album" || h.type === "playlist" || h.type === "artist"
+    );
+    if (isInHierarchy && this._searchQuery && this._searchQuery.trim() !== "") {
+      const q = this._searchQuery.trim().toLowerCase();
+      return results.filter((item) => {
+        const title = (item.title || item.name || "").toLowerCase();
+        const artist = (item.artist || "").toLowerCase();
+        return title.includes(q) || artist.includes(q);
+      });
+    }
+    return results;
   }
 
   _getSearchResultsLimit() {
@@ -1802,7 +2070,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _getSearchResultsCount() {
-    return Array.isArray(this._searchResults) ? this._searchResults.length : 0;
+    return this._getDisplaySearchResults().length;
   }
 
   _shouldShowSearchResultsCount() {
@@ -1839,6 +2107,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   async _doSearch(mediaType = null, searchParams = {}) {
     this._searchAttempted = true;
     this._closeMenuIfOpen();
+    this._setSearchHeadersRetracted(false);
+    this._lastSearchResultsScrollTop = 0;
     // Set the current filter - but don't use "favorites" as a media type
     this._searchMediaClassFilter = (mediaType && mediaType !== 'favorites') ? mediaType : 'all';
 
@@ -2120,6 +2390,10 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
   // Handle explicit search submission from UI (Enter key or Search Button)
   _handleSearchSubmit() {
+    if (this._searchHierarchy.some((h) => h.type === "album" || h.type === "playlist" || h.type === "artist")) {
+      // In hierarchy mode, filtering is already live in real-time
+      return;
+    }
     const keepFilters = this._keepFiltersOnSearch;
     if (!keepFilters) {
       this._favoritesFilterActive = false;
@@ -2167,6 +2441,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     }
     const targetEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
     const targetEntityId = await this._resolveTemplateAtActionTime(targetEntityIdTemplate, this.currentEntityId);
+    this._mediaSessionManager?.startPlaybackGesture(targetEntityId);
     this._searchError = "";
     const playbackStarted = await this._performSearchPlayback(item, targetEntityId);
 
@@ -2385,6 +2660,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
   async _invokePlayMedia(targetEntityId, item) {
     try {
+      this._mediaSessionManager?.startPlaybackGesture(targetEntityId);
       if (this._radioModeActive) {
         await this.hass.callService("music_assistant", "play_media", {
           entity_id: targetEntityId,
@@ -2439,10 +2715,15 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   async _searchArtistAlbums(artistName, artistUri = null) {
     this._searchHierarchy.push({ type: 'artist', name: artistName, query: this._searchQuery, uri: artistUri, filter: this._searchMediaClassFilter });
     this._searchBreadcrumb = `Albums by ${artistName}`;
-    this._searchQuery = artistName;
     this._searchResultsByType = {}; // Clear cache for new search
-    this._currentSearchQuery = artistName;
+    this._currentSearchQuery = "";
     this._searchMediaClassFilter = 'album';
+
+    // Immediate loading state
+    this._searchResults = [];
+    this._searchLoading = true;
+    this._searchQuery = "";
+    this.requestUpdate();
 
     // Clear filter states to ensure accurate artist search results
     this._favoritesFilterActive = false;
@@ -2453,8 +2734,44 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     // Remove swipe handlers when entering hierarchy
     this._removeSearchSwipeHandlers();
 
-    // Use Music Assistant search with artist name for albums (explicitly clear filters)
-    await this._doSearch('album', { clearFilters: true });
+    // Priority 1: Use browse_media if artistUri is available and entity is Music Assistant
+    if (artistUri && this._isMusicAssistantEntity()) {
+      try {
+        const searchEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
+        const searchEntityId = await this._resolveTemplateAtActionTime(searchEntityIdTemplate, this.currentEntityId);
+
+        const browseMsg = {
+          type: "call_service",
+          domain: "media_player",
+          service: "browse_media",
+          service_data: {
+            entity_id: searchEntityId,
+            media_content_id: artistUri,
+          },
+          return_response: true,
+        };
+
+        const browseRes = await this.hass.connection.sendMessagePromise(browseMsg);
+        const browseResult = browseRes?.response?.[searchEntityId]?.result || browseRes?.result || {};
+        const children = browseResult.children || [];
+        const albums = children.filter(c => c.media_class === 'album' || c.media_content_type === 'album');
+
+        if (albums.length > 0) {
+          this._searchQuery = "";
+          this._searchResults = this._sortSearchResults(albums);
+          this._searchTotalRows = Math.max(15, albums.length);
+          this._searchAttempted = true;
+          this._searchLoading = false;
+          this.requestUpdate();
+          return;
+        }
+      } catch (e) {
+        // Fall back to search
+      }
+    }
+
+    // Priority 2: Use Music Assistant search with artist parameter for albums (explicitly clear filters)
+    await this._doSearch('album', { artist: artistName, clearFilters: true });
   }
 
 
@@ -2502,33 +2819,35 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       } else if (currentLevel.type === 'album') {
         this._searchBreadcrumb = `Tracks from ${currentLevel.name}`;
         this._searchMediaClassFilter = 'track';
-        if (currentLevel.uri && this._isMusicAssistantEntity()) {
-          this._searchQuery = currentLevel.name;
-          this._searchAlbumTracks(currentLevel.name, null, currentLevel.uri);
-          return;
-        }
-        // Fallback search
         const artistLevel = this._searchHierarchy.find(level => level.type === 'artist');
-        const searchParams = { album: currentLevel.name };
-        if (artistLevel) {
-          searchParams.artist = artistLevel.name;
-        }
-        this._doSearch('track', searchParams);
-      } else if (currentLevel.type === 'playlist') {
-        this._searchBreadcrumb = `Tracks in ${currentLevel.name}`;
-        this._searchMediaClassFilter = 'track';
+        const artistName = artistLevel ? artistLevel.name : null;
         if (currentLevel.uri && this._isMusicAssistantEntity()) {
-          this._searchQuery = currentLevel.name;
-          // _searchPlaylistTracks pushes to the hierarchy, so we just call _fetchMassQueueTracks directly
-          this._currentSearchQuery = currentLevel.name;
+          this._searchQuery = "";
+          this._currentSearchQuery = "";
           this._searchResults = [];
           this._searchLoading = true;
           this.requestUpdate();
-          this._fetchMassQueueTracks(currentLevel.uri, "get_playlist_tracks").then(mqTracks => {
-            this._searchResultsByType['track'] = mqTracks;
-            this._searchResults = [...mqTracks];
-            this._searchLoading = false;
-            this.requestUpdate();
+          this._loadAlbumTracks(currentLevel.uri, currentLevel.name, artistName).then(() => {
+            this._scrollToTop();
+          });
+          return;
+        }
+        // Fallback search
+        const searchParams = { album: currentLevel.name };
+        if (artistName) {
+          searchParams.artist = artistName;
+        }
+        this._doSearch('track', searchParams);
+      } else if (currentLevel.type === 'playlist') {
+        this._searchBreadcrumb = `Tracks from ${currentLevel.name}`;
+        this._searchMediaClassFilter = 'track';
+        if (currentLevel.uri && this._isMusicAssistantEntity()) {
+          this._searchQuery = "";
+          this._currentSearchQuery = "";
+          this._searchResults = [];
+          this._searchLoading = true;
+          this.requestUpdate();
+          this._loadPlaylistTracks(currentLevel.uri, currentLevel.name).then(() => {
             this._scrollToTop();
           });
           return;
@@ -2536,6 +2855,223 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         this._doSearch('track');
       }
     }
+  }
+
+  _scrollToTop() {
+    const results = this.shadowRoot?.querySelector(".search-sheet-results");
+    if (results) results.scrollTop = 0;
+    this._updateSearchHeaderPosition(0, true);
+    this._lastSearchResultsScrollTop = 0;
+  }
+
+  _getSearchHeaderHeight() {
+    const panel = this.shadowRoot?.querySelector(".search-header-panel");
+    if (!panel) return this._searchHeaderNaturalHeight || 120;
+    const height = panel.offsetHeight;
+    if (height > 0) {
+      this._searchHeaderNaturalHeight = height;
+      return height;
+    }
+    return this._searchHeaderNaturalHeight || 120;
+  }
+
+  _updateSearchHeaderPosition(offset, animated = false) {
+    const headerHeight = this._getSearchHeaderHeight();
+    const clampedOffset = Math.max(0, Math.min(headerHeight, offset));
+    this._searchHeaderOffset = clampedOffset;
+    const isRetracted = clampedOffset >= headerHeight && headerHeight > 0;
+    this._searchHeadersRetracted = isRetracted;
+
+    const panel = this.shadowRoot?.querySelector(".search-header-panel");
+    if (!panel) return;
+
+    if (animated) {
+      panel.classList.add("smooth-transition");
+      clearTimeout(this._searchHeaderTransitionTimer);
+      this._searchHeaderTransitionTimer = setTimeout(() => {
+        panel.classList.remove("smooth-transition");
+      }, 280);
+    } else {
+      panel.classList.remove("smooth-transition");
+    }
+
+    panel.classList.toggle("retracted", isRetracted);
+    panel.style.marginTop = clampedOffset > 0 ? `-${clampedOffset}px` : "0px";
+
+    const progress = headerHeight > 0 ? clampedOffset / headerHeight : 0;
+    const opacity = Math.max(0, Math.min(1, 1 - progress));
+    panel.style.opacity = clampedOffset > 0 ? opacity.toFixed(3) : "";
+
+    if (isRetracted) {
+      panel.style.pointerEvents = "none";
+      const input = panel.querySelector("#search-input-box");
+      if (input && document.activeElement === input) {
+        input.blur();
+      }
+    } else {
+      panel.style.pointerEvents = "";
+    }
+  }
+
+  _getSearchResultsElement() {
+    if (!this._cachedSearchResultsElement || !this._cachedSearchResultsElement.isConnected) {
+      this._cachedSearchResultsElement = this.shadowRoot?.querySelector(
+        ".virtualized-results-wrapper, .queue-results-wrapper, .search-sheet-results, .entity-options-search-results"
+      );
+    }
+    return this._cachedSearchResultsElement;
+  }
+
+  _applySearchHeaderDelta(delta) {
+    if (this.config?.pin_search_headers === true) return;
+    const headerHeight = this._getSearchHeaderHeight();
+    if (headerHeight <= 0) return;
+
+    const currentOffset = this._searchHeaderOffset || 0;
+    const newOffset = Math.max(0, Math.min(headerHeight, currentOffset + delta));
+    if (newOffset !== currentOffset) {
+      this._updateSearchHeaderPosition(newOffset, false);
+    }
+  }
+
+  _setSearchHeadersRetracted(retracted, animated = true) {
+    const headerHeight = this._getSearchHeaderHeight();
+    const targetOffset = retracted ? headerHeight : 0;
+    this._updateSearchHeaderPosition(targetOffset, animated);
+  }
+
+  _handleSearchResultsScroll(e, pinSearchHeaders) {
+    if (pinSearchHeaders || this.config?.pin_search_headers === true || this._isDragging) return;
+    const el = e.currentTarget || e.target;
+    if (!el) return;
+
+    const currentScrollTop = el.scrollTop;
+    const lastScrollTop = this._lastSearchResultsScrollTop ?? currentScrollTop;
+    const delta = currentScrollTop - lastScrollTop;
+    this._lastSearchResultsScrollTop = currentScrollTop;
+
+    const maxScroll = Math.max(0, el.scrollHeight - el.clientHeight);
+    if (maxScroll <= 0) {
+      if ((this._searchHeaderOffset || 0) !== 0) {
+        this._updateSearchHeaderPosition(0, false);
+      }
+      return;
+    }
+
+    if (currentScrollTop <= 0) {
+      this._updateSearchHeaderPosition(0, false);
+      return;
+    }
+
+    if (currentScrollTop >= maxScroll - 6) {
+      return;
+    }
+
+    if (delta === 0) return;
+
+    this._applySearchHeaderDelta(delta);
+  }
+
+  _handleHeaderWheel(e, pinSearchHeaders) {
+    if (e.cancelable) e.preventDefault();
+    e.stopPropagation();
+    if (pinSearchHeaders || this.config?.pin_search_headers === true) {
+      const results = this._getSearchResultsElement();
+      if (results) {
+        results.scrollTop += e.deltaY;
+      }
+      return;
+    }
+    this._applySearchHeaderDelta(e.deltaY);
+  }
+
+  _handleHeaderTouchStart(e) {
+    if (e.touches && e.touches.length === 1) {
+      this._headerTouchStartY = e.touches[0].clientY;
+      this._headerTouchStartX = e.touches[0].clientX;
+    }
+  }
+
+  _handleHeaderTouchMove(e, pinSearchHeaders) {
+    if (pinSearchHeaders || this.config?.pin_search_headers === true || this._headerTouchStartY == null) return;
+    if (!e.touches || e.touches.length !== 1) return;
+
+    const currentY = e.touches[0].clientY;
+    const currentX = e.touches[0].clientX;
+    const deltaY = currentY - this._headerTouchStartY;
+    const deltaX = currentX - this._headerTouchStartX;
+
+    // Discriminate vertical gesture to avoid conflicting with horizontal chip scroll
+    if (Math.abs(deltaY) > Math.abs(deltaX)) {
+      if (e.cancelable) e.preventDefault();
+      this._applySearchHeaderDelta(-deltaY);
+      this._headerTouchStartY = currentY;
+      this._headerTouchStartX = currentX;
+    }
+  }
+
+  _handleHeaderTouchEnd() {
+    this._headerTouchStartY = null;
+    this._headerTouchStartX = null;
+  }
+
+
+  _handleSearchContainerWheel(e, pinSearchHeaders) {
+    if (pinSearchHeaders || this.config?.pin_search_headers === true) return;
+    const headerHeight = this._getSearchHeaderHeight();
+    const currentOffset = this._searchHeaderOffset || 0;
+    if (e.deltaY < 0) {
+      const results = this._getSearchResultsElement();
+      if (!results || results.scrollTop <= 5) {
+        if (e.cancelable) e.preventDefault();
+        this._applySearchHeaderDelta(e.deltaY);
+      }
+    } else if (e.deltaY > 0 && currentOffset < headerHeight) {
+      if (e.cancelable) e.preventDefault();
+      this._applySearchHeaderDelta(e.deltaY);
+    }
+  }
+
+  _handleSearchResultsWheel(e, pinSearchHeaders) {
+    if (pinSearchHeaders || this.config?.pin_search_headers === true) return;
+    const el = e.currentTarget || e.target;
+    const scrollTop = el ? el.scrollTop : 0;
+    if (e.deltaY < 0 && scrollTop <= 5) {
+      if ((this._searchHeaderOffset || 0) > 0 && e.cancelable) {
+        e.preventDefault();
+      }
+      this._applySearchHeaderDelta(e.deltaY);
+    }
+  }
+
+  _handleResultsTouchStart(e) {
+    if (e.touches && e.touches.length === 1) {
+      this._resultsTouchStartY = e.touches[0].clientY;
+      this._resultsTouchStartX = e.touches[0].clientX;
+    }
+  }
+
+  _handleResultsTouchMove(e, pinSearchHeaders) {
+    if (pinSearchHeaders || this.config?.pin_search_headers === true || this._resultsTouchStartY == null) return;
+    if (!e.touches || e.touches.length !== 1) return;
+    const el = e.currentTarget;
+    const scrollTop = el ? el.scrollTop : 0;
+    const deltaY = e.touches[0].clientY - this._resultsTouchStartY;
+    const deltaX = e.touches[0].clientX - this._resultsTouchStartX;
+
+    if (Math.abs(deltaY) > Math.abs(deltaX) && deltaY > 0 && scrollTop <= 5) {
+      if ((this._searchHeaderOffset || 0) > 0 && e.cancelable) {
+        e.preventDefault();
+      }
+      this._applySearchHeaderDelta(-deltaY);
+      this._resultsTouchStartY = e.touches[0].clientY;
+      this._resultsTouchStartX = e.touches[0].clientX;
+    }
+  }
+
+  _handleResultsTouchEnd() {
+    this._resultsTouchStartY = null;
+    this._resultsTouchStartX = null;
   }
 
   // Check if a search result is clickable for hierarchical navigation
@@ -2547,45 +3083,6 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     if (currentHierarchyLevel?.type === 'select_track_for_playlist') return true;
 
     return !!item.is_browsable;
-  }
-
-  // Handle touch events to prevent accidental clicks during scrolling
-  _handleSearchResultTouch(item, event) {
-    // Only handle touch events on mobile
-    if (!('ontouchstart' in window)) {
-      return;
-    }
-
-    const touch = event.touches[0];
-    const startX = touch.clientX;
-    const startY = touch.clientY;
-    let hasMoved = false;
-    const moveThreshold = 10; // pixels
-
-    const handleTouchMove = (moveEvent) => {
-      const moveTouch = moveEvent.touches[0];
-      const deltaX = Math.abs(moveTouch.clientX - startX);
-      const deltaY = Math.abs(moveTouch.clientY - startY);
-
-      if (deltaX > moveThreshold || deltaY > moveThreshold) {
-        hasMoved = true;
-      }
-    };
-
-    const handleTouchEnd = (endEvent) => {
-      // Remove event listeners
-      document.removeEventListener('touchmove', handleTouchMove, { passive: true });
-      document.removeEventListener('touchend', handleTouchEnd, { passive: true });
-
-      // Only trigger click if finger didn't move significantly (not scrolling)
-      if (!hasMoved) {
-        this._handleSearchResultClick(item);
-      }
-    };
-
-    // Add event listeners
-    document.addEventListener('touchmove', handleTouchMove, { passive: true });
-    document.addEventListener('touchend', handleTouchEnd, { passive: true });
   }
 
 
@@ -2689,9 +3186,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     if (this._recentlyPlayedFilterActive) {
       // Clear search box since it's not used in recently played mode
       this._searchQuery = '';
-      // Load recently played items - always use "all" for recently played
+      // Load recently played items
       try {
-        await this._doSearch('all', { isRecentlyPlayed: true, clearFilters: true });
+        const currentMediaType = this._searchMediaClassFilter || 'all';
+        const targetFilter = this._keepFiltersOnSearch && currentMediaType !== 'favorites' ? currentMediaType : 'all';
+        await this._doSearch(targetFilter, { isRecentlyPlayed: true, clearFilters: true });
       } catch (error) {
         console.error('yamp: Error in _doSearch for recently played:', error);
       }
@@ -2703,10 +3202,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         await this._doSearch(currentMediaType);
       } else {
         // Restore from cache or load favorites if no search query
-        const cacheKey = `${this._searchMediaClassFilter || 'all'}`;
-        if (this._searchResultsByType[cacheKey]) {
-          this._searchResults = this._sortSearchResults(this._searchResultsByType[cacheKey]);
-          this.requestUpdate();
+        const currentMediaType = this._searchMediaClassFilter || 'all';
+        if (this._restoreSearchResultsFromCache(currentMediaType)) {
+          // Restored from cache
+        } else if (this._keepFiltersOnSearch && currentMediaType !== 'all') {
+          await this._doSearch(currentMediaType);
         } else {
           // No cache, load favorites as default
           await this._doSearch('favorites');
@@ -2741,9 +3241,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       delete this._searchResultsByType[cacheKey];
       // Subscribe to queue update events
       await this._subscribeToQueueUpdates();
-      // Load upcoming queue items - always use "all" for upcoming
+      // Load upcoming queue items
       try {
-        await this._doSearch('all', { isUpcoming: true, clearFilters: true });
+        const currentMediaType = this._searchMediaClassFilter || 'all';
+        const targetFilter = this._keepFiltersOnSearch && currentMediaType !== 'favorites' ? currentMediaType : 'all';
+        await this._doSearch(targetFilter, { isUpcoming: true, clearFilters: true });
       } catch (error) {
         console.error('yamp: Error in _doSearch for upcoming queue:', error);
       }
@@ -2757,10 +3259,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         await this._doSearch(currentMediaType);
       } else {
         // Restore from cache or load favorites if no search query
-        const cacheKey = `${this._searchMediaClassFilter || 'all'}`;
-        if (this._searchResultsByType[cacheKey]) {
-          this._searchResults = this._sortSearchResults(this._searchResultsByType[cacheKey]);
-          this.requestUpdate();
+        const currentMediaType = this._searchMediaClassFilter || 'all';
+        if (this._restoreSearchResultsFromCache(currentMediaType)) {
+          // Restored from cache
+        } else if (this._keepFiltersOnSearch && currentMediaType !== 'all') {
+          await this._doSearch(currentMediaType);
         } else {
           // No cache, load favorites as default
           await this._doSearch('favorites');
@@ -2795,7 +3298,14 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           return;
         }
 
-        await this._doSearch('all', { isRecommendations: true, clearFilters: true });
+        const targetFilter =
+          this._keepFiltersOnSearch &&
+          this._searchMediaClassFilter &&
+          this._searchMediaClassFilter !== "favorites"
+            ? this._searchMediaClassFilter
+            : "all";
+
+        await this._doSearch(targetFilter, { isRecommendations: true, clearFilters: true });
       } catch (error) {
         console.error('yamp: Error in _doSearch for recommendations:', error);
         this._searchError = "Unable to load recommendations.";
@@ -2807,15 +3317,34 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         const currentMediaType = this._searchMediaClassFilter;
         await this._doSearch(currentMediaType);
       } else {
-        const cacheKey = `${this._searchMediaClassFilter || 'all'}`;
-        if (this._searchResultsByType[cacheKey]) {
-          this._searchResults = this._sortSearchResults(this._searchResultsByType[cacheKey]);
-          this.requestUpdate();
+        const currentMediaType = this._searchMediaClassFilter || 'all';
+        if (this._restoreSearchResultsFromCache(currentMediaType)) {
+          // Restored from cache
+        } else if (this._keepFiltersOnSearch && currentMediaType !== 'all') {
+          await this._doSearch(currentMediaType);
         } else {
           await this._doSearch('favorites');
         }
       }
     }
+  }
+
+  /**
+   * Attempts to restore search results from cache based on the current media type.
+   * @param {string} currentMediaType
+   * @returns {boolean} True if restored from cache, false otherwise
+   */
+  _restoreSearchResultsFromCache(currentMediaType) {
+    const sortMode = this._getActiveSearchDisplaySortMode();
+    const cacheKey = `${currentMediaType}_sort_${sortMode}`;
+    if (this._searchResultsByType[cacheKey] || this._searchResultsByType[currentMediaType]) {
+      this._searchResults = this._sortSearchResults(
+        this._searchResultsByType[cacheKey] || this._searchResultsByType[currentMediaType]
+      );
+      this.requestUpdate();
+      return true;
+    }
+    return false;
   }
 
   // Get next track from Music Assistant (limited by Music Assistant API)
@@ -3424,6 +3953,9 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
   // Check if current entity is a Music Assistant entity
   _isMusicAssistantEntity() {
+    const activeState = this.currentActivePlaybackStateObj || this.currentStateObj;
+    if (this._looksLikeMusicAssistantState(activeState)) return true;
+
     // Get the Music Assistant state for the current chip
     const maState = this._getMusicAssistantState();
     if (!maState) return false;
@@ -3435,14 +3967,30 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       // If we're in upcoming mode and getting queue items, assume it's MA
       (this._upcomingFilterActive && this._searchResultsByType[`${this._searchMediaClassFilter || 'all'}_upcoming_sort_default`]?.some(item => item.queue_item_id));
 
-    return hasMassAttributes;
+    return Boolean(hasMassAttributes);
   }
 
   _looksLikeMusicAssistantState(state) {
     if (!state) return false;
-    return isMusicAssistantEntity(state) ||
-      !!state.attributes?.mass_player_id ||
-      !!state.attributes?.active_queue;
+    return isMusicAssistantEntity(state);
+  }
+
+  // Check if current entity media content type is music
+  _isMusicContentType() {
+    const states = [
+      this.metadataStateObj,
+      this.currentActivePlaybackStateObj,
+      this.currentPlaybackStateObj,
+      this.currentStateObj,
+      this._getMusicAssistantState(),
+    ];
+    for (const state of states) {
+      const type = state?.attributes?.media_content_type;
+      if (typeof type === "string" && type.trim().length > 0) {
+        return type.trim().toLowerCase() === "music";
+      }
+    }
+    return false;
   }
 
   _getTransferQueueTargets() {
@@ -3474,8 +4022,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       const displayState = maState || mainState;
       const configuredName = obj?.name;
       const displayName = configuredName ||
-        mainState?.attributes?.friendly_name ||
-        maState?.attributes?.friendly_name ||
+        getEntityName(this.hass, mainState) ||
+        getEntityName(this.hass, maState) ||
         obj.entity_id;
 
       targets.push({
@@ -3856,11 +4404,6 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     }
     if (!this._isClickableSearchResult(item)) return;
 
-    // If this is a touch device and we have a touch event, ignore the click
-    // (touch events are handled by _handleSearchResultTouch)
-    if ('ontouchstart' in window && event && event.sourceCapabilities && event.sourceCapabilities.firesTouchEvents) {
-      return;
-    }
 
     // Radio flow: user is picking a track to resolve from search results
     const currentHierarchyLevel = this._searchHierarchy[this._searchHierarchy.length - 1];
@@ -3935,28 +4478,29 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         await this._searchAlbumTracks(item.album, item.artist, item.album_uri);
       }
     } else if (item.media_class === 'playlist') {
-      await this._searchPlaylistTracks(item.title, item.media_content_id);
+      let playlistUri = item.media_content_id || item.uri || null;
+      if (!playlistUri && this._isMusicAssistantEntity()) {
+        try {
+          const searchEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
+          const searchEntityId = await this._resolveTemplateAtActionTime(searchEntityIdTemplate, this.currentEntityId);
+          playlistUri = await this._resolvePlaylistUri(item.title, searchEntityId);
+        } catch (e) {
+          console.warn("yamp: error resolving playlist URI:", e);
+        }
+      }
+      await this._searchPlaylistTracks(item.title, playlistUri);
     }
   }
 
-  // Handle hierarchical search - search for tracks by album
-  async _searchAlbumTracks(albumName, artistName, albumUri = null) {
-    this._searchHierarchy.push({ type: 'album', name: albumName, query: this._searchQuery, uri: albumUri, filter: this._searchMediaClassFilter });
-    this._searchBreadcrumb = `Tracks from ${albumName}`;
-    this._searchResultsByType = {}; // Clear cache for new search
-    this._currentSearchQuery = albumName;
-    this._searchMediaClassFilter = 'track';
-
-    // Immediate loading state
-    this._searchResults = [];
-    this._searchLoading = true;
-    this.requestUpdate();
-
+  // Stack-safe loader: fetches album tracks without modifying _searchHierarchy
+  async _loadAlbumTracks(albumUri, albumName, artistName = null) {
     // Priority 1: Use mass_queue integration if available (preferred for Music Assistant)
-    const mqTracks = await this._fetchMassQueueTracks(albumUri, "get_album_tracks");
-    if (mqTracks && mqTracks.length > 0) {
-      this._setSearchResultsFromMassQueue(mqTracks, albumName);
-      return;
+    if (albumUri && (await this._isMassQueueIntegrationAvailable(this.hass))) {
+      const mqTracks = await this._fetchMassQueueTracks(albumUri, "get_album_tracks");
+      if (mqTracks && mqTracks.length > 0) {
+        this._setSearchResultsFromMassQueue(mqTracks, "");
+        return;
+      }
     }
 
     // Priority 2: Use browse_media (fallback for non-mass_queue MA or other integration)
@@ -3981,9 +4525,10 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         const tracks = browseResult.children || [];
 
         if (tracks.length > 0) {
-          this._searchQuery = albumName;
+          this._searchQuery = "";
           this._searchResults = this._sortSearchResults(tracks);
           this._searchTotalRows = Math.max(15, tracks.length);
+          this._searchAttempted = true;
           this._searchLoading = false;
           this.requestUpdate();
           return;
@@ -3994,11 +4539,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     }
 
     // Fallback to search-based navigation
-    let searchQuery = albumName;
-    if (artistName) {
-      searchQuery = `${artistName} ${albumName}`;
-    }
-    this._searchQuery = searchQuery;
+    this._searchQuery = "";
 
     // Clear filter states to ensure accurate album search results
     this._favoritesFilterActive = false;
@@ -4011,11 +4552,82 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       searchParams.artist = artistName;
     }
 
+    // Use Music Assistant search with specific parameters for tracks
+    await this._doSearch('track', searchParams);
+  }
+
+  // Handle hierarchical search - search for tracks by album
+  async _searchAlbumTracks(albumName, artistName, albumUri = null) {
+    this._searchHierarchy.push({ type: 'album', name: albumName, query: this._searchQuery, uri: albumUri, filter: this._searchMediaClassFilter });
+    this._searchBreadcrumb = `Tracks from ${albumName}`;
+    this._searchResultsByType = {}; // Clear cache for new search
+    this._currentSearchQuery = "";
+    this._searchMediaClassFilter = 'track';
+
+    // Immediate loading state
+    this._searchResults = [];
+    this._searchLoading = true;
+    this._searchQuery = "";
+    this.requestUpdate();
+
     // Remove swipe handlers when entering hierarchy
     this._removeSearchSwipeHandlers();
 
-    // Use Music Assistant search with specific parameters for tracks
-    await this._doSearch('track', searchParams);
+    await this._loadAlbumTracks(albumUri, albumName, artistName);
+  }
+
+  // Helper to load tracks for a playlist via mass_queue or browse_media
+  async _loadPlaylistTracks(playlistUri, playlistName) {
+    // Priority 1: Use mass_queue integration if available (preferred for Music Assistant)
+    if (playlistUri && (await this._isMassQueueIntegrationAvailable(this.hass))) {
+      const mqTracks = await this._fetchMassQueueTracks(playlistUri, "get_playlist_tracks");
+      if (mqTracks && mqTracks.length > 0) {
+        this._setSearchResultsFromMassQueue(mqTracks, "");
+        return true;
+      }
+    }
+
+    // Priority 2: Use browse_media (fallback for non-mass_queue MA or other integration)
+    if (playlistUri && this._isMusicAssistantEntity()) {
+      try {
+        const searchEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
+        const searchEntityId = await this._resolveTemplateAtActionTime(searchEntityIdTemplate, this.currentEntityId);
+
+        const browseMsg = {
+          type: "call_service",
+          domain: "media_player",
+          service: "browse_media",
+          service_data: {
+            entity_id: searchEntityId,
+            media_content_id: playlistUri,
+          },
+          return_response: true,
+        };
+
+        const browseRes = await this.hass.connection.sendMessagePromise(browseMsg);
+        const browseResult = browseRes?.response?.[searchEntityId]?.result || browseRes?.result || {};
+        const tracks = browseResult.children || [];
+
+        if (tracks.length > 0) {
+          this._searchQuery = "";
+          this._searchResults = this._sortSearchResults(tracks);
+          this._searchTotalRows = Math.max(15, tracks.length);
+          this._searchAttempted = true;
+          this._searchLoading = false;
+          this.requestUpdate();
+          return true;
+        }
+      } catch (e) {
+        console.error("yamp: Failed to browse playlist tracks:", e);
+      }
+    }
+
+    this._searchQuery = "";
+    this._searchResults = [];
+    this._searchAttempted = true;
+    this._searchLoading = false;
+    this.requestUpdate();
+    return false;
   }
 
   // Handle hierarchical search - search for tracks in a playlist
@@ -4023,25 +4635,19 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._searchHierarchy.push({ type: 'playlist', name: playlistName, query: this._searchQuery, uri: playlistUri, filter: this._searchMediaClassFilter });
     this._searchBreadcrumb = `Tracks from ${playlistName}`;
     this._searchResultsByType = {}; // Clear cache for new search
-    this._currentSearchQuery = playlistName;
+    this._currentSearchQuery = "";
     this._searchMediaClassFilter = 'track';
 
     // Immediate loading state
     this._searchResults = [];
     this._searchLoading = true;
+    this._searchQuery = "";
     this.requestUpdate();
 
-    const mqTracks = await this._fetchMassQueueTracks(playlistUri, "get_playlist_tracks");
-    if (mqTracks && mqTracks.length > 0) {
-      this._setSearchResultsFromMassQueue(mqTracks, playlistName);
-      return;
-    }
+    // Remove swipe handlers when entering hierarchy
+    this._removeSearchSwipeHandlers();
 
-    // Handled user request to not fall back to browse_media for playlists
-    this._searchQuery = playlistName;
-    this._searchResults = [];
-    this._searchLoading = false;
-    this.requestUpdate();
+    await this._loadPlaylistTracks(playlistUri, playlistName);
   }
 
   async _fetchMassQueueTracks(uri, serviceName) {
@@ -4120,6 +4726,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     }));
     this._searchQuery = queryName;
     this._searchTotalRows = Math.max(15, tracks.length);
+    this._searchAttempted = true;
     this._searchLoading = false;
     this.requestUpdate();
   }
@@ -4136,7 +4743,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       return;
     }
     this._textResizeObserver = new ResizeObserver(() => this._updateAdaptiveTextScale());
-    this._textResizeObserver.observe(this);
+    this._textResizeObserver.observe(/** @type {Element} */ (/** @type {unknown} */ (this)));
     this._updateAdaptiveTextScale();
   }
 
@@ -4159,7 +4766,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       const isActive = !!targetSet?.has(target);
       this.style.setProperty(varName, isActive ? scaleString : "1");
     }
-    const detailActive = !!targetSet?.has("details") && !this._lyricsActive;
+    const detailActive = !!targetSet?.has("details");
     const safeDetailsScale = Number.isFinite(detailsScale) ? detailsScale : safeScale;
     const detailScaleString = detailActive ? safeDetailsScale.toFixed(2) : "1";
     const detailLineHeight = detailActive ? this._calculateDetailsLineHeight(safeDetailsScale) : 1.2;
@@ -4205,8 +4812,20 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const docWidth = typeof document !== "undefined" ? document.documentElement?.clientWidth : 0;
     const viewportWidth = window.innerWidth || docWidth || 0;
     const isNarrow = viewportWidth > 0 ? viewportWidth <= 520 : this._isNarrowViewport;
+    const isMobile = this._isMobile;
+    let needsUpdate = false;
     if (isNarrow !== this._isNarrowViewport) {
       this._isNarrowViewport = isNarrow;
+      needsUpdate = true;
+    }
+    if (isMobile !== this._lastIsMobile) {
+      this._lastIsMobile = isMobile;
+      if (this._idleImageTemplate) this._idleImageTemplateNeedsResolve = true;
+      if (this._backgroundImageTemplate) this._backgroundImageTemplateNeedsResolve = true;
+      if (this._fontColorTemplate) this._fontColorTemplateNeedsResolve = true;
+      needsUpdate = true;
+    }
+    if (needsUpdate) {
       this.requestUpdate();
     }
   }
@@ -4244,6 +4863,297 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._updateMarquee();
   }
 
+  _getTranslateX(element) {
+    if (!element) return 0;
+    const style = window.getComputedStyle(element);
+    const transform = style.transform || style.webkitTransform;
+    if (!transform || transform === "none") return 0;
+    try {
+      return new DOMMatrix(transform).m41;
+    } catch {
+      const match = transform.match(/matrix\(([^)]+)\)/);
+      if (match) {
+        const parts = match[1].split(",");
+        return parseFloat(parts[4]) || 0;
+      }
+      return 0;
+    }
+  }
+
+  _clearMarqueeResetTimer(container) {
+    if (this._marqueeManualResetTimers?.has(container)) {
+      clearTimeout(this._marqueeManualResetTimers.get(container));
+      this._marqueeManualResetTimers.delete(container);
+    }
+  }
+
+  _resetMarqueeManual(container, inner, resumeMarquee = true) {
+    if (!container || !inner) return;
+    this._clearMarqueeResetTimer(container);
+
+    if (!container.hasAttribute("data-marquee-manual")) {
+      container.removeAttribute("data-marquee-paused");
+      container.removeAttribute("data-marquee-dragging");
+      return;
+    }
+
+    inner.style.transition = "transform 0.4s cubic-bezier(0.25, 1, 0.5, 1)";
+    inner.style.transform = "translateX(0px)";
+
+    let finished = false;
+    const finishReset = () => {
+      if (finished) return;
+      finished = true;
+      inner.removeEventListener("transitionend", onTransitionEnd);
+      inner.style.transition = "";
+      inner.style.transform = "";
+      inner.style.opacity = "";
+      container.removeAttribute("data-marquee-manual");
+      container.removeAttribute("data-marquee-paused");
+      container.removeAttribute("data-marquee-dragging");
+      this._clearMarqueeResetTimer(container);
+
+      if (resumeMarquee && this.isConnected && container.hasAttribute("data-marquee")) {
+        if (container.hasAttribute("data-marquee-sequential")) {
+          if (container.getAttribute("data-marquee-active") === "true") {
+            container.removeAttribute("data-marquee-active");
+            void container.offsetWidth;
+            container.setAttribute("data-marquee-active", "true");
+          } else {
+            const activeEl = this.renderRoot?.querySelector(
+              ".details [data-marquee-sequential='true'][data-marquee-active='true']"
+            );
+            if (!activeEl) {
+              container.setAttribute("data-marquee-active", "true");
+            }
+          }
+        }
+      }
+    };
+
+    const onTransitionEnd = (e) => {
+      if (e.target !== inner || e.propertyName !== "transform") return;
+      finishReset();
+    };
+
+    inner.addEventListener("transitionend", onTransitionEnd);
+    const fallbackTimer = setTimeout(finishReset, 450);
+    this._marqueeManualResetTimers.set(container, fallbackTimer);
+  }
+
+  _setupMarqueeManualInteraction(info) {
+    const { container, inner, overflow } = info;
+    if (!container || !inner || overflow <= 4) return;
+
+    let isPointerDown = false;
+    let pointerId = null;
+    let startX = 0;
+    let startY = 0;
+    let currentX = 0;
+    let startTransformX = 0;
+    let hasMovedHorizontally = false;
+    let isVerticalScroll = false;
+    let lastClientX = 0;
+    let lastTime = 0;
+    let velocityX = 0;
+
+    const onPointerDown = (e) => {
+      if (e.button !== undefined && e.button !== 0) return;
+      this._clearMarqueeResetTimer(container);
+      if (inner._clearMomentum) {
+        inner._clearMomentum();
+      }
+
+      isPointerDown = true;
+      pointerId = e.pointerId;
+      startX = e.clientX;
+      startY = e.clientY;
+      lastClientX = e.clientX;
+      lastTime = Date.now();
+      velocityX = 0;
+      hasMovedHorizontally = false;
+      isVerticalScroll = false;
+
+      if (container.hasAttribute("data-marquee-manual")) {
+        inner.style.transition = "";
+        startTransformX = this._getTranslateX(inner);
+      } else {
+        startTransformX = this._getTranslateX(inner);
+        container.setAttribute("data-marquee-paused", "true");
+      }
+      currentX = startTransformX;
+    };
+
+    const onPointerMove = (e) => {
+      if (!isPointerDown || e.pointerId !== pointerId) return;
+      if (isVerticalScroll) return;
+
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+
+      if (!hasMovedHorizontally) {
+        if (Math.abs(dy) > 6 && Math.abs(dy) > Math.abs(dx)) {
+          isVerticalScroll = true;
+          container.removeAttribute("data-marquee-paused");
+          return;
+        }
+        if (Math.abs(dx) > 6) {
+          hasMovedHorizontally = true;
+          container.setAttribute("data-marquee-manual", "true");
+          container.setAttribute("data-marquee-dragging", "true");
+          inner.style.transition = "";
+          inner.style.opacity = "1";
+          try {
+            if (container.setPointerCapture) {
+              container.setPointerCapture(e.pointerId);
+            }
+          } catch {
+            // Ignore capture failures on unsupported elements
+          }
+        }
+      }
+
+      if (hasMovedHorizontally) {
+        if (e.cancelable) e.preventDefault();
+        const now = Date.now();
+        const dt = now - lastTime;
+        if (dt > 0) {
+          velocityX = (e.clientX - lastClientX) / dt;
+          lastClientX = e.clientX;
+          lastTime = now;
+        }
+
+        const maxScroll = -Math.ceil(overflow);
+        const targetX = Math.min(0, Math.max(maxScroll, startTransformX + dx));
+        currentX = targetX;
+        inner.style.transform = `translateX(${targetX}px)`;
+      }
+    };
+
+    const onPointerUp = (e) => {
+      if (!isPointerDown || e.pointerId !== pointerId) return;
+      isPointerDown = false;
+      container.removeAttribute("data-marquee-dragging");
+
+      try {
+        if (container.hasPointerCapture && container.hasPointerCapture(pointerId)) {
+          container.releasePointerCapture(pointerId);
+        }
+      } catch {
+        // Ignore release failures
+      }
+
+      if (hasMovedHorizontally) {
+        this._suppressMarqueeClick = true;
+        if (this._suppressMarqueeClickTimer) {
+          clearTimeout(this._suppressMarqueeClickTimer);
+        }
+        this._suppressMarqueeClickTimer = setTimeout(() => {
+          this._suppressMarqueeClick = false;
+        }, 350);
+
+        const maxScroll = -Math.ceil(overflow);
+        if (Math.abs(velocityX) > 0.25) {
+          const momentumDist = velocityX * 160;
+          const finalX = Math.min(0, Math.max(maxScroll, currentX + momentumDist));
+          currentX = finalX;
+          inner.style.transition = "transform 0.3s cubic-bezier(0.25, 1, 0.5, 1)";
+          inner.style.transform = `translateX(${finalX}px)`;
+          inner._clearMomentum = () => {
+            inner.removeEventListener("transitionend", inner._clearMomentum);
+            inner.style.transition = "";
+            inner._clearMomentum = null;
+          };
+          inner.addEventListener("transitionend", inner._clearMomentum);
+        }
+
+        if (e.pointerType === "touch") {
+          this._clearMarqueeResetTimer(container);
+          const timer = setTimeout(() => {
+            this._resetMarqueeManual(container, inner);
+          }, 3000);
+          this._marqueeManualResetTimers.set(container, timer);
+        } else {
+          // Desktop mouse: check if still hovered. If hovered, wait for mouseleave on .details.
+          // Otherwise set a fallback timer in case mouse is already outside.
+          const detailsEl = this.renderRoot?.querySelector(".details");
+          const isHovered = detailsEl?.matches(":hover") || container.matches(":hover");
+          if (!isHovered) {
+            this._clearMarqueeResetTimer(container);
+            const timer = setTimeout(() => {
+              this._resetMarqueeManual(container, inner);
+            }, 3000);
+            this._marqueeManualResetTimers.set(container, timer);
+          }
+        }
+      } else {
+        container.removeAttribute("data-marquee-paused");
+      }
+    };
+
+    const onWheel = (e) => {
+      const isHorizontalScroll = Math.abs(e.deltaX) > Math.abs(e.deltaY);
+      if (!isHorizontalScroll) return;
+
+      this._clearMarqueeResetTimer(container);
+      const rawDelta = e.deltaX;
+      if (rawDelta === 0) return;
+
+      let factor = 1;
+      if (e.deltaMode === 1) factor = 20;
+      else if (e.deltaMode === 2) factor = 100;
+      const delta = rawDelta * factor;
+
+      if (e.cancelable) e.preventDefault();
+
+      if (!container.hasAttribute("data-marquee-manual")) {
+        currentX = this._getTranslateX(inner);
+        container.setAttribute("data-marquee-manual", "true");
+        inner.style.transition = "";
+        inner.style.opacity = "1";
+        inner.style.transform = `translateX(${currentX}px)`;
+      }
+
+      const maxScroll = -Math.ceil(overflow);
+      const targetX = Math.min(0, Math.max(maxScroll, currentX - delta));
+      currentX = targetX;
+      inner.style.transform = `translateX(${targetX}px)`;
+
+      // If mouse is already outside, set an idle fallback timer.
+      const detailsEl = this.renderRoot?.querySelector(".details");
+      const isHovered = detailsEl?.matches(":hover") || container.matches(":hover");
+      if (!isHovered) {
+        const timer = setTimeout(() => {
+          this._resetMarqueeManual(container, inner);
+        }, 3000);
+        this._marqueeManualResetTimers.set(container, timer);
+      }
+    };
+
+    const onClickCapture = (e) => {
+      if (this._suppressMarqueeClick) {
+        e.stopImmediatePropagation();
+        e.preventDefault();
+      }
+    };
+
+    container.addEventListener("pointerdown", onPointerDown);
+    container.addEventListener("pointermove", onPointerMove);
+    container.addEventListener("pointerup", onPointerUp);
+    container.addEventListener("pointercancel", onPointerUp);
+    container.addEventListener("wheel", onWheel, { passive: false });
+    container.addEventListener("click", onClickCapture, true);
+
+    this._marqueeCleanups.push(() => {
+      container.removeEventListener("pointerdown", onPointerDown);
+      container.removeEventListener("pointermove", onPointerMove);
+      container.removeEventListener("pointerup", onPointerUp);
+      container.removeEventListener("pointercancel", onPointerUp);
+      container.removeEventListener("wheel", onWheel);
+      container.removeEventListener("click", onClickCapture, true);
+    });
+  }
+
   _cleanupMarquee() {
     if (this._marqueeSequentialTimer) {
       clearTimeout(this._marqueeSequentialTimer);
@@ -4255,6 +5165,35 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       });
       this._marqueeObservedElements = null;
     }
+    if (this._marqueeCleanups) {
+      this._marqueeCleanups.forEach((cleanup) => cleanup());
+      this._marqueeCleanups = [];
+    }
+    if (this._marqueeManualResetTimers) {
+      this._marqueeManualResetTimers.forEach((timer) => clearTimeout(timer));
+      this._marqueeManualResetTimers.clear();
+    }
+    if (this._suppressMarqueeClickTimer) {
+      clearTimeout(this._suppressMarqueeClickTimer);
+      this._suppressMarqueeClickTimer = null;
+    }
+    this._suppressMarqueeClick = false;
+
+    if (this.renderRoot) {
+      const marqueeContainers = this.renderRoot.querySelectorAll(".details [data-marquee='true']");
+      marqueeContainers.forEach((container) => {
+        container.removeAttribute("data-marquee-manual");
+        container.removeAttribute("data-marquee-paused");
+        container.removeAttribute("data-marquee-dragging");
+        const inner = container.querySelector(".marquee-inner");
+        if (inner) {
+          inner.style.transform = "";
+          inner.style.transition = "";
+          inner.style.opacity = "";
+        }
+      });
+    }
+
     this._lastMarqueeKey = null;
   }
 
@@ -4305,8 +5244,16 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       info.container.removeAttribute("data-marquee");
       info.container.removeAttribute("data-marquee-sequential");
       info.container.removeAttribute("data-marquee-active");
+      info.container.removeAttribute("data-marquee-manual");
+      info.container.removeAttribute("data-marquee-paused");
+      info.container.removeAttribute("data-marquee-dragging");
       info.container.style.removeProperty("--yamp-marquee-distance");
       info.container.style.removeProperty("--yamp-marquee-duration");
+      if (info.inner) {
+        info.inner.style.transform = "";
+        info.inner.style.transition = "";
+        info.inner.style.opacity = "";
+      }
     };
 
     if (titleOverflows && artistOverflows) {
@@ -4320,12 +5267,17 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       titleInfo.container.setAttribute("data-marquee-active", "true");
       artistInfo.container.removeAttribute("data-marquee-active");
 
+      this._setupMarqueeManualInteraction(titleInfo);
+      this._setupMarqueeManualInteraction(artistInfo);
+
       const items = [titleInfo, artistInfo];
       let activeIndex = 0;
 
       this._marqueeAnimationEndHandler = (e) => {
         if (e.animationName !== "yamp-marquee") return;
         if (!this.isConnected || this._lastMarqueeKey !== marqueeKey) return;
+
+
 
         const current = items[activeIndex];
         if (current?.container) {
@@ -4353,16 +5305,33 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       titleInfo.container.removeAttribute("data-marquee-sequential");
       titleInfo.container.removeAttribute("data-marquee-active");
       clearMarquee(artistInfo);
+      this._setupMarqueeManualInteraction(titleInfo);
     } else if (artistOverflows) {
       // Only artist overflows: single infinite marquee
       applyMarqueeVars(artistInfo);
       artistInfo.container.removeAttribute("data-marquee-sequential");
       artistInfo.container.removeAttribute("data-marquee-active");
       clearMarquee(titleInfo);
+      this._setupMarqueeManualInteraction(artistInfo);
     } else {
       // Neither overflows
       clearMarquee(titleInfo);
       clearMarquee(artistInfo);
+    }
+
+    const detailsEl = this.renderRoot.querySelector(".details");
+    if (detailsEl && (titleOverflows || artistOverflows)) {
+      const onDetailsMouseLeave = () => {
+        [titleInfo, artistInfo].forEach((info) => {
+          if (info.container?.hasAttribute("data-marquee-manual")) {
+            this._resetMarqueeManual(info.container, info.inner);
+          }
+        });
+      };
+      detailsEl.addEventListener("mouseleave", onDetailsMouseLeave);
+      this._marqueeCleanups.push(() => {
+        detailsEl.removeEventListener("mouseleave", onDetailsMouseLeave);
+      });
     }
   }
 
@@ -4452,7 +5421,55 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     }
   }
 
+  async _resolveBackgroundImageTemplate() {
+    if (!this._backgroundImageTemplate || this._resolvingBackgroundImageTemplate || !this.hass) return;
+    this._resolvingBackgroundImageTemplate = true;
+    try {
+      const context = this._getTemplateContext();
+      const result = await resolveStringTemplate(this.hass, this._backgroundImageTemplate, context);
+      this._backgroundImageTemplateResult = (result ?? "").toString().trim();
+    } catch (error) {
+      this._backgroundImageTemplateResult = "";
+    } finally {
+      this._resolvingBackgroundImageTemplate = false;
+      this._backgroundImageTemplateNeedsResolve = false;
+      this.requestUpdate();
+    }
+  }
+
+  async _resolveFontColorTemplate() {
+    if (!this._fontColorTemplate || this._resolvingFontColorTemplate || !this.hass) return;
+    this._resolvingFontColorTemplate = true;
+    try {
+      const context = this._getTemplateContext();
+      const result = await resolveStringTemplate(this.hass, this._fontColorTemplate, context);
+      this._fontColorTemplateResult = (result ?? "").toString().trim();
+    } catch (error) {
+      this._fontColorTemplateResult = "";
+    } finally {
+      this._resolvingFontColorTemplate = false;
+      this._fontColorTemplateNeedsResolve = false;
+      this.requestUpdate();
+    }
+  }
+
+  get _isMobile() {
+    if (typeof window === "undefined") return false;
+    const docWidth = typeof document !== "undefined" ? document.documentElement?.clientWidth : 0;
+    const viewportWidth = window.innerWidth || docWidth || 0;
+    const isMobileWidth = viewportWidth > 0 ? viewportWidth <= 768 : false;
+    const isMobileUserAgent =
+      typeof navigator !== "undefined" &&
+      (/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent || "") ||
+        (Boolean(navigator.maxTouchPoints && navigator.maxTouchPoints > 1) && /Macintosh/i.test(navigator.userAgent || "")));
+    return Boolean(isMobileWidth || isMobileUserAgent);
+  }
+
   _getTemplateContext() {
+    const isDarkMode = Boolean(
+      this.hass?.themes?.darkMode ??
+      (typeof window !== "undefined" && window.matchMedia?.("(prefers-color-scheme: dark)")?.matches)
+    );
     return {
       entity: this.currentEntityId || '',
       is_idle: this._isIdle,
@@ -4464,6 +5481,10 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       is_options: this._showEntityOptions,
       is_transfer_queue: this._showTransferQueue,
       is_any_menu_open: this.isAnyMenuOpen,
+      is_dark_mode: isDarkMode,
+      is_mobile: this._isMobile,
+      is_music_assistant: this._isMusicAssistantEntity(),
+      is_music: this._isMusicContentType(),
       current: this.currentActivePlaybackEntityId || this.currentEntityId || '',
     };
   }
@@ -4559,9 +5580,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         this._controlLayout
       );
       if (controls > 6) {
-        // Check if we're on a mobile screen (width <= 768px is typical mobile breakpoint)
-        const isMobile = window.innerWidth <= 768;
-        if (isMobile) {
+        // Check if we're on a mobile device or mobile screen breakpoint
+        if (this._isMobile) {
           // Make artwork smaller on mobile when there are many controls
           return "width: 60px; height: 60px; object-fit: var(--yamp-artwork-fit, cover); border-radius: 8px;";
         }
@@ -4571,8 +5591,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   // Get artwork URL from entity state, supporting entity_picture_local
-  _getArtworkUrl(state, forceIdleImage = false) {
-    const isIdleImageActive = (this._isIdle || forceIdleImage) && !!this.config?.idle_image;
+  _getArtworkUrl(state, forceIdleImage = false, ignoreIdleImage = false) {
+    const isIdleImageActive = !ignoreIdleImage && (this._isIdle || forceIdleImage) && !!this.config?.idle_image;
     const res = getArtworkUrl(state, {
       hostname: this.config?.artwork_hostname || '',
       overrides: Array.isArray(this.config?.media_artwork_overrides) ? this.config.media_artwork_overrides : [],
@@ -4602,6 +5622,36 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     }
 
     return { url, sizePercentage, objectFit, objectPosition };
+  }
+
+  // Unified helper to resolve artwork with intelligent fallbacks
+  _resolveSelectedArtwork({
+    metadataArtwork,
+    playbackArtwork,
+    mainArtwork,
+    displayTitle,
+    playbackStateObj,
+    mainState,
+    isPlayingSameMedia = false,
+  }) {
+    let selectedArt = metadataArtwork;
+    if (displayTitle && (!selectedArt || !selectedArt.url)) {
+      if (playbackArtwork?.url && (playbackStateObj?.attributes?.media_title === displayTitle || isPlayingSameMedia)) {
+        selectedArt = playbackArtwork;
+      } else if (mainArtwork?.url && (mainState?.attributes?.media_title === displayTitle || isPlayingSameMedia)) {
+        selectedArt = mainArtwork;
+      }
+    }
+    if (!selectedArt || !selectedArt.url) {
+      if (playbackArtwork?.url) {
+        selectedArt = playbackArtwork;
+      } else if (mainArtwork?.url) {
+        selectedArt = mainArtwork;
+      } else {
+        selectedArt = playbackArtwork || mainArtwork || null;
+      }
+    }
+    return selectedArt;
   }
 
   _getBackgroundSizeForFit(fit) {
@@ -4735,6 +5785,23 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     return trimmed;
   }
 
+  _resolveImageUrlFromInput(input) {
+    const normalized = this._normalizeImageSourceValue(input);
+    if (!normalized || !this.hass) return null;
+    if (this.hass.states?.[normalized]) {
+      const stateObj = this.hass.states[normalized];
+      return (
+        stateObj.attributes?.entity_picture_local ||
+        stateObj.attributes?.entity_picture ||
+        (stateObj.state && typeof stateObj.state === "string" && (stateObj.state.startsWith("http") || stateObj.state.startsWith("/")) ? stateObj.state : null)
+      );
+    }
+    if (normalized.startsWith("http") || normalized.startsWith("/")) {
+      return normalized;
+    }
+    return null;
+  }
+
   setConfig(rawConfig) {
     if (!rawConfig.entities || !Array.isArray(rawConfig.entities) || rawConfig.entities.length === 0) {
       throw new Error("You must define at least one media_player entity.");
@@ -4743,6 +5810,9 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const templateName = rawConfig.template || "custom";
     const templateBase = TEMPLATE_CONFIGS[templateName] || {};
     const config = { ...templateBase, ...rawConfig };
+    if (oldConfig?.lock_screen_controls !== config.lock_screen_controls) {
+      this._mediaSessionOverride = null;
+    }
     this.config = config;
     this._swapPauseForStop = config.swap_pause_for_stop === true;
     this._holdToPin = !!config.hold_to_pin;
@@ -4841,6 +5911,28 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       this._idleImageTemplate = null;
       this._idleImageTemplateResult = "";
       this._idleImageTemplateNeedsResolve = false;
+    }
+    // Handle background image templates
+    if (typeof config.background_image === "string" &&
+      (config.background_image.includes("{{") || config.background_image.includes("{%"))) {
+      this._backgroundImageTemplate = config.background_image;
+      this._backgroundImageTemplateResult = "";
+      this._backgroundImageTemplateNeedsResolve = true;
+    } else {
+      this._backgroundImageTemplate = null;
+      this._backgroundImageTemplateResult = "";
+      this._backgroundImageTemplateNeedsResolve = false;
+    }
+    // Handle font color templates
+    if (typeof config.font_color === "string" &&
+      (config.font_color.includes("{{") || config.font_color.includes("{%"))) {
+      this._fontColorTemplate = config.font_color;
+      this._fontColorTemplateResult = "";
+      this._fontColorTemplateNeedsResolve = true;
+    } else {
+      this._fontColorTemplate = null;
+      this._fontColorTemplateResult = "";
+      this._fontColorTemplateNeedsResolve = false;
     }
     // Handle card_height templates (similar to idle_image)
     // card_height now uses websocket template subscriptions
@@ -4971,6 +6063,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     return entityTemplate;
   }
 
+  // Helper to determine if main and paired MA entities are playing the same media
+  _areEntitiesPlayingSameMedia(mainState, maState) {
+    return areEntitiesPlayingSameMedia(mainState, maState);
+  }
+
   // Get active playback entity for a specific index
   _getActivePlaybackEntityForIndex(idx) {
     const obj = this.entityObjs[idx];
@@ -5024,8 +6121,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const maPlaying = this._isEntityPlaying(maState);
     const mainPlaying = this._isEntityPlaying(mainState);
 
-    // If both are playing, be sticky
+    // If both are playing, prioritize main entity if they are playing the same thing; otherwise be sticky
     if (maPlaying && mainPlaying) {
+      if (this._areEntitiesPlayingSameMedia(mainState, maState)) {
+        return resolve(mainId);
+      }
       if (lastResolved === mainId) return resolve(mainId);
       if (lastResolved === maId) return resolve(maId);
       return resolve(maId); // Default to MA
@@ -5139,8 +6239,17 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const maWasRecent = maWasPlayingUntilNow || (now - maPlayTime) < 5000;
     const mainWasRecent = mainWasPlayingUntilNow || (now - mainPlayTime) < 5000;
 
+    const maPlaying = this._isEntityPlaying(maState);
+    const mainPlaying = this._isEntityPlaying(mainState);
+
+    // If both are playing the same thing, prioritize the main entity
+    if (maPlaying && mainPlaying && this._areEntitiesPlayingSameMedia(mainState, maState)) {
+      this._lastActiveEntityIdByChip[idx] = mainId;
+      return mainId;
+    }
+
     // Prioritize the Music Assistant entity when it's playing
-    if (this._isEntityPlaying(maState)) {
+    if (maPlaying) {
       this._lastActiveEntityIdByChip[idx] = maId;
       return maId;
     }
@@ -5303,8 +6412,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   getChipName(entity_id) {
     const obj = this.entityObjs.find(e => e.entity_id === entity_id);
     if (obj && obj.name) return obj.name;
-    const state = this.hass.states[entity_id];
-    return state?.attributes.friendly_name || entity_id;
+    const state = this.hass?.states?.[entity_id];
+    return getEntityName(this.hass, state || entity_id);
   }
 
   // Return group master (includes all others in group_members)
@@ -5585,19 +6694,23 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         const playbackArtwork = this._getArtworkUrl(playbackState);
         const mainArtwork = this._getArtworkUrl(mainState);
 
-        const displaySource = metadataState || playbackState || mainState;
-        const displayTitle = displaySource?.attributes?.media_title;
+        const isPlayingSameMedia = this._areEntitiesPlayingSameMedia(mainState, playbackState);
 
-        // Prioritize metadata artwork, then fall back to others only if they match the displayed title
-        let artObj = metadataArtwork;
-        if (displayTitle && (!artObj || !artObj.url) && playbackArtwork?.url && playbackState?.attributes?.media_title === displayTitle) {
-          artObj = playbackArtwork;
-        }
-        if (displayTitle && (!artObj || !artObj.url) && mainArtwork?.url && mainState?.attributes?.media_title === displayTitle) {
-          artObj = mainArtwork;
-        }
+        const metaTitle = metadataState?.attributes?.media_title;
+        const isMetaPlaceholder = isPlaceholderMediaTitle(metaTitle, metadataState?.attributes?.friendly_name);
+        const effectiveMetaTitle = (!isMetaPlaceholder && metaTitle) ? metaTitle : null;
+        const displayTitle = effectiveMetaTitle || playbackState?.attributes?.media_title || mainState?.attributes?.media_title || metaTitle;
 
-        return artObj || playbackArtwork || mainArtwork;
+        // Prioritize metadata artwork, then fall back to others only if they match the displayed title or are playing the same media
+        return this._resolveSelectedArtwork({
+          metadataArtwork,
+          playbackArtwork,
+          mainArtwork,
+          displayTitle,
+          playbackStateObj: playbackState,
+          mainState,
+          isPlayingSameMedia,
+        });
       },
       getIsMaActive: (id) => {
         const idx = this.entityIds.indexOf(id);
@@ -6054,7 +7167,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           <div class="entity-options-resolved-entities-list ${isGridMode ? 'grid-menu' : ''}">
             ${this._getResolvedEntitiesForCurrentChip().map(entityId => {
         const state = this.hass?.states?.[entityId];
-        const name = state?.attributes?.friendly_name || entityId;
+        const name = getEntityName(this.hass, state || entityId);
         const icon = state?.attributes?.icon || "mdi:help-circle";
 
         const idx = this._selectedIndex;
@@ -6127,10 +7240,13 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const isAdmin = this.hass?.user?.is_admin === true;
     if (!isAdmin && configSource !== "lrclib") {
       if (configSource === "mass") {
-        console.warn(`YAMP: ${this.localize('lyrics.admin_only_mass')}`);
+        console.warn(`YAMP: ${localize('lyrics.admin_only_mass')}`);
 
-        const event = new Event("hass-notification", { bubbles: true, composed: true });
-        event.detail = { message: this.localize('lyrics.admin_only_mass') };
+        const event = new CustomEvent("hass-notification", {
+          bubbles: true,
+          composed: true,
+          detail: { message: localize("lyrics.admin_only_mass") },
+        });
         this.dispatchEvent(event);
 
         this._fetchingLyrics = false;
@@ -6138,7 +7254,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         this.requestUpdate();
         return;
       } else {
-        console.log(`YAMP: ${this.localize('lyrics.fallback_to_lrclib_non_admin')}`);
+        console.log(`YAMP: ${localize('lyrics.fallback_to_lrclib_non_admin')}`);
         configSource = "lrclib";
       }
     }
@@ -6324,6 +7440,15 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         } else if (typeof lyricsArray === "string") {
           lrcString = lyricsArray;
         } else if (typeof lyricsArray === "object") {
+          if (lyricsArray.instrumental) {
+            return [
+              {
+                time: 0,
+                text: localize("lyrics.instrumental") || "Instrumental Track",
+                isInstrumental: true,
+              },
+            ];
+          }
           lrcString = lyricsArray.lyrics || lyricsArray.text || "";
         }
         return lrcString ? parseLrc(lrcString) : [];
@@ -6380,7 +7505,13 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
       if (data) {
         if (data.instrumental) {
-          return [{ time: null, text: localize("lyrics.instrumental") || "Instrumental Track" }];
+          return [
+            {
+              time: 0,
+              text: localize("lyrics.instrumental") || "Instrumental Track",
+              isInstrumental: true,
+            },
+          ];
         }
         const lrcString = data.syncedLyrics || data.plainLyrics || "";
         return lrcString ? parseLrc(lrcString) : [];
@@ -6393,15 +7524,29 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
 
   updated(changedProps) {
+    if (changedProps.has("hass") && this.hass) {
+      const currentLang = this.hass.selectedLanguage || this.hass.language || this.hass.locale?.language;
+      if (currentLang) {
+        setHassLanguage(currentLang);
+      }
+    }
     this._updateHostAttributes();
     if (this._idleImageTemplate && changedProps.has("hass")) {
       this._idleImageTemplateNeedsResolve = true;
+    }
+    if (this._backgroundImageTemplate && changedProps.has("hass")) {
+      this._backgroundImageTemplateNeedsResolve = true;
+    }
+    if (this._fontColorTemplate && changedProps.has("hass")) {
+      this._fontColorTemplateNeedsResolve = true;
     }
     const currentContext = JSON.stringify(this._getTemplateContext());
     this._syncTemplateSubscriptions('action_in_menu', currentContext, this.config?.actions);
     this._syncTemplateSubscriptions('always_collapsed', currentContext, this.config?.always_collapsed);
     this._syncTemplateSubscriptions('control_layout', currentContext, this.config?.control_layout);
     this._syncTemplateSubscriptions('card_height', currentContext, this.config?.card_height);
+    this._syncTemplateSubscriptions('lyrics_background_fade', currentContext, this.config?.lyrics_background_fade);
+    this._syncTemplateSubscriptions('lock_screen_controls', currentContext, this.config?.lock_screen_controls);
     this._syncEntityTemplateSubscriptions('ma', currentContext);
     this._syncEntityTemplateSubscriptions('vol', currentContext);
     this._syncEntityTemplateSubscriptions('remote', currentContext);
@@ -6694,6 +7839,58 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       }, 500);
     }
 
+    // Sync lock screen media controls (Web Media Session API)
+    if (this._mediaSessionManager) {
+      const activePlaybackEntity = this.currentActivePlaybackEntityId || this.currentEntityId;
+      const metadataState = this.metadataStateObj;
+      const mainState = this.currentStateObj;
+
+      const metadataArtwork = this._getArtworkUrl(metadataState, false);
+      const playbackArtwork = this._getArtworkUrl(playbackState, false);
+      const mainArtwork = this._getArtworkUrl(mainState, false);
+
+      const artworkUrl =
+        metadataArtwork?.url ||
+        playbackArtwork?.url ||
+        mainArtwork?.url ||
+        metadataState?.attributes?.entity_picture ||
+        playbackState?.attributes?.entity_picture ||
+        mainState?.attributes?.entity_picture ||
+        "";
+
+      const title =
+        metadataState?.attributes?.media_title ||
+        playbackState?.attributes?.media_title ||
+        mainState?.attributes?.media_title ||
+        getEntityName(this.hass, playbackState) ||
+        getEntityName(this.hass, mainState) ||
+        "";
+
+      const artist =
+        metadataState?.attributes?.media_artist ||
+        playbackState?.attributes?.media_artist ||
+        mainState?.attributes?.media_artist ||
+        "";
+
+      const album =
+        metadataState?.attributes?.media_album_name ||
+        playbackState?.attributes?.media_album_name ||
+        mainState?.attributes?.media_album_name ||
+        "";
+
+      if (!this._isEditorPreview) {
+        this._mediaSessionManager.update({
+          enabled: this._isMediaSessionEnabled,
+          stateObj: playbackState,
+          targetEntityId: activePlaybackEntity,
+          artworkUrl,
+          title,
+          artist,
+          album,
+        });
+      }
+    }
+
     // Update idle state after all other state checks
 
 
@@ -6879,6 +8076,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _onChipClick(idx) {
+    this._mediaSessionManager?.resumeFromUserGesture();
     // Ignore the synthetic click that fires immediately after a long‑press pin.
     if (this._holdToPin && this._justPinned) {
       this._justPinned = false;
@@ -7050,6 +8248,21 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       return;
     }
 
+    if (
+      action.action === "toggle_media_session" ||
+      action.action === "toggle_lock_screen_controls"
+    ) {
+      const currentlyEnabled = this._isMediaSessionEnabled;
+      this._mediaSessionOverride = !currentlyEnabled;
+      if (this._mediaSessionOverride) {
+        this._mediaSessionManager?.startPlaybackGesture(this.currentEntityId);
+      } else {
+        this._mediaSessionManager?.reset();
+      }
+      this.requestUpdate();
+      return;
+    }
+
     if (action.action === "prev_entity" || action.action === "next_entity") {
       const sortedIds = this.sortedEntityIds;
       if (sortedIds && sortedIds.length > 0) {
@@ -7116,6 +8329,10 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       } else {
         data.entity_id = this.currentEntityId;
       }
+    }
+
+    if (domain === "media_player" && (service === "media_play" || service === "media_play_pause")) {
+      this._mediaSessionManager?.startPlaybackGesture(data.entity_id || this.currentEntityId);
     }
 
     this.hass.callService(domain, service, data);
@@ -7331,11 +8548,24 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     ) {
       return iconOnly ? "" : "Navigate";
     }
+    if (action.action === "toggle_lyrics") {
+      return iconOnly ? "" : localize("editor.action_types.toggle_lyrics") || "Toggle Lyrics Overlay";
+    }
+    if (action.action === "remote_control") {
+      return iconOnly ? "" : localize("editor.action_types.remote_control") || "Open Remote Controls Overlay";
+    }
+    if (
+      action.action === "toggle_media_session" ||
+      action.action === "toggle_lock_screen_controls"
+    ) {
+      return iconOnly ? "" : localize("editor.action_types.toggle_media_session") || "Toggle Media Session Controls";
+    }
     if (action.service) return iconOnly ? "" : action.service;
     return iconOnly ? "" : "Action";
   }
 
   async _onControlClick(action) {
+    this._mediaSessionManager?.resumeFromUserGesture();
     // Use the unified entity resolution system for control actions
     const targetEntity = this._getEntityForPurpose(this._selectedIndex, 'playback_control');
     if (!targetEntity) return;
@@ -7361,6 +8591,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           this.requestUpdate();
           setTimeout(() => { this._optimisticPlayback = null; this.requestUpdate(); }, 1200);
         } else {
+          this._mediaSessionManager?.startPlaybackGesture(targetEntity);
           this.hass.callService("media_player", "media_play", { entity_id: targetEntity });
           // On resume, clear the paused entity tracking since we're now playing
           if (this._lastPlayingEntityIdByChip) {
@@ -7378,10 +8609,12 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         }
         break;
       case "next":
+        this._mediaSessionManager?.startPlaybackGesture(targetEntity);
         this._advanceQueueInUI(null, true); // Manual advance
         this.hass.callService("media_player", "media_next_track", { entity_id: targetEntity });
         break;
       case "prev":
+        this._mediaSessionManager?.startPlaybackGesture(targetEntity);
         this.hass.callService("media_player", "media_previous_track", { entity_id: targetEntity });
         break;
       case "stop":
@@ -7892,6 +9125,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       let targetEntity;
       if (this._controlFocusEntityId && (this._controlFocusEntityId === maId || this._controlFocusEntityId === mainId)) {
         targetEntity = this._controlFocusEntityId;
+      } else if (this._isEntityPlaying(maState) && this._isEntityPlaying(mainState) && this._areEntitiesPlayingSameMedia(mainState, maState)) {
+        targetEntity = mainId;
       } else if (this._isEntityPlaying(maState)) {
         targetEntity = maId;
       } else if (this._isEntityPlaying(mainState)) {
@@ -7980,6 +9215,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   render() {
     if (!this.hass || !this.config) return nothing;
 
+    const currentLang = this.hass.selectedLanguage || this.hass.language || this.hass.locale?.language;
+    if (currentLang) {
+      setHassLanguage(currentLang);
+    }
+
 
 
     const isCardHeightTemplate = typeof this.config.card_height === 'string' && (this.config.card_height.includes('{{') || this.config.card_height.includes('{%') || this.config.card_height.trim().startsWith('[[['));
@@ -7990,7 +9230,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       ? (customCardHeightInput.includes('px') ? parseFloat(customCardHeightInput) : Number(customCardHeightInput))
       : Number(customCardHeightInput);
     const isValidCardHeightNumber = typeof customCardHeight === "number" && Number.isFinite(customCardHeight) && customCardHeight > 0;
-    const hasCustomCardHeight = isValidCardHeightNumber || (typeof customCardHeight === "string" && customCardHeight.trim() !== "");
+    const hasCustomCardHeight =
+      isValidCardHeightNumber ||
+      (typeof customCardHeightInput === "string" &&
+        customCardHeightInput.trim() !== "" &&
+        customCardHeightInput !== "auto");
 
     const collapsedBaselineHeight = this._collapsedBaselineHeight || 220;
 
@@ -8097,17 +9341,33 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       if (typeof iconColor === "string" && (iconColor.includes("{{") || iconColor.includes("{%") || iconColor.trim().startsWith("[[["))) {
         iconColor = resolveStringTemplateSync(this.hass, iconColor, this._getTemplateContext()) || "";
       }
+      let icon = action.icon;
+      if (!icon) {
+        if (action.action === "toggle_media_session" || action.action === "toggle_lock_screen_controls") {
+          icon = this._isMediaSessionEnabled ? "mdi:cellphone-lock" : "mdi:cellphone-wireless";
+        } else if (action.action === "toggle_lyrics") {
+          icon = "mdi:script-text-outline";
+        } else if (action.action === "remote_control") {
+          icon = "mdi:remote";
+        } else {
+          icon = "mdi:rhombus-outline";
+        }
+      }
+      if (!iconColor && (action.action === "toggle_media_session" || action.action === "toggle_lock_screen_controls") && this._isMediaSessionEnabled) {
+        iconColor = "var(--custom-accent, var(--accent-color, #ff9800))";
+      }
       return html`
         <button
           class="volume-icon-btn favorite-volume-btn custom-bottom-action"
           @click=${(e) => { e.stopPropagation(); this._onActionChipClick(idx); }}
           title="${label}"
         >
-          <ha-icon style=${styleMap({ color: iconColor || undefined })} .icon=${action.icon || "mdi:rhombus-outline"}></ha-icon>
+          <ha-icon style=${styleMap({ color: iconColor || undefined })} .icon=${icon}></ha-icon>
         </button>
       `;
     };
 
+    /** @type {import('lit').TemplateResult | typeof nothing} */
     let leadingVolumeControl = nothing;
     if (showModernPowerButton) {
       if (replacePowerAction) {
@@ -8139,6 +9399,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       }
     }
 
+    /** @type {import('lit').TemplateResult | typeof nothing} */
     let rightSlotTemplate = nothing;
     if (replaceFavoriteAction) {
       rightSlotTemplate = renderCustomBottomAction(replaceFavoriteAction);
@@ -8157,6 +9418,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       `;
     }
 
+    /** @type {import('lit').TemplateResult | typeof nothing} */
     let muteSlotTemplate = nothing;
     if (replaceMuteAction) {
       muteSlotTemplate = renderCustomBottomAction(replaceMuteAction);
@@ -8170,6 +9432,12 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     if (this._idleImageTemplate && this._idleImageTemplateNeedsResolve && !this._resolvingIdleImageTemplate && this._isIdle) {
       void this._resolveIdleImageTemplate();
     }
+    if (this._backgroundImageTemplate && this._backgroundImageTemplateNeedsResolve && !this._resolvingBackgroundImageTemplate) {
+      void this._resolveBackgroundImageTemplate();
+    }
+    if (this._fontColorTemplate && this._fontColorTemplateNeedsResolve && !this._resolvingFontColorTemplate) {
+      void this._resolveFontColorTemplate();
+    }
     // Idle image "picture frame" mode when idle
     const isJsTemplate = typeof this.config.idle_image === "string" && this.config.idle_image.trim().startsWith("[[[");
     const rawIdleImageInput = isJsTemplate
@@ -8177,27 +9445,44 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       : (this._idleImageTemplate ? this._idleImageTemplateResult : this.config.idle_image);
     const normalizedIdleImageInput = this._normalizeImageSourceValue(rawIdleImageInput);
 
+    // Persistent card background image
+    const isBgJsTemplate = typeof this.config.background_image === "string" && this.config.background_image.trim().startsWith("[[[");
+    const rawBgImageInput = isBgJsTemplate
+      ? this._evaluateJsTemplate(this.config.background_image)
+      : (this._backgroundImageTemplate ? this._backgroundImageTemplateResult : this.config.background_image);
+    const cardBackgroundImageUrl = this._resolveImageUrlFromInput(rawBgImageInput);
+    const trimmedBgInput = (typeof rawBgImageInput === "string" && rawBgImageInput.trim().length > 0) ? rawBgImageInput.trim() : "";
+    const isDirectColorOrGradient = !cardBackgroundImageUrl && trimmedBgInput.length > 0 && (
+      trimmedBgInput.startsWith("#") ||
+      trimmedBgInput.startsWith("rgb") ||
+      trimmedBgInput.startsWith("hsl") ||
+      trimmedBgInput.startsWith("linear-gradient") ||
+      trimmedBgInput.startsWith("radial-gradient") ||
+      /^[a-zA-Z]+$/.test(trimmedBgInput)
+    );
+    const hasCardBg = !!(cardBackgroundImageUrl || isDirectColorOrGradient);
+
+    const isFcJsTemplate = typeof this.config.font_color === "string" && this.config.font_color.trim().startsWith("[[[");
+    const rawFontColorInput = isFcJsTemplate
+      ? this._evaluateJsTemplate(this.config.font_color)
+      : (this._fontColorTemplate ? this._fontColorTemplateResult : this.config.font_color);
+    const cardFontColor = (typeof rawFontColorInput === "string" && rawFontColorInput.trim().length > 0) ? rawFontColorInput.trim() : null;
+    const hasFontColor = !!cardFontColor;
+
     // Use the unified entity resolution system for playback state.
     // (Note: resolved here at the top of render to support show_idle_artwork_when_not_playing detection)
     const playbackEntityId = this._getEntityForPurpose(this._selectedIndex, 'playback_control');
     const playbackStateObj = this.hass?.states?.[playbackEntityId];
     const isCurrentPlayingForIdle = this._isEntityPlaying(playbackStateObj);
-    const forceIdleImage = this.config.show_idle_artwork_when_not_playing === true && !isCurrentPlayingForIdle && normalizedIdleImageInput;
+    const forceIdleImage = !!(
+      this.config.show_idle_artwork_when_not_playing === true &&
+      !isCurrentPlayingForIdle &&
+      normalizedIdleImageInput
+    );
 
     let idleImageUrl = null;
     if (normalizedIdleImageInput && (this._isIdle || forceIdleImage)) {
-      // Check if it's an entity ID
-      if (this.hass.states[normalizedIdleImageInput]) {
-        const sensorState = this.hass.states[normalizedIdleImageInput];
-        idleImageUrl =
-          sensorState.attributes.entity_picture_local ||
-          sensorState.attributes.entity_picture ||
-          (sensorState.state && typeof sensorState.state === "string" && sensorState.state.startsWith("http") ? sensorState.state : null);
-      }
-      // Check if it's a direct URL or file path
-      else if (normalizedIdleImageInput.startsWith("http") || normalizedIdleImageInput.startsWith("/")) {
-        idleImageUrl = normalizedIdleImageInput;
-      }
+      idleImageUrl = this._resolveImageUrlFromInput(normalizedIdleImageInput);
     }
     const dimIdleFrame = !!idleImageUrl;
     const hideControlsNow = this._idleTimeoutMs === 0 ? false : this._isIdle;
@@ -8207,7 +9492,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     // We'll set useInsetArtwork again later with full collapsed context for rendering.
     const preCalcInsetArtwork = this._artworkObjectFit === "scaled-contain" || this._artworkObjectFit === "scaled-contain-alternate";
     // Extend artwork when configured, when chips are hidden inline (in_menu_on_idle + idle), or when using scaled-contain
-    const artworkFullBleed = this.config.extend_artwork === true || chipsHiddenInline || preCalcInsetArtwork || this._lyricsActive;
+    const artworkFullBleed = this.config.extend_artwork === true || chipsHiddenInline || preCalcInsetArtwork;
 
     // Calculate shuffle/repeat state from the active playback entity when available
     const mainStateForPlayback = this.currentStateObj;
@@ -8293,21 +9578,41 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const playbackArtwork = this._getArtworkUrl(playbackStateObj, forceIdleImage);
     const mainArtwork = this._getArtworkUrl(mainState, forceIdleImage);
 
-    const displayTitle = metadataStateObj?.attributes?.media_title || finalPlaybackStateObj?.attributes?.media_title || mainState?.attributes?.media_title;
+    const isPlayingSameMedia = this._areEntitiesPlayingSameMedia(mainState, playbackStateObj);
+
+    // If metadataStateObj only has a placeholder title (like 'AirPlay' or the entity name)
+    // while mainState or playbackState has real media metadata, fall back to the real metadata
+    const metaTitle = metadataStateObj?.attributes?.media_title;
+    const isMetaPlaceholder = isPlaceholderMediaTitle(metaTitle, metadataStateObj?.attributes?.friendly_name);
+    const effectiveMetaTitle = (!isMetaPlaceholder && metaTitle) ? metaTitle : null;
+
+    const displayTitle = effectiveMetaTitle || finalPlaybackStateObj?.attributes?.media_title || mainState?.attributes?.media_title || metaTitle || "";
 
     // Intelligent artwork fallback: 
     // 1. Always prefer the explicit metadata source
-    // 2. Fall back to active/main playback ONLY if they are playing the exact same track title
-    let selectedArt = metadataArtwork;
-    if (displayTitle && (!selectedArt || !selectedArt.url) && playbackArtwork?.url && playbackStateObj?.attributes?.media_title === displayTitle) {
-      selectedArt = playbackArtwork;
-    }
-    if (displayTitle && (!selectedArt || !selectedArt.url) && mainArtwork?.url && mainState?.attributes?.media_title === displayTitle) {
-      selectedArt = mainArtwork;
-    }
-    if (!selectedArt) {
-      selectedArt = playbackArtwork || mainArtwork || null;
-    }
+    // 2. Fall back to active/main playback if they are playing the exact same track title or same media
+    const selectedArt = this._resolveSelectedArtwork({
+      metadataArtwork,
+      playbackArtwork,
+      mainArtwork,
+      displayTitle,
+      playbackStateObj,
+      mainState,
+      isPlayingSameMedia,
+    });
+
+    // Persistent media controls track artwork:
+    // Always show the track's album artwork if available (ignoring idle image mode),
+    // falling back to placeholder icon if no track artwork is available.
+    const persistentArt = this._resolveSelectedArtwork({
+      metadataArtwork: this._getArtworkUrl(metadataStateObj, false, true),
+      playbackArtwork: this._getArtworkUrl(playbackStateObj, false, true),
+      mainArtwork: this._getArtworkUrl(mainState, false, true),
+      displayTitle,
+      playbackStateObj,
+      mainState,
+      isPlayingSameMedia,
+    });
 
 
 
@@ -8316,7 +9621,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const shouldShowDetails = this._idleTimeoutMs === 0 ? true : isPlaying;
     // For display-only fields, fall back to the state object that actually provides the title we matched
     const displaySource =
-      (metadataStateObj?.attributes?.media_title) ? metadataStateObj :
+      (effectiveMetaTitle && metadataStateObj?.attributes?.media_title) ? metadataStateObj :
         (finalPlaybackStateObj?.attributes?.media_title) ? finalPlaybackStateObj :
           (mainState?.attributes?.media_title) ? mainState :
             (metadataStateObj || finalPlaybackStateObj || mainState);
@@ -8335,7 +9640,9 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       : "";
     const hasSearchableArtist = !!(displaySource?.attributes?.media_artist || stateObj?.attributes?.media_artist);
     const searchAlbumTitle = localize("search.search_album") || localize("search.browse_album", { "{album}": album });
-    const searchArtistTitle = hasSearchableArtist ? localize("search.search_artist") : "";
+    const searchArtistTitle = hasSearchableArtist
+      ? localize("search.browse_artist", { "{artist}": artist }) || localize("search.search_artist")
+      : "";
     if (this._adaptiveText) {
       this._updateAdaptiveTextScale(true);
     }
@@ -8412,6 +9719,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const actionRowReserve = collapsed && rowActions.length > 0 ? 40 : 0;
     const reservedTopSpace = chipRowReserve + actionRowReserve;
 
+    const activeTopChipReserve = (showChipsInline && !chipsHiddenInline) ? (collapsed ? 48 : 58) : 0;
+    const activeActionReserve = (rowActions.length > 0) ? (collapsed ? 40 : 42) : 0;
+    const totalTopReserve = activeTopChipReserve + activeActionReserve;
+    const effectiveCustomLowerHeight = hasCustomCardHeight ? Math.max(0, customCardHeight - totalTopReserve) : null;
+
     // Calculate available height for lower content
     const lowerContentAvailableHeight = hasCustomCardHeight
       ? Math.max(100, customCardHeight - reservedTopSpace)
@@ -8452,7 +9764,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const collapsedDetailsMinHeight = effectiveExtraSpace > 0
       ? Math.round(baseDetailsMinHeight + detailGrowth)
       : (effectiveExtraSpace < -20 ? 36 : baseDetailsMinHeight);
-    const detailsScale = (this._adaptiveTextTargets?.has("details") && !this._lyricsActive) ? (this._currentDetailsScale || 1) : 1;
+    const detailsScale = this._adaptiveTextTargets?.has("details") ? (this._currentDetailsScale || 1) : 1;
     const detailsMinHeight = Math.round((collapsed ? collapsedDetailsMinHeight : baseDetailsMinHeight) * detailsScale);
     let showCollapsedPlaceholder;
     const expandedHeightBaseline = 350;
@@ -8516,7 +9828,9 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     }
 
     const idleMinHeight = hideControlsNow
-      ? (collapsed ? (this._collapsedBaselineHeight || 220) : 325)
+      ? (collapsed
+          ? (this._collapsedBaselineHeight || 220)
+          : (hasCustomCardHeight ? effectiveCustomLowerHeight : 325))
       : null;
 
     this._lastRenderedCollapsed = collapsed;
@@ -8524,7 +9838,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
     const activeArtworkFit = artworkObjectFit || this._artworkObjectFit;
     const isAlternateFit = activeArtworkFit === "scaled-contain-alternate";
-    const useInsetArtwork = (activeArtworkFit === "scaled-contain" || isAlternateFit) && !collapsed && !this._alwaysCollapsed && !this._lyricsActive;
+    const useInsetArtwork = (activeArtworkFit === "scaled-contain" || isAlternateFit) && !collapsed && !this._alwaysCollapsed;
     const hasSpacerContent =
       (useInsetArtwork && artworkUrl) ||
       (!useInsetArtwork && !artworkUrl && !idleImageUrl);
@@ -8540,13 +9854,13 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
     const backgroundImageValue = (activeArtworkFit === "no_artwork")
       ? "none"
-      : (idleImageUrl || (isAlternateFit && !this._lyricsActive))
+      : (idleImageUrl || isAlternateFit)
         ? (idleImageUrl ? `url('${idleImageUrl}')` : "none")
         : artworkUrl
           ? `url('${artworkUrl}')`
           : "none";
     const hasBackgroundImage = backgroundImageValue !== "none";
-    const backgroundFilter = (artworkUrl && (this._lyricsActive || this.config.blurred_artwork === true || (this.config.blurred_artwork !== false && (collapsed || (useInsetArtwork && activeArtworkFit === "scaled-contain")))))
+    const backgroundFilter = (artworkUrl && (this.config.blurred_artwork === true || (this.config.blurred_artwork !== false && (collapsed || (useInsetArtwork && activeArtworkFit === "scaled-contain")))))
       ? "blur(18px) brightness(0.7) saturate(1.15)"
       : "none";
     let artworkPos = (typeof artworkObjectPosition !== 'undefined' ? artworkObjectPosition : null) || this.config.artwork_position || "top center";
@@ -8564,6 +9878,21 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       `filter: ${backgroundFilter}`
     ].join('; ');
 
+    const bgFit = this.config.background_fit || "cover";
+    const bgPosition = this.config.background_position || "center center";
+    const bgSize = this._getBackgroundSizeForFit(bgFit);
+    const cardBgStyle = cardBackgroundImageUrl ? [
+      `background-image: url('${cardBackgroundImageUrl}')`,
+      `background-size: ${bgSize}`,
+      `background-position: ${bgPosition}`,
+      "background-repeat: no-repeat"
+    ].join('; ') : (isDirectColorOrGradient ? [
+      trimmedBgInput.startsWith("linear-gradient") || trimmedBgInput.startsWith("radial-gradient")
+        ? `background-image: ${trimmedBgInput}`
+        : `background-color: ${trimmedBgInput}`,
+      "background-repeat: no-repeat"
+    ].join('; ') : '');
+
 
 
     const isVolumeHiddenByConfig =
@@ -8579,9 +9908,9 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const hasRightPlaceholder = this._controlLayout === "modern";
     const hasLeadingControl = leadingVolumeControl !== nothing && leadingVolumeControl !== undefined && leadingVolumeControl !== null;
 
-    const volumeRowWillCollapse = isVolumeHiddenByConfig && !isCompactVolume && !hasLeadingControl && !hasRightPlaceholder;
+    const volumeRowWillCollapse = isVolumeHiddenByConfig && !hasLeadingControl && !hasRightPlaceholder;
 
-    const detailsHasAdaptiveText = this._adaptiveTextTargets?.has("details") && !this._lyricsActive;
+    const detailsHasAdaptiveText = !!this._adaptiveTextTargets?.has("details");
     this._lastSpacerRendered = !!(showCollapsedPlaceholder || (!collapsed && (!detailsHasAdaptiveText || hasSpacerContent)));
     this._lastVolumeRendered = !volumeRowWillCollapse;
 
@@ -8592,14 +9921,27 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       (volumeRowWillCollapse ? 0 : 56)
     );
     const lyricsBottomOffset = lowerControlsH;
+    const lyricsFade = this._getLyricsBackgroundFade();
+    const lyricsBlurPx = lyricsFade === 0 ? 0 : Math.min(5, Number(((lyricsFade / 80) * 5).toFixed(1)));
+    const lyricsBackdropFilter = lyricsBlurPx === 0 ? "none" : `blur(${lyricsBlurPx}px)`;
+
+    const shouldAdaptMenuIconColor = this._artworkGradientDisabled || (this._isIdle && !hasBackgroundImage && !artworkUrl && !idleImageUrl);
+    const menuIconStyle = shouldAdaptMenuIconColor ? 'color: var(--yamp-icon-color, var(--primary-text, #444));' : '';
 
     return html`
         <ha-card class="yamp-card" 
           style=${(hasCustomCardHeight && (!collapsed || this._alwaysCollapsed)) ? `height:${customCardHeight}px;` : nothing}>
           <div
             data-match-theme="${String(this.config.match_theme === true)}"
+            data-has-font-color="${String(hasFontColor)}"
             data-artwork-fit="${activeArtworkFit}"
+            data-has-background-image="${String(hasCardBg)}"
             data-lyrics-active="${String(this._lyricsActive === true)}"
+            style=${[
+              (hasCustomCardHeight && (!collapsed || this._alwaysCollapsed)) ? `height:${customCardHeight}px;` : null,
+              this._lyricsActive ? `--yamp-lyrics-fade: ${lyricsFade}%; --yamp-lyrics-backdrop-filter: ${lyricsBackdropFilter}` : null,
+              hasFontColor ? `--primary-text: ${cardFontColor}; --primary-text-color: ${cardFontColor}; --secondary-text: ${cardFontColor}; --secondary-text-color: ${cardFontColor}; --yamp-icon-color: ${cardFontColor};` : null
+            ].filter(Boolean).join('; ') || nothing}
             class=${classMap({
       "yamp-card-inner": true,
       "compact-collapsed": isCompact && collapsed,
@@ -8608,11 +9950,15 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       "collapsed": collapsed
     })}
           >
+            ${hasCardBg ? html`
+              <div class="card-background-image-layer" style="${cardBgStyle}"></div>
+              ${!this._artworkGradientDisabled && !isDirectColorOrGradient ? html`<div class="card-background-image-overlay"></div>` : nothing}
+            ` : nothing}
             ${artworkFullBleed && hasBackgroundImage ? html`
               <div class="full-bleed-artwork-bg" style="${sharedBackgroundStyle}"></div>
-              ${!(dimIdleFrame || this._isIdle) ? html`<div class="full-bleed-artwork-fade"></div>` : nothing}
+              ${!this._artworkGradientDisabled && !(dimIdleFrame || this._isIdle || this._lyricsActive) ? html`<div class="full-bleed-artwork-fade"></div>` : nothing}
             ` : nothing}
-            ${(!useInsetArtwork && !artworkUrl && !idleImageUrl) ? html`
+            ${(!useInsetArtwork && !artworkUrl && !idleImageUrl && !hasCardBg) ? html`
               <div class="media-artwork-placeholder"
                 @pointerdown=${this._onTapAreaPointerDown}
                 @pointermove=${this._onTapAreaPointerMove}
@@ -8635,11 +9981,13 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
               <yamp-lyrics-view
                 data-match-theme="${String(this.config.match_theme === true)}"
                 data-artwork-fit="${activeArtworkFit}"
+                data-playing="${String(this._isCurrentEntityPlaying())}"
                 .hass=${this.hass}
                 .lyrics=${this._massLyrics}
                 .position=${pos}
                 .loading=${this._fetchingLyrics}
                 .error=${this._lyricsError}
+                .playing=${this._isCurrentEntityPlaying()}
                 .activeThemeColor=${this.config.match_theme === true ? "var(--custom-accent, var(--state-media_player-active-color, var(--primary-color, #ffffff)))" : "var(--custom-accent, #ffffff)"}
                 .mode=${this._isCurrentlyPlayingRadio() ? 'text' : (this.config.lyrics_mode || 'default')}
                 .preRoll=${this.config.lyrics_pre_roll ?? 0}
@@ -8650,6 +9998,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
                 style="${[
                   `--yamp-lyrics-top-offset: ${showChipsInline ? 48 : 0}px`,
                   `--yamp-lyrics-bottom-offset: ${lyricsBottomOffset}px`,
+                  `--yamp-lyrics-fade: ${lyricsFade}%`,
+                  `--yamp-lyrics-backdrop-filter: ${lyricsBackdropFilter}`,
                   this._getGestureStyles()
                 ].filter(Boolean).join('; ')}"
               ></yamp-lyrics-view>
@@ -8674,17 +10024,17 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         }
         styles.push(`min-height: ${collapsed
           ? (hideControlsNow ? `${this._collapsedBaselineHeight || 220}px` : '0px')
-          : (hasCustomCardHeight ? `${customCardHeight}px` : '350px')}`);
+          : (hasCustomCardHeight ? `${effectiveCustomLowerHeight}px` : '350px')}`);
         styles.push('transition: min-height 0.4s cubic-bezier(0.6,0,0.4,1), background 0.4s');
         return styles.join('; ');
       })()}"
               ></div>
-              ${!(dimIdleFrame || this._isIdle) && (!useInsetArtwork || activeArtworkFit === "scaled-contain" || this._lyricsActive) ? html`<div class="card-lower-fade" style="--yamp-lyrics-bottom-offset: ${lyricsBottomOffset}px;"></div>` : nothing}
+              ${!this._artworkGradientDisabled && !(dimIdleFrame || this._isIdle || this._lyricsActive || (!artworkUrl && hasCardBg)) && (!useInsetArtwork || activeArtworkFit === "scaled-contain") ? html`<div class="card-lower-fade" style="--yamp-lyrics-bottom-offset: ${lyricsBottomOffset}px;"></div>` : nothing}
               <div class="card-lower-content${collapsed ? ' collapsed transitioning' : ' transitioning'}${collapsed && artworkUrl && collapsedArtworkSize > 0 ? ' has-artwork' : ''}" style="${(() => {
-        if (!hideControlsNow && !this._lyricsActive) return '';
+        if (!hideControlsNow) return '';
         return collapsed
           ? `min-height: ${this._collapsedBaselineHeight || 220}px;`
-          : `min-height: ${hasCustomCardHeight ? `${customCardHeight}px` : `${this._lastNonLyricsLowerContentHeight || 350}px`};`;
+          : `min-height: ${hasCustomCardHeight ? `${effectiveCustomLowerHeight}px` : `${this._lastNonLyricsLowerContentHeight || 350}px`};`;
       })()}">
                 ${collapsed && artworkUrl && collapsedArtworkSize > 0 && isValidArtworkUrl(artworkUrl) ? html`
                   <div
@@ -8718,7 +10068,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
                     @pointerup=${!this._lyricsActive ? this._onTapAreaPointerUp : nothing}
                     @pointercancel=${!this._lyricsActive ? this._onTapAreaPointerCancel : nothing}
                     style="${[
-                      this._lyricsActive ? 'min-height: 0; pointer-events: none;' : '',
+                      this._lyricsActive ? 'pointer-events: none;' : '',
                       this._getGestureStyles(!this._lyricsActive)
                     ].filter(Boolean).join('; ')}"
                   >
@@ -8780,7 +10130,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
                         </div>
                       </div>
                     ` : html`
-                      <div class="title track-options-title" @click=${(e) => { if (shouldShowDetails && title) { e.stopPropagation(); this._showMediaTitleOptions = true; } }} style="${shouldShowDetails && title ? 'cursor: pointer;' : ''}" title="${shouldShowDetails && title ? localize('search.show_track_options') : ''}">
+                      <div class="title track-options-title" @click=${(e) => { if (!this._suppressMarqueeClick && shouldShowDetails && title) { e.stopPropagation(); this._showMediaTitleOptions = true; } }} style="${shouldShowDetails && title ? 'cursor: pointer;' : ''}" title="${shouldShowDetails && title ? localize('search.show_track_options') : ''}">
                         <span class="marquee-inner">${shouldShowDetails && title ? title : html`&nbsp;`}</span>
                       </div>
                     `}
@@ -8790,6 +10140,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
                           <span
                             class="artist-name ${hasSearchableArtist ? "clickable-artist" : ""}"
                             @click=${(e) => {
+                              if (this._suppressMarqueeClick) return;
                               if (hasSearchableArtist) {
                                 e.stopPropagation();
                                 this._searchArtistFromNowPlaying();
@@ -8799,6 +10150,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
                           >${artist}</span><span class="artist-album-separator"> - </span><span
                             class="album-name clickable-album"
                             @click=${(e) => {
+                              if (this._suppressMarqueeClick) return;
                               e.stopPropagation();
                               this._searchAlbumFromNowPlaying();
                             }}
@@ -8808,6 +10160,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
                           <span
                             class="artist-name ${hasSearchableArtist ? "clickable-artist" : ""}"
                             @click=${(e) => {
+                              if (this._suppressMarqueeClick) return;
                               if (hasSearchableArtist) {
                                 e.stopPropagation();
                                 this._searchArtistFromNowPlaying();
@@ -8819,6 +10172,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
                           <span
                             class="album-name clickable-album"
                             @click=${(e) => {
+                              if (this._suppressMarqueeClick) return;
                               e.stopPropagation();
                               this._searchAlbumFromNowPlaying();
                             }}
@@ -8887,6 +10241,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         adaptiveControls: this._adaptiveControls,
         controlLayout: this._controlLayout,
         swapPauseForStop: this._controlLayout === "modern" && this._swapPauseForStop,
+        lockScreenState: this._isMediaSessionEnabled ? this._mediaSessionManager?.lockScreenState : null,
       })}
                 </div>
                 ${renderVolumeRow({
@@ -8910,18 +10265,18 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         muteSlotTemplate: shouldHideVolumeControls ? (muteSlotTemplate !== nothing ? html`<div style="visibility:hidden; opacity:0; pointer-events:none;">${muteSlotTemplate}</div>` : nothing) : muteSlotTemplate,
         hideVolume: isVolumeHidden,
         collapseRow: volumeRowWillCollapse,
-        moreInfoMenu: (!this._showEntityOptions && !isCompactVolume && !volumeRowWillCollapse) ? html`
+        moreInfoMenu: (!this._showEntityOptions && !volumeRowWillCollapse) ? html`
           <div class="more-info-menu">
             <button class="more-info-btn" @click=${async () => await this._openEntityOptions()}>
-              <span class="more-info-icon">&#9776;</span>
+              <span class="more-info-icon" style="${menuIconStyle}">&#9776;</span>
             </button>
           </div>
         ` : nothing,
       })}
-            ${(volumeRowWillCollapse && !this._showEntityOptions && !isCompactVolume) ? html`
+            ${(volumeRowWillCollapse && !this._showEntityOptions) ? html`
               <div class="more-info-menu volume-collapsed">
                 <button class="more-info-btn" @click=${async () => await this._openEntityOptions()}>
-                  <span class="more-info-icon">&#9776;</span>
+                  <span class="more-info-icon" style="${menuIconStyle}">&#9776;</span>
                 </button>
               </div>
             ` : nothing}
@@ -8935,7 +10290,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       ${this._showEntityOptions ? html`
       <div class="entity-options-overlay entity-options-overlay-opening" @click=${(e) => this._closeEntityOptions(e)}>
         <div class="entity-options-container entity-options-container-opening" style="${this._showSearchInSheet ? 'height:100%;' : ''}">
-          <div class="entity-options-sheet${(showChipsInMenu || reserveChipSpaceInMenu) ? ' chips-mode' : ''} entity-options-sheet-opening" 
+          <div class="entity-options-sheet${(showChipsInMenu || reserveChipSpaceInMenu) ? ' chips-mode' : ''}${this._showSearchInSheet ? ' search-mode' : ''} entity-options-sheet-opening" 
                @click=${e => e.stopPropagation()}
                data-pin-search-headers="${effectivePinHeaders}">
             ${(showChipsInMenu || reserveChipSpaceInMenu) ? html`
@@ -8959,8 +10314,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
               <div class="persistent-media-controls" @click=${e => e.stopPropagation()}>
                 <div class="persistent-controls-artwork">
                   ${(() => {
-            // Use the same entity resolution as the main card
-            const artwork = selectedArt;
+            // Use track artwork if available, falling back to selected card artwork
+            const artwork = persistentArt?.url ? persistentArt : selectedArt;
             return artwork?.url && isValidArtworkUrl(artwork.url) ? html`
                       <img src="${artwork.url}" alt="${localize('common.album_art')}" class="persistent-artwork" onerror="this.style.display='none'">
                     ` : html`
@@ -9077,6 +10432,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
     host.setAttribute("data-hide-menu-player", String(config.hide_menu_player === true || forceHideMenuPlayer));
     host.setAttribute("data-extend-artwork", String(this._extendArtwork));
+    host.setAttribute("data-disable-artwork-gradient", String(this._artworkGradientDisabled));
     host.setAttribute("data-control-layout", this._controlLayout || "classic");
     host.setAttribute("data-details-alignment", config.details_alignment || "left");
 
@@ -9085,6 +10441,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const isMinHeight = hasSingleEntity && this._alwaysCollapsed && config.expand_on_search !== true;
     const effectivePinHeaders = config.pin_search_headers === true && !isMinHeight;
     host.setAttribute("data-pin-search-headers", String(effectivePinHeaders));
+    host.setAttribute("data-in-search", String(this._showSearchInSheet));
 
     if (hasCustomCardHeight) {
       host.setAttribute("data-has-custom-height", "true");
@@ -9102,7 +10459,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       ? this._evaluateJsTemplate(config.idle_image)
       : (this._idleImageTemplate ? this._idleImageTemplateResult : (config.idle_image ? resolveStringTemplateSync(this.hass, config.idle_image, this._getTemplateContext()) : null));
     const normalizedIdleImageInput = this._normalizeImageSourceValue(rawIdleImageInput);
-    const forceIdleImage = config.show_idle_artwork_when_not_playing === true && !isCurrentPlayingForIdle && normalizedIdleImageInput;
+    const forceIdleImage = !!(
+      config.show_idle_artwork_when_not_playing === true &&
+      !isCurrentPlayingForIdle &&
+      normalizedIdleImageInput
+    );
 
     const isActuallyPlaying = this._isCurrentEntityPlaying();
 
@@ -9284,16 +10645,14 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
     const displayTitle = metadataStateObj?.attributes?.media_title || playbackStateObj?.attributes?.media_title || mainState?.attributes?.media_title;
 
-    let selectedArt = metadataArtwork;
-    if (displayTitle && (!selectedArt || !selectedArt.url) && playbackArtwork?.url && playbackStateObj?.attributes?.media_title === displayTitle) {
-      selectedArt = playbackArtwork;
-    }
-    if (displayTitle && (!selectedArt || !selectedArt.url) && mainArtwork?.url && mainState?.attributes?.media_title === displayTitle) {
-      selectedArt = mainArtwork;
-    }
-    if (!selectedArt) {
-      selectedArt = playbackArtwork || mainArtwork || null;
-    }
+    const selectedArt = this._resolveSelectedArtwork({
+      metadataArtwork,
+      playbackArtwork,
+      mainArtwork,
+      displayTitle,
+      playbackStateObj,
+      mainState,
+    });
 
     let artworkObjectFit = this._artworkObjectFit;
     if (selectedArt?.objectFit) {
@@ -9487,107 +10846,137 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _renderSearchInOptions(showSearchHeaders, pinSearchHeaders = false) {
+    const isPinned = pinSearchHeaders || this.config?.pin_search_headers === true;
+    const currentOffset = !isPinned ? (this._searchHeaderOffset || 0) : 0;
+    const headerHeight = this._searchHeaderNaturalHeight || 120;
+    const progress = headerHeight > 0 ? currentOffset / headerHeight : 0;
+    const opacity = Math.max(0, Math.min(1, 1 - progress));
+    const isRetracted = !isPinned && (this._searchHeadersRetracted || (currentOffset >= headerHeight && headerHeight > 0));
+    const panelStyle = (!isPinned && currentOffset > 0)
+      ? `margin-top: -${currentOffset}px; opacity: ${opacity.toFixed(3)};${isRetracted ? ' pointer-events: none;' : ''}`
+      : '';
     return html`
-      <div class="entity-options-search" style="margin-top:${this._cardType === 'up_next' ? '0' : '12px'};">
-        ${this._searchHierarchy.length > 0 ? html`
-            <button class="entity-options-item close-item" @click=${() => this._goBackInSearch()}>
-              ${localize('common.back')}
-            </button>
-            <div class="entity-options-divider"></div>
-          ` : nothing
-      }
-        ${this._searchBreadcrumb ? html`
-            <div class="entity-options-search-breadcrumb">
-              <div class="entity-options-search-breadcrumb-text">${this._searchBreadcrumb}</div>
-              ${!this._isSelectionFlow ? html`
-                <button class="entity-options-search-breadcrumb-play" @click=${() => this._playCurrentCollection()} title="${localize('search.play_collection')}">
-                  <ha-icon icon="mdi:play"></ha-icon>
-                </button>
+      <div class="entity-options-search"
+           @wheel=${(e) => this._handleSearchContainerWheel(e, pinSearchHeaders)}
+           style="margin-top:${this._cardType === 'up_next' ? '0' : '12px'};">
+        <div class="search-header-panel ${isRetracted ? 'retracted' : ''}"
+             style="${panelStyle}"
+             @wheel=${(e) => this._handleHeaderWheel(e, pinSearchHeaders)}
+             @touchstart=${(e) => this._handleHeaderTouchStart(e)}
+             @touchmove=${(e) => this._handleHeaderTouchMove(e, pinSearchHeaders)}
+             @touchend=${() => this._handleHeaderTouchEnd()}>
+          ${this._searchHierarchy.length > 0 ? html`
+              <button class="entity-options-item close-item" @click=${() => this._goBackInSearch()}>
+                ${localize('common.back')}
+              </button>
+              <div class="entity-options-divider"></div>
+            ` : nothing
+        }
+          ${this._searchBreadcrumb ? html`
+              <div class="entity-options-search-breadcrumb">
+                <div class="entity-options-search-breadcrumb-text">${this._searchBreadcrumb}</div>
+                ${!this._isSelectionFlow ? html`
+                  <button class="entity-options-search-breadcrumb-play" @click=${() => this._playCurrentCollection()} title="${localize('search.play_collection')}">
+                    <ha-icon icon="mdi:play"></ha-icon>
+                  </button>
+                ` : nothing}
+              </div>
+            ` : (showSearchHeaders && this._cardType !== 'up_next' ? html`<div class="entity-options-search-skeleton"></div>` : nothing)
+        }
+          ${showSearchHeaders && this._cardType !== 'up_next' ? html`
+            <div class="entity-options-search-row">
+              <div class="search-input-wrapper">
+                <input
+                  type="text"
+                  id="search-input-box"
+                  ?autofocus=${!this._disableSearchAutofocus}
+                  class="entity-options-search-input"
+                  .value=${this._searchQuery}
+                  @focus=${() => {
+                    if ((this._searchHeaderOffset || 0) > 0) {
+                      this._updateSearchHeaderPosition(0, true);
+                    }
+                  }}
+                  @input=${e => { this._searchQuery = e.target.value; this.requestUpdate(); }}
+                  @keydown=${e => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              this._handleSearchSubmit();
+            }
+            else if (e.key === "Escape") { e.preventDefault(); this._hideSearchSheetInOptions(); }
+          }}
+                  placeholder="${localize('editor.placeholders.search')}"
+                />
+                ${this._searchQuery ? html`
+                  <button
+                    class="search-input-clear"
+                    @click=${() => {
+                      if (this._searchHierarchy.length > 0) {
+                        this._searchQuery = "";
+                        this.requestUpdate();
+                      } else {
+                        this._showSearchSheetInOptions();
+                      }
+                    }}
+                    title="${localize('common.clear')}">
+                    <ha-icon icon="mdi:close"></ha-icon>
+                  </button>
+                ` : nothing}
+              </div>
+              <button
+                class="entity-options-item icon-only"
+                style="min-width:48px; padding: 0;"
+                @click=${() => this._handleSearchSubmit()}
+                title="${localize('common.search')}"
+                aria-label="${localize('common.search')}"
+                ?disabled=${this._searchLoading}>
+                <ha-icon icon="mdi:magnify"></ha-icon>
+              </button>
+              ${this._cardType !== "search" && this._cardType !== "up_next" ? html`
+              <button
+                class="entity-options-item icon-only"
+                style="min-width:48px; padding: 0;"
+                title="${localize('common.cancel')}"
+                aria-label="${localize('common.cancel')}"
+                @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._hideSearchSheetInOptions(); } }}>
+                <ha-icon icon="mdi:close"></ha-icon>
+              </button>
               ` : nothing}
             </div>
-          ` : (showSearchHeaders && this._cardType !== 'up_next' ? html`<div class="entity-options-search-skeleton"></div>` : nothing)
-      }
-        ${showSearchHeaders && this._cardType !== 'up_next' ? html`
-          <div class="entity-options-search-row">
-            <div class="search-input-wrapper">
-              <input
-                type="text"
-                id="search-input-box"
-                ?autofocus=${!this._disableSearchAutofocus}
-                class="entity-options-search-input"
-                .value=${this._searchQuery}
-                @input=${e => { this._searchQuery = e.target.value; this.requestUpdate(); }}
-                @keydown=${e => {
-          if (e.key === "Enter") {
-            e.preventDefault();
-            this._handleSearchSubmit();
-          }
-          else if (e.key === "Escape") { e.preventDefault(); this._hideSearchSheetInOptions(); }
-        }}
-                placeholder="${localize('editor.placeholders.search')}"
-              />
-              ${this._searchQuery ? html`
-                <button
-                  class="search-input-clear"
-                  @click=${() => { this._showSearchSheetInOptions(); }}
-                  title="${localize('common.clear')}">
-                  <ha-icon icon="mdi:close"></ha-icon>
-                </button>
-              ` : nothing}
-            </div>
-            <button
-              class="entity-options-item icon-only"
-              style="min-width:48px; padding: 0;"
-              @click=${() => this._handleSearchSubmit()}
-              title="${localize('common.search')}"
-              aria-label="${localize('common.search')}"
-              ?disabled=${this._searchLoading}>
-              <ha-icon icon="mdi:magnify"></ha-icon>
-            </button>
-            ${this._cardType !== "search" && this._cardType !== "up_next" ? html`
-            <button
-              class="entity-options-item icon-only"
-              style="min-width:48px; padding: 0;"
-              title="${localize('common.cancel')}"
-              aria-label="${localize('common.cancel')}"
-              @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._hideSearchSheetInOptions(); } }}>
-              <ha-icon icon="mdi:close"></ha-icon>
-            </button>
-            ` : nothing}
-          </div>
-        ` : nothing}
-        <!--FILTER CHIPS-->
-        ${showSearchHeaders && this._cardType !== 'up_next' ? (() => {
-        const classes = this._getVisibleSearchFilterClasses();
-        const filter = this._searchMediaClassFilter || "all";
+          ` : nothing}
+          <!--FILTER CHIPS-->
+          ${showSearchHeaders && this._cardType !== 'up_next' ? (() => {
+          const classes = this._getVisibleSearchFilterClasses();
+          const filter = this._searchMediaClassFilter || "all";
 
-        if (this._searchHierarchy.length > 0) return nothing;
-        if (classes.length < 2 && !this._usingMusicAssistant) return nothing;
+          if (this._searchHierarchy.length > 0) return nothing;
+          if (classes.length < 2 && !this._usingMusicAssistant) return nothing;
 
-        return html`
-            <div class="chip-row search-filter-chips" id="search-filter-chip-row" style="margin-bottom:12px; justify-content: center; align-items: center;">
-                <button
-                  class="chip"
-                  ?selected=${filter === 'all'}
-                  @click=${() => this._doSearch()}
-                >${localize('search.filters.all')}</button>
-                ${classes.map(c => html`
+          return html`
+              <div class="chip-row search-filter-chips" id="search-filter-chip-row" style="margin-bottom:4px; justify-content: center; align-items: center;">
                   <button
                     class="chip"
-                    ?selected=${filter === c}
-                    @click=${() => this._doSearch(c)}
-                  >
-                    ${localize(`search.filters.${c}`)}
-                  </button>
-                `)}
-            </div>
-          `;
-      })() : nothing}
-        
-        ${this._searchLoading ? html`<div class="entity-options-search-loading">${localize('common.loading')}</div>` : nothing}
-        ${this._searchError ? html`<div class="entity-options-search-error">${this._searchError}</div>` : nothing}
-        
-        ${this._renderSearchSubFilters(showSearchHeaders)}
+                    ?selected=${filter === 'all'}
+                    @click=${() => this._doSearch()}
+                  >${localize('search.filters.all')}</button>
+                  ${classes.map(c => html`
+                    <button
+                      class="chip"
+                      ?selected=${filter === c}
+                      @click=${() => this._doSearch(c)}
+                    >
+                      ${localize(`search.filters.${c}`)}
+                    </button>
+                  `)}
+              </div>
+            `;
+        })() : nothing}
+          
+          ${this._searchLoading ? html`<div class="entity-options-search-loading">${localize('common.loading')}</div>` : nothing}
+          ${this._searchError ? html`<div class="entity-options-search-error">${this._searchError}</div>` : nothing}
+          
+          ${this._renderSearchSubFilters(showSearchHeaders)}
+        </div>
  
         ${(() => {
           const isQueueDragAndDrop = this._upcomingFilterActive && this._massQueueAvailable;
@@ -9615,7 +11004,6 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
             queueControlsStyle: this.config.queue_controls_style || "drag_handle",
             onPlay: (it, e) => this._playMediaFromSearch(it, e),
             onResultClick: (it, e) => this._handleSearchResultClick(it, e),
-            onResultTouch: (it, e) => this._handleSearchResultTouch(it, e),
             onOptionsToggle: (it) => { this._activeSearchRowMenuId = it?.media_content_id || null; this.requestUpdate(); },
             onPlayOption: (it, mode) => this._performSearchOptionAction(it, mode),
             onMoveUp: (it) => this._moveQueueItemUp(it.queue_item_id),
@@ -9630,7 +11018,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
           if (this._searchAttempted && currentResults.length === 0 && !this._searchLoading) {
             return html`
-              <div class="${this._showSearchInSheet ? 'search-sheet-results' : 'entity-options-search-results'}">
+              <div class="${this._showSearchInSheet ? 'search-sheet-results' : 'entity-options-search-results'}"
+                   @wheel=${(e) => this._handleSearchResultsWheel(e, pinSearchHeaders)}
+                   @touchstart=${(e) => this._handleResultsTouchStart(e)}
+                   @touchmove=${(e) => this._handleResultsTouchMove(e, pinSearchHeaders)}
+                   @touchend=${() => this._handleResultsTouchEnd()}>
                 <div class="entity-options-search-empty">${localize('common.no_results')}</div>
               </div>
             `;
@@ -9639,6 +11031,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           if (isQueueDragAndDrop) {
             return html`
               <div class="${this._showSearchInSheet ? 'search-sheet-results' : 'entity-options-search-results'} queue-results-wrapper ${isGridMode ? 'grid-mode' : ''}"
+                   @scroll=${(e) => this._handleSearchResultsScroll(e, pinSearchHeaders)}
+                   @wheel=${(e) => this._handleSearchResultsWheel(e, pinSearchHeaders)}
+                   @touchstart=${(e) => this._handleResultsTouchStart(e)}
+                   @touchmove=${(e) => this._handleResultsTouchMove(e, pinSearchHeaders)}
+                   @touchend=${() => this._handleResultsTouchEnd()}
                    style="${(this.config.search_view === 'card' || this.config.search_view === 'card_minimal' || isGridMode) ? `--search-card-columns: ${isGridMode ? 5 /* MINI_GRID_COLUMNS */ : (this.config.search_card_columns || 4)};` : ''}">
                 <div class="queue-sortable-container ${(isCard || isGridMode) ? 'is-card-layout' : ''} ${isGridMode ? 'grid-mode' : ''}"
                   @pointerdown=${(e) => this._onQueueDragStart(e)}
@@ -9672,19 +11069,23 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
           return html`
             <div class="${this._showSearchInSheet ? 'search-sheet-results' : 'entity-options-search-results'} virtualized-results-wrapper ${isGridMode ? 'grid-mode' : ''}"
+                 @scroll=${(e) => this._handleSearchResultsScroll(e, pinSearchHeaders)}
+                 @wheel=${(e) => this._handleSearchResultsWheel(e, pinSearchHeaders)}
+                 @touchstart=${(e) => this._handleResultsTouchStart(e)}
+                 @touchmove=${(e) => this._handleResultsTouchMove(e, pinSearchHeaders)}
+                 @touchend=${() => this._handleResultsTouchEnd()}
                  style="${(this.config.search_view === 'card' || this.config.search_view === 'card_minimal' || isGridMode) ? `--search-card-columns: ${isGridMode ? 5 /* MINI_GRID_COLUMNS */ : (this.config.search_card_columns || 4)};` : ''}">
               ${(isCard || isGridMode)
                 ? virtualize({
                   items: currentResults,
                   renderItem: renderItemFn,
                   layout: this._cachedSearchGridLayout,
-                  scroller: pinSearchHeaders
+                  scroller: true
                 })
-                : virtualize({ items: currentResults, renderItem: renderItemFn, scroller: pinSearchHeaders })}
+                : virtualize({ items: currentResults, renderItem: renderItemFn, scroller: true })}
             </div>
           `;
         })()}
-        </div>
       </div>
     `;
   }
@@ -9749,22 +11150,13 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _updateIdleState(changedProps) {
-    // Defer idle state if user is actively browsing menus
-    if (this.isAnyMenuOpen) {
-      if (this._idleTimeout) {
-        clearTimeout(this._idleTimeout);
-        this._idleTimeout = null;
-      }
-      return;
-    }
-
     // Consider both main and Music Assistant entities so we can wake from idle
     // even if the active selection is frozen while idle.
     const isAnyUnrestrictedPlaying = this.entityIds.some((id, idx) => {
       if (this._isAutoSelectDisabled(idx)) return false;
 
       const activeId = this._getEntityForPurpose(idx, 'sorting');
-      return this._isEntityPlaying(this.hass.states[activeId]);
+      return this._isEntityPlaying(this.hass?.states?.[activeId]);
     });
 
     const isCurrentPlaying = this._isCurrentEntityPlaying();
@@ -9778,7 +11170,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
     let shouldBeActiveImmediately;
     if (this._isIdle || !this._hasSeenPlayback) {
-      shouldBeActiveImmediately = isAnyUnrestrictedPlaying;
+      shouldBeActiveImmediately = isAnyUnrestrictedPlaying || isCurrentPlaying;
     } else {
       shouldBeActiveImmediately = isCurrentPlayingValidForActive;
     }
@@ -9793,9 +11185,20 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         this._resetIdleScreen();
         this.requestUpdate();
       }
-    } else {
-      // Current is not playing, or nothing is playing.
-      if (!this._hasSeenPlayback) {
+      return;
+    }
+
+    // Defer idle state if user is actively browsing menus
+    if (this.isAnyMenuOpen) {
+      if (this._idleTimeout) {
+        clearTimeout(this._idleTimeout);
+        this._idleTimeout = null;
+      }
+      return;
+    }
+
+    // Current is not playing, or nothing is playing.
+    if (!this._hasSeenPlayback) {
         // Initial load with nothing playing - go idle immediately
         if (this._idleTimeoutMs > 0) {
           if (!this._isIdle) {
@@ -9855,7 +11258,6 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         this._resetIdleScreen();
         this.requestUpdate();
       }
-    }
   }
 
   _handleIdleTimeoutCallback() {
@@ -10006,6 +11408,13 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
             domain: "",
             multiple: false
           }
+        },
+        required: false
+      },
+      {
+        name: "background_image",
+        selector: {
+          text: {}
         },
         required: false
       },
@@ -10273,6 +11682,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   disconnectedCallback() {
+    this._isEditorPreviewCached = undefined;
     if (this._activeDragCleanup) {
       this._activeDragCleanup();
     }
@@ -10293,6 +11703,17 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     if (this._lyricsFetchTimeout) {
       clearTimeout(this._lyricsFetchTimeout);
       this._lyricsFetchTimeout = null;
+    }
+    if (this._mediaSessionManager) {
+      this._mediaSessionManager.destroy();
+    }
+    if (this._mediaSessionUpdateTimer) {
+      clearTimeout(this._mediaSessionUpdateTimer);
+      this._mediaSessionUpdateTimer = null;
+    }
+    if (this._searchHeaderTransitionTimer) {
+      clearTimeout(this._searchHeaderTransitionTimer);
+      this._searchHeaderTransitionTimer = null;
     }
     super.disconnectedCallback?.();
     if (this._progressTimer) {
@@ -10316,7 +11737,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       clearTimeout(this._manualSelectTimeout);
       this._manualSelectTimeout = null;
     }
-    if (this._searchTimeoutHandle) {
+    if (this._searchTimeoutHandle && !this._searchLoading) {
       clearTimeout(this._searchTimeoutHandle);
       this._searchTimeoutHandle = null;
     }
@@ -10350,8 +11771,6 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       clearTimeout(this._queueOpsTimeout);
       this._queueOpsTimeout = null;
     }
-
-    this._latestSearchToken = 0;
 
     this._removeSourceDropdownOutsideHandler();
     this._removeGrabScrollHandlers();
@@ -11237,4 +12656,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
 }
 
-customElements.define("yet-another-media-player", YetAnotherMediaPlayerCard);
+customElements.define(
+  "yet-another-media-player",
+  /** @type {CustomElementConstructor} */ (/** @type {unknown} */ (YetAnotherMediaPlayerCard))
+);

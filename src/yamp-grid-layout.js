@@ -4,8 +4,8 @@ export class YampGridLayout extends GridLayout {
   constructor(hostSink, config) {
     super(hostSink, config);
     this._columns = config?.columns || 4;
-    this.flex = { preserve: "aspect-ratio" };
-    this.justify = "start";
+    this.flex = /** @type {any} */ ({ preserve: "aspect-ratio" });
+    this.justify = /** @type {any} */ ("start");
     const widthStr = config?.itemSize?.width || 150;
     const heightStr = config?.itemSize?.height || 195;
     const initialWidth = parseInt(widthStr) || 150;
@@ -50,14 +50,15 @@ export class YampGridLayout extends GridLayout {
       const calculatedWidth = (availableSpace - (this._columns - 1) * gap2Val) / this._columns;
 
       const isVertical = this.direction !== "horizontal";
+      const itemSize = /** @type {{ width: number, height: number }} */ (this._itemSize);
       if (isVertical) {
         const itemWidth = Math.max(10, Math.floor(calculatedWidth));
-        this._itemSize.width = itemWidth;
-        this._itemSize.height = Math.max(10, Math.floor(itemWidth + this._extraHeight));
+        itemSize.width = itemWidth;
+        itemSize.height = Math.max(10, Math.floor(itemWidth + this._extraHeight));
       } else {
         const itemHeight = Math.max(10, Math.floor(calculatedWidth));
-        this._itemSize.height = itemHeight;
-        this._itemSize.width = Math.max(10, Math.floor(itemHeight - this._extraHeight));
+        itemSize.height = itemHeight;
+        itemSize.width = Math.max(10, Math.floor(itemHeight - this._extraHeight));
       }
     }
 

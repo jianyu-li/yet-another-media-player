@@ -85,6 +85,10 @@ export default {
           title: "Všeobecné nastavenia",
           description: "Globálne ovládanie toho, ako sa grafika zobrazuje a získava.",
         },
+        background: {
+          title: "Obrázok pozadia",
+          description: "Nakonfigurujte trvalý obrázok pozadia pre kartu za obsahom prehrávania.",
+        },
         idle: {
           title: "Grafika pri nečinnosti",
           description: "Zobraziť statický obrázok alebo snímku entity, keď sa nič neprehráva.",
@@ -157,6 +161,10 @@ export default {
       swap_pause_stop:
         "Nahradiť tlačidlo pauzy tlačidlom zastavenia pri použití moderného rozloženia.",
       show_album: "Zobraziť názov albumu vedľa interpreta v podrobnostiach prehrávača.",
+      lock_screen_controls:
+        "Ponechajte ovládacie prvky a metadáta stopy aktívne na uzamknutej obrazovke vášho zariadenia (iOS / Android / macOS), keď je aplikácia na pozadí. Poznámka: Táto funkcia je experimentálna.",
+      toggle_media_session:
+        "Poznámka: Ovládacie prvky uzamknutej obrazovky a relácie médií sú experimentálne.",
       adaptive_controls: "Umožniť tlačidlám prehrávania meniť veľkosť podľa dostupného priestoru.",
       hide_menu_player: "Keď sú čipy v menu, skryť názov entity v spodnej časti karty.",
       hide_reorder_progress:
@@ -226,14 +234,19 @@ export default {
         "Music Assistant vyžaduje integráciu mass_queue na načítanie textov z jeho interného metadátového modulu.",
       lyrics_pre_roll:
         "Posunutie načasovania zvýraznenia textu piesne. Kladné hodnoty ho zrýchľujú, záporné spomaľujú (predvolené: 0).",
+      lyrics_background_fade:
+        "Upravte prelínanie pozadia a nepriehľadnosť stmavenia prekrytia textu piesne (0% pre priehľadný obrázok, 100% pre plné pozadie).",
       blurred_artwork: "Vždy rozmazať obrázok na pozadí",
       hide_collapsed_artwork: "Skryť malý obrázok vpravo, keď je karta zbalená",
+      disable_artwork_gradient: "Zakázať prekrytie spodného prechodu na obrázku",
       show_idle_artwork_when_not_playing:
         "Keď je táto možnosť povolená, pri výbere čipu, na ktorom sa momentálne nič neprehráva, sa namiesto aktívnej grafiky prehrávania zobrazí nakonfigurovaný obrázok pri nečinnosti.",
       prefer_ma_metadata:
         "Vždy používajte spárovanú entitu Music Assistant pre názov skladby, interpreta a grafiku, aj keď sa prehráva primárna entita.",
       show_volume_overlay:
         "Pri zmene úrovne hlasitosti nakrátko zobrazí veľký ukazovateľ hlasitosti cez grafiku albumu.",
+      font_color_helper:
+        "Prispôsobte farby textu a ikon. Prijíma hex, názvy CSS, rgba alebo šablóny (predvolené: farba motívu).",
       queue_controls_style:
         "Vyberte, či sa má pre položky fronty zobraziť úchyt na ťahanie alebo jednotlivé tlačidlá pohybu.",
     },
@@ -262,6 +275,7 @@ export default {
       display_timestamps: "Zobraziť časové údaje",
       swap_pause_stop: "Vymeniť pauzu za stop",
       show_album: "Zobraziť názov albumu",
+      lock_screen_controls: "Ovládacie prvky médií na uzamknutej obrazovke (Experimentálne)",
       adaptive_controls: "Adaptívna veľkosť ovládania",
       hide_active_entity: "Skryť štítok aktívnej entity",
       hide_active_entity_on_idle: "Skryť štítok aktívnej entity pri nečinnosti",
@@ -282,8 +296,10 @@ export default {
       lyrics_mode: "Režim textov piesní",
       lyrics_source: "Zdroj textov",
       lyrics_pre_roll: "Pre-roll textu piesne (sekundy)",
+      lyrics_background_fade: "Prelínanie pozadia textu piesne",
       blurred_artwork: "Rozmazaný obrázok",
       hide_collapsed_artwork: "Skryť zmenšený obrázok",
+      disable_artwork_gradient: "Zakázať prechod obrázka",
       show_idle_artwork_when_not_playing: "Zobraziť obrázok nečinnosti, keď sa neprehráva",
       prefer_ma_metadata: "Uprednostniť metadáta z Music Assistant",
       show_volume_overlay: "Zobraziť prekrytie hlasitosti",
@@ -304,7 +320,12 @@ export default {
       card_height: "Výška karty (px)",
       control_layout: "Rozloženie ovládania",
       idle_image: "Obrázok nečinnosti",
-
+      background_image: "Obrázok pozadia",
+      background_image_entity: "Entita obrázka pozadia",
+      font_color: "Farba písma",
+      font_color_entity: "Farba písma",
+      background_position: "Pozícia pozadia",
+      background_fit: "Prispôsobenie pozadia",
       image_url: "URL obrázka",
       fallback_image_url: "Záložná URL obrázka",
       move_to_main: "Presunúť do hlavných čipov",
@@ -340,6 +361,7 @@ export default {
       appearance: "Vzhľad",
       no_artwork_option: "Žiadny obrázok",
       details_alignment: "Zarovnanie detailov",
+      lyrics_background_fade: "Prelínanie pozadia textu piesne (%)",
       queue_controls_style: "Štýl ovládacích prvkov fronty",
     },
     action_types: {
@@ -352,6 +374,8 @@ export default {
       select_entity: "Vybrať entitu z pomocníka",
       toggle_lyrics: "Prepnúť prekrytie textov piesní",
       remote_control: "Otvoriť prekrývanie diaľkového ovládania",
+      toggle_media_session:
+        "Prepnúť ovládacie prvky relácie médií / uzamknutej obrazovky (Experimentálne)",
     },
     action_helpers: {
       sync_selected_entity: "Synchronizovať vybranú entitu →",
@@ -418,6 +442,24 @@ export default {
       center: "Stred",
       bottom: "Dole",
     },
+    background_fit: {
+      cover: "Pokryť",
+      contain: "Zmestiť",
+      fill: "Vyplniť",
+      "scale-down": "Zmenšiť",
+      none: "Žiadne",
+    },
+    background_position: {
+      center: "Stred",
+      top: "Hore",
+      bottom: "Dole",
+      "center left": "V strede vľavo",
+      "center right": "V strede vpravo",
+      "top left": "Vľavo hore",
+      "top right": "Vpravo hore",
+      "bottom left": "Vľavo dole",
+      "bottom right": "Vpravo dole",
+    },
   },
   card: {
     sections: {
@@ -433,6 +475,8 @@ export default {
       stop: "Zastaviť",
       next: "Nasledujúce",
       repeat: "Opakovať",
+      lock_screen_ready: "Ovládacie prvky na uzamknutej obrazovke aktívne",
+      lock_screen_connecting: "Pripájanie ovládacích prvkov na uzamknutej obrazovke...",
     },
     menu: {
       more_info: "Viac informácií",
@@ -522,9 +566,11 @@ export default {
       podcast: "Podcast",
       audiobook: "Audiokniha",
     },
-    search_artist: "Hľadať tohto interpreta",
+    search_artist: "Prehľadávať albumy tohto interpreta",
+    browse_artist: "Prehľadávať albumy od {artist}",
     search_album: "Prehľadávať skladby z tohto albumu",
     browse_album: "Prehľadávať skladby z {album}",
+    browse_playlist: "Prehľadávať skladby z {playlist}",
     play_collection: "Prehrať túto kolekciu",
     play_collection_error: "Túto kolekciu nie je možné prehrať priamo",
     play_item: "Prehrať {item}",

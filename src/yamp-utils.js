@@ -21,6 +21,36 @@ export function getValidArtworkAttr(attrs, key) {
 }
 
 /**
+ * Safely resolves the display name for an entity or state object, adhering to
+ * Home Assistant's formatEntityName helper when available, falling back
+ * to friendly_name or entity_id.
+ *
+ * @param {import("./types").HomeAssistant|null|undefined} hass - The Home Assistant instance
+ * @param {import("./types").HassEntity|string|null|undefined} stateOrEntityId - Entity state object or entity ID
+ * @returns {string} Formatted entity name
+ */
+export function getEntityName(hass, stateOrEntityId) {
+  if (!stateOrEntityId) return "";
+  const stateObj =
+    typeof stateOrEntityId === "string" ? hass?.states?.[stateOrEntityId] : stateOrEntityId;
+
+  if (!stateObj) {
+    return typeof stateOrEntityId === "string" ? stateOrEntityId : "";
+  }
+
+  if (typeof hass?.formatEntityName === "function") {
+    try {
+      const formatted = hass.formatEntityName(stateObj);
+      if (formatted) return formatted;
+    } catch {
+      // Gracefully fall back if unsupported arguments or error
+    }
+  }
+
+  return stateObj.attributes?.friendly_name || stateObj.entity_id || "";
+}
+
+/**
  * Resolve a Jinja template string at runtime
  * @param {Object} hass - Home Assistant object
  * @param {string} templateString - The template string to resolve
@@ -226,31 +256,31 @@ export function findAssociatedButtonEntities(hass, maEntityId) {
   // Look for button entities that might be associated with this MA entity
   // Common patterns: device_id matching, friendly_name similarity, or device_class
   const maDeviceId = maEntity.attributes?.device_id;
-  const maFriendlyName = maEntity.attributes?.friendly_name || maEntityId;
+  const maDisplayName = getEntityName(hass, maEntity) || maEntityId;
 
   // Search through all button entities
   for (const [entityId, state] of Object.entries(hass.states)) {
     if (entityId.startsWith("button.") && state.attributes) {
       const buttonDeviceId = state.attributes.device_id;
-      const buttonFriendlyName = state.attributes.friendly_name || entityId;
+      const buttonDisplayName = getEntityName(hass, state) || entityId;
 
       // Check if this button is associated with the same device
       if (maDeviceId && buttonDeviceId === maDeviceId) {
         buttonEntities.push({
           entity_id: entityId,
-          friendly_name: buttonFriendlyName,
+          friendly_name: buttonDisplayName,
           device_class: state.attributes.device_class,
           reason: "same_device",
         });
       }
       // Check for name similarity (e.g., "HomePod Favorite" button for "HomePod" MA entity)
       else if (
-        buttonFriendlyName.toLowerCase().includes(maFriendlyName.toLowerCase()) ||
-        maFriendlyName.toLowerCase().includes(buttonFriendlyName.toLowerCase())
+        buttonDisplayName.toLowerCase().includes(maDisplayName.toLowerCase()) ||
+        maDisplayName.toLowerCase().includes(buttonDisplayName.toLowerCase())
       ) {
         buttonEntities.push({
           entity_id: entityId,
-          friendly_name: buttonFriendlyName,
+          friendly_name: buttonDisplayName,
           device_class: state.attributes.device_class,
           reason: "name_similarity",
         });
@@ -259,7 +289,7 @@ export function findAssociatedButtonEntities(hass, maEntityId) {
       else if (entityId.toLowerCase().includes(maEntityId.split(".")[1].toLowerCase())) {
         buttonEntities.push({
           entity_id: entityId,
-          friendly_name: buttonFriendlyName,
+          friendly_name: buttonDisplayName,
           device_class: state.attributes.device_class,
           reason: "entity_id_match",
         });
@@ -302,7 +332,10 @@ export function getMusicAssistantState(hass, entityId) {
 export function isMusicAssistantEntity(state) {
   if (!state || !state.attributes) return false;
   return (
-    state.attributes.app_id === "music_assistant" || state.attributes.mass_player_type !== undefined
+    state.attributes.app_id === "music_assistant" ||
+    state.attributes.mass_player_type !== undefined ||
+    Boolean(state.attributes.mass_player_id) ||
+    Boolean(state.attributes.active_queue)
   );
 }
 
@@ -346,9 +379,9 @@ export function getSearchResultClickTitle(item) {
     return title;
   }
 
-  // For playlists, show the name
+  // For playlists, show "Browse tracks from [Playlist]"
   if (mediaType === "playlist") {
-    return title;
+    return localize("search.browse_playlist", "{playlist}", title) || title;
   }
 
   // Default fallback
@@ -443,8 +476,8 @@ function _findArtworkOverride(state, overrides, resolveOverrideSource, options =
             const parts = expected.split(":");
             if (
               parts.length === 2 &&
-              !isNaN(parts[0]) &&
-              !isNaN(parts[1]) &&
+              !isNaN(Number(parts[0])) &&
+              !isNaN(Number(parts[1])) &&
               parseFloat(parts[1]) !== 0
             ) {
               targetRatio = parseFloat(parts[0]) / parseFloat(parts[1]);
@@ -561,6 +594,8 @@ function _findArtworkOverride(state, overrides, resolveOverrideSource, options =
  * @param {string} [options.fallbackArtwork] - Fallback artwork strategy ('smart' or direct URL)
  * @param {string} [options.artworkObjectFit] - Fit strategy; if "no_artwork", returns null URL
  * @param {Function} [options.resolveOverrideSource] - Callback for template override resolution
+ * @param {Record<string, number>} [options.aspectRatioCache] - Cache of aspect ratios
+ * @param {boolean} [options.isIdleImageActive] - Whether an idle image is actively displayed
  * @returns {Object} { url: string|null, sizePercentage: number|null, objectFit: string|null }
  */
 export function getArtworkUrl(
@@ -694,4 +729,99 @@ export function getActionPlacement(action, index) {
   if (action?.in_menu === "hidden") return "hidden";
   if (action?.in_menu === true) return "menu";
   return "chip";
+}
+
+/**
+ * Checks if a given media title is a generic placeholder (such as "AirPlay" or the entity's friendly name)
+ * rather than genuine track/media metadata.
+ *
+ * @param {string|null|undefined} title - The media title to test
+ * @param {string|null|undefined} [friendlyName] - The entity's friendly name
+ * @returns {boolean} True if the title is considered a placeholder
+ */
+export function isPlaceholderMediaTitle(title, friendlyName) {
+  if (!title || typeof title !== "string") return true;
+  const trimmed = title.trim().toLowerCase();
+  if (trimmed === "" || trimmed === "airplay") return true;
+  if (
+    friendlyName &&
+    typeof friendlyName === "string" &&
+    trimmed === friendlyName.trim().toLowerCase()
+  ) {
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Determines whether two paired media player entities are playing the same media/content.
+ * Used when both the main entity and its paired Music Assistant entity are reporting playing state,
+ * allowing the card to prioritize the main entity (e.g. Apple TV outputting audio to a HomePod).
+ *
+ * @param {import("./types").HassEntity|null|undefined} mainState - Main entity state object
+ * @param {import("./types").HassEntity|null|undefined} maState - Music Assistant entity state object
+ * @returns {boolean} True if both entities are determined to be playing the same media
+ */
+export function areEntitiesPlayingSameMedia(mainState, maState) {
+  if (!mainState || !maState) return false;
+
+  const mainAttrs = mainState.attributes || {};
+  const maAttrs = maState.attributes || {};
+
+  const mainTitle =
+    typeof mainAttrs.media_title === "string" ? mainAttrs.media_title.trim().toLowerCase() : "";
+  const maTitle =
+    typeof maAttrs.media_title === "string" ? maAttrs.media_title.trim().toLowerCase() : "";
+
+  // 1. Both entities have media_title and they match (case-insensitive)
+  if (mainTitle && maTitle && mainTitle === maTitle) {
+    return true;
+  }
+
+  // 2. Both entities have matching media_content_id
+  const mainContentId = mainAttrs.media_content_id;
+  const maContentId = maAttrs.media_content_id;
+  if (mainContentId && maContentId && mainContentId === maContentId) {
+    return true;
+  }
+
+  // 3. AirPlay receiver / sender indicators
+  const mainName =
+    typeof mainAttrs.friendly_name === "string" ? mainAttrs.friendly_name.trim().toLowerCase() : "";
+  const maName =
+    typeof maAttrs.friendly_name === "string" ? maAttrs.friendly_name.trim().toLowerCase() : "";
+  const mainApp =
+    typeof mainAttrs.app_name === "string" ? mainAttrs.app_name.trim().toLowerCase() : "";
+  const maApp = typeof maAttrs.app_name === "string" ? maAttrs.app_name.trim().toLowerCase() : "";
+  const mainSource =
+    typeof mainAttrs.source === "string" ? mainAttrs.source.trim().toLowerCase() : "";
+  const maSource = typeof maAttrs.source === "string" ? maAttrs.source.trim().toLowerCase() : "";
+
+  if (maTitle === "airplay" || maApp === "airplay" || maSource === "airplay") {
+    return true;
+  }
+  if (mainTitle === "airplay" || mainApp === "airplay" || mainSource === "airplay") {
+    return true;
+  }
+
+  // 4. Cross-reference: one entity's title or source is the other's friendly_name
+  if (mainName && (maTitle === mainName || maSource === mainName)) {
+    return true;
+  }
+  if (maName && (mainTitle === maName || mainSource === maName)) {
+    return true;
+  }
+
+  // 5. Main entity is playing with a title, but MA entity has no title
+  // (Common when Apple TV AirPlays video/app audio to HomePod, which lacks track metadata)
+  if (mainTitle && !maTitle) {
+    return true;
+  }
+
+  // 6. Neither entity has a media_title (e.g. system sounds, video games, live streams)
+  if (!mainTitle && !maTitle) {
+    return true;
+  }
+
+  return false;
 }

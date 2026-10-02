@@ -85,6 +85,11 @@ export default {
           title: "Allgemeine Einstellungen",
           description: "Globale Steuerung der Artwork-Anzeige und -Abrufung.",
         },
+        background: {
+          title: "Hintergrundbild",
+          description:
+            "Konfigurieren Sie ein dauerhaftes Hintergrundbild für die Karte hinter den Wiedergabeinhalten.",
+        },
         idle: {
           title: "Artwork im Leerlauf",
           description:
@@ -158,6 +163,10 @@ export default {
       disable_mass: "Optionale Mass Queue Integration deaktivieren, auch wenn sie installiert ist.",
       swap_pause_stop: "Pause-Taste durch Stop-Taste im modernen Layout ersetzen.",
       show_album: "Den Albumnamen neben dem Interpreten in den Player-Details anzeigen.",
+      lock_screen_controls:
+        "Halte Steuerelemente und Titel-Metadaten auf dem Sperrbildschirm deines Geräts (iOS / Android / macOS) aktiv, wenn die App in den Hintergrund tritt. Hinweis: Diese Funktion ist experimentell.",
+      toggle_media_session:
+        "Hinweis: Sperrbildschirm- und Mediensitzungssteuerung sind experimentell.",
       adaptive_controls: "Wiedergabetasten an verfügbaren Platz anpassen.",
       hide_menu_player: "Entitäts-Label unten ausblenden, wenn Chips im Menü sind.",
       hide_reorder_progress:
@@ -224,15 +233,20 @@ export default {
         "Music Assistant benötigt die mass_queue-Integration, um Liedtexte von seiner internen Metadaten-Engine abzurufen.",
       lyrics_pre_roll:
         "Passen Sie das Timing der Songtext-Hervorhebung an. Positive Werte beschleunigen sie, negative verzögern sie (Standard: 0).",
+      lyrics_background_fade:
+        "Hintergrundüberblendung und Dimm-Deckkraft des Liedtext-Overlays anpassen (0% für transparentes Artwork, 100% für durchgehenden Hintergrund).",
       blurred_artwork: "Hintergrundbild immer weichzeichnen",
       hide_collapsed_artwork:
         "Das kleine Artwork auf der rechten Seite ausblenden, wenn die Karte eingeklappt ist",
+      disable_artwork_gradient: "Den unteren Farbverlauf auf dem Artwork deaktivieren",
       show_idle_artwork_when_not_playing:
         "Wenn aktiviert, wird beim Auswählen eines Chips, auf dem derzeit nichts abgespielt wird, das konfigurierte Ruhebild anstelle des aktiven Wiedergabe-Artworks angezeigt.",
       prefer_ma_metadata:
         "Verwenden Sie immer die gekoppelte Music Assistant-Entität für Titel, Künstler und Artwork, auch wenn die primäre Entität gerade spielt.",
       show_volume_overlay:
         "Zeige kurz eine große Lautstärkeanzeige über dem Cover an, wenn sich die Lautstärke ändert.",
+      font_color_helper:
+        "Text- und Symbolfarben anpassen. Akzeptiert Hex, CSS-Namen, RGBA oder Vorlagen (Standard: Theme-Farbe).",
       queue_controls_style:
         "Wählen Sie, ob ein Ziehgriff oder einzelne Bewegungstasten für Warteschlangenelemente angezeigt werden sollen.",
     },
@@ -261,6 +275,7 @@ export default {
       display_timestamps: "Zeitstempel anzeigen",
       swap_pause_stop: "Pause durch Stop ersetzen",
       show_album: "Albumname anzeigen",
+      lock_screen_controls: "Sperrbildschirm-Mediensteuerung (Experimentell)",
       adaptive_controls: "Adaptive Tastengröße",
       hide_active_entity: "Aktives Entitäts-Label ausblenden",
       hide_active_entity_on_idle: "Aktive Entitätsbeschriftung im Leerlauf ausblenden",
@@ -281,8 +296,10 @@ export default {
       lyrics_mode: "Liedtext-Modus",
       lyrics_source: "Liedtext-Quelle",
       lyrics_pre_roll: "Liedtext Pre-Roll (Sekunden)",
+      lyrics_background_fade: "Liedtext Hintergrundüberblendung",
       blurred_artwork: "Verschwommenes Artwork",
       hide_collapsed_artwork: "Verkleinertes Artwork ausblenden",
+      disable_artwork_gradient: "Artwork-Farbverlauf deaktivieren",
       show_idle_artwork_when_not_playing: "Ruhebild anzeigen, wenn nicht abgespielt wird",
       prefer_ma_metadata: "Music Assistant Metadaten bevorzugen",
       show_volume_overlay: "Lautstärke-Overlay anzeigen",
@@ -303,7 +320,12 @@ export default {
       card_height: "Kartenhöhe (px)",
       control_layout: "Steuerungs-Layout",
       idle_image: "Ruhebild",
-
+      background_image: "Hintergrundbild",
+      background_image_entity: "Hintergrundbild-Entität",
+      font_color: "Schriftfarbe",
+      font_color_entity: "Schriftfarbe",
+      background_position: "Hintergrundposition",
+      background_fit: "Hintergrundanpassung",
       image_url: "Bild-URL",
       fallback_image_url: "Fallback Bild-URL",
       move_to_main: "Aktion in Haupt-Chips verschieben",
@@ -339,6 +361,7 @@ export default {
       appearance: "Erscheinungsbild",
       no_artwork_option: "Kein Artwork",
       details_alignment: "Detail-Ausrichtung",
+      lyrics_background_fade: "Liedtext Hintergrundüberblendung (%)",
       queue_controls_style: "Warteschlangen-Steuerungsstil",
     },
     action_types: {
@@ -351,6 +374,7 @@ export default {
       select_entity: "Entität aus Helper auswählen",
       toggle_lyrics: "Liedtext-Overlay ein-/ausschalten",
       remote_control: "Fernbedienungs-Overlay öffnen",
+      toggle_media_session: "Mediensitzung / Sperrbildschirm-Steuerung umschalten (Experimentell)",
     },
     action_helpers: {
       sync_selected_entity: "Entität synchronisieren →",
@@ -417,6 +441,24 @@ export default {
       center: "Mitte",
       bottom: "Unten",
     },
+    background_fit: {
+      cover: "Ausfüllen",
+      contain: "Einpassen",
+      fill: "Dehnen",
+      "scale-down": "Herunterskalieren",
+      none: "Keine",
+    },
+    background_position: {
+      center: "Mitte",
+      top: "Oben",
+      bottom: "Unten",
+      "center left": "Mitte links",
+      "center right": "Mitte rechts",
+      "top left": "Oben links",
+      "top right": "Oben rechts",
+      "bottom left": "Unten links",
+      "bottom right": "Unten rechts",
+    },
   },
   card: {
     sections: {
@@ -432,6 +474,8 @@ export default {
       stop: "Stop",
       next: "Weiter",
       repeat: "Wiederholen",
+      lock_screen_ready: "Sperrbildschirm-Steuerung aktiv",
+      lock_screen_connecting: "Sperrbildschirm-Steuerung wird verbunden...",
     },
     menu: {
       more_info: "Mehr Info",
@@ -521,9 +565,11 @@ export default {
       podcast: "Podcast",
       audiobook: "Hörbuch",
     },
-    search_artist: "Nach diesem Künstler suchen",
+    search_artist: "Alben dieses Künstlers durchsuchen",
+    browse_artist: "Alben von {artist} durchsuchen",
     search_album: "Titel von diesem Album durchsuchen",
     browse_album: "Albentitel von {album} durchsuchen",
+    browse_playlist: "Titel von {playlist} durchsuchen",
     play_collection: "Diese Sammlung abspielen",
     play_collection_error: "Diese Sammlung kann nicht direkt abgespielt werden",
     play_item: "{item} abspielen",

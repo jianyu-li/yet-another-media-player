@@ -1,14 +1,17 @@
+import { localize } from "./localize/localize.js";
+
 /**
  * Parses a standard LRC (LyRiCs) string into an array of timed lyric objects.
  * Supports basic [mm:ss.xx] and [mm:ss:xx] formats.
  *
  * @param {string} lrcString - The raw LRC text.
- * @returns {Array<{text: string, time: number}>} Array of parsed lyric lines.
+ * @returns {import("./types.d.ts").LyricsLine[]} Array of parsed lyric lines.
  */
 export function parseLrc(lrcString) {
   if (!lrcString || typeof lrcString !== "string") return [];
 
   const lines = lrcString.split(/\r?\n/);
+  /** @type {import("./types.d.ts").LyricsLine[]} */
   const parsedLyrics = [];
 
   // Regex to match [mm:ss.xx] or [mm:ss:xx]
@@ -63,6 +66,20 @@ export function parseLrc(lrcString) {
     if (b.time === null) return -1;
     return a.time - b.time;
   });
+
+  // If the parsed lyrics consist solely of an instrumental indicator
+  if (
+    validLyrics.length === 1 &&
+    /^(\[|\()?instrumental(\s+track)?(\]|\))?$/i.test(validLyrics[0].text.trim())
+  ) {
+    return [
+      {
+        time: 0,
+        text: localize("lyrics.instrumental") || "Instrumental Track",
+        isInstrumental: true,
+      },
+    ];
+  }
 
   // Automatically insert instrumental break markers for gaps >= 10.0s in synced lyrics
   const syncedLines = validLyrics.filter((l) => l.time !== null);

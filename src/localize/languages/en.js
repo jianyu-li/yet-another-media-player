@@ -84,6 +84,11 @@ export default {
           title: "General Settings",
           description: "Global controls for how artwork is displayed and retrieved.",
         },
+        background: {
+          title: "Background Image",
+          description:
+            "Configure a persistent background image for the card behind playback content.",
+        },
         idle: {
           title: "Idle Artwork",
           description: "Show a static image or entity snapshot whenever nothing is playing.",
@@ -153,6 +158,9 @@ export default {
       disable_mass: "Disable the optional Mass Queue integration even if it is installed.",
       swap_pause_stop: "Replace the pause button with stop while using the modern layout.",
       show_album: "Display the album name next to the artist in the player details.",
+      lock_screen_controls:
+        "Keep controls and track metadata active on your device lock screen (iOS / Android / macOS) when backgrounding the app. Note: This feature is experimental.",
+      toggle_media_session: "Note: Lock screen and media session controls are experimental.",
       adaptive_controls: "Let the playback buttons grow or shrink to fit the available space.",
       hide_menu_player:
         "When chips live in the menu, hide the entity label at the bottom of the card.",
@@ -222,14 +230,19 @@ export default {
         "Music Assistant requires the mass_queue integration to fetch lyrics from its internal metadata engine.",
       lyrics_pre_roll:
         "Shift the lyrics highlight timing. Positive values speed it up, negative values slow it down (default: 0).",
+      lyrics_background_fade:
+        "Adjust the background fade and dimming opacity of the lyrics overlay (0% for transparent artwork, 100% for solid background).",
       blurred_artwork: "Always blur the background artwork",
       hide_collapsed_artwork: "Hide the smaller artwork on the right when the card is collapsed",
+      disable_artwork_gradient: "Disable the bottom fade gradient overlay on the artwork",
       show_idle_artwork_when_not_playing:
         "When enabled, selecting a chip that is not currently playing will display the configured idle image instead of the active playback artwork.",
       prefer_ma_metadata:
         "Always use the paired Music Assistant entity for track title, artist, and artwork, even if the primary entity is playing.",
       show_volume_overlay:
         "Briefly display a large volume indicator over the artwork when the volume level changes.",
+      font_color_helper:
+        "Customize text and icon colors. Accepts hex, CSS names, rgba, or templates (default: theme color).",
     },
     titles: {
       edit_entity: "Edit Entity",
@@ -256,6 +269,7 @@ export default {
       display_timestamps: "Display Timestamps",
       swap_pause_stop: "Swap Pause with Stop",
       show_album: "Show Album Name",
+      lock_screen_controls: "Lock Screen Media Controls (Experimental)",
       adaptive_controls: "Adaptive Control Size",
       hide_active_entity: "Hide Active Entity Label",
       hide_active_entity_on_idle: "Hide Active Entity Label on Idle",
@@ -276,8 +290,10 @@ export default {
       lyrics_mode: "Lyrics Mode",
       lyrics_source: "Lyrics Source",
       lyrics_pre_roll: "Lyrics Pre-Roll (seconds)",
+      lyrics_background_fade: "Lyrics Background Fade",
       blurred_artwork: "Blurred Artwork",
       hide_collapsed_artwork: "Hide Collapsed Artwork",
+      disable_artwork_gradient: "Disable Artwork Gradient",
       show_idle_artwork_when_not_playing: "Show Idle Image When Not Playing",
       prefer_ma_metadata: "Prefer Music Assistant Metadata",
       show_volume_overlay: "Show Volume Overlay",
@@ -298,6 +314,12 @@ export default {
       card_height: "Card Height (px)",
       control_layout: "Control Layout",
       idle_image: "Idle Image",
+      background_image: "Background Image",
+      background_image_entity: "Background Image Entity",
+      font_color: "Font Color",
+      font_color_entity: "Font Color",
+      background_position: "Background Position",
+      background_fit: "Background Fit",
       image_url: "Image URL",
       fallback_image_url: "Fallback Image URL",
       move_to_main: "Move action to main chips",
@@ -334,6 +356,7 @@ export default {
       appearance: "Appearance",
       no_artwork_option: "No Artwork",
       details_alignment: "Details Alignment",
+      lyrics_background_fade: "Lyrics Background Fade (%)",
     },
     action_types: {
       menu: "Open a Card Menu Item",
@@ -345,6 +368,7 @@ export default {
       select_entity: "Select Entity from Helper",
       toggle_lyrics: "Toggle Lyrics Overlay",
       remote_control: "Open Remote Controls Overlay",
+      toggle_media_session: "Toggle Media Session Controls (Experimental)",
     },
     action_helpers: {
       sync_selected_entity: "Sync Selected Entity →",
@@ -411,6 +435,24 @@ export default {
       center: "Center",
       bottom: "Bottom",
     },
+    background_fit: {
+      cover: "Cover",
+      contain: "Contain",
+      fill: "Fill",
+      "scale-down": "Scale Down",
+      none: "None",
+    },
+    background_position: {
+      center: "Center",
+      top: "Top",
+      bottom: "Bottom",
+      "center left": "Center Left",
+      "center right": "Center Right",
+      "top left": "Top Left",
+      "top right": "Top Right",
+      "bottom left": "Bottom Left",
+      "bottom right": "Bottom Right",
+    },
   },
   card: {
     sections: {
@@ -426,6 +468,8 @@ export default {
       stop: "Stop",
       next: "Next",
       repeat: "Repeat",
+      lock_screen_ready: "Lock screen controls active",
+      lock_screen_connecting: "Connecting lock screen controls...",
     },
     menu: {
       more_info: "More Info",
@@ -515,9 +559,11 @@ export default {
       podcast: "Podcast",
       audiobook: "Audiobook",
     },
-    search_artist: "Search for this artist",
+    search_artist: "Browse albums by this artist",
+    browse_artist: "Browse albums by {artist}",
     search_album: "Browse tracks from this album",
     browse_album: "Browse tracks from {album}",
+    browse_playlist: "Browse tracks from {playlist}",
     play_collection: "Play this collection",
     play_collection_error: "Unable to play this collection directly",
     play_item: "Play {item}",

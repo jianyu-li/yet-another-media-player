@@ -2,6 +2,30 @@
 import { html, nothing } from "lit";
 import { localize } from "./localize/localize.js";
 
+/**
+ * @param {Object} options
+ * @param {boolean} [options.isRemoteVolumeEntity]
+ * @param {boolean} [options.showSlider]
+ * @param {number} [options.vol]
+ * @param {boolean} [options.isMuted]
+ * @param {boolean} [options.supportsMute]
+ * @param {Function} [options.onVolumeDragStart]
+ * @param {Function} [options.onVolumeDragEnd]
+ * @param {Function} [options.onVolumeInput]
+ * @param {Function} [options.onVolumeChange]
+ * @param {Function} [options.onVolumeStep]
+ * @param {Function} [options.onMuteToggle]
+ * @param {any} [options.moreInfoMenu]
+ * @param {any} [options.leadingControlTemplate]
+ * @param {boolean} [options.reserveLeadingControlSpace]
+ * @param {boolean} [options.showRightPlaceholder]
+ * @param {any} [options.rightSlotTemplate]
+ * @param {any} [options.muteSlotTemplate]
+ * @param {boolean} [options.hideVolume]
+ * @param {boolean} [options.collapseRow]
+ * @param {boolean} [options.isDragging]
+ * @param {number} [options.dragVol]
+ */
 export function renderVolumeRow({
   isRemoteVolumeEntity,
   showSlider,
