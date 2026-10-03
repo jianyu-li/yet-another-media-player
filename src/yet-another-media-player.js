@@ -10403,7 +10403,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     return !!this._getRemoteControlEntity(true);
   }
 
-  _getRemoteControlEntity(strict = false) {
+  _getRemoteControlEntity(strict = true) {
     const idx = this._selectedIndex;
     const obj = (this.entityObjs || [])[idx];
 
@@ -10432,60 +10432,10 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const targetEntity = this._getRemoteControlEntity();
     if (!targetEntity) return;
 
-    if (targetEntity.startsWith("remote.")) {
-      this.hass.callService("remote", "send_command", {
-        entity_id: targetEntity,
-        command: command
-      });
-      return;
-    }
-
-    switch (command) {
-      case "up":
-      case "down":
-      case "left":
-      case "right":
-      case "select":
-      case "back":
-      case "menu":
-      case "home":
-        this.hass.callService("remote", "send_command", {
-          entity_id: targetEntity,
-          command: command
-        });
-        break;
-      case "play_pause":
-        this.hass.callService("media_player", "media_play_pause", { entity_id: targetEntity });
-        break;
-      case "previous":
-      case "rewind":
-        this.hass.callService("media_player", "media_previous_track", { entity_id: targetEntity });
-        break;
-      case "next":
-      case "fast_forward":
-        this.hass.callService("media_player", "media_next_track", { entity_id: targetEntity });
-        break;
-      case "volume_up":
-        this.hass.callService("media_player", "volume_up", { entity_id: targetEntity });
-        break;
-      case "volume_down":
-        this.hass.callService("media_player", "volume_down", { entity_id: targetEntity });
-        break;
-      case "mute":
-        this.hass.callService("media_player", "volume_mute", {
-          entity_id: targetEntity,
-          is_volume_muted: !(this.currentVolumeStateObj?.attributes?.is_volume_muted)
-        });
-        break;
-      case "power":
-        this.hass.callService("media_player", "toggle", { entity_id: targetEntity });
-        break;
-      default:
-        this.hass.callService("remote", "send_command", {
-          entity_id: targetEntity,
-          command: command
-        });
-    }
+    this.hass.callService("remote", "send_command", {
+      entity_id: targetEntity,
+      command: command,
+    });
   }
 
   _openRemoteControl() {
