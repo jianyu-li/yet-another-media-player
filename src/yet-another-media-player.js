@@ -6469,6 +6469,36 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     return this._lyricsController.getLrclibLyrics(artist, title, album, duration, fetchToken);
   }
 
+  get _fetchingLyrics() {
+    return this._lyricsController?.loading ?? false;
+  }
+
+  set _fetchingLyrics(val) {
+    if (this._lyricsController) {
+      this._lyricsController.loading = val;
+    }
+  }
+
+  get _massLyrics() {
+    return this._lyricsController?.lyrics ?? [];
+  }
+
+  set _massLyrics(val) {
+    if (this._lyricsController) {
+      this._lyricsController.lyrics = val;
+    }
+  }
+
+  get _lyricsError() {
+    return this._lyricsController?.error ?? false;
+  }
+
+  set _lyricsError(val) {
+    if (this._lyricsController) {
+      this._lyricsController.error = val;
+    }
+  }
+
 
   updated(changedProps) {
     if (changedProps.has("hass") && this.hass) {
@@ -9230,7 +9260,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
               Re-ordering ${this._queueOpsCompleted} / ${this._queueOpsTotal}
             </div>
           ` : ""}
-          ${(!this._showEntityOptions || !shouldShowPersistentControls) && this._lyricsActive && !this._isIdle && this._lyricsController.loading ? html`
+          ${(!this._showEntityOptions || !shouldShowPersistentControls) && this._lyricsActive && !this._isIdle && this._fetchingLyrics ? html`
             <div class="queue-ops-progress" style="position: absolute !important; bottom: 2px !important; left: 50% !important; transform: translate(-50%, 0) !important; z-index: 1000 !important; width: max-content !important; pointer-events: none !important; color: var(--search-text-secondary) !important;">
               ${localize("lyrics.finding")}
             </div>
