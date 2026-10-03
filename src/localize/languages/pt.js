@@ -478,6 +478,9 @@ export default {
       select_entity: "Selecionar",
       transfer_to: "Transferir para",
       no_players: "Sem leitores MA.",
+      active: "(Ativo)",
+      set_active_entity: "Definir como entidade ativa",
+      active_entity: "Entidade ativa",
     },
     remote: {
       title: "Controlo remoto",

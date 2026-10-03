@@ -1009,6 +1009,62 @@ export const menusSheetsStyles = css`
     border-bottom: none;
   }
 
+  .entity-active-star {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 20px;
+    --mdc-icon-size: 20px;
+    flex-shrink: 0;
+  }
+
+  .entity-active-star.is-active {
+    color: var(--custom-accent, var(--primary-color, #ff9800));
+    opacity: 1;
+  }
+
+  .entity-active-star.is-inactive {
+    color: inherit;
+    opacity: 0;
+    transition: opacity var(--transition-fast);
+  }
+
+  @media (hover: hover) {
+    .entity-options-item:hover .entity-active-star.is-inactive,
+    .entity-options-item:focus-visible .entity-active-star.is-inactive {
+      opacity: 0.75;
+      color: var(--custom-accent, var(--primary-color, #ff9800));
+    }
+  }
+
+  @media (hover: none) {
+    .entity-active-star.is-inactive {
+      opacity: 0.35;
+    }
+  }
+
+  .entity-more-info-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: none;
+    border: none;
+    padding: 4px;
+    margin: 0;
+    cursor: pointer;
+    color: inherit;
+    opacity: 0.6;
+    transition:
+      opacity var(--transition-fast),
+      color var(--transition-fast);
+    flex-shrink: 0;
+  }
+
+  .entity-more-info-btn:hover {
+    opacity: 1;
+    color: var(--custom-accent, var(--primary-color, #ff9800));
+  }
+
   .queue-ops-progress {
     background: var(--yamp-chip-bg, rgba(255, 255, 255, 0.15));
     color: var(--search-text-secondary, #666);

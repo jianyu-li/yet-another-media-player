@@ -486,6 +486,9 @@ export default {
       select_entity: "Select Entity for More Info",
       transfer_to: "Transfer Queue To",
       no_players: "No other Music Assistant players available.",
+      active: "(Active)",
+      set_active_entity: "Set as active entity",
+      active_entity: "Active entity",
     },
     remote: {
       title: "Remote Control",

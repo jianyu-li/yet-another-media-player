@@ -479,6 +479,9 @@ export default {
       select_entity: "Seleccionar",
       transfer_to: "Transferir a",
       no_players: "Sin reproductores MA.",
+      active: "(Activo)",
+      set_active_entity: "Establecer como entidad activa",
+      active_entity: "Entidad activa",
     },
     remote: {
       title: "Mando a distancia",

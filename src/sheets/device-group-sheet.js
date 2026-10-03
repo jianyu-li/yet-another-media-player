@@ -510,12 +510,8 @@ export function renderResolvedEntitiesSheet() {
               return html`
                 <button
                   class="entity-options-item menu-action-item"
-                  @click=${() => {
-                    this._openMoreInfoForEntity(entityId);
-                    this._showEntityOptions = false;
-                    this._showResolvedEntities = false;
-                    this.requestUpdate();
-                  }}
+                  @click=${() => this._setActiveEntityForCurrentChip(entityId)}
+                  title=${isActive ? localize("card.menu.active_entity") : localize("card.menu.set_active_entity")}
                 >
                   <ha-icon class="menu-action-icon" .icon=${icon}></ha-icon>
                   <span class="menu-action-label">${isActive ? `${name} (Active)` : name}</span>
@@ -524,21 +520,46 @@ export function renderResolvedEntitiesSheet() {
             }
 
             return html`
-              <button
+              <div
                 class="entity-options-item"
-                @click=${() => {
-                  this._openMoreInfoForEntity(entityId);
-                  this._showEntityOptions = false;
-                  this._showResolvedEntities = false;
-                  this.requestUpdate();
+                role="button"
+                tabindex="0"
+                @click=${() => this._setActiveEntityForCurrentChip(entityId)}
+                @keydown=${(e) => {
+                  if (e.key === "Enter" || e.key === " ") {
+                    e.preventDefault();
+                    this._setActiveEntityForCurrentChip(entityId);
+                  }
                 }}
+                title=${isActive ? localize("card.menu.active_entity") : localize("card.menu.set_active_entity")}
               >
                 <ha-icon .icon=${icon} style="margin-right: 8px;"></ha-icon>
-                <div style="display: flex; flex-direction: column; align-items: flex-start;">
+                <div
+                  style="display: flex; flex-direction: column; align-items: flex-start; flex: 1; min-width: 0;"
+                >
                   <div>${isActive ? `${name} (Active)` : name}</div>
                   <div style="font-size: 0.85em; opacity: 0.7;">${role}</div>
                 </div>
-              </button>
+                <button
+                  type="button"
+                  class="entity-more-info-btn"
+                  title="More info"
+                  aria-label="More info"
+                  @click=${(e) => {
+                    e.stopPropagation();
+                    this._openMoreInfoForEntity(entityId);
+                    this._showEntityOptions = false;
+                    this._showResolvedEntities = false;
+                    this.requestUpdate();
+                  }}
+                >
+                  <ha-icon icon="mdi:information-outline" style="--mdc-icon-size: 20px;"></ha-icon>
+                </button>
+                <ha-icon
+                  class="entity-active-star ${isActive ? "is-active" : "is-inactive"}"
+                  .icon=${isActive ? "mdi:star" : "mdi:star-outline"}
+                ></ha-icon>
+              </div>
             `;
           })}
         </div>
