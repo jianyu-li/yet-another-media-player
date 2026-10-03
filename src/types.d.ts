@@ -351,6 +351,77 @@ export function getEntityName(
   stateOrEntityId?: HassEntity | string | null
 ): string;
 
+export interface TemplateResolveCacheEntry<T = string> {
+  id?: string;
+  value?: T;
+  ts: number;
+}
+
+export interface TemplateValueEntry<T = string> {
+  template: string;
+  resolved: T | null;
+}
+
+export declare class TemplateController {
+  constructor(host: any);
+  host: any;
+  templateSubscriptions: Record<string, Function | symbol>;
+  activeSubscriptionTokens: Record<string, symbol>;
+  compiledJsTemplates: Record<string, Function>;
+  maTemplateValues: Record<string | number, TemplateValueEntry>;
+  maResolveCache: Record<number, TemplateResolveCacheEntry>;
+  volTemplateValues: Record<string | number, TemplateValueEntry>;
+  volResolveCache: Record<number, TemplateResolveCacheEntry>;
+  remoteTemplateValues: Record<string | number, TemplateValueEntry>;
+  remoteResolveCache: Record<number, TemplateResolveCacheEntry>;
+  hiddenControlsTemplateValues: Record<string | number, TemplateValueEntry<any>>;
+  hiddenControlsResolveCache: Record<number, TemplateResolveCacheEntry<any>>;
+  actionInMenuTemplateValues: Record<string | number, TemplateValueEntry>;
+  actionInMenuResolveCache: Record<number, TemplateResolveCacheEntry>;
+  alwaysCollapsedTemplateValue: Record<string, TemplateValueEntry>;
+  alwaysCollapsedResolveCache: Record<string, TemplateResolveCacheEntry<string | boolean>>;
+  controlLayoutTemplateValue: Record<string, TemplateValueEntry>;
+  controlLayoutResolveCache: Record<string, TemplateResolveCacheEntry>;
+  cardHeightTemplateValue: Record<string, TemplateValueEntry>;
+  cardHeightResolveCache: Record<string, TemplateResolveCacheEntry<string | number>>;
+  lyricsBackgroundFadeTemplateValue: Record<string, TemplateValueEntry>;
+  lyricsBackgroundFadeResolveCache: Record<string, TemplateResolveCacheEntry<string | number>>;
+  lockScreenControlsTemplateValue: Record<string, TemplateValueEntry>;
+  lockScreenControlsResolveCache: Record<string, TemplateResolveCacheEntry<string | boolean>>;
+  contextKeyMap: Record<string, string>;
+  hostConnected(): void;
+  hostDisconnected(): void;
+  subscribeToTemplate(idx: number | string, type: string, templateString: string): void;
+  unsubscribeFromTemplate(idx: number | string, type: string): void;
+  unsubscribeAll(): void;
+  evaluateJsTemplate(templateStr: string): any;
+  ensureResolvedTemplateForIndex(
+    idx: number,
+    typeKey: string,
+    rawValue: any,
+    options?: { allowObject?: boolean; cacheStaticString?: boolean },
+    customCacheObj?: Record<string | number, any> | null,
+    customTemplateValsObj?: Record<string | number, any> | null
+  ): Promise<void>;
+  ensureResolvedMaForIndex(idx: number): Promise<void>;
+  ensureResolvedVolForIndex(idx: number): Promise<void>;
+  ensureResolvedRemoteForIndex(idx: number): Promise<void>;
+  ensureResolvedHiddenControlsForIndex(idx: number): Promise<void>;
+  syncTemplateSubscriptions(type: string, currentContext: string, rawConfigData: any): void;
+  syncEntityTemplateSubscriptions(
+    typeKey: string,
+    currentContext: string,
+    customEntityObjs?: any[]
+  ): void;
+  resolveEntity(
+    entityTemplate?: string | null,
+    fallbackEntityId?: string | null,
+    idx?: number,
+    cacheType?: string
+  ): string | null;
+  resolveTemplateAtActionTime(templateString: string, fallbackEntityId?: string): Promise<string>;
+}
+
 declare global {
   const __VERSION__: string;
   interface Window {
