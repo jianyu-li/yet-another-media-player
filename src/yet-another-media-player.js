@@ -43,6 +43,7 @@ import {
   renderGroupingMenuOption,
   renderOptionsOverlay,
 } from "./sheets/options-sheet.js";
+import { TemplateController } from "./controllers/template-controller.js";
 
 
 import {
@@ -50,7 +51,6 @@ import {
   resolveStringTemplate,
   resolveStringTemplateSync,
   resolveSelectedArtwork,
-  evaluateJsTemplate,
   getActionPlacement,
   findAssociatedButtonEntities,
   getMusicAssistantState,
@@ -947,28 +947,37 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     // Track previous states to detect transitions
     this._lastMainState = null;
     this._lastMaState = null;
-    // Cache resolved MA entity per index to use during render without switching chips
-    this._maResolveCache = {}; // { [idx:number]: { id: string, ts: number } }
+    // Initialize TemplateController for Jinja WS subscriptions and JS template evaluation
+    /** @type {TemplateController} */
+    this._templateController = new TemplateController(this);
+    this._templateSubscriptions = this._templateController.templateSubscriptions;
+    this._activeSubscriptionTokens = this._templateController.activeSubscriptionTokens;
+    this._maTemplateValues = this._templateController.maTemplateValues;
+    this._volTemplateValues = this._templateController.volTemplateValues;
+    this._remoteTemplateValues = this._templateController.remoteTemplateValues;
+    this._actionInMenuTemplateValues = this._templateController.actionInMenuTemplateValues;
+    this._actionInMenuResolveCache = this._templateController.actionInMenuResolveCache;
+    this._alwaysCollapsedTemplateValue = this._templateController.alwaysCollapsedTemplateValue;
+    this._alwaysCollapsedResolveCache = this._templateController.alwaysCollapsedResolveCache;
+    this._hiddenControlsTemplateValues = this._templateController.hiddenControlsTemplateValues;
+    this._hiddenControlsResolveCache = this._templateController.hiddenControlsResolveCache;
+    this._controlLayoutTemplateValue = this._templateController.controlLayoutTemplateValue;
+    this._controlLayoutResolveCache = this._templateController.controlLayoutResolveCache;
+    this._cardHeightTemplateValue = this._templateController.cardHeightTemplateValue;
+    this._cardHeightResolveCache = this._templateController.cardHeightResolveCache;
+    this._lyricsBackgroundFadeTemplateValue = this._templateController.lyricsBackgroundFadeTemplateValue;
+    this._lyricsBackgroundFadeResolveCache = this._templateController.lyricsBackgroundFadeResolveCache;
+    this._lockScreenControlsTemplateValue = this._templateController.lockScreenControlsTemplateValue;
+    this._lockScreenControlsResolveCache = this._templateController.lockScreenControlsResolveCache;
+    this._maResolveCache = this._templateController.maResolveCache;
+    this._volResolveCache = this._templateController.volResolveCache;
+    this._remoteResolveCache = this._templateController.remoteResolveCache;
+    this._compiledJsTemplates = this._templateController.compiledJsTemplates;
     this._maResolveTtlMs = 7000; // refresh every ~7s
     // Manual select timeout for hold-to-pin functionality
     this._manualSelectTimeout = null;
-    // Track active websocket template subscriptions
-    this._templateSubscriptions = {}; // { [idx_type]: unsubscribeFunction }
-    this._activeSubscriptionTokens = {}; // { [idx_type]: Symbol }
-    this._maTemplateValues = {}; // { [idx]: { template: string, resolved: string } }
-    this._volTemplateValues = {}; // { [idx]: { template: string, resolved: string } }
-    this._actionInMenuTemplateValues = {}; // { [idx]: { template: string, resolved: string } }
-    this._actionInMenuResolveCache = {}; // { [idx]: { value: string, ts: number } }
-    this._alwaysCollapsedTemplateValue = {}; // { card: { template: string, resolved: string } }
-    this._alwaysCollapsedResolveCache = {}; // { card: { value: string, ts: number } }
-    this._hiddenControlsTemplateValues = {}; // { [idx]: { template: string, resolved: string } }
-    this._hiddenControlsResolveCache = {}; // { [idx]: { value: string, ts: number } }
     this._lastActionEntityId = null;
-    // Cache resolved Volume entity per index (template or static)
-    this._volResolveCache = {}; // { [idx:number]: { id: string, ts: number } }
     this._volResolveTtlMs = 7000; // Used for static caching now
-    this._remoteResolveCache = {}; // { [idx:number]: { id: string, ts: number } }
-    this._remoteTemplateValues = {}; // { [idx]: { template: string, resolved: string } }
     // Track the last entity that was playing for better pause/resume behavior
     this._lastPlayingEntityId = null;
     // Control focus lock to prefer most-recently controlled entity in brief paused window
@@ -990,379 +999,54 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._queueOpsTotal = 0;
     this._queueOpsCompleted = 0;
     this._queueOpsTimeout = null;
-    /** @type {Record<string, any>} */
-    this._compiledJsTemplates = {};
   }
 
-  // Subscribe to a template and update properties reactively
+  // Template Controller Delegations
   _subscribeToTemplate(idx, type, templateString) {
-    if (!this.hass || !this.hass.connection) return;
-
-    const subKey = `${idx}_${type}`;
-
-    let currentCache;
-    let templateVals;
-    let cache;
-    if (type === 'ma') {
-      currentCache = this._maTemplateValues[idx];
-      templateVals = this._maTemplateValues;
-      cache = this._maResolveCache;
-    } else if (type === 'vol') {
-      currentCache = this._volTemplateValues[idx];
-      templateVals = this._volTemplateValues;
-      cache = this._volResolveCache;
-    } else if (type === 'remote') {
-      currentCache = this._remoteTemplateValues[idx];
-      templateVals = this._remoteTemplateValues;
-      cache = this._remoteResolveCache;
-    } else if (type === 'action_in_menu') {
-      currentCache = this._actionInMenuTemplateValues[idx];
-      templateVals = this._actionInMenuTemplateValues;
-      cache = this._actionInMenuResolveCache;
-    } else if (type === 'always_collapsed') {
-      currentCache = this._alwaysCollapsedTemplateValue[idx];
-      templateVals = this._alwaysCollapsedTemplateValue;
-      cache = this._alwaysCollapsedResolveCache;
-    } else if (type === 'hidden_controls') {
-      currentCache = this._hiddenControlsTemplateValues[idx];
-      templateVals = this._hiddenControlsTemplateValues;
-      cache = this._hiddenControlsResolveCache;
-    } else if (type === 'control_layout') {
-      currentCache = this._controlLayoutTemplateValue[idx];
-      templateVals = this._controlLayoutTemplateValue;
-      cache = this._controlLayoutResolveCache;
-    } else if (type === 'card_height') {
-      currentCache = this._cardHeightTemplateValue[idx];
-      templateVals = this._cardHeightTemplateValue;
-      cache = this._cardHeightResolveCache;
-    } else if (type === 'lyrics_background_fade') {
-      currentCache = this._lyricsBackgroundFadeTemplateValue[idx];
-      templateVals = this._lyricsBackgroundFadeTemplateValue;
-      cache = this._lyricsBackgroundFadeResolveCache;
-    } else if (type === 'lock_screen_controls') {
-      currentCache = this._lockScreenControlsTemplateValue[idx];
-      templateVals = this._lockScreenControlsTemplateValue;
-      cache = this._lockScreenControlsResolveCache;
-    }
-
-    // Check if there's already an active subscription for this exact template
-    if (this._templateSubscriptions[subKey] && currentCache?.template === templateString) {
-      return;
-    }
-
-    // Unsubscribe from old template if it changed
-    this._unsubscribeFromTemplate(idx, type);
-
-    // Save current template to state
-    templateVals[idx] = { template: templateString, resolved: null };
-
-    // Generate a unique token for this subscription request to prevent race conditions
-    const subToken = Symbol('subToken');
-    this._activeSubscriptionTokens[subKey] = subToken;
-    this._templateSubscriptions[subKey] = subToken;
-
-    // Subscribe to template rendering
-    try {
-      const context = this._getTemplateContext();
-      const setStatements = Object.entries(context)
-        .map(([key, value]) => `{% set ${key} = ${JSON.stringify(value)} %}`)
-        .join(' ');
-      const finalTemplate = `${setStatements} ${templateString}`;
-
-      this.hass.connection.subscribeMessage((msg) => {
-        // If we have unsubscribed or started a new subscription since, ignore message
-        if (this._activeSubscriptionTokens[subKey] !== subToken) {
-          return;
-        }
-
-        const resolved = (msg.result || '').toString().trim();
-        let isValid = false;
-
-        if (type === 'ma' || type === 'vol' || type === 'remote') {
-          isValid = resolved && /^([a-z0-9_]+)\.[a-zA-Z0-9_]+$/.test(resolved);
-        } else if (type === 'action_in_menu' || type === 'always_collapsed' || type === 'control_layout' || type === 'card_height' || type === 'lyrics_background_fade' || type === 'lock_screen_controls' || type === 'hidden_controls') {
-          isValid = true; // Any string result is valid
-        }
-
-        let shouldUpdate = false;
-
-        if (templateVals[idx]) {
-          templateVals[idx].resolved = isValid ? resolved : null;
-        }
-
-        if (type === 'ma' || type === 'vol' || type === 'remote') {
-          const currentCached = cache[idx]?.id;
-          if (isValid && currentCached !== resolved) {
-            cache[idx] = { id: resolved, ts: Date.now() };
-            shouldUpdate = true;
-          }
-        } else if (type === 'action_in_menu' || type === 'always_collapsed' || type === 'control_layout' || type === 'card_height' || type === 'lyrics_background_fade' || type === 'lock_screen_controls' || type === 'hidden_controls') {
-          const currentCached = cache[idx]?.value;
-          if (isValid && currentCached !== resolved) {
-            cache[idx] = { value: resolved, ts: Date.now() };
-            shouldUpdate = true;
-          }
-        }
-
-        if (shouldUpdate) {
-          this.requestUpdate();
-        }
-      }, {
-        type: 'render_template',
-        template: finalTemplate
-      }).then((unsub) => {
-        // If it was cancelled while subscribing, call unsub immediately to avoid resource leak
-        if (this._activeSubscriptionTokens[subKey] !== subToken) {
-          try {
-            unsub();
-          } catch (e) { /* ignore */ }
-        } else {
-          this._templateSubscriptions[subKey] = unsub;
-        }
-      });
-    } catch (err) {
-      console.warn('yamp: failed to subscribe to template:', err);
-    }
+    return this._templateController.subscribeToTemplate(idx, type, templateString);
   }
 
   _unsubscribeFromTemplate(idx, type) {
-    const subKey = `${idx}_${type}`;
-    const unsub = this._templateSubscriptions[subKey];
-    if (unsub) {
-      if (typeof unsub === 'function') {
-        try {
-          unsub();
-        } catch (e) { /* ignore */ }
-      }
-      delete this._templateSubscriptions[subKey];
-      delete this._activeSubscriptionTokens[subKey];
-    }
+    return this._templateController.unsubscribeFromTemplate(idx, type);
   }
 
-  async _ensureResolvedTemplateForIndex(idx, typeKey, rawValue, cacheObj, templateValsObj, options = {}) {
-    const { allowObject = false, cacheStaticString = false } = options;
-
-    if (!rawValue || (typeof rawValue !== 'string' && !(allowObject && typeof rawValue === 'object'))) {
-      delete cacheObj[idx];
-      this._unsubscribeFromTemplate(idx, typeKey);
-      if (templateValsObj[idx]) delete templateValsObj[idx];
-      return;
-    }
-
-    if (typeof rawValue === 'string') {
-      const isJsTemplate = rawValue.trim().startsWith('[[[');
-      if (isJsTemplate) {
-        this._unsubscribeFromTemplate(idx, typeKey);
-        if (templateValsObj[idx]) delete templateValsObj[idx];
-
-        const resolvedValue = this._evaluateJsTemplate(rawValue);
-
-        const currentCached = allowObject ? cacheObj[idx]?.value : cacheObj[idx]?.id;
-
-        let changed;
-        if (typeof resolvedValue === 'object' && resolvedValue !== null) {
-          changed = JSON.stringify(currentCached) !== JSON.stringify(resolvedValue);
-        } else if (Number.isNaN(resolvedValue) && Number.isNaN(currentCached)) {
-          changed = false;
-        } else {
-          changed = currentCached !== resolvedValue;
-        }
-
-        if (changed) {
-          if (allowObject) {
-            cacheObj[idx] = { value: resolvedValue, ts: Date.now() };
-          } else {
-            cacheObj[idx] = { id: resolvedValue, ts: Date.now() };
-          }
-          this.requestUpdate();
-        }
-        return;
-      }
-
-      const looksTemplate = rawValue.includes('{{') || rawValue.includes('{%');
-      if (!looksTemplate) {
-        this._unsubscribeFromTemplate(idx, typeKey);
-        if (templateValsObj[idx]) delete templateValsObj[idx];
-
-        if (cacheStaticString) {
-          cacheObj[idx] = { id: rawValue, ts: Date.now() };
-        } else {
-          delete cacheObj[idx];
-        }
-        return;
-      }
-
-      // Setup subscription for reactivity
-      this._subscribeToTemplate(idx, typeKey, rawValue);
-    } else if (allowObject && typeof rawValue === 'object') {
-      // It's a raw array/object, not a string template. Clear template caches.
-      delete cacheObj[idx];
-      this._unsubscribeFromTemplate(idx, typeKey);
-      if (templateValsObj[idx]) delete templateValsObj[idx];
-    }
-  }
-
-  // Resolve and cache the MA entity for a given chip index (template or static)
-  async _ensureResolvedMaForIndex(idx) {
-    const obj = this.entityObjs?.[idx];
-    if (!obj) return;
-    return this._ensureResolvedTemplateForIndex(idx, 'ma', obj.music_assistant_entity, this._maResolveCache, this._maTemplateValues, { cacheStaticString: true });
-  }
-
-  // Resolve and cache the Volume entity for a given chip index (template or static)
-  async _ensureResolvedVolForIndex(idx) {
-    const obj = this.entityObjs?.[idx];
-    if (!obj) return;
-
-    // If follow_active_volume is enabled, we don't need to cache a specific volume entity
-    // as it will be determined dynamically based on the active entity
-    if (obj.follow_active_volume) {
-      delete this._volResolveCache[idx];
-      this._unsubscribeFromTemplate(idx, 'vol');
-      if (this._volTemplateValues[idx]) delete this._volTemplateValues[idx];
-      return;
-    }
-
-    return this._ensureResolvedTemplateForIndex(idx, 'vol', obj.volume_entity, this._volResolveCache, this._volTemplateValues, { cacheStaticString: true });
-  }
-
-  async _ensureResolvedRemoteForIndex(idx) {
-    const obj = this.entityObjs?.[idx];
-    if (!obj) return;
-    return this._ensureResolvedTemplateForIndex(idx, 'remote', obj.remote_entity, this._remoteResolveCache, this._remoteTemplateValues, { cacheStaticString: true });
-  }
-
-  // Resolve and cache the hidden_controls array for a given chip index
-  async _ensureResolvedHiddenControlsForIndex(idx) {
-    const obj = this.entityObjs?.[idx];
-    if (!obj) return;
-    return this._ensureResolvedTemplateForIndex(idx, 'hidden_controls', obj.hidden_controls, this._hiddenControlsResolveCache, this._hiddenControlsTemplateValues, { allowObject: true });
-  }
-
-  _evaluateJsTemplate(templateStr) {
-    if (!this._compiledJsTemplates) this._compiledJsTemplates = {};
-    return evaluateJsTemplate(
-      templateStr,
-      this.hass,
-      this._getTemplateContext(),
-      this._compiledJsTemplates
+  _ensureResolvedTemplateForIndex(idx, typeKey, rawValue, cacheObj, templateValsObj, options = {}) {
+    return this._templateController.ensureResolvedTemplateForIndex(
+      idx,
+      typeKey,
+      rawValue,
+      options,
+      cacheObj,
+      templateValsObj
     );
   }
 
-  // Unified helper for resolving and subscribing to UI templates
+  _ensureResolvedMaForIndex(idx) {
+    return this._templateController.ensureResolvedMaForIndex(idx);
+  }
+
+  _ensureResolvedVolForIndex(idx) {
+    return this._templateController.ensureResolvedVolForIndex(idx);
+  }
+
+  _ensureResolvedRemoteForIndex(idx) {
+    return this._templateController.ensureResolvedRemoteForIndex(idx);
+  }
+
+  _ensureResolvedHiddenControlsForIndex(idx) {
+    return this._templateController.ensureResolvedHiddenControlsForIndex(idx);
+  }
+
+  _evaluateJsTemplate(templateStr) {
+    return this._templateController.evaluateJsTemplate(templateStr);
+  }
+
   _syncTemplateSubscriptions(type, currentContext, rawConfigData) {
-    if (!this.hass) return;
-
-    let templateVals, cache, contextKeyName;
-    if (type === 'always_collapsed') {
-      templateVals = this._alwaysCollapsedTemplateValue;
-      cache = this._alwaysCollapsedResolveCache;
-      contextKeyName = '_lastAlwaysCollapsedContextKey';
-    } else if (type === 'action_in_menu') {
-      templateVals = this._actionInMenuTemplateValues;
-      cache = this._actionInMenuResolveCache;
-      contextKeyName = '_lastActionTemplateContextKey';
-    } else if (type === 'control_layout') {
-      templateVals = this._controlLayoutTemplateValue;
-      cache = this._controlLayoutResolveCache;
-      contextKeyName = '_lastControlLayoutContextKey';
-    } else if (type === 'card_height') {
-      templateVals = this._cardHeightTemplateValue;
-      cache = this._cardHeightResolveCache;
-      contextKeyName = '_lastCardHeightContextKey';
-    } else if (type === 'lyrics_background_fade') {
-      templateVals = this._lyricsBackgroundFadeTemplateValue;
-      cache = this._lyricsBackgroundFadeResolveCache;
-      contextKeyName = '_lastLyricsBackgroundFadeContextKey';
-    } else if (type === 'lock_screen_controls') {
-      templateVals = this._lockScreenControlsTemplateValue;
-      cache = this._lockScreenControlsResolveCache;
-      contextKeyName = '_lastLockScreenControlsContextKey';
-    } else {
-      return;
-    }
-
-    const isContextChanged = this[contextKeyName] !== currentContext;
-    if (isContextChanged) {
-      this[contextKeyName] = currentContext;
-    }
-
-    const processItem = (idx, raw) => {
-      const hasJsTemplate = typeof raw === 'string' && raw.trim().startsWith('[[[');
-      if (hasJsTemplate) {
-        this._unsubscribeFromTemplate(idx, type);
-        const resolvedValue = this._evaluateJsTemplate(raw);
-
-        const currentValue = cache[idx]?.value;
-        let isChanged;
-        if (typeof resolvedValue === 'object' && resolvedValue !== null) {
-          isChanged = JSON.stringify(currentValue) !== JSON.stringify(resolvedValue);
-        } else if (Number.isNaN(resolvedValue) && Number.isNaN(currentValue)) {
-          isChanged = false;
-        } else {
-          isChanged = currentValue !== resolvedValue;
-        }
-
-        if (isChanged) {
-          cache[idx] = { value: resolvedValue, ts: Date.now() };
-          this.requestUpdate();
-        }
-      } else if (typeof raw === 'string' && (raw.includes('{{') || raw.includes('{%'))) {
-        if (isContextChanged) {
-          this._unsubscribeFromTemplate(idx, type);
-          if (templateVals[idx]) delete templateVals[idx];
-          if (cache[idx]) delete cache[idx];
-        }
-        this._subscribeToTemplate(idx, type, raw);
-      } else {
-        this._unsubscribeFromTemplate(idx, type);
-        if (templateVals[idx]) delete templateVals[idx];
-        delete cache[idx];
-      }
-    };
-
-    if (type === 'always_collapsed' || type === 'control_layout' || type === 'card_height' || type === 'lyrics_background_fade' || type === 'lock_screen_controls') {
-      processItem('card', rawConfigData);
-    } else if (type === 'action_in_menu') {
-      const actions = rawConfigData || [];
-      actions.forEach((act, idx) => processItem(idx, getActionPlacement(act, idx)));
-
-      // Clean up any stale subscriptions for indices beyond the current actions length
-      let checkIdx = actions.length;
-      while (this._templateSubscriptions[`${checkIdx}_${type}`] || templateVals[checkIdx] || cache[checkIdx]) {
-        this._unsubscribeFromTemplate(checkIdx, type);
-        delete templateVals[checkIdx];
-        delete cache[checkIdx];
-        checkIdx++;
-      }
-    }
+    return this._templateController.syncTemplateSubscriptions(type, currentContext, rawConfigData);
   }
 
   _syncEntityTemplateSubscriptions(typeKey, currentContext) {
-    if (!this.hass || !this.entityObjs) return;
-
-    const contextKeyName = `_lastEntity_${typeKey}ContextKey`;
-    const isContextChanged = this[contextKeyName] !== currentContext;
-    if (!isContextChanged) return;
-
-    this[contextKeyName] = currentContext;
-
-    this.entityObjs.forEach((_, idx) => {
-      // Force cache clearing for Jinja templates so they re-subscribe with new context
-      if (this._templateSubscriptions[`${idx}_${typeKey}`]) {
-        this._unsubscribeFromTemplate(idx, typeKey);
-      }
-
-      if (typeKey === 'ma') {
-        this._ensureResolvedMaForIndex(idx);
-      } else if (typeKey === 'vol') {
-        this._ensureResolvedVolForIndex(idx);
-      } else if (typeKey === 'remote') {
-        this._ensureResolvedRemoteForIndex(idx);
-      } else if (typeKey === 'hidden_controls') {
-        this._ensureResolvedHiddenControlsForIndex(idx);
-      }
-    });
+    return this._templateController.syncEntityTemplateSubscriptions(typeKey, currentContext);
   }
 
   // Get the resolved playback entity id for a chip index, preferring cache
@@ -6010,17 +5694,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
   // Helper to resolve template entities
   _resolveEntity(entityTemplate, fallbackEntityId, idx, cacheType = 'ma') {
-    if (!entityTemplate) return null;
-
-    if (typeof entityTemplate === 'string' &&
-      (entityTemplate.includes('{{') || entityTemplate.includes('{%') || entityTemplate.trim().startsWith('[[['))) {
-      // For templates, use cached resolved entity
-      const cache = cacheType === 'vol' ? this._volResolveCache : cacheType === 'remote' ? this._remoteResolveCache : this._maResolveCache;
-      const cached = cache?.[idx]?.id;
-      return cached || fallbackEntityId;
-    }
-
-    return entityTemplate;
+    return this._templateController.resolveEntity(entityTemplate, fallbackEntityId, idx, cacheType);
   }
 
   // Helper to determine if main and paired MA entities are playing the same media
@@ -10790,16 +10464,8 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     window.removeEventListener("resize", this._handleViewportResize);
     if (typeof this._teardownAdaptiveTextObserver === 'function') this._teardownAdaptiveTextObserver();
 
-    // Cleanup all websocket subscriptions
-    Object.values(this._templateSubscriptions).forEach(unsub => {
-      try {
-        if (typeof unsub === 'function') unsub();
-      } catch (e) {
-        console.warn('yamp: Error during template unsubscription:', e);
-      }
-    });
-    this._templateSubscriptions = {};
-    this._activeSubscriptionTokens = {};
+    // Cleanup all websocket subscriptions via TemplateController
+    this._templateController.unsubscribeAll();
 
     if (this._adaptiveScrollTimer) {
       clearTimeout(this._adaptiveScrollTimer);
