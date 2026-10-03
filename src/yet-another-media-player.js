@@ -778,6 +778,8 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._playbackLingerByIdx = {};
     // Track the last resolved entity for each chip to provide "sticky" selection and prevent flickers
     this._lastResolvedEntityIdByChip = {};
+    // Track manual active entity overrides selected via More Info sheet
+    this._manualActiveEntityByChip = {};
     // Show search-in-sheet flag for entity options sheet
     this._showSearchInSheet = false;
     this._searchHeadersRetracted = false;
@@ -984,6 +986,8 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._controlFocusEntityId = null;
     // Track the last active entity per chip index for intra-chip persistence
     this._lastActiveEntityIdByChip = {};
+    // Track manual active entity overrides selected via More Info sheet
+    this._manualActiveEntityByChip = {};
     // Cache for detecting entity state transitions (playing -> stopped)
     this._playerStateCache = {};
     this._volumeOverlayActive = false;
@@ -5733,6 +5737,16 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       return id;
     };
 
+    // Check for manual override from More Info sheet first
+    const manualId = this._manualActiveEntityByChip?.[idx];
+    if (manualId) {
+      const manualState = this.hass?.states?.[manualId];
+      if (manualState && manualState.state !== "unavailable") {
+        return resolve(manualId);
+      }
+      delete this._manualActiveEntityByChip[idx];
+    }
+
     // Check for linger first - if we recently paused MA, stay on MA unless main entity is playing
     const linger = this._playbackLingerByIdx?.[idx];
     const now = Date.now();
@@ -5859,6 +5873,17 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _getActivePlaybackEntityIdInternal(idx, mainId, maId, mainState, maState) {
+    // Check for manual override from More Info sheet first
+    const manualId = this._manualActiveEntityByChip?.[idx];
+    if (manualId) {
+      const manualState = this.hass?.states?.[manualId];
+      if (manualState && manualState.state !== "unavailable") {
+        this._lastActiveEntityIdByChip[idx] = manualId;
+        return manualId;
+      }
+      delete this._manualActiveEntityByChip[idx];
+    }
+
     if (maId === mainId) return mainId;
 
     const now = Date.now();
@@ -6170,7 +6195,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   get currentActivePlaybackEntityId() {
     // Cache the result to prevent continuous re-calling during renders
     // Only recalculate if the cache is invalid or if key state has changed
-    const cacheKey = `${this._selectedIndex}-${this.hass?.states?.[this.currentEntityId]?.state}-${this.hass?.states?.[this._getSearchEntityId(this._selectedIndex)]?.state}`;
+    const cacheKey = `${this._selectedIndex}-${this.hass?.states?.[this.currentEntityId]?.state}-${this.hass?.states?.[this._getSearchEntityId(this._selectedIndex)]?.state}-${this._manualActiveEntityByChip?.[this._selectedIndex] || ""}`;
 
     if (this._cachedActivePlaybackEntityId === undefined || this._cachedActivePlaybackEntityKey !== cacheKey) {
       this._cachedActivePlaybackEntityId = this._getActivePlaybackEntityId(this._selectedIndex);
@@ -6834,7 +6859,12 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         const prevMainState = this._playerStateCache[mainId];
         if (mainState === "playing") {
           this._playTimestamps[mainId] = now;
-          this._lastActiveEntityIdByChip[idx] = mainId;
+          if (prevMainState !== "playing" && this._manualActiveEntityByChip?.[idx] && this._manualActiveEntityByChip[idx] !== mainId) {
+            delete this._manualActiveEntityByChip[idx];
+          }
+          if (!this._manualActiveEntityByChip?.[idx]) {
+            this._lastActiveEntityIdByChip[idx] = mainId;
+          }
         } else if (prevMainState === "playing" && mainState !== "playing") {
           this._playTimestamps[mainId] = now;
         }
@@ -6846,7 +6876,12 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           const prevMaState = this._playerStateCache[maId];
           if (maState === "playing") {
             this._playTimestamps[maId] = now;
-            this._lastActiveEntityIdByChip[idx] = maId;
+            if (prevMaState !== "playing" && this._manualActiveEntityByChip?.[idx] && this._manualActiveEntityByChip[idx] !== maId) {
+              delete this._manualActiveEntityByChip[idx];
+            }
+            if (!this._manualActiveEntityByChip?.[idx]) {
+              this._lastActiveEntityIdByChip[idx] = maId;
+            }
           } else if (prevMaState === "playing" && maState !== "playing") {
             this._playTimestamps[maId] = now;
           }
@@ -11013,6 +11048,33 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       bubbles: true,
       composed: true,
     }));
+  }
+
+  // Set the active entity override on demand for the current chip
+  _setActiveEntityForCurrentChip(entityId) {
+    const idx = this._selectedIndex;
+    if (idx === undefined || idx < 0) return;
+
+    if (!this._manualActiveEntityByChip) {
+      this._manualActiveEntityByChip = {};
+    }
+    this._manualActiveEntityByChip[idx] = entityId;
+    this._lastActiveEntityIdByChip[idx] = entityId;
+    this._lastResolvedEntityIdByChip[idx] = entityId;
+
+    // Reset playback linger for this chip
+    if (this._playbackLingerByIdx?.[idx]) {
+      delete this._playbackLingerByIdx[idx];
+    }
+
+    // Invalidate cached active playback entity
+    this._cachedActivePlaybackEntityId = undefined;
+    this._cachedActivePlaybackEntityKey = undefined;
+
+    // Sync any sync_selected_entity actions with new active entity
+    this._updateSelectedEntityHelper();
+
+    this.requestUpdate();
   }
 
   // Read helper and select matching entity chip via select_entity actions

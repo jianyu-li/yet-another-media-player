@@ -484,6 +484,9 @@ export default {
       select_entity: "Choisir pour plus d'infos",
       transfer_to: "Transférer vers",
       no_players: "Aucun lecteur MA disponible.",
+      active: "(Actif)",
+      set_active_entity: "Définir comme entité active",
+      active_entity: "Entité active",
     },
     remote: {
       title: "Télécommande",

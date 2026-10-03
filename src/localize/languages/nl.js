@@ -501,6 +501,9 @@ export default {
       select_entity: "Selecteer Entiteit voor Meer Info",
       transfer_to: "Wachtrij Overdragen Naar",
       no_players: "Geen andere Music Assistant spelers beschikbaar.",
+      active: "(Actief)",
+      set_active_entity: "Instellen als actieve entiteit",
+      active_entity: "Actieve entiteit",
     },
     remote: {
       title: "Afstandsbediening",

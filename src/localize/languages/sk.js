@@ -493,6 +493,9 @@ export default {
       select_entity: "Vyberte entitu pre viac info",
       transfer_to: "Presunúť frontu do",
       no_players: "Žiadne iné prehrávače Music Assistant nie sú k dispozícii.",
+      active: "(Aktívne)",
+      set_active_entity: "Nastaviť ako aktívnu entitu",
+      active_entity: "Aktívna entita",
     },
     remote: {
       title: "Diaľkové ovládanie",

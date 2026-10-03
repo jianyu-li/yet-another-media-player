@@ -477,6 +477,9 @@ export default {
       select_entity: "Seleziona",
       transfer_to: "Trasferisci a",
       no_players: "Senza lettori MA.",
+      active: "(Attivo)",
+      set_active_entity: "Imposta come entità attiva",
+      active_entity: "Entità attiva",
     },
     remote: {
       title: "Telecomando",

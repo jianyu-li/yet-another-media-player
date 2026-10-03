@@ -492,6 +492,9 @@ export default {
       select_entity: "Entität für mehr Info wählen",
       transfer_to: "Warteschlange übertragen zu",
       no_players: "Keine anderen Music Assistant Player verfügbar.",
+      active: "(Aktiv)",
+      set_active_entity: "Als aktive Entität festlegen",
+      active_entity: "Aktive Entität",
     },
     remote: {
       title: "Fernbedienung",

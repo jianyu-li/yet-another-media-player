@@ -474,6 +474,9 @@ export default {
       select_entity: "Izberi entiteto za več informacij",
       transfer_to: "Prenesi čakalno vrsto na",
       no_players: "Ni drugih razpoložljivih predvajalnikov Music Assistant.",
+      active: "(Aktivno)",
+      set_active_entity: "Nastavi kot aktivno entiteto",
+      active_entity: "Aktivna entiteta",
     },
     remote: {
       title: "Daljinski upravljalnik",
