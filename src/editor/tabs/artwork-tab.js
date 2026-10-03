@@ -4,7 +4,7 @@ import { getEntityName } from "../../yamp-utils.js";
 
 /**
  * Render the Artwork tab in the YAMP card editor.
- * @this {import("../../yamp-editor.js").YetAnotherMediaPlayerEditor}
+ * @this {import("../../types.d.ts").YetAnotherMediaPlayerEditor}
  */
 export function renderArtworkTab() {
   const overrides = [...(this._artworkOverrides ?? [])];

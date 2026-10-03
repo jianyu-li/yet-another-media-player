@@ -3,7 +3,7 @@ import { localize } from "../../localize/localize.js";
 
 /**
  * Render the Behavior tab in the YAMP card editor.
- * @this {import("../../yamp-editor.js").YetAnotherMediaPlayerEditor}
+ * @this {import("../../types.d.ts").YetAnotherMediaPlayerEditor}
  */
 export function renderBehaviorTab() {
   return html`

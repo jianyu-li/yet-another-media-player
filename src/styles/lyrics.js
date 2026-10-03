@@ -233,4 +233,26 @@ export const lyricsStyles = css`
     margin-bottom: 12px;
     opacity: 0.6;
   }
+
+  .queue-ops-progress {
+    background: var(--yamp-chip-bg, rgba(255, 255, 255, 0.15));
+    color: var(--search-text-secondary, #666);
+    border-radius: 10px;
+    padding: 3px 8px;
+    font-size: 10.5px;
+    font-weight: 500;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    animation: queueOpsFadeIn 0.2s ease-out forwards;
+  }
+  @keyframes queueOpsFadeIn {
+    from {
+      opacity: 0;
+    }
+    to {
+      opacity: 0.95;
+    }
+  }
 `;

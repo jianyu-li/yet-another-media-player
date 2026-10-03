@@ -3,7 +3,7 @@ import { localize } from "../localize/localize.js";
 
 /**
  * Render the source list selection sheet with alphabet index scrubber.
- * @this {import("../yet-another-media-player.js").YetAnotherMediaPlayerCard}
+ * @this {import("../types.d.ts").YetAnotherMediaPlayerCard}
  * @param {string[]} sourceList
  * @param {string[]} sourceLetters
  * @param {Set<string>} availableSourceFirstLetters

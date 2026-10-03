@@ -16,7 +16,7 @@ import {
 /**
  * @typedef {import("../types.d.ts").HassEntity} HassEntity
  * @typedef {import("../types.d.ts").TemplateContext} TemplateContext
- * @typedef {import("../yet-another-media-player.js").YetAnotherMediaPlayerCard} YetAnotherMediaPlayerCard
+ * @typedef {import("../types.d.ts").YetAnotherMediaPlayerCard} YetAnotherMediaPlayerCard
  */
 
 export class TemplateController {
