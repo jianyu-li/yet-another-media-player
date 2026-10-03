@@ -222,6 +222,11 @@ describe("yamp-utils & progress-bar helpers", () => {
       assert.equal(isPlaceholderMediaTitle("living room apple tv", "Living Room Apple TV"), true);
     });
 
+    it("detects title matching active app name as a placeholder", () => {
+      assert.equal(isPlaceholderMediaTitle("Infuse", "Loft HomePod Right", "Infuse"), true);
+      assert.equal(isPlaceholderMediaTitle("infuse", "Loft HomePod Right", "Infuse"), true);
+    });
+
     it("returns false for genuine track titles", () => {
       assert.equal(isPlaceholderMediaTitle("Bohemian Rhapsody", "Living Room Apple TV"), false);
       assert.equal(isPlaceholderMediaTitle("Hotel California"), false);
@@ -249,6 +254,46 @@ describe("yamp-utils & progress-bar helpers", () => {
       const main2 = mockEntity({ attributes: { media_title: "AirPlay" } });
       const ma2 = mockEntity({ attributes: { source: "Default" } });
       assert.equal(areEntitiesPlayingSameMedia(main2, ma2), true);
+    });
+
+    it("returns true when paired entity has tvairplayd in app_id (Apple TV audio routing)", () => {
+      const main = mockEntity({ attributes: { media_title: "Movie" } });
+      const ma = mockEntity({
+        attributes: { media_title: "Track", app_id: "com.apple.tvairplayd" },
+      });
+      assert.equal(areEntitiesPlayingSameMedia(main, ma), true);
+    });
+
+    it("returns true when main entity app_name matches paired entity title or source (e.g. Infuse, Disney+)", () => {
+      const main = mockEntity({
+        attributes: {
+          media_title: "Jurassic World Rebirth",
+          app_name: "Infuse",
+          app_id: "com.firecore.infuse",
+        },
+      });
+      const ma = mockEntity({
+        attributes: {
+          media_title: "Infuse",
+          source: "Infuse",
+          app_id: "com.apple.tvairplayd",
+        },
+      });
+      assert.equal(areEntitiesPlayingSameMedia(main, ma), true);
+
+      const mainDisney = mockEntity({
+        attributes: { app_name: "Disney+", media_title: "Iron Man" },
+      });
+      const maDisney = mockEntity({ attributes: { source: "Disney+", media_title: "Episode" } });
+      assert.equal(areEntitiesPlayingSameMedia(mainDisney, maDisney), true);
+    });
+
+    it("returns true when main entity app_id suffix matches paired entity media_title or source", () => {
+      const main = mockEntity({
+        attributes: { app_id: "com.firecore.infuse", media_title: "Movie" },
+      });
+      const ma = mockEntity({ attributes: { media_title: "Infuse" } });
+      assert.equal(areEntitiesPlayingSameMedia(main, ma), true);
     });
 
     it("returns true when one entity's title/source cross-references the other's friendly_name", () => {
