@@ -5,7 +5,7 @@ import { isValidArtworkUrl } from "../yamp-utils.js";
 
 /**
  * Render the main options menu (More info, search, source, transfer queue, group players, remote, lyrics, custom actions).
- * @this {import("../yet-another-media-player.js").YetAnotherMediaPlayerCard}
+ * @this {import("../types.d.ts").YetAnotherMediaPlayerCard}
  * @param {string[]} sourceList
  * @param {Array<{action: any, idx: number}>} menuOnlyActions
  * @param {boolean} showChipsInMenu
@@ -117,7 +117,7 @@ export function renderMainMenu(sourceList, menuOnlyActions, showChipsInMenu) {
 
 /**
  * Render the Group Players menu button in the main options menu if multi-player grouping is supported.
- * @this {import("../yet-another-media-player.js").YetAnotherMediaPlayerCard}
+ * @this {import("../types.d.ts").YetAnotherMediaPlayerCard}
  * @param {boolean} [isGridMode=false]
  */
 export function renderGroupingMenuOption(isGridMode = false) {
@@ -158,7 +158,7 @@ export function renderGroupingMenuOption(isGridMode = false) {
 
 /**
  * Render the outer Entity Options overlay container, sub-sheet content switcher, and persistent bottom media controls.
- * @this {import("../yet-another-media-player.js").YetAnotherMediaPlayerCard}
+ * @this {import("../types.d.ts").YetAnotherMediaPlayerCard}
  * @param {object} props
  * @param {boolean} props.showChipsInMenu
  * @param {boolean} props.reserveChipSpaceInMenu

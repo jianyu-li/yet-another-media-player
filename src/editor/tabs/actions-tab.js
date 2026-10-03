@@ -5,7 +5,7 @@ import { getActionPlacement } from "../../yamp-utils.js";
 
 /**
  * Render the Actions tab in the YAMP card editor.
- * @this {import("../../yamp-editor.js").YetAnotherMediaPlayerEditor}
+ * @this {import("../../types.d.ts").YetAnotherMediaPlayerEditor}
  */
 export function renderActionsTab() {
   let actions = [...(this._config.actions ?? [])];
@@ -177,7 +177,7 @@ export function renderActionsTab() {
 
 /**
  * Render the single Action sub-editor.
- * @this {import("../../yamp-editor.js").YetAnotherMediaPlayerEditor}
+ * @this {import("../../types.d.ts").YetAnotherMediaPlayerEditor}
  * @param {any} action
  * @param {number} idx
  * @param {boolean} isSearch

@@ -10,7 +10,7 @@ import {
 
 /**
  * Render the Look & Feel (Visual) tab in the YAMP card editor.
- * @this {import("../../yamp-editor.js").YetAnotherMediaPlayerEditor}
+ * @this {import("../../types.d.ts").YetAnotherMediaPlayerEditor}
  */
 export function renderVisualTab() {
   return html`

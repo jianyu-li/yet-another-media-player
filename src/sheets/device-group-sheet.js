@@ -4,7 +4,7 @@ import { getEntityName } from "../yamp-utils.js";
 
 /**
  * Render the Speaker Grouping / Multi-room sheet.
- * @this {import("../yet-another-media-player.js").YetAnotherMediaPlayerCard}
+ * @this {import("../types.d.ts").YetAnotherMediaPlayerCard}
  */
 export function renderGroupingSheet() {
   const isGridMode = this._isGridMode;
@@ -351,7 +351,7 @@ export function renderGroupingSheet() {
 
 /**
  * Render the Transfer Queue overlay sheet.
- * @this {import("../yet-another-media-player.js").YetAnotherMediaPlayerCard}
+ * @this {import("../types.d.ts").YetAnotherMediaPlayerCard}
  */
 export function renderTransferQueueSheet() {
   const isGridMode = this._isGridMode;
@@ -455,7 +455,7 @@ export function renderTransferQueueSheet() {
 
 /**
  * Render the Resolved Entities overlay sheet (debug / multi-entity viewer).
- * @this {import("../yet-another-media-player.js").YetAnotherMediaPlayerCard}
+ * @this {import("../types.d.ts").YetAnotherMediaPlayerCard}
  */
 export function renderResolvedEntitiesSheet() {
   const isGridMode = this._isGridMode;

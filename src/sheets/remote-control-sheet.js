@@ -3,7 +3,7 @@ import { localize } from "../localize/localize.js";
 
 /**
  * Render the Remote Control sheet with D-Pad and navigation buttons.
- * @this {import("../yet-another-media-player.js").YetAnotherMediaPlayerCard}
+ * @this {import("../types.d.ts").YetAnotherMediaPlayerCard}
  */
 export function renderRemoteControlSheet() {
   const hiddenButtons = this._getHiddenRemoteButtons();

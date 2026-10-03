@@ -5,7 +5,7 @@ import { VOLUME_MODE_SELECTOR, VOLUME_STEP_SELECTOR } from "../constants.js";
 
 /**
  * Render the Entities tab in the YAMP card editor.
- * @this {import("../../yamp-editor.js").YetAnotherMediaPlayerEditor}
+ * @this {import("../../types.d.ts").YetAnotherMediaPlayerEditor}
  */
 export function renderEntitiesTab() {
   if (!this._config) return html``;
@@ -73,7 +73,7 @@ export function renderEntitiesTab() {
 
 /**
  * Render the single Entity sub-editor.
- * @this {import("../../yamp-editor.js").YetAnotherMediaPlayerEditor}
+ * @this {import("../../types.d.ts").YetAnotherMediaPlayerEditor}
  * @param {any} entity
  * @param {number} idx
  * @param {boolean} isSearch
