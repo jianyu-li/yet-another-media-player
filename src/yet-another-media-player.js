@@ -10,7 +10,6 @@ import { renderVolumeRow } from "./volume-row.js";
 import { renderProgressBar } from "./progress-bar.js";
 import { yampCardStyles } from "./yamp-card-styles.js";
 import { QueueDragMixin } from "./yamp-queue-drag.js";
-import { parseLrc } from "./lyrics-parser.js";
 import "./lyrics-view.js";
 import { YampMediaSessionManager } from "./yamp-media-session.js";
 import {
@@ -44,6 +43,7 @@ import {
   renderOptionsOverlay,
 } from "./sheets/options-sheet.js";
 import { TemplateController } from "./controllers/template-controller.js";
+import { LyricsController, cleanTrackMetadata } from "./controllers/lyrics-controller.js";
 
 
 import {
@@ -80,7 +80,6 @@ import {
 
 const PLAYLIST_FETCH_LIMIT = 500;
 const SUCCESS_MESSAGE_TIMEOUT_MS = 3000;
-const MAX_LYRICS_CACHE_SIZE = 30;
 
 const ADAPTIVE_TEXT_TARGETS = Object.freeze(["details", "menu", "action_chips", "lyrics"]);
 const DEFAULT_ADAPTIVE_TEXT_TARGETS = Object.freeze([...ADAPTIVE_TEXT_TARGETS]);
@@ -270,17 +269,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
    * Strips common suffixes like "- Remastered", "(feat. ...)", etc.
    */
   _cleanTrackMetadata(text) {
-    if (!text || typeof text !== 'string') return '';
-    return text
-      .split(" - ")[0] // Often "Track Name - Extra Info"
-      .replace(/\(feat\..*?\)/gi, "")
-      .replace(/\(with.*?\)/gi, "")
-      .replace(/\[.*?\]/g, "")
-      .replace(/\(.*?\)/g, "")
-      .replace(/- \d{4} Remaster.*/gi, "")
-      .replace(/- Remastered.*/gi, "")
-      .replace(/- Single.*/gi, "")
-      .trim();
+    return cleanTrackMetadata(text);
   }
 
   // Get the favorite button entity for the current Music Assistant entity
@@ -842,7 +831,10 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._lastNonLyricsLowerContentHeight = null;
     this._lowerControlsHeight = null;
 
-    // Lyrics state
+    // Lyrics state & controller
+    /** @type {LyricsController} */
+    this._lyricsController = new LyricsController(this);
+    this._lyricsCache = this._lyricsController.cache;
     this._massLyrics = []; // Array of parsed lyric objects { time, text }
     this._lastLyricsTrackId = null; // Track ID of currently loaded lyrics
     this._lastLyricsArtist = null; // Artist of currently loaded lyrics
@@ -6455,302 +6447,26 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
   /**
    * Universal lyrics fetcher that supports both Music Assistant and LRCLIB.
-   * Logic is guided by the 'lyrics_source' configuration.
+   * Delegated to LyricsController.
    */
   async _fetchLyrics() {
-    // Safety guard: ensure lyrics are still active and card is visible/active
-    if (!this._lyricsActive || this._isIdle || this.isAnyMenuOpen) {
-      this._fetchingLyrics = false;
-      this.requestUpdate();
-      return;
-    }
-
-    this._lyricsError = false;
-    let configSource = this.config.lyrics_source || "mass_lrclib";
-
-    const isAdmin = this.hass?.user?.is_admin === true;
-    if (!isAdmin && configSource !== "lrclib") {
-      if (configSource === "mass") {
-        console.warn(`YAMP: ${localize('lyrics.admin_only_mass')}`);
-
-        const event = new CustomEvent("hass-notification", {
-          bubbles: true,
-          composed: true,
-          detail: { message: localize("lyrics.admin_only_mass") },
-        });
-        this.dispatchEvent(event);
-
-        this._fetchingLyrics = false;
-        this._lyricsError = true;
-        this.requestUpdate();
-        return;
-      } else {
-        console.log(`YAMP: ${localize('lyrics.fallback_to_lrclib_non_admin')}`);
-        configSource = "lrclib";
-      }
-    }
-
-    const activeState = this.metadataStateObj || this.currentActivePlaybackStateObj || this.currentPlaybackStateObj || this.currentStateObj;
-    if (!activeState) {
-      this._massLyrics = [];
-      this.requestUpdate();
-      return;
-    }
-
-    const artist = activeState.attributes.media_artist;
-    const title = activeState.attributes.media_title;
-    const album = activeState.attributes.media_album_name;
-    const duration = activeState.attributes.media_duration;
-    const trackId = activeState.attributes.media_content_id;
-
-    // 1. Check Internal Cache
-    const cacheKey = trackId ? `${trackId}:${artist}:${title}` : `${artist}:${title}`;
-
-    // Prevent redundant fetches if already in progress for this same key
-    if (this._fetchingLyrics && this._fetchingCacheKey === cacheKey) return;
-
-    if (this._lyricsCache.has(cacheKey)) {
-      const cachedLyrics = this._lyricsCache.get(cacheKey);
-      // Move to end to track as "most recently used"
-      this._lyricsCache.delete(cacheKey);
-      this._lyricsCache.set(cacheKey, cachedLyrics);
-
-      this._massLyrics = cachedLyrics;
-      this._fetchingLyrics = false;
-      this.requestUpdate();
-      return;
-    }
-
-    // Generate token to prevent race conditions
-    const fetchToken = Symbol();
-    this._currentFetchToken = fetchToken;
-
-    this._fetchingLyrics = true;
-    this._fetchingCacheKey = cacheKey;
-    this._massLyrics = [];
-    this.requestUpdate();
-
-    let lyrics;
-
-    try {
-      if (configSource === "mass") {
-        lyrics = await this._getMassLyrics(activeState, fetchToken);
-      } else if (configSource === "lrclib") {
-        lyrics = await this._getLrclibLyrics(artist, title, album, duration, fetchToken);
-      } else {
-        // Parallel fetching for mass_lrclib and lrclib_mass modes
-        const massPromise = this._getMassLyrics(activeState, fetchToken);
-        const lrclibPromise = this._getLrclibLyrics(artist, title, album, duration, fetchToken);
-
-        // Define preferred and fallback based on config
-        const isMassPreferred = configSource === "mass_lrclib";
-
-        // Setup interim update handler
-        const handleInterim = async (promise, name) => {
-          const res = await promise;
-          if (this._currentFetchToken !== fetchToken) return null;
-          if (res && res.length > 0) {
-            const isPreferred = (name === "mass" && isMassPreferred) || (name === "lrclib" && !isMassPreferred);
-            // Only perform interim update if the other source hasn't finished or we are the preferred source
-            if (!this._massLyrics || this._massLyrics.length === 0 || isPreferred) {
-              this._massLyrics = res || [];
-              // Immediately hide fetching state as we now have results to show
-              this._fetchingLyrics = false;
-              this.requestUpdate();
-            }
-          }
-          return res;
-        };
-
-        // Fire both and await the preferred one (or first available)
-        const [massResults, lrclibResults] = await Promise.all([
-          handleInterim(massPromise, "mass"),
-          handleInterim(lrclibPromise, "lrclib")
-        ]);
-
-        if (this._currentFetchToken !== fetchToken) return;
-
-        // Final selection: Prefer MA in mass_lrclib, LRCLIB in lrclib_mass
-        if (isMassPreferred) {
-          lyrics = (massResults && massResults.length > 0) ? massResults : lrclibResults;
-        } else {
-          lyrics = (lrclibResults && lrclibResults.length > 0) ? lrclibResults : massResults;
-        }
-      }
-
-      if (this._currentFetchToken === fetchToken) {
-        this._massLyrics = lyrics || [];
-        if (lyrics && lyrics.length > 0) {
-          // Add to cache with LRU eviction
-          if (this._lyricsCache.size >= MAX_LYRICS_CACHE_SIZE) {
-            // Remove the oldest (first) entry
-            const oldestKey = this._lyricsCache.keys().next().value;
-            this._lyricsCache.delete(oldestKey);
-          }
-          this._lyricsCache.set(cacheKey, lyrics);
-        } else if (lyrics === null) {
-          // Explicit null means fetch failed
-          this._lyricsError = true;
-        }
-        this._fetchingLyrics = false;
-        this._fetchingCacheKey = null;
-        this.requestUpdate();
-      }
-    } catch (e) {
-      if (this._currentFetchToken === fetchToken) {
-        console.error("YAMP: Failed to fetch lyrics:", e);
-        this._lyricsError = true;
-        this._fetchingLyrics = false;
-        this._fetchingCacheKey = null;
-        this.requestUpdate();
-      }
-    }
+    return this._lyricsController.fetchLyrics();
   }
 
   /**
    * Internal helper to fetch lyrics from Music Assistant.
+   * Delegated to LyricsController.
    */
   async _getMassLyrics(activeState, fetchToken) {
-    // Use the already-resolved integration status if available
-    if (this._hasMassQueueIntegration === false) return [];
-
-    if (!this._massQueueAvailable) {
-      this._massQueueAvailable = await this._isMassQueueIntegrationAvailable(this.hass);
-      this._hasMassQueueIntegration = this._massQueueAvailable;
-      if (!this._massQueueAvailable) return [];
-      if (this._currentFetchToken !== fetchToken) return [];
-    }
-
-    try {
-      const searchEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
-      const searchEntityId = await this._resolveTemplateAtActionTime(searchEntityIdTemplate, this.currentEntityId);
-      const mqConfigEntryId = await getMassQueueConfigEntryId(this.hass, searchEntityId);
-      if (!mqConfigEntryId) return [];
-
-      const trackUri = activeState.attributes.media_content_id;
-      if (!trackUri || !trackUri.includes("://")) return [];
-
-      const trackMsg = {
-        type: "call_service",
-        domain: "mass_queue",
-        service: "send_command",
-        service_data: {
-          command: "music/item_by_uri",
-          data: { uri: trackUri },
-          ...(mqConfigEntryId && mqConfigEntryId !== "auto" && { config_entry_id: mqConfigEntryId })
-        },
-        return_response: true
-      };
-
-      const trackRes = await this.hass.connection.sendMessagePromise(trackMsg);
-      if (this._currentFetchToken !== fetchToken) return [];
-
-      const validTrack = trackRes?.response?.response || trackRes?.response || trackRes?.result;
-      if (!validTrack) return [];
-
-      const lyricsMsg = {
-        type: "call_service",
-        domain: "mass_queue",
-        service: "send_command",
-        service_data: {
-          command: "metadata/get_track_lyrics",
-          data: { track: validTrack },
-          ...(mqConfigEntryId && mqConfigEntryId !== "auto" && { config_entry_id: mqConfigEntryId })
-        },
-        return_response: true
-      };
-
-      const lyricsRes = await this.hass.connection.sendMessagePromise(lyricsMsg);
-      if (this._currentFetchToken !== fetchToken) return [];
-
-      const lyricsArray = lyricsRes?.response?.response || lyricsRes?.response || lyricsRes?.result;
-      if (lyricsArray) {
-        let lrcString = "";
-        if (Array.isArray(lyricsArray)) {
-          lrcString = lyricsArray[1] || lyricsArray[0] || "";
-        } else if (typeof lyricsArray === "string") {
-          lrcString = lyricsArray;
-        } else if (typeof lyricsArray === "object") {
-          if (lyricsArray.instrumental) {
-            return [
-              {
-                time: 0,
-                text: localize("lyrics.instrumental") || "Instrumental Track",
-                isInstrumental: true,
-              },
-            ];
-          }
-          lrcString = lyricsArray.lyrics || lyricsArray.text || "";
-        }
-        return lrcString ? parseLrc(lrcString) : [];
-      }
-    } catch (e) {
-      console.warn("YAMP: MA Lyrics fetch failed:", e);
-    }
-    return [];
+    return this._lyricsController.getMassLyrics(activeState, fetchToken);
   }
 
   /**
    * Internal helper to fetch lyrics from LRCLIB.
+   * Delegated to LyricsController.
    */
   async _getLrclibLyrics(artist, title, album, duration, fetchToken) {
-    if (!artist || !title) return [];
-
-    const cleanArtist = this._cleanTrackMetadata(artist);
-    const cleanTitle = this._cleanTrackMetadata(title);
-    const cleanAlbum = album ? this._cleanTrackMetadata(album) : "";
-
-    try {
-      const headers = {
-        "Lrclib-Client": `yet-another-media-player/${__VERSION__} (https://github.com/jianyu-li/yet-another-media-player)`
-      };
-
-      // 1. Try precise get first
-      let url = `https://lrclib.net/api/get?artist_name=${encodeURIComponent(cleanArtist)}&track_name=${encodeURIComponent(cleanTitle)}`;
-      if (cleanAlbum) url += `&album_name=${encodeURIComponent(cleanAlbum)}`;
-      if (duration) url += `&duration=${Math.round(duration)}`;
-
-      let response = await fetch(url, { headers });
-      if (this._currentFetchToken !== fetchToken) return [];
-
-      if (!response.ok && response.status !== 404) {
-        throw new Error(`LRCLIB error: ${response.status}`);
-      }
-
-      let data = null;
-      if (response.ok) {
-        data = await response.json();
-      } else {
-        // 2. Try search fallback if precise get failed
-        const searchUrl = `https://lrclib.net/api/search?artist_name=${encodeURIComponent(cleanArtist)}&track_name=${encodeURIComponent(cleanTitle)}`;
-        const searchRes = await fetch(searchUrl, { headers });
-        if (this._currentFetchToken !== fetchToken) return [];
-
-        if (searchRes.ok) {
-          const results = await searchRes.json();
-          if (results && results.length > 0) {
-            data = results[0]; // Take the first result
-          }
-        }
-      }
-
-      if (data) {
-        if (data.instrumental) {
-          return [
-            {
-              time: 0,
-              text: localize("lyrics.instrumental") || "Instrumental Track",
-              isInstrumental: true,
-            },
-          ];
-        }
-        const lrcString = data.syncedLyrics || data.plainLyrics || "";
-        return lrcString ? parseLrc(lrcString) : [];
-      }
-    } catch (e) {
-      console.warn("YAMP: LRCLIB Lyrics fetch failed:", e);
-    }
-    return [];
+    return this._lyricsController.getLrclibLyrics(artist, title, album, duration, fetchToken);
   }
 
 
@@ -7020,51 +6736,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     }
 
     // Lyrics fetch trigger
-    if (this._lyricsActive) {
-      const activeState = this.metadataStateObj || this.currentActivePlaybackStateObj || this.currentPlaybackStateObj || this.currentStateObj;
-      const trackId = activeState?.attributes?.media_content_id || null;
-      const artist = activeState?.attributes?.media_artist || null;
-      const title = activeState?.attributes?.media_title || null;
-      const activeEntityId = this.currentActivePlaybackEntityId || this.currentEntityId || null;
-
-      const hasMetadata = !!(trackId || artist || title);
-      const metadataChanged =
-        trackId !== this._lastLyricsTrackId ||
-        artist !== this._lastLyricsArtist ||
-        title !== this._lastLyricsTitle ||
-        activeEntityId !== this._lastLyricsEntityId;
-
-      if (hasMetadata && metadataChanged && !this._isIdle && !this.isAnyMenuOpen) {
-        // Update trackers immediately to avoid multiple triggers
-        this._lastLyricsTrackId = trackId;
-        this._lastLyricsArtist = artist;
-        this._lastLyricsTitle = title;
-        this._lastLyricsEntityId = activeEntityId;
-
-        // Set loading state immediately to avoid UI flicker during debounce
-        this._fetchingLyrics = true;
-        this._lyricsError = false;
-
-        // Debounce fetch to handle rapid metadata updates (e.g. radio streams)
-        if (this._lyricsFetchTimeout) clearTimeout(this._lyricsFetchTimeout);
-        this._lyricsFetchTimeout = setTimeout(() => {
-          this._fetchLyrics();
-          this._lyricsFetchTimeout = null;
-        }, 500);
-      } else if (!hasMetadata && metadataChanged) {
-        // Clear trackers
-        this._lastLyricsTrackId = null;
-        this._lastLyricsArtist = null;
-        this._lastLyricsTitle = null;
-        this._lastLyricsEntityId = activeEntityId;
-
-        if (this._lyricsFetchTimeout) clearTimeout(this._lyricsFetchTimeout);
-        this._massLyrics = [];
-        this._fetchingLyrics = false;
-        this._lyricsError = false;
-        this.requestUpdate();
-      }
-    }
+    this._lyricsController.checkTrackLyrics();
 
     // Restart progress timer
     super.updated?.(changedProps);
@@ -7478,9 +7150,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     }
 
     if (action.action === "toggle_lyrics") {
-      this._lyricsActive = !this._lyricsActive;
-      // No explicit fetch call here - updated() will handle it lazily if appropriate
-      this.requestUpdate();
+      this._lyricsController.toggle();
       return;
     }
 
@@ -9228,10 +8898,10 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
                 data-artwork-fit="${activeArtworkFit}"
                 data-playing="${String(this._isCurrentEntityPlaying())}"
                 .hass=${this.hass}
-                .lyrics=${this._massLyrics}
+                .lyrics=${this._lyricsController.lyrics}
                 .position=${pos}
-                .loading=${this._fetchingLyrics}
-                .error=${this._lyricsError}
+                .loading=${this._lyricsController.loading}
+                .error=${this._lyricsController.error}
                 .playing=${this._isCurrentEntityPlaying()}
                 .activeThemeColor=${this.config.match_theme === true ? "var(--custom-accent, var(--state-media_player-active-color, var(--primary-color, #ffffff)))" : "var(--custom-accent, #ffffff)"}
                 .mode=${this._isCurrentlyPlayingRadio() ? 'text' : (this.config.lyrics_mode || 'default')}
@@ -9560,7 +9230,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
               Re-ordering ${this._queueOpsCompleted} / ${this._queueOpsTotal}
             </div>
           ` : ""}
-          ${(!this._showEntityOptions || !shouldShowPersistentControls) && this._lyricsActive && !this._isIdle && this._fetchingLyrics ? html`
+          ${(!this._showEntityOptions || !shouldShowPersistentControls) && this._lyricsActive && !this._isIdle && this._lyricsController.loading ? html`
             <div class="queue-ops-progress" style="position: absolute !important; bottom: 2px !important; left: 50% !important; transform: translate(-50%, 0) !important; z-index: 1000 !important; width: max-content !important; pointer-events: none !important; color: var(--search-text-secondary) !important;">
               ${localize("lyrics.finding")}
             </div>
@@ -10428,9 +10098,8 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     }
     // Unsubscribe from queue update events
     this._unsubscribeFromQueueUpdates();
-    if (this._lyricsFetchTimeout) {
-      clearTimeout(this._lyricsFetchTimeout);
-      this._lyricsFetchTimeout = null;
+    if (this._lyricsController) {
+      this._lyricsController.hostDisconnected();
     }
     if (this._mediaSessionManager) {
       this._mediaSessionManager.destroy();

@@ -422,6 +422,67 @@ export declare class TemplateController {
   resolveTemplateAtActionTime(templateString: string, fallbackEntityId?: string): Promise<string>;
 }
 
+export declare function cleanTrackMetadata(text?: any): string;
+
+export declare function getActiveLyricIndex(
+  lyrics: LyricsLine[] | null | undefined,
+  position: number,
+  preRoll?: number,
+  mode?: string
+): number;
+
+export declare class LyricsController {
+  constructor(host: any);
+  host: any;
+  lyrics: LyricsLine[];
+  loading: boolean;
+  error: boolean;
+  active: boolean;
+  cache: Map<string, LyricsLine[]>;
+  lastTrackId: string | null;
+  lastArtist: string | null;
+  lastTitle: string | null;
+  lastEntityId: string | null;
+  fetchTimeout: any;
+  currentFetchToken: symbol | null;
+  fetchingCacheKey: string | null;
+  get fetching(): boolean;
+  set fetching(val: boolean);
+  hostConnected(): void;
+  hostDisconnected(): void;
+  toggle(forceState?: boolean): boolean;
+  checkTrackLyrics(): void;
+  fetchLyrics(): Promise<void>;
+  getMassLyrics(activeState: any, fetchToken: symbol): Promise<LyricsLine[]>;
+  getLrclibLyrics(
+    artist?: string | null,
+    title?: string | null,
+    album?: string | null,
+    duration?: number | null,
+    fetchToken?: symbol
+  ): Promise<LyricsLine[]>;
+}
+
+export interface YetAnotherMediaPlayerCard {
+  hass?: HomeAssistant;
+  entityIds?: string[];
+  currentEntityId?: string;
+  config?: YampCardConfig;
+  _config?: YampCardConfig;
+  templateController?: TemplateController;
+  lyricsController?: LyricsController;
+  requestUpdate?: (name?: PropertyKey, oldValue?: unknown) => Promise<unknown>;
+  [key: string]: any;
+}
+
+export interface YetAnotherMediaPlayerEditor {
+  hass?: HomeAssistant;
+  _config?: YampCardConfig;
+  _yamlConfig?: any;
+  requestUpdate?: (name?: PropertyKey, oldValue?: unknown) => Promise<unknown>;
+  [key: string]: any;
+}
+
 declare global {
   const __VERSION__: string;
   interface Window {

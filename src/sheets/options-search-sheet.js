@@ -7,7 +7,7 @@ import { yampGrid } from "../yamp-grid-layout.js";
 
 /**
  * Render the sub-filters bar within options search (favorites, recents, queue, radio, sort).
- * @this {import("../yet-another-media-player.js").YetAnotherMediaPlayerCard}
+ * @this {import("../types.d.ts").YetAnotherMediaPlayerCard}
  * @param {boolean} showSearchHeaders
  */
 export function renderSearchSubFilters(showSearchHeaders) {
@@ -260,7 +260,7 @@ export function renderSearchSubFilters(showSearchHeaders) {
 
 /**
  * Render the embedded search UI within the options sheet.
- * @this {import("../yet-another-media-player.js").YetAnotherMediaPlayerCard}
+ * @this {import("../types.d.ts").YetAnotherMediaPlayerCard}
  * @param {boolean} showSearchHeaders
  * @param {boolean} [pinSearchHeaders=false]
  */

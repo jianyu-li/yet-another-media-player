@@ -2,6 +2,7 @@ import { LitElement, html, nothing } from "lit";
 import { classMap } from "lit/directives/class-map.js";
 import { lyricsStyles } from "./styles/lyrics.js";
 import { localize } from "./localize/localize.js";
+import { getActiveLyricIndex } from "./controllers/lyrics-controller.js";
 
 export class YampLyricsView extends LitElement {
   static get properties() {
@@ -86,32 +87,7 @@ export class YampLyricsView extends LitElement {
   }
 
   _updateActiveLyric() {
-    if (!this.lyrics || this.lyrics.length === 0) return;
-
-    if (this.lyrics.length === 1 && Boolean(this.lyrics[0].isInstrumental)) {
-      if (this._activeIndex !== 0) {
-        this._activeIndex = 0;
-        this.updateComplete.then(() => this._scrollToActive());
-      }
-      return;
-    }
-
-    if (this.mode === "text") return;
-
-    // If not a single line has a time, treat as unsynced
-    const isUnsynced = !this.lyrics.some((l) => l.time !== null);
-    if (isUnsynced) return;
-
-    let newActiveIndex = -1;
-    const adjustedPos = this.position + this.preRoll;
-
-    for (let i = 0; i < this.lyrics.length; i++) {
-      if (this.lyrics[i].time !== null && this.lyrics[i].time <= adjustedPos) {
-        newActiveIndex = i;
-      } else if (this.lyrics[i].time !== null && this.lyrics[i].time > adjustedPos) {
-        break;
-      }
-    }
+    const newActiveIndex = getActiveLyricIndex(this.lyrics, this.position, this.preRoll, this.mode);
 
     if (newActiveIndex !== this._activeIndex) {
       this._activeIndex = newActiveIndex;
