@@ -815,14 +815,15 @@ export function getActionPlacement(action, index) {
 }
 
 /**
- * Checks if a given media title is a generic placeholder (such as "AirPlay" or the entity's friendly name)
- * rather than genuine track/media metadata.
+ * Checks if a given media title is a generic placeholder (such as "AirPlay", the entity's friendly name,
+ * or the active app name) rather than genuine track/media metadata.
  *
  * @param {string|null|undefined} title - The media title to test
  * @param {string|null|undefined} [friendlyName] - The entity's friendly name
+ * @param {string|null|undefined} [appName] - The active application name (e.g. "Infuse", "YouTube")
  * @returns {boolean} True if the title is considered a placeholder
  */
-export function isPlaceholderMediaTitle(title, friendlyName) {
+export function isPlaceholderMediaTitle(title, friendlyName, appName) {
   if (!title || typeof title !== "string") return true;
   const trimmed = title.trim().toLowerCase();
   if (trimmed === "" || trimmed === "airplay") return true;
@@ -831,6 +832,9 @@ export function isPlaceholderMediaTitle(title, friendlyName) {
     typeof friendlyName === "string" &&
     trimmed === friendlyName.trim().toLowerCase()
   ) {
+    return true;
+  }
+  if (appName && typeof appName === "string" && trimmed === appName.trim().toLowerCase()) {
     return true;
   }
   return false;
@@ -876,14 +880,46 @@ export function areEntitiesPlayingSameMedia(mainState, maState) {
   const mainApp =
     typeof mainAttrs.app_name === "string" ? mainAttrs.app_name.trim().toLowerCase() : "";
   const maApp = typeof maAttrs.app_name === "string" ? maAttrs.app_name.trim().toLowerCase() : "";
+  const mainAppId =
+    typeof mainAttrs.app_id === "string" ? mainAttrs.app_id.trim().toLowerCase() : "";
+  const maAppId = typeof maAttrs.app_id === "string" ? maAttrs.app_id.trim().toLowerCase() : "";
   const mainSource =
     typeof mainAttrs.source === "string" ? mainAttrs.source.trim().toLowerCase() : "";
   const maSource = typeof maAttrs.source === "string" ? maAttrs.source.trim().toLowerCase() : "";
 
-  if (maTitle === "airplay" || maApp === "airplay" || maSource === "airplay") {
+  // Helper to test if a string signifies an AirPlay daemon or receiver
+  const isAirPlayIndicator = (val) =>
+    typeof val === "string" && (val === "airplay" || val.includes("tvairplay"));
+
+  if (
+    isAirPlayIndicator(maTitle) ||
+    isAirPlayIndicator(maApp) ||
+    isAirPlayIndicator(maSource) ||
+    isAirPlayIndicator(maAppId)
+  ) {
     return true;
   }
-  if (mainTitle === "airplay" || mainApp === "airplay" || mainSource === "airplay") {
+  if (
+    isAirPlayIndicator(mainTitle) ||
+    isAirPlayIndicator(mainApp) ||
+    isAirPlayIndicator(mainSource) ||
+    isAirPlayIndicator(mainAppId)
+  ) {
+    return true;
+  }
+
+  // 3b. App match: main entity app matches paired entity title, source, or app
+  // (Common when Apple TV routes audio to HomePod/AirPlay: HomePod title or source is the tvOS app name like "Infuse" or "Disney+")
+  if (mainApp && (maTitle === mainApp || maSource === mainApp || maApp === mainApp)) {
+    return true;
+  }
+  if (maApp && (mainTitle === maApp || mainSource === maApp)) {
+    return true;
+  }
+  if (mainAppId && maTitle && (mainAppId === maTitle || mainAppId.endsWith("." + maTitle))) {
+    return true;
+  }
+  if (mainAppId && maSource && (mainAppId === maSource || mainAppId.endsWith("." + maSource))) {
     return true;
   }
 

@@ -6260,7 +6260,11 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         const isPlayingSameMedia = this._areEntitiesPlayingSameMedia(mainState, playbackState);
 
         const metaTitle = metadataState?.attributes?.media_title;
-        const isMetaPlaceholder = isPlaceholderMediaTitle(metaTitle, metadataState?.attributes?.friendly_name);
+        const isMetaPlaceholder = isPlaceholderMediaTitle(
+          metaTitle,
+          metadataState?.attributes?.friendly_name,
+          mainState?.attributes?.app_name
+        );
         const effectiveMetaTitle = (!isMetaPlaceholder && metaTitle) ? metaTitle : null;
         const displayTitle = effectiveMetaTitle || playbackState?.attributes?.media_title || mainState?.attributes?.media_title || metaTitle;
 
@@ -8785,7 +8789,11 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     // If metadataStateObj only has a placeholder title (like 'AirPlay' or the entity name)
     // while mainState or playbackState has real media metadata, fall back to the real metadata
     const metaTitle = metadataStateObj?.attributes?.media_title;
-    const isMetaPlaceholder = isPlaceholderMediaTitle(metaTitle, metadataStateObj?.attributes?.friendly_name);
+    const isMetaPlaceholder = isPlaceholderMediaTitle(
+      metaTitle,
+      metadataStateObj?.attributes?.friendly_name,
+      mainState?.attributes?.app_name
+    );
     const effectiveMetaTitle = (!isMetaPlaceholder && metaTitle) ? metaTitle : null;
 
     const displayTitle = effectiveMetaTitle || finalPlaybackStateObj?.attributes?.media_title || mainState?.attributes?.media_title || metaTitle || "";
