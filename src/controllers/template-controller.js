@@ -272,7 +272,7 @@ export class TemplateController {
             }
 
             if (shouldUpdate) {
-              this.host.requestUpdate();
+              this.host.triggerRender?.() || this.host.requestUpdate?.();
             }
           },
           {
@@ -405,7 +405,7 @@ export class TemplateController {
           } else {
             cacheObj[idx] = { id: resolvedValue, ts: Date.now() };
           }
-          this.host.requestUpdate();
+          this.host.triggerRender?.() || this.host.requestUpdate?.();
         }
         return;
       }
@@ -544,7 +544,7 @@ export class TemplateController {
 
         if (isChanged) {
           cache[idx] = { value: resolvedValue, ts: Date.now() };
-          this.host.requestUpdate();
+          this.host.triggerRender?.() || this.host.requestUpdate?.();
         }
       } else if (typeof raw === "string" && (raw.includes("{{") || raw.includes("{%"))) {
         if (isContextChanged) {

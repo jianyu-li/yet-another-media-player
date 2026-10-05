@@ -155,6 +155,8 @@ export function compileArtworkOverrides(overrides) {
   return copied;
 }
 
+export const MAX_ASPECT_RATIO_CACHE_SIZE = 50;
+
 export class ArtworkController {
   /**
    * @param {YetAnotherMediaPlayerCard} host
@@ -188,7 +190,11 @@ export class ArtworkController {
   /**
    * Lit lifecycle hook: called when the host element disconnects from the DOM.
    */
-  hostDisconnected() {}
+  hostDisconnected() {
+    this.aspectRatioCache = {};
+    this.artworkOverrideTemplateCache = {};
+    this.artworkOverrideIndexMap = null;
+  }
 
   /**
    * Clears internal template caches and WeakMap indices on configuration reload.
@@ -278,7 +284,7 @@ export class ArtworkController {
         })
         .finally(() => {
           entry.resolving = false;
-          this.host.requestUpdate();
+          this.host.triggerRender?.() || this.host.requestUpdate?.();
         });
     }
     return entry.value;
@@ -446,6 +452,22 @@ export class ArtworkController {
   }
 
   /**
+   * Sets an aspect ratio in the cache, enforcing an LRU cap.
+   * @param {string} url
+   * @param {number | null} ratio
+   */
+  _setAspectRatio(url, ratio) {
+    const keys = Object.keys(this.aspectRatioCache);
+    if (
+      keys.length >= MAX_ASPECT_RATIO_CACHE_SIZE &&
+      !Object.prototype.hasOwnProperty.call(this.aspectRatioCache, url)
+    ) {
+      delete this.aspectRatioCache[keys[0]];
+    }
+    this.aspectRatioCache[url] = ratio;
+  }
+
+  /**
    * Calculates and caches the aspect ratio (width / height) of an image URL.
    * @param {string} [url]
    */
@@ -453,7 +475,7 @@ export class ArtworkController {
     if (!url || typeof url !== "string") return;
     if (this.aspectRatioCache[url] !== undefined) return;
 
-    this.aspectRatioCache[url] = null;
+    this._setAspectRatio(url, null);
     if (typeof window === "undefined" || !window.Image) return;
 
     const img = new window.Image();
@@ -463,12 +485,16 @@ export class ArtworkController {
     img.src = url;
     img.onload = () => {
       if (img.naturalWidth && img.naturalHeight) {
-        this.aspectRatioCache[url] = img.naturalWidth / img.naturalHeight;
-        this.host?.requestUpdate?.();
+        this._setAspectRatio(url, img.naturalWidth / img.naturalHeight);
+        this.host?.triggerRender?.() || this.host?.requestUpdate?.();
       }
+      img.onload = null;
+      img.onerror = null;
     };
     img.onerror = () => {
-      this.aspectRatioCache[url] = null;
+      this._setAspectRatio(url, null);
+      img.onload = null;
+      img.onerror = null;
     };
   }
 

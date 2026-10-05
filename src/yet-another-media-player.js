@@ -407,6 +407,9 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     if (this._handleKeyDownBound) {
       window.addEventListener("keydown", this._handleKeyDownBound);
     }
+    if (this._handleVisibilityChangeBound) {
+      document.addEventListener("visibilitychange", this._handleVisibilityChangeBound);
+    }
     this._updateViewportFlags();
     this._updateAdaptiveTextObserverState();
     if (this._mediaSessionManager && this._isMediaSessionEnabled) {
@@ -462,7 +465,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     return meta
       .sort((a, b) => {
         // Disabled entities always sort to the end
-        if (a.disabled !== b.disabled) return a.disabled - b.disabled;
+        if (a.disabled !== b.disabled) return a.disabled ? 1 : -1;
         if (a.ts === b.ts) return a.idx - b.idx;
         return b.ts - a.ts;
       })
@@ -543,10 +546,158 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     _volumeDraggingEntity: { state: true },
     _dragVolume: { state: true },
     _mediaSessionOverride: { state: true },
-    _fullScreenOverride: { state: true }
+    _fullScreenOverride: { state: true },
+    _renderTick: { state: true }
   };
 
   static styles = yampCardStyles;
+
+  /**
+   * Handles tab/browser visibility changes to pause background timers when hidden.
+   */
+  _handleVisibilityChange() {
+    if (typeof document !== "undefined" && document.hidden) {
+      if (this._progressTimer) {
+        clearInterval(this._progressTimer);
+        this._progressTimer = null;
+      }
+    } else {
+      this.requestUpdate();
+    }
+  }
+
+  /**
+   * Forces a re-render safely, ensuring it isn't swallowed by shouldUpdate
+   * if batched in the same microtask as an irrelevant 'hass' update.
+   */
+  triggerRender() {
+    this._renderTick = Date.now();
+  }
+
+  /**
+   * Lit lifecycle hook: determines whether the element should re-render.
+   * Filters out high-frequency Home Assistant entity updates unrelated to YAMP.
+   * @param {Map<string | number | symbol, unknown>} changedProps
+   * @returns {boolean}
+   */
+  shouldUpdate(changedProps) {
+    // If the document is completely hidden (e.g. tablet screen off, background tab),
+    // skip DOM re-renders to save RAM and CPU.
+    if (typeof document !== "undefined" && document.hidden) {
+      return false;
+    }
+
+    // Always update if anything other than 'hass' changed
+    if (!changedProps.has("hass") || changedProps.size > 1) {
+      return true;
+    }
+
+    const oldHass = /** @type {any} */ (changedProps.get("hass"));
+    if (!oldHass || !this.hass) {
+      return true;
+    }
+
+    // Always update in editor preview for maximum responsiveness
+    if (this._isEditorPreview) {
+      return true;
+    }
+
+    // Check themes, dark mode, language, locale
+    if (
+      this.hass.themes !== oldHass.themes ||
+      this.hass.darkMode !== oldHass.darkMode ||
+      this.hass.language !== oldHass.language ||
+      this.hass.selectedLanguage !== oldHass.selectedLanguage ||
+      this.hass.locale !== oldHass.locale
+    ) {
+      return true;
+    }
+
+    // Check if any overlay, sheet, or menu is active
+    if (
+      this._showEntityOptions ||
+      this._showSearchInSheet ||
+      this._showTransferQueue ||
+      this._showGrouping ||
+      this._showRemoteControl ||
+      this._showSourceList ||
+      this._lyricsActive
+    ) {
+      return true;
+    }
+
+    const currentStates = this.hass.states;
+    const oldStates = oldHass.states;
+    if (!currentStates || !oldStates) {
+      return true;
+    }
+
+    // Check all configured media player entities
+    const entityIds = this.entityIds;
+    for (let i = 0; i < entityIds.length; i++) {
+      const id = entityIds[i];
+      if (currentStates[id] !== oldStates[id]) {
+        this._cachedEntityObjs = null;
+        return true;
+      }
+      // Check group members if present
+      const members = currentStates[id]?.attributes?.group_members;
+      if (Array.isArray(members)) {
+        for (let j = 0; j < members.length; j++) {
+          const mId = members[j];
+          if (currentStates[mId] !== oldStates[mId]) {
+            this._cachedEntityObjs = null;
+            return true;
+          }
+        }
+      }
+    }
+
+    // Check resolved companion entities (MA, Volume, Remote)
+    if (this._templateController) {
+      const checkCache = (cache) => {
+        if (!cache) return false;
+        for (const k in cache) {
+          const id = cache[k]?.value || cache[k]?.id;
+          if (typeof id === "string" && id.includes(".") && currentStates[id] !== oldStates[id]) {
+            return true;
+          }
+        }
+        return false;
+      };
+
+      if (
+        checkCache(this._maResolveCache) ||
+        checkCache(this._volResolveCache) ||
+        checkCache(this._remoteResolveCache)
+      ) {
+        return true;
+      }
+    }
+
+    // Check action helper entities (sync_selected_entity, select_entity, etc.)
+    if (this._actionHelperEntities) {
+      for (let i = 0; i < this._actionHelperEntities.length; i++) {
+        const id = this._actionHelperEntities[i];
+        if (currentStates[id] !== oldStates[id]) {
+          return true;
+        }
+      }
+    }
+
+    // Check external entities referenced in client-side JS templates
+    if (this._jsTemplateEntities) {
+      for (let i = 0; i < this._jsTemplateEntities.length; i++) {
+        const id = this._jsTemplateEntities[i];
+        if (currentStates[id] !== oldStates[id]) {
+          return true;
+        }
+      }
+    }
+
+    // No relevant entities or settings changed - skip re-render!
+    return false;
+  }
 
   get _controlLayout() {
     const raw = this.config?.control_layout;
@@ -723,6 +874,15 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     /** @type {boolean | null} */
     this._fullScreenOverride = null;
     this._handleKeyDownBound = this._handleKeyDown.bind(this);
+    this._handleVisibilityChangeBound = this._handleVisibilityChange.bind(this);
+    /** @type {string[] | null} */
+    this._cachedEntityIds = null;
+    /** @type {any[] | null} */
+    this._cachedEntityObjs = null;
+    /** @type {string[] | null} */
+    this._actionHelperEntities = null;
+    /** @type {string[] | null} */
+    this._jsTemplateEntities = null;
     this._mediaSessionOverride = null;
     this._mediaSessionUpdatePending = false;
     this._mediaSessionManager = new YampMediaSessionManager(this);
@@ -4322,6 +4482,39 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       this._fullScreenOverride = null;
     }
     this.config = config;
+    this._cachedEntityIds = null;
+    this._cachedEntityObjs = null;
+
+    const actionHelpers = [];
+    if (Array.isArray(config.actions)) {
+      for (const act of config.actions) {
+        if (act && typeof act === "object") {
+          const helperId = act.entity || act.service_data?.entity_id;
+          if (typeof helperId === "string" && helperId.includes(".")) {
+            actionHelpers.push(helperId);
+          }
+        }
+      }
+    }
+    this._actionHelperEntities = actionHelpers;
+
+    const jsEntities = new Set();
+    const scanForEntities = (val) => {
+      if (typeof val === "string" && val.trim().startsWith("[[[")) {
+        const matches = val.match(/[a-z0-9_]+\.[a-z0-9_]+/gi);
+        if (matches) {
+          for (const m of matches) {
+            jsEntities.add(m.toLowerCase());
+          }
+        }
+      } else if (val && typeof val === "object") {
+        for (const k in val) {
+          scanForEntities(val[k]);
+        }
+      }
+    };
+    scanForEntities(config);
+    this._jsTemplateEntities = Array.from(jsEntities);
     this._swapPauseForStop = config.swap_pause_for_stop === true;
     this._holdToPin = !!config.hold_to_pin;
     this._disableSearchAutofocus = config.disable_autofocus === true;
@@ -4454,7 +4647,12 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
   // Returns array of entity config objects, including group_volume if present in user config.
   get entityObjs() {
-    return this.config.entities.map((e, index) => {
+    if (this._cachedEntityObjs) {
+      return this._cachedEntityObjs;
+    }
+    const entities = this.config?.entities || [];
+    const configEntityIds = this.entityIds;
+    this._cachedEntityObjs = entities.map((e, index) => {
       const entity_id = typeof e === "string" ? e : e.entity_id;
       const name = typeof e === "string" ? "" : (e.name || "");
       const volume_entity = typeof e === "string" ? undefined : e.volume_entity;
@@ -4473,10 +4671,6 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         if (state && Array.isArray(state.attributes.group_members) && state.attributes.group_members.length > 0) {
           // Are any group members in entityIds?
           const otherMembers = state.attributes.group_members.filter(id => id !== entity_id);
-          // Use raw config.entities to avoid circular dependency in this.entityIds
-          const configEntityIds = this.config.entities.map(en =>
-            typeof en === "string" ? en : en.entity_id
-          );
           const visibleMembers = otherMembers.filter(id => configEntityIds.includes(id));
           group_volume = visibleMembers.length > 0;
         }
@@ -4503,6 +4697,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         ...(typeof entity_volume_step === "number" ? { entity_volume_step } : {})
       };
     });
+    return this._cachedEntityObjs;
   }
 
 
@@ -4907,7 +5102,12 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   get entityIds() {
-    return this.entityObjs.map(e => e.entity_id);
+    if (!this._cachedEntityIds) {
+      this._cachedEntityIds = (this.config?.entities || []).map(e =>
+        typeof e === "string" ? e : e.entity_id
+      );
+    }
+    return this._cachedEntityIds;
   }
 
   // Return display name for a chip/entity
@@ -5769,9 +5969,11 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     }
     const playbackState = this.currentActivePlaybackStateObj || this.currentPlaybackStateObj || this.currentStateObj;
     if (this._isEntityPlaying(playbackState) && playbackState.attributes.media_duration) {
-      this._progressTimer = setInterval(() => {
-        this.requestUpdate();
-      }, 500);
+      if (typeof document === "undefined" || !document.hidden) {
+        this._progressTimer = setInterval(() => {
+          this.requestUpdate();
+        }, 500);
+      }
     }
 
     // Sync lock screen media controls (Web Media Session API)
@@ -9049,6 +9251,9 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     }
     if (this._handleKeyDownBound) {
       window.removeEventListener("keydown", this._handleKeyDownBound);
+    }
+    if (this._handleVisibilityChangeBound) {
+      document.removeEventListener("visibilitychange", this._handleVisibilityChangeBound);
     }
     // Unsubscribe from queue update events
     this._unsubscribeFromQueueUpdates();

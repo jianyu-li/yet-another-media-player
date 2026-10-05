@@ -482,6 +482,8 @@ export declare class LyricsController {
   ): Promise<LyricsLine[]>;
 }
 
+export declare const MAX_ASPECT_RATIO_CACHE_SIZE: number;
+
 export declare class ArtworkController {
   host: YetAnotherMediaPlayerCard;
   aspectRatioCache: Record<string, number | null>;
@@ -493,6 +495,7 @@ export declare class ArtworkController {
   hostDisconnected(): void;
   resetCaches(): void;
   ensureArtworkOverrideIndexMap(): void;
+  _setAspectRatio(url: string, ratio: number | null): void;
   getArtworkOverrideCacheKey(override: any, type?: string, stateObj?: HassEntity | null): string;
   getResolvedArtworkOverrideSource(
     override: any,
@@ -699,6 +702,12 @@ export interface YetAnotherMediaPlayerCard {
   _toggleFullScreen?: () => void;
   _enterFullScreen?: () => void;
   _exitFullScreen?: () => void;
+  _cachedEntityIds?: string[] | null;
+  _cachedEntityObjs?: any[] | null;
+  _actionHelperEntities?: string[] | null;
+  _jsTemplateEntities?: string[] | null;
+  _handleVisibilityChangeBound?: () => void;
+  shouldUpdate?: (changedProps: Map<string | number | symbol, unknown>) => boolean;
   requestUpdate?: (name?: PropertyKey, oldValue?: unknown) => Promise<unknown>;
   [key: string]: any;
 }
