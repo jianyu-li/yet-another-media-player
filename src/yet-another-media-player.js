@@ -542,7 +542,8 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     _showSourceMenu: { state: true },
     _volumeDraggingEntity: { state: true },
     _dragVolume: { state: true },
-    _mediaSessionOverride: { state: true }
+    _mediaSessionOverride: { state: true },
+    _fullScreenOverride: { state: true }
   };
 
   static styles = yampCardStyles;
@@ -719,6 +720,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
   constructor() {
     super();
+    /** @type {boolean | null} */
     this._fullScreenOverride = null;
     this._handleKeyDownBound = this._handleKeyDown.bind(this);
     this._mediaSessionOverride = null;
@@ -777,16 +779,12 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._showRemoteControl = false;
     this._cardHeightTemplateValue = {};
     this._cardHeightResolveCache = {};
-    this._lastCardHeightContextKey = null;
     this._lyricsBackgroundFadeTemplateValue = {};
     this._lyricsBackgroundFadeResolveCache = {};
-    this._lastLyricsBackgroundFadeContextKey = null;
     this._lockScreenControlsTemplateValue = {};
     this._lockScreenControlsResolveCache = {};
-    this._lastLockScreenControlsContextKey = null;
     this._fullScreenTemplateValue = {};
     this._fullScreenResolveCache = {};
-    this._lastFullScreenContextKey = null;
     this._transferQueuePendingTarget = null;
     this._transferQueueStatus = null;
     this._hasTransferQueueForCurrent = false;
