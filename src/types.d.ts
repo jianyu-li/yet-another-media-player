@@ -148,6 +148,13 @@ export interface HomeAssistant {
   ) => string | undefined;
 }
 
+export interface ArtworkObject {
+  url?: string | null;
+  sizePercentage?: number | null;
+  objectFit?: string | null;
+  objectPosition?: string | null;
+}
+
 export interface ArtworkOverrideRule {
   match_key?: string;
   match_value?: string;
@@ -463,6 +470,54 @@ export declare class LyricsController {
   ): Promise<LyricsLine[]>;
 }
 
+export declare class ArtworkController {
+  host: YetAnotherMediaPlayerCard;
+  aspectRatioCache: Record<string, number | null>;
+  artworkOverrideIndexMap: WeakMap<object, number> | null;
+  artworkOverrideTemplateCache: Record<string, { value: string | null; resolving: boolean }>;
+  lastArtworkUrl: string | null;
+  constructor(host: YetAnotherMediaPlayerCard);
+  hostConnected(): void;
+  hostDisconnected(): void;
+  resetCaches(): void;
+  ensureArtworkOverrideIndexMap(): void;
+  getArtworkOverrideCacheKey(override: any, type?: string, stateObj?: HassEntity | null): string;
+  getResolvedArtworkOverrideSource(
+    override: any,
+    sourceValue: string,
+    type?: string,
+    stateObj?: HassEntity | null
+  ): string | null;
+  getCollapsedArtworkStyle(): string;
+  getArtworkUrl(
+    state?: HassEntity | null,
+    forceIdleImage?: boolean,
+    ignoreIdleImage?: boolean
+  ): ArtworkObject | null;
+  resolveSelectedArtwork(options: any): ArtworkObject | null;
+  getBackgroundSizeForFit(fit?: string): string;
+  isExternalImageUrl(url?: string): boolean;
+  extractDominantColor(imgUrl: string): Promise<string>;
+  updateArtworkAspectRatios(): void;
+  calculateAspectRatio(url?: string): void;
+  normalizeImageSourceValue(value: any): string;
+  resolveImageUrlFromInput(input: string): string | null;
+  updateHostArtworkStyles(
+    host: HTMLElement,
+    playbackStateObj?: HassEntity | null,
+    forceIdleImage?: boolean
+  ): void;
+  getMaxCollapsedArtworkWidth(cardWidth: number): number;
+  compileArtworkOverrides(overrides?: any): any[];
+}
+
+export function getMaxCollapsedArtworkWidth(cardWidth: number): number;
+export function getBackgroundSizeForFit(fit?: string): string;
+export function isExternalImageUrl(url?: string): boolean;
+export function normalizeImageSourceValue(value: any): string;
+export function resolveImageUrlFromInput(input: string, hass?: any): string | null;
+export function compileArtworkOverrides(overrides?: any): any[];
+
 export function mediaPlay(hass?: HomeAssistant, entityId?: string): Promise<any>;
 export function mediaPause(hass?: HomeAssistant, entityId?: string): Promise<any>;
 export function mediaPlayPause(hass?: HomeAssistant, entityId?: string): Promise<any>;
@@ -538,6 +593,8 @@ export interface YetAnotherMediaPlayerCard {
   _config?: YampCardConfig;
   templateController?: TemplateController;
   lyricsController?: LyricsController;
+  artworkController?: ArtworkController;
+  _artworkController?: ArtworkController;
   requestUpdate?: (name?: PropertyKey, oldValue?: unknown) => Promise<unknown>;
   [key: string]: any;
 }

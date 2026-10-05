@@ -44,6 +44,7 @@ import {
 } from "./sheets/options-sheet.js";
 import { TemplateController } from "./controllers/template-controller.js";
 import { LyricsController, cleanTrackMetadata } from "./controllers/lyrics-controller.js";
+import { ArtworkController } from "./controllers/artwork-controller.js";
 import {
   mediaPlay,
   mediaPause,
@@ -69,15 +70,12 @@ import {
   resolveTemplateAtActionTime,
   resolveStringTemplate,
   resolveStringTemplateSync,
-  resolveSelectedArtwork,
   getActionPlacement,
   findAssociatedButtonEntities,
   getMusicAssistantState,
   getSearchResultClickTitle,
   isMusicAssistantEntity,
-  getArtworkUrl,
   isValidArtworkUrl,
-  getValidArtworkAttr,
   getEntityName,
   areEntitiesPlayingSameMedia,
   isPlaceholderMediaTitle
@@ -91,7 +89,6 @@ import {
   SUPPORT_TURN_OFF,
   SUPPORT_STOP,
   SUPPORT_GROUPING,
-  ARTWORK_OVERRIDE_MATCH_KEYS,
   DEFAULT_PROGRESS_BAR_HEIGHT,
   DEFAULT_LYRICS_BACKGROUND_FADE,
   TEMPLATE_CONFIGS
@@ -842,8 +839,11 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._fontColorTemplateResult = "";
     this._resolvingFontColorTemplate = false;
     this._fontColorTemplateNeedsResolve = false;
-    this._artworkOverrideTemplateCache = {};
-    this._artworkOverrideIndexMap = null;
+    // Artwork controller
+    /** @type {ArtworkController} */
+    this._artworkController = new ArtworkController(this);
+    this._artworkOverrideTemplateCache = this._artworkController.artworkOverrideTemplateCache;
+    this._artworkOverrideIndexMap = this._artworkController.artworkOverrideIndexMap;
     this._hideActiveEntityLabel = false;
     this._hideActiveEntityLabelOnIdle = false;
     this._currentDetailsScale = null;
@@ -5178,231 +5178,47 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     if (this._cardHeightTemplate) this._cardHeightTemplateNeedsResolve = true;
   }
   _ensureArtworkOverrideIndexMap() {
-    if (this._artworkOverrideIndexMap) return;
-    this._artworkOverrideIndexMap = new WeakMap();
-    const overrides = Array.isArray(this.config?.media_artwork_overrides)
-      ? this.config.media_artwork_overrides
-      : [];
-    overrides.forEach((item, idx) => {
-      if (item && typeof item === "object") {
-        this._artworkOverrideIndexMap.set(item, idx);
-      }
-    });
+    this._artworkController.ensureArtworkOverrideIndexMap();
   }
 
   _getArtworkOverrideCacheKey(override, type = "image", stateObj = null) {
-    this._ensureArtworkOverrideIndexMap();
-
-    // Include media title and artist in the key if available to ensure
-    // templates are re-evaluated when the track changes.
-    const mediaTitle = stateObj?.attributes?.media_title || "";
-    const mediaArtist = stateObj?.attributes?.media_artist || "";
-    const stateKey = `${mediaTitle}:${mediaArtist}`;
-
-    const idx = override && this._artworkOverrideIndexMap?.get(override);
-    const prefix = typeof idx === "number" ? idx : "generic";
-
-    return `${prefix}:${type}:${stateKey}`;
+    return this._artworkController.getArtworkOverrideCacheKey(override, type, stateObj);
   }
 
   _getResolvedArtworkOverrideSource(override, sourceValue, type = "image", stateObj = null) {
-    if (!sourceValue || typeof sourceValue !== "string") return null;
-    const normalizedInput = this._normalizeImageSourceValue(sourceValue);
-    if (!normalizedInput) return null;
-    const isJsTemplate = typeof sourceValue === "string" && sourceValue.trim().startsWith("[[[");
-    const isJinjaTemplate = typeof sourceValue === "string" && (sourceValue.includes("{{") || sourceValue.includes("{%"));
-    if (!isJsTemplate && !isJinjaTemplate) return normalizedInput;
-
-    if (isJsTemplate) {
-      return this._normalizeImageSourceValue(this._evaluateJsTemplate(sourceValue));
-    }
-
-    if (!this._artworkOverrideTemplateCache) {
-      this._artworkOverrideTemplateCache = {};
-    }
-    const key = this._getArtworkOverrideCacheKey(override, type, stateObj);
-    if (!this._artworkOverrideTemplateCache[key]) {
-      this._artworkOverrideTemplateCache[key] = { value: null, resolving: false };
-    }
-    const entry = this._artworkOverrideTemplateCache[key];
-    if (entry.value) return entry.value;
-    if (!entry.resolving && this.hass) {
-      entry.resolving = true;
-      const context = this._getTemplateContext();
-      resolveStringTemplate(this.hass, sourceValue, context)
-        .then((res) => {
-          entry.value = this._normalizeImageSourceValue((res ?? "").toString());
-        })
-        .catch(() => {
-          entry.value = "";
-        })
-        .finally(() => {
-          entry.resolving = false;
-          this.requestUpdate();
-        });
-    }
-    return entry.value;
+    return this._artworkController.getResolvedArtworkOverrideSource(override, sourceValue, type, stateObj);
   }
 
-  // Get style for collapsed artwork based on mobile and control count
   _getCollapsedArtworkStyle() {
-    if (this._alwaysCollapsed) {
-      const showFavorite = !!this._getFavoriteButtonEntity() && !this._getHiddenControlsForCurrentEntity().favorite;
-      const controls = countMainControls(
-        this.currentActivePlaybackStateObj,
-        (s, f) => this._supportsFeature(s, f),
-        showFavorite,
-        this._getHiddenControlsForCurrentEntity(),
-        true,
-        this._controlLayout
-      );
-      if (controls > 6) {
-        // Check if we're on a mobile device or mobile screen breakpoint
-        if (this._isMobile) {
-          // Make artwork smaller on mobile when there are many controls
-          return "width: 60px; height: 60px; object-fit: var(--yamp-artwork-fit, cover); border-radius: 8px;";
-        }
-      }
-    }
-    return ""; // Default style (no additional styling)
+    return this._artworkController.getCollapsedArtworkStyle();
   }
 
-  // Get artwork URL from entity state, supporting entity_picture_local
   _getArtworkUrl(state, forceIdleImage = false, ignoreIdleImage = false) {
-    const isIdleImageActive = !ignoreIdleImage && (this._isIdle || forceIdleImage) && !!this.config?.idle_image;
-    const res = getArtworkUrl(state, {
-      hostname: this.config?.artwork_hostname || '',
-      overrides: Array.isArray(this.config?.media_artwork_overrides) ? this.config.media_artwork_overrides : [],
-      fallbackArtwork: this.config?.fallback_artwork,
-      artworkObjectFit: this._artworkObjectFit,
-      aspectRatioCache: this._aspectRatioCache,
-      isIdleImageActive,
-      resolveOverrideSource: (override, sourceValue, type, stateObj) =>
-        this._getResolvedArtworkOverrideSource(override, sourceValue, type, stateObj)
-    });
-
-    if (!res) return null;
-
-    let { url, sizePercentage, objectFit, objectPosition } = res;
-
-    // Validate artwork URL to prevent proxy errors
-    if (url && !isValidArtworkUrl(url)) {
-      url = null;
-    }
-
-    if (!objectFit) {
-      objectFit = this._artworkObjectFit;
-    }
-
-    if (!objectPosition) {
-      objectPosition = this.config?.artwork_position || "top center";
-    }
-
-    return { url, sizePercentage, objectFit, objectPosition };
+    return this._artworkController.getArtworkUrl(state, forceIdleImage, ignoreIdleImage);
   }
 
-  // Unified helper to resolve artwork with intelligent fallbacks
   _resolveSelectedArtwork(options) {
-    return resolveSelectedArtwork(options);
+    return this._artworkController.resolveSelectedArtwork(options);
   }
 
   _getBackgroundSizeForFit(fit) {
-    switch (fit) {
-      case "contain":
-        return "contain";
-      case "fill":
-        return "100% 100%";
-      case "scale-down":
-        return "contain";
-      case "none":
-        return "auto";
-      case "scaled-contain":
-      case "scaled-contain-alternate":
-        return "80%";
-      case "cover":
-      default:
-        return "cover";
-    }
+    return this._artworkController.getBackgroundSizeForFit(fit);
   }
 
-
-
-  // Check if a URL points to an external origin (not the current HA instance)
   _isExternalImageUrl(url) {
-    return (
-      /^https?:\/\//i.test(url) &&
-      window.location?.origin &&
-      !url.startsWith(window.location.origin)
-    );
+    return this._artworkController.isExternalImageUrl(url);
   }
 
-  // Extract dominant color from image
   async _extractDominantColor(imgUrl) {
-    return new Promise((resolve) => {
-      if (!imgUrl || typeof imgUrl !== "string") {
-        resolve("#888");
-        return;
-      }
-      const img = new window.Image();
-      // Only set crossOrigin for external URLs to prevent CORS credential stripping on relative HA proxy paths
-      if (this._isExternalImageUrl(imgUrl)) {
-        img.crossOrigin = "Anonymous";
-      }
-      img.src = imgUrl;
-      img.onload = function () {
-        try {
-          const canvas = document.createElement("canvas");
-          canvas.width = 1;
-          canvas.height = 1;
-          const ctx = canvas.getContext("2d");
-          ctx.drawImage(img, 0, 0, 1, 1);
-          const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data;
-          resolve(`rgb(${r},${g},${b})`);
-        } catch (e) {
-          resolve("#888");
-        }
-      };
-      img.onerror = function () { resolve("#888"); };
-    });
+    return this._artworkController.extractDominantColor(imgUrl);
   }
 
   _updateArtworkAspectRatios() {
-    if (!this.hass) return;
-    this.entityIds.forEach(entityId => {
-      const state = this.hass.states[entityId];
-      if (state?.attributes) {
-        const attrs = state.attributes;
-        const baseArtworkUrl =
-          getValidArtworkAttr(attrs, "entity_picture_local") ||
-          getValidArtworkAttr(attrs, "entity_picture") ||
-          getValidArtworkAttr(attrs, "album_art");
-
-        if (baseArtworkUrl) {
-          this._calculateAspectRatio(this._normalizeImageSourceValue(baseArtworkUrl));
-        }
-      }
-    });
+    this._artworkController.updateArtworkAspectRatios();
   }
 
   _calculateAspectRatio(url) {
-    if (!url || typeof url !== "string") return;
-    if (this._aspectRatioCache[url] !== undefined) return;
-
-    this._aspectRatioCache[url] = null;
-    const img = new window.Image();
-    if (this._isExternalImageUrl(url)) {
-      img.crossOrigin = "Anonymous";
-    }
-    img.src = url;
-    img.onload = () => {
-      if (img.naturalWidth && img.naturalHeight) {
-        this._aspectRatioCache[url] = img.naturalWidth / img.naturalHeight;
-        this.requestUpdate();
-      }
-    };
-    img.onerror = () => {
-      this._aspectRatioCache[url] = null;
-    };
+    this._artworkController.calculateAspectRatio(url);
   }
 
   _normalizeAdaptiveTextTargets(config) {
@@ -5418,40 +5234,11 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _normalizeImageSourceValue(value) {
-    if (!value || typeof value !== "string") return "";
-    let trimmed = value.trim();
-    if (!trimmed) return "";
-    const quoted = (trimmed.startsWith("'") && trimmed.endsWith("'")) ||
-      (trimmed.startsWith('"') && trimmed.endsWith('"'));
-    if (quoted && trimmed.length >= 2) {
-      trimmed = trimmed.slice(1, -1).trim();
-    }
-    const urlMatch = trimmed.match(/^url\((.*)\)$/i);
-    if (urlMatch && urlMatch[1] !== undefined) {
-      let inner = urlMatch[1].trim();
-      if ((inner.startsWith("'") && inner.endsWith("'")) || (inner.startsWith('"') && inner.endsWith('"'))) {
-        inner = inner.slice(1, -1).trim();
-      }
-      return inner;
-    }
-    return trimmed;
+    return this._artworkController.normalizeImageSourceValue(value);
   }
 
   _resolveImageUrlFromInput(input) {
-    const normalized = this._normalizeImageSourceValue(input);
-    if (!normalized || !this.hass) return null;
-    if (this.hass.states?.[normalized]) {
-      const stateObj = this.hass.states[normalized];
-      return (
-        stateObj.attributes?.entity_picture_local ||
-        stateObj.attributes?.entity_picture ||
-        (stateObj.state && typeof stateObj.state === "string" && (stateObj.state.startsWith("http") || stateObj.state.startsWith("/")) ? stateObj.state : null)
-      );
-    }
-    if (normalized.startsWith("http") || normalized.startsWith("/")) {
-      return normalized;
-    }
-    return null;
+    return this._artworkController.resolveImageUrlFromInput(input);
   }
 
   setConfig(rawConfig) {
@@ -5528,30 +5315,13 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     }
     this._hideActiveEntityLabel = config.hide_active_entity_label === true;
     this._hideActiveEntityLabelOnIdle = config.hide_active_entity_label_on_idle === true;
-    this._artworkOverrideTemplateCache = {};
-    this._artworkOverrideIndexMap = null;
+    this._artworkController.resetCaches();
 
     // Pre-compile wildcard regexes for artwork overrides
     if (Array.isArray(config.media_artwork_overrides)) {
-      // Create a copy of the overrides array and objects to avoid "not extensible" errors
-      // with Home Assistant's frozen config objects.
-      this.config.media_artwork_overrides = config.media_artwork_overrides.map(o => ({ ...o }));
-
-      this.config.media_artwork_overrides.forEach(override => {
-        if (!override || typeof override !== "object") return;
-        override.__cachedRegexes = {};
-        ARTWORK_OVERRIDE_MATCH_KEYS.forEach(key => {
-          const pattern = override[key];
-          if (typeof pattern === "string" && pattern.includes("*") && pattern !== "*") {
-            try {
-              const regexPattern = pattern.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\\\*/g, ".*");
-              override.__cachedRegexes[key] = new RegExp(`^${regexPattern}$`, "i");
-            } catch (e) {
-              console.warn("yamp: Failed to compile artwork override regex for", key, pattern);
-            }
-          }
-        });
-      });
+      this.config.media_artwork_overrides = this._artworkController.compileArtworkOverrides(
+        config.media_artwork_overrides
+      );
     }
     // Handle idle image templates
     if (typeof config.idle_image === "string" &&
@@ -9237,8 +9007,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
    * artwork remains recognisable even on narrow cards.
    */
   _getMaxCollapsedArtworkWidth(cardWidth) {
-    const safeMaxWidth = cardWidth > 0 ? Math.max(64, cardWidth - 220) : 102;
-    return Math.min(safeMaxWidth, 160);
+    return this._artworkController.getMaxCollapsedArtworkWidth(cardWidth);
   }
 
   _setHostDataAttributes(host, config, hasCustomCardHeight) {
@@ -9460,39 +9229,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _updateHostArtworkStyles(host, playbackStateObj, forceIdleImage) {
-    const metadataStateObj = this.metadataStateObj;
-    const metadataArtwork = this._getArtworkUrl(metadataStateObj, forceIdleImage);
-    const playbackArtwork = this._getArtworkUrl(playbackStateObj, forceIdleImage);
-    const mainState = this.currentStateObj;
-    const mainArtwork = this._getArtworkUrl(mainState, forceIdleImage);
-
-    const displayTitle = metadataStateObj?.attributes?.media_title || playbackStateObj?.attributes?.media_title || mainState?.attributes?.media_title;
-
-    const selectedArt = this._resolveSelectedArtwork({
-      metadataArtwork,
-      playbackArtwork,
-      mainArtwork,
-      displayTitle,
-      playbackStateObj,
-      mainState,
-    });
-
-    let artworkObjectFit = this._artworkObjectFit;
-    if (selectedArt?.objectFit) {
-      artworkObjectFit = selectedArt.objectFit;
-    }
-
-    const activeArtworkFit = artworkObjectFit || "cover";
-    const backgroundSize = this._getBackgroundSizeForFit(activeArtworkFit);
-    host.style.setProperty('--yamp-artwork-fit', activeArtworkFit);
-    host.style.setProperty('--yamp-artwork-bg-size', backgroundSize);
-    if (selectedArt?.objectPosition) {
-      host.style.setProperty('--yamp-artwork-position', selectedArt.objectPosition);
-    } else if (this.config?.artwork_position) {
-      host.style.setProperty('--yamp-artwork-position', this.config.artwork_position);
-    } else {
-      host.style.setProperty('--yamp-artwork-position', 'top center');
-    }
+    this._artworkController.updateHostArtworkStyles(host, playbackStateObj, forceIdleImage);
   }
 
   _updateHostAttributes() {
