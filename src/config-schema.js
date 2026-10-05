@@ -170,6 +170,7 @@ export const CARD_CONFIG_DEFAULTS = Object.freeze({
   show_album: true,
   lyrics_background_fade: DEFAULT_LYRICS_BACKGROUND_FADE,
   lock_screen_controls: false,
+  full_screen: false,
 });
 
 /**
@@ -207,6 +208,7 @@ export const TEMPLATE_SUPPORTED_FIELDS = Object.freeze(
     "font_color",
     "lyrics_background_fade",
     "lock_screen_controls",
+    "full_screen",
   ])
 );
 

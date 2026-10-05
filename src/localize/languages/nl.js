@@ -167,6 +167,7 @@ export default {
       show_album: "Toon de albumnaam naast de artiest in de spelerdetails.",
       lock_screen_controls:
         "Houd bedieningselementen en trackmetagegevens actief op het vergrendelingsscherm van je apparaat (iOS / Android / macOS) wanneer de app op de achtergrond wordt uitgevoerd. Let op: deze functie is experimenteel.",
+      full_screen: "Kaart weergeven als dashboard-overlay over het volledige scherm.",
       toggle_media_session: "Let op: vergrendelscherm- en mediasessiebediening zijn experimenteel.",
       adaptive_controls:
         "Laat de afspeelknoppen groeien of krimpen om in de beschikbare ruimte te passen.",
@@ -285,6 +286,7 @@ export default {
       swap_pause_stop: "Pauze vervangen door Stop",
       show_album: "Toon albumnaam",
       lock_screen_controls: "Mediabediening vergrendelscherm (Experimenteel)",
+      full_screen: "Volledig scherm overlay",
       adaptive_controls: "Adaptieve Knoppen Grootte",
       hide_active_entity: "Label van Actieve Entiteit verbergen",
       hide_active_entity_on_idle: "Actieve entiteitslabel verbergen bij inactiviteit",
@@ -384,6 +386,7 @@ export default {
       toggle_lyrics: "Wisselen tussen songtekst-overlay",
       remote_control: "Afstandsbediening overlay openen",
       toggle_media_session: "Wisselen van mediasessie / vergrendelschermbediening (Experimenteel)",
+      full_screen: "Volledig scherm overlay in-/uitschakelen",
     },
     action_helpers: {
       sync_selected_entity: "Geselecteerde entiteit synchroniseren",
@@ -493,6 +496,8 @@ export default {
       remote_controls: "Afstandsbediening",
       show_lyrics: "Songtekst weergeven",
       hide_lyrics: "Songtekst verbergen",
+      full_screen: "Volledig scherm",
+      exit_full_screen: "Volledig scherm verlaten",
       transfer_queue: "Wachtrij Overdragen",
       main_menu: "Hoofdmenu",
       group_players: "Spelers Groeperen",

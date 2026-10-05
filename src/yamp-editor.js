@@ -820,6 +820,8 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     if (action.action === "remote_control") return "remote_control";
     if (action.action === "toggle_media_session" || action.action === "toggle_lock_screen_controls")
       return "toggle_media_session";
+    if (action.action === "full_screen" || action.action === "toggle_full_screen")
+      return "full_screen";
     return "service";
   }
 

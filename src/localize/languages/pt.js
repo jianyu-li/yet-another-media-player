@@ -155,6 +155,7 @@ export default {
       show_album: "Exibir o nome do álbum ao lado do artista nos detalhes do reprodutor.",
       lock_screen_controls:
         "Mantenha os controles e os metadados da faixa ativos na tela de bloqueio do seu dispositivo (iOS / Android / macOS) quando o aplicativo estiver em segundo plano. Nota: Esta funcionalidade é experimental.",
+      full_screen: "Apresentar o cartão como uma sobreposição de ecrã inteiro no painel.",
       toggle_media_session:
         "Nota: Os controlos de ecrã de bloqueio e sessão multimédia são experimentais.",
       adaptive_controls: "Permitir que os botões se adaptem ao espaço.",
@@ -261,6 +262,7 @@ export default {
       swap_pause_stop: "Substituir Pausa por Stop",
       show_album: "Mostrar nome do álbum",
       lock_screen_controls: "Controles de mídia na tela de bloqueio (Experimental)",
+      full_screen: "Sobreposição de ecrã inteiro",
       adaptive_controls: "Tamanho adaptativo",
       hide_active_entity: "Ocultar nome da entidade ativa",
       hide_active_entity_on_idle: "Ocultar etiqueta de entidade ativa quando inativo",
@@ -361,6 +363,7 @@ export default {
       remote_control: "Abrir sobreposição do controlo remoto",
       toggle_media_session:
         "Alternar sessão de multimédia / controlos de ecrã de bloqueio (Experimental)",
+      full_screen: "Alternar sobreposição de ecrã inteiro",
     },
     action_helpers: {
       sync_selected_entity: "Sincronizar entidade selecionada →",
@@ -470,6 +473,8 @@ export default {
       remote_controls: "Controlo remoto",
       show_lyrics: "Mostrar letras",
       hide_lyrics: "Ocultar letras",
+      full_screen: "Ecrã inteiro",
+      exit_full_screen: "Sair do ecrã inteiro",
       transfer_queue: "Transferir fila",
       main_menu: "Menu Principal",
       group_players: "Agrupar",

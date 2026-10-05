@@ -417,6 +417,11 @@ export function renderActionEditor(action, idx = this._actionEditorIndex, isSear
                       localize("editor.action_types.toggle_media_session") ||
                       "Toggle Media Session Controls (Experimental)",
                   },
+                  {
+                    value: "full_screen",
+                    label:
+                      localize("editor.action_types.full_screen") || "Toggle Full Screen Overlay",
+                  },
                 ],
               },
             }}
@@ -501,7 +506,8 @@ export function renderActionEditor(action, idx = this._actionEditorIndex, isSear
               } else if (
                 mode === "toggle_lyrics" ||
                 mode === "remote_control" ||
-                mode === "toggle_media_session"
+                mode === "toggle_media_session" ||
+                mode === "full_screen"
               ) {
                 this._updateActionProperties({
                   menu_item: undefined,
@@ -555,6 +561,7 @@ export function renderActionEditor(action, idx = this._actionEditorIndex, isSear
                           { value: "group-players", label: localize("card.menu.group_players") },
                           { value: "transfer-queue", label: localize("card.menu.transfer_queue") },
                           { value: "main-menu", label: localize("card.menu.main_menu") },
+                          { value: "full-screen", label: localize("card.menu.full_screen") },
                         ],
                       },
                     }}

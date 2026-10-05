@@ -41,6 +41,7 @@ describe("config-schema", () => {
       assert.equal(CARD_CONFIG_DEFAULTS.hold_to_pin, false);
       assert.equal(CARD_CONFIG_DEFAULTS.match_theme, false);
       assert.equal(CARD_CONFIG_DEFAULTS.show_album, true);
+      assert.equal(CARD_CONFIG_DEFAULTS.full_screen, false);
     });
   });
 
@@ -144,6 +145,7 @@ describe("config-schema", () => {
         "font_color",
         "lyrics_background_fade",
         "lock_screen_controls",
+        "full_screen",
       ];
       expectedFields.forEach((field) => {
         assert.ok(TEMPLATE_SUPPORTED_FIELDS.has(field), `Field should support templates: ${field}`);

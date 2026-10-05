@@ -184,6 +184,8 @@ export interface ActionConfig {
     | "sync_selected_entity"
     | "toggle_media_session"
     | "toggle_lock_screen_controls"
+    | "full_screen"
+    | "toggle_full_screen"
     | string;
   service?: string;
   service_data?: Record<string, any>;
@@ -310,6 +312,7 @@ export interface YampCardConfig {
   show_album?: boolean;
   lyrics_background_fade?: number | string;
   lock_screen_controls?: boolean | string;
+  full_screen?: boolean | string;
   [key: string]: any;
 }
 
@@ -325,6 +328,7 @@ export interface TemplateContext {
   is_options?: boolean;
   is_transfer_queue?: boolean;
   is_any_menu_open?: boolean;
+  is_fullscreen?: boolean;
   is_dark_mode: boolean;
   is_mobile: boolean;
   is_music_assistant: boolean;
@@ -400,6 +404,8 @@ export declare class TemplateController {
   lyricsBackgroundFadeResolveCache: Record<string, TemplateResolveCacheEntry<string | number>>;
   lockScreenControlsTemplateValue: Record<string, TemplateValueEntry>;
   lockScreenControlsResolveCache: Record<string, TemplateResolveCacheEntry<string | boolean>>;
+  fullScreenTemplateValue: Record<string, TemplateValueEntry>;
+  fullScreenResolveCache: Record<string, TemplateResolveCacheEntry<string | boolean>>;
   contextKeyMap: Record<string, string>;
   hostConnected(): void;
   hostDisconnected(): void;
@@ -687,6 +693,11 @@ export interface YetAnotherMediaPlayerCard {
   _artworkController?: ArtworkController;
   queueController?: QueueController;
   _queueController?: QueueController;
+  _isFullScreen?: boolean;
+  _fullScreenOverride?: boolean | null;
+  _toggleFullScreen?: () => void;
+  _enterFullScreen?: () => void;
+  _exitFullScreen?: () => void;
   requestUpdate?: (name?: PropertyKey, oldValue?: unknown) => Promise<unknown>;
   [key: string]: any;
 }

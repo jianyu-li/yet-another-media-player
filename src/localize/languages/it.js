@@ -155,6 +155,7 @@ export default {
       show_album: "Visualizza il nome dell'album accanto all'artista nei dettagli del lettore.",
       lock_screen_controls:
         "Mantieni i controlli e i metadati della traccia attivi sulla schermata di blocco del dispositivo (iOS / Android / macOS) quando l'app è in background. Nota: Questa funzione è sperimentale.",
+      full_screen: "Mostra la scheda come sovrapposizione a schermo intero nella dashboard.",
       toggle_media_session:
         "Nota: I controlli della sessione multimediale e della schermata di blocco sono sperimentali.",
       adaptive_controls: "Permetti ai pulsanti di adattarsi allo spazio.",
@@ -260,6 +261,7 @@ export default {
       swap_pause_stop: "Sostituisci Pausa con Stop",
       show_album: "Mostra nome album",
       lock_screen_controls: "Controlli multimediali nella schermata di blocco (Sperimentale)",
+      full_screen: "Schermo intero",
       adaptive_controls: "Dimensione adattativa",
       hide_active_entity: "Nascondi nome entità attiva",
       hide_active_entity_on_idle: "Nascondi etichetta entità attiva quando inattivo",
@@ -360,6 +362,7 @@ export default {
       remote_control: "Apri sovrapposizione telecomando",
       toggle_media_session:
         "Attiva/disattiva sessione multimediale / schermata di blocco (Sperimentale)",
+      full_screen: "Attiva/disattiva sovrapposizione a schermo intero",
     },
     action_helpers: {
       sync_selected_entity: "Sincronizza entità selezionata →",
@@ -469,6 +472,8 @@ export default {
       remote_controls: "Telecomando",
       show_lyrics: "Mostra testi",
       hide_lyrics: "Nascondi testi",
+      full_screen: "Schermo intero",
+      exit_full_screen: "Esci dallo schermo intero",
       transfer_queue: "Trasferisci coda",
       main_menu: "Menu Principale",
       group_players: "Raggruppa",

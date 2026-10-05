@@ -157,6 +157,7 @@ export default {
       show_album: "Prikaži ime albuma zraven izvajalca v podrobnostih predvajalnika.",
       lock_screen_controls:
         "Ohranite kontrolnike in metapodatke skladbe aktivne na zaklenjenem zaslonu vaše naprave (iOS / Android / macOS), ko je aplikacija v ozadju. Opomba: Ta funkcija je eksperimentalna.",
+      full_screen: "Prikaži kartico kot celozaslonsko prekrivanje nadzorne plošče.",
       toggle_media_session:
         "Opomba: Kontrolniki zaklenjenega zaslona in seje predstavnosti so eksperimentalni.",
       adaptive_controls: "Prilagodi velikost gumbov glede na prostor.",
@@ -257,6 +258,7 @@ export default {
       swap_pause_stop: "Zamenjaj pavzo z zaustavitvijo",
       show_album: "Prikaži ime albuma",
       lock_screen_controls: "Predstavnostni kontrolniki na zaklenjenem zaslonu (Eksperimentalno)",
+      full_screen: "Celozaslonsko prekrivanje",
       adaptive_controls: "Prilagodljiva velikost gumbov",
       hide_active_entity: "Skrij oznako aktivne entitete",
       hide_active_entity_on_idle: "Skrij oznako aktivne entitete ob mirovanju",
@@ -357,6 +359,7 @@ export default {
       remote_control: "Odpri prekrivanje daljinskega upravljalnika",
       toggle_media_session:
         "Preklopi sejo predstavnosti / kontrole zaklenjenega zaslona (Eksperimentalno)",
+      full_screen: "Preklopi celozaslonsko prekrivanje",
     },
     action_helpers: {
       sync_selected_entity: "Sinhroniziraj izbrano entiteto →",
@@ -466,6 +469,8 @@ export default {
       remote_controls: "Daljinski upravljalnik",
       show_lyrics: "Pokaži besedilo",
       hide_lyrics: "Skrij besedilo",
+      full_screen: "Celozaslonski način",
+      exit_full_screen: "Izhod iz celozaslonskega načina",
       transfer_queue: "Prenesi čakalno vrsto",
       main_menu: "Glavni meni",
       group_players: "Združi predvajalnike",

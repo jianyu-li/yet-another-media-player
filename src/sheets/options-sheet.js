@@ -89,6 +89,15 @@ export function renderMainMenu(sourceList, menuOnlyActions, showChipsInMenu) {
             )
           : nothing
       }
+      ${renderMenuItem(
+        localize(this._isFullScreen ? "card.menu.exit_full_screen" : "card.menu.full_screen"),
+        this._isFullScreen ? "mdi:fullscreen-exit" : "mdi:fullscreen",
+        () => {
+          this._toggleFullScreen();
+          this._showEntityOptions = false;
+          this.requestUpdate();
+        }
+      )}
       ${
         menuOnlyActions.length
           ? html`

@@ -570,6 +570,57 @@ export function renderVisualTab() {
               </div>
             `
       }
+      ${
+        this._isTemplateMode("full_screen", this._config.full_screen)
+          ? html`
+              <div
+                class="form-row"
+                data-search-keys="full_screen fullscreen overlay view fill screen"
+              >
+                <div class="editor-field-wrapper">
+                  <div class="grow-children" style="flex-direction: column;">
+                    <span class="form-label">${localize("editor.labels.full_screen")}</span>
+                    <ha-code-editor
+                      lint
+                      .hass=${this.hass}
+                      mode="jinja2"
+                      autocomplete-entities
+                      label="${localize("editor.labels.full_screen")}"
+                      .value=${
+                        typeof this._config.full_screen === "string" ? this._config.full_screen : ""
+                      }
+                      @value-changed=${(e) => this._updateConfig("full_screen", e.detail.value)}
+                    ></ha-code-editor>
+                  </div>
+                  <div class="field-actions">
+                    ${this._renderTemplateToggle("full_screen", this._config.full_screen, (v) =>
+                      this._updateConfig("full_screen", v)
+                    )}
+                  </div>
+                </div>
+                <div class="config-subtitle">${localize("editor.subtitles.full_screen")}</div>
+              </div>
+            `
+          : html`
+              <div
+                class="form-row"
+                data-search-keys="full_screen fullscreen overlay view fill screen"
+              >
+                <div style="display: flex; align-items: center; gap: 8px;">
+                  <ha-switch
+                    id="full-screen-toggle"
+                    .checked=${this._config.full_screen === true}
+                    @change=${(e) => this._updateConfig("full_screen", e.target.checked)}
+                  ></ha-switch>
+                  <span>${localize("editor.labels.full_screen")}</span>
+                  ${this._renderTemplateToggle("full_screen", this._config.full_screen, (v) =>
+                    this._updateConfig("full_screen", v)
+                  )}
+                </div>
+                <div class="config-subtitle">${localize("editor.subtitles.full_screen")}</div>
+              </div>
+            `
+      }
       <div class="form-row">
         <div>
           <ha-switch
