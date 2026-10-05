@@ -160,6 +160,7 @@ export default {
       show_album: "Display the album name next to the artist in the player details.",
       lock_screen_controls:
         "Keep controls and track metadata active on your device lock screen (iOS / Android / macOS) when backgrounding the app. Note: This feature is experimental.",
+      full_screen: "Display card as a full-screen dashboard overlay.",
       toggle_media_session: "Note: Lock screen and media session controls are experimental.",
       adaptive_controls: "Let the playback buttons grow or shrink to fit the available space.",
       hide_menu_player:
@@ -270,6 +271,7 @@ export default {
       swap_pause_stop: "Swap Pause with Stop",
       show_album: "Show Album Name",
       lock_screen_controls: "Lock Screen Media Controls (Experimental)",
+      full_screen: "Full Screen Overlay",
       adaptive_controls: "Adaptive Control Size",
       hide_active_entity: "Hide Active Entity Label",
       hide_active_entity_on_idle: "Hide Active Entity Label on Idle",
@@ -369,6 +371,7 @@ export default {
       toggle_lyrics: "Toggle Lyrics Overlay",
       remote_control: "Open Remote Controls Overlay",
       toggle_media_session: "Toggle Media Session Controls (Experimental)",
+      full_screen: "Toggle Full Screen Overlay",
     },
     action_helpers: {
       sync_selected_entity: "Sync Selected Entity →",
@@ -478,6 +481,8 @@ export default {
       remote_controls: "Remote Control",
       show_lyrics: "Show Lyrics",
       hide_lyrics: "Hide Lyrics",
+      full_screen: "Full Screen",
+      exit_full_screen: "Exit Full Screen",
       transfer_queue: "Transfer Queue",
       main_menu: "Main Menu",
       group_players: "Group Players",

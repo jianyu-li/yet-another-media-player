@@ -91,6 +91,7 @@ describe("TemplateController (Reactive Lit Controller)", () => {
     assert.deepEqual(ctrl.volResolveCache, {});
     assert.deepEqual(ctrl.remoteResolveCache, {});
     assert.deepEqual(ctrl.alwaysCollapsedResolveCache, {});
+    assert.deepEqual(ctrl.fullScreenResolveCache, {});
   });
 
   it("evaluates client-side JS templates synchronously", () => {
@@ -193,7 +194,7 @@ describe("TemplateController (Reactive Lit Controller)", () => {
     assert.equal(staticResult, "media_player.static_speaker");
   });
 
-  it("syncs UI template subscriptions for always_collapsed and control_layout", () => {
+  it("syncs UI template subscriptions for always_collapsed, control_layout, and full_screen", () => {
     const host = createMockHost();
     const ctrl = new TemplateController(host);
 
@@ -206,5 +207,25 @@ describe("TemplateController (Reactive Lit Controller)", () => {
     // Static value cleans up cache
     ctrl.syncTemplateSubscriptions("always_collapsed", contextStr, false);
     assert.equal(ctrl.alwaysCollapsedResolveCache["card"], undefined);
+
+    // JS template for full_screen
+    ctrl.syncTemplateSubscriptions("full_screen", contextStr, "[[[ return is_playing; ]]]");
+    assert.equal(ctrl.fullScreenResolveCache["card"]?.value, true);
+
+    // Jinja template subscription for full_screen
+    ctrl.subscribeToTemplate(
+      "card",
+      "full_screen",
+      "{{ is_state('input_boolean.fullscreen', 'on') }}"
+    );
+    assert.ok(host.hass.connection.lastSubscribedTemplate.includes("input_boolean.fullscreen"));
+    host.hass.connection.subscribeMessageCallback({
+      result: "true",
+    });
+    assert.equal(ctrl.fullScreenResolveCache["card"]?.value, "true");
+
+    // Static value cleans up cache
+    ctrl.syncTemplateSubscriptions("full_screen", contextStr, false);
+    assert.equal(ctrl.fullScreenResolveCache["card"], undefined);
   });
 });

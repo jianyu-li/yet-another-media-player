@@ -404,6 +404,9 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._isEditorPreviewCached = undefined;
     window.addEventListener("scroll", this._handleGlobalScroll, { passive: true });
     window.addEventListener("resize", this._handleViewportResize, { passive: true });
+    if (this._handleKeyDownBound) {
+      window.addEventListener("keydown", this._handleKeyDownBound);
+    }
     this._updateViewportFlags();
     this._updateAdaptiveTextObserverState();
     if (this._mediaSessionManager && this._isMediaSessionEnabled) {
@@ -539,7 +542,8 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     _showSourceMenu: { state: true },
     _volumeDraggingEntity: { state: true },
     _dragVolume: { state: true },
-    _mediaSessionOverride: { state: true }
+    _mediaSessionOverride: { state: true },
+    _fullScreenOverride: { state: true }
   };
 
   static styles = yampCardStyles;
@@ -582,6 +586,9 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   get _alwaysCollapsed() {
+    if (this._isFullScreen) {
+      return false;
+    }
     const raw = this.config?.always_collapsed;
     if (typeof raw === 'string' && (raw.includes('{{') || raw.includes('{%') || raw.trim().startsWith('[[['))) {
       const resolved = this._alwaysCollapsedResolveCache?.['card']?.value;
@@ -687,8 +694,35 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     return this._lockScreenControls;
   }
 
+  get _fullScreenConfig() {
+    const raw = this.config?.full_screen;
+    if (typeof raw === "string" && (raw.includes("{{") || raw.includes("{%") || raw.trim().startsWith("[[["))) {
+      const resolved = this._fullScreenResolveCache?.["card"]?.value;
+      if (resolved !== undefined && resolved !== null && resolved !== "") {
+        if (typeof resolved === "boolean") return resolved;
+        const lower = String(resolved).trim().toLowerCase();
+        return lower === "true" || lower === "1" || lower === "on" || lower === "yes";
+      }
+      return false; // Default until template resolves
+    }
+    return raw === true;
+  }
+
+  get _isFullScreen() {
+    if (this._isEditorPreview) {
+      return false;
+    }
+    if (this._fullScreenOverride !== null) {
+      return this._fullScreenOverride;
+    }
+    return this._fullScreenConfig;
+  }
+
   constructor() {
     super();
+    /** @type {boolean | null} */
+    this._fullScreenOverride = null;
+    this._handleKeyDownBound = this._handleKeyDown.bind(this);
     this._mediaSessionOverride = null;
     this._mediaSessionUpdatePending = false;
     this._mediaSessionManager = new YampMediaSessionManager(this);
@@ -745,13 +779,12 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._showRemoteControl = false;
     this._cardHeightTemplateValue = {};
     this._cardHeightResolveCache = {};
-    this._lastCardHeightContextKey = null;
     this._lyricsBackgroundFadeTemplateValue = {};
     this._lyricsBackgroundFadeResolveCache = {};
-    this._lastLyricsBackgroundFadeContextKey = null;
     this._lockScreenControlsTemplateValue = {};
     this._lockScreenControlsResolveCache = {};
-    this._lastLockScreenControlsContextKey = null;
+    this._fullScreenTemplateValue = {};
+    this._fullScreenResolveCache = {};
     this._transferQueuePendingTarget = null;
     this._transferQueueStatus = null;
     this._hasTransferQueueForCurrent = false;
@@ -985,6 +1018,8 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._lyricsBackgroundFadeResolveCache = this._templateController.lyricsBackgroundFadeResolveCache;
     this._lockScreenControlsTemplateValue = this._templateController.lockScreenControlsTemplateValue;
     this._lockScreenControlsResolveCache = this._templateController.lockScreenControlsResolveCache;
+    this._fullScreenTemplateValue = this._templateController.fullScreenTemplateValue;
+    this._fullScreenResolveCache = this._templateController.fullScreenResolveCache;
     this._maResolveCache = this._templateController.maResolveCache;
     this._volResolveCache = this._templateController.volResolveCache;
     this._remoteResolveCache = this._templateController.remoteResolveCache;
@@ -4187,6 +4222,8 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       is_options: this._showEntityOptions,
       is_transfer_queue: this._showTransferQueue,
       is_any_menu_open: this.isAnyMenuOpen,
+      is_fullscreen: this._isFullScreen,
+      is_full_screen: this._isFullScreen,
       is_dark_mode: isDarkMode,
       is_mobile: this._isMobile,
       is_music_assistant: this._isMusicAssistantEntity(),
@@ -4280,6 +4317,9 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const config = { ...templateBase, ...rawConfig };
     if (oldConfig?.lock_screen_controls !== config.lock_screen_controls) {
       this._mediaSessionOverride = null;
+    }
+    if (oldConfig?.full_screen !== config.full_screen) {
+      this._fullScreenOverride = null;
     }
     this.config = config;
     this._swapPauseForStop = config.swap_pause_for_stop === true;
@@ -5475,6 +5515,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._syncTemplateSubscriptions('card_height', currentContext, this.config?.card_height);
     this._syncTemplateSubscriptions('lyrics_background_fade', currentContext, this.config?.lyrics_background_fade);
     this._syncTemplateSubscriptions('lock_screen_controls', currentContext, this.config?.lock_screen_controls);
+    this._syncTemplateSubscriptions('full_screen', currentContext, this.config?.full_screen);
     this._syncEntityTemplateSubscriptions('ma', currentContext);
     this._syncEntityTemplateSubscriptions('vol', currentContext);
     this._syncEntityTemplateSubscriptions('remote', currentContext);
@@ -6096,6 +6137,11 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           this._showTransferQueue = false;
           await this._openEntityOptions();
           break;
+        case "full-screen":
+          this._toggleFullScreen();
+          this._showEntityOptions = false;
+          this.requestUpdate();
+          break;
         default:
           // Do nothing for unknown menu_item
           break;
@@ -6124,6 +6170,11 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         path = await resolveStringTemplate(this.hass, path, context);
         this._handleNavigate(path, openInNewTab);
       }
+      return;
+    }
+
+    if (action.action === "full_screen" || action.action === "toggle_full_screen") {
+      this._toggleFullScreen();
       return;
     }
 
@@ -6428,6 +6479,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         "group-players": localize("card.menu.group_players"),
         "transfer-queue": localize("card.menu.transfer_queue"),
         "main-menu": localize("card.menu.main_menu"),
+        "full-screen": localize(this._isFullScreen ? "card.menu.exit_full_screen" : "card.menu.full_screen"),
       };
       return menuLabels[action.menu_item] ?? action.menu_item;
     }
@@ -6436,6 +6488,9 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       action.action === "navigate"
     ) {
       return iconOnly ? "" : "Navigate";
+    }
+    if (action.action === "full_screen" || action.action === "toggle_full_screen") {
+      return iconOnly ? "" : localize(this._isFullScreen ? "card.menu.exit_full_screen" : "card.menu.full_screen");
     }
     if (action.action === "toggle_lyrics") {
       return iconOnly ? "" : localize("editor.action_types.toggle_lyrics") || "Toggle Lyrics Overlay";
@@ -7060,10 +7115,11 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       : Number(customCardHeightInput);
     const isValidCardHeightNumber = typeof customCardHeight === "number" && Number.isFinite(customCardHeight) && customCardHeight > 0;
     const hasCustomCardHeight =
-      isValidCardHeightNumber ||
-      (typeof customCardHeightInput === "string" &&
-        customCardHeightInput.trim() !== "" &&
-        customCardHeightInput !== "auto");
+      !this._isFullScreen &&
+      (isValidCardHeightNumber ||
+        (typeof customCardHeightInput === "string" &&
+          customCardHeightInput.trim() !== "" &&
+          customCardHeightInput !== "auto"));
 
     const collapsedBaselineHeight = this._collapsedBaselineHeight || 220;
 
@@ -7174,6 +7230,8 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       if (!icon) {
         if (action.action === "toggle_media_session" || action.action === "toggle_lock_screen_controls") {
           icon = this._isMediaSessionEnabled ? "mdi:cellphone-lock" : "mdi:cellphone-wireless";
+        } else if (action.action === "full_screen" || action.action === "toggle_full_screen") {
+          icon = this._isFullScreen ? "mdi:fullscreen-exit" : "mdi:fullscreen";
         } else if (action.action === "toggle_lyrics") {
           icon = "mdi:script-text-outline";
         } else if (action.action === "remote_control") {
@@ -7183,6 +7241,8 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         }
       }
       if (!iconColor && (action.action === "toggle_media_session" || action.action === "toggle_lock_screen_controls") && this._isMediaSessionEnabled) {
+        iconColor = "var(--custom-accent, var(--accent-color, #ff9800))";
+      } else if (!iconColor && (action.action === "full_screen" || action.action === "toggle_full_screen") && this._isFullScreen) {
         iconColor = "var(--custom-accent, var(--accent-color, #ff9800))";
       }
       return html`
@@ -8164,7 +8224,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       ? parseFloat(customCardHeightInput)
       : Number(customCardHeightInput);
     const isValidCardHeightNumber = typeof customCardHeight === "number" && Number.isFinite(customCardHeight) && customCardHeight > 0;
-    const hasCustomCardHeight = isValidCardHeightNumber;
+    const hasCustomCardHeight = !this._isFullScreen && isValidCardHeightNumber;
     return { customCardHeight, hasCustomCardHeight };
   }
 
@@ -8185,6 +8245,12 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     host.setAttribute("data-appearance", appearance);
     host.setAttribute("data-always-collapsed", String(this._alwaysCollapsed));
 
+    if (this._isFullScreen) {
+      host.setAttribute("fullscreen", "");
+    } else {
+      host.removeAttribute("fullscreen");
+    }
+
     // Force hide menu player if always collapsed and no multiple entities/grouping mode
     const hasMultipleEntities = (this.entityObjs || []).length > 1;
     const forceHideMenuPlayer = this._alwaysCollapsed &&
@@ -8204,7 +8270,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     host.setAttribute("data-pin-search-headers", String(effectivePinHeaders));
     host.setAttribute("data-in-search", String(this._showSearchInSheet));
 
-    if (hasCustomCardHeight) {
+    if (hasCustomCardHeight && !this._isFullScreen) {
       host.setAttribute("data-has-custom-height", "true");
     } else {
       host.removeAttribute("data-has-custom-height");
@@ -8981,6 +9047,9 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       window.removeEventListener("click", this._dragClickCaptureFn, true);
       this._dragClickCaptureFn = null;
     }
+    if (this._handleKeyDownBound) {
+      window.removeEventListener("keydown", this._handleKeyDownBound);
+    }
     // Unsubscribe from queue update events
     this._unsubscribeFromQueueUpdates();
     if (this._lyricsController) {
@@ -9308,6 +9377,38 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     if (this._cardType === "remote_control") return;
     this._showRemoteControl = false;
     this.requestUpdate();
+  }
+
+  _toggleFullScreen() {
+    this._fullScreenOverride = !this._isFullScreen;
+    this._updateHostAttributes();
+    this.requestUpdate();
+  }
+
+  _enterFullScreen() {
+    this._fullScreenOverride = true;
+    this._updateHostAttributes();
+    this.requestUpdate();
+  }
+
+  _exitFullScreen() {
+    this._fullScreenOverride = false;
+    this._updateHostAttributes();
+    this.requestUpdate();
+  }
+
+  _handleKeyDown(e) {
+    if (e.key === "Escape" && this._isFullScreen) {
+      if (this._showEntityOptions) {
+        this._closeEntityOptions();
+        return;
+      }
+      if (this._showSearchInSheet) {
+        this._hideSearchSheetInOptions();
+        return;
+      }
+      this._exitFullScreen();
+    }
   }
 
   _getHiddenRemoteButtons() {

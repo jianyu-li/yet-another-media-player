@@ -165,6 +165,7 @@ export default {
       show_album: "Den Albumnamen neben dem Interpreten in den Player-Details anzeigen.",
       lock_screen_controls:
         "Halte Steuerelemente und Titel-Metadaten auf dem Sperrbildschirm deines Geräts (iOS / Android / macOS) aktiv, wenn die App in den Hintergrund tritt. Hinweis: Diese Funktion ist experimentell.",
+      full_screen: "Karte als Vollbild-Dashboard-Overlay anzeigen.",
       toggle_media_session:
         "Hinweis: Sperrbildschirm- und Mediensitzungssteuerung sind experimentell.",
       adaptive_controls: "Wiedergabetasten an verfügbaren Platz anpassen.",
@@ -276,6 +277,7 @@ export default {
       swap_pause_stop: "Pause durch Stop ersetzen",
       show_album: "Albumname anzeigen",
       lock_screen_controls: "Sperrbildschirm-Mediensteuerung (Experimentell)",
+      full_screen: "Vollbild-Overlay",
       adaptive_controls: "Adaptive Tastengröße",
       hide_active_entity: "Aktives Entitäts-Label ausblenden",
       hide_active_entity_on_idle: "Aktive Entitätsbeschriftung im Leerlauf ausblenden",
@@ -375,6 +377,7 @@ export default {
       toggle_lyrics: "Liedtext-Overlay ein-/ausschalten",
       remote_control: "Fernbedienungs-Overlay öffnen",
       toggle_media_session: "Mediensitzung / Sperrbildschirm-Steuerung umschalten (Experimentell)",
+      full_screen: "Vollbild-Overlay umschalten",
     },
     action_helpers: {
       sync_selected_entity: "Entität synchronisieren →",
@@ -484,6 +487,8 @@ export default {
       remote_controls: "Fernbedienung",
       show_lyrics: "Songtext anzeigen",
       hide_lyrics: "Songtext ausblenden",
+      full_screen: "Vollbild",
+      exit_full_screen: "Vollbild beenden",
       transfer_queue: "Warteschlange übertragen",
       main_menu: "Hauptmenü",
       group_players: "Player gruppieren",

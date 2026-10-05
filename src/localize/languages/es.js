@@ -156,6 +156,7 @@ export default {
       show_album: "Mostrar el nombre del álbum junto al artista en los detalles del reproductor.",
       lock_screen_controls:
         "Mantén los controles y los metadatos de la pista activos en la pantalla de bloqueo de tu dispositivo (iOS / Android / macOS) cuando la aplicación esté en segundo plano. Nota: Esta función es experimental.",
+      full_screen: "Mostrar tarjeta como superposición de pantalla completa en el panel.",
       toggle_media_session:
         "Nota: Los controles de pantalla de bloqueo y sesión multimedia son experimentales.",
       adaptive_controls: "Permitir que los botones se adapten al espacio.",
@@ -262,6 +263,7 @@ export default {
       swap_pause_stop: "Cambiar Pausa por Stop",
       show_album: "Mostrar nombre del álbum",
       lock_screen_controls: "Controles multimedia en la pantalla de bloqueo (Experimental)",
+      full_screen: "Superposición de pantalla completa",
       adaptive_controls: "Tamaño adaptativo",
       hide_active_entity: "Ocultar nombre de entidad activa",
       hide_active_entity_on_idle: "Ocultar etiqueta de entidad activa al estar inactivo",
@@ -362,6 +364,7 @@ export default {
       remote_control: "Abrir superposición de mando a distancia",
       toggle_media_session:
         "Alternar controles de sesión de medios / pantalla de bloqueo (Experimental)",
+      full_screen: "Alternar superposición de pantalla completa",
     },
     action_helpers: {
       sync_selected_entity: "Sincronizar entidad seleccionada →",
@@ -471,6 +474,8 @@ export default {
       remote_controls: "Mando a distancia",
       show_lyrics: "Mostrar letra",
       hide_lyrics: "Ocultar letra",
+      full_screen: "Pantalla completa",
+      exit_full_screen: "Salir de pantalla completa",
       transfer_queue: "Transferir cola",
       main_menu: "Menú Principal",
       group_players: "Agrupar",
