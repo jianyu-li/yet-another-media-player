@@ -1,6 +1,7 @@
 import { html, nothing } from "lit";
 import { isMusicAssistantEntity, applyHostnameToUrl } from "./yamp-utils.js";
 import { localize } from "./localize/localize.js";
+import { playMedia } from "./services/ha-media-services.js";
 
 const getPlayOptions = () => [
   { mode: "replace", icon: "mdi:playlist-remove", label: localize("search.replace") },
@@ -1205,11 +1206,7 @@ async function fallbackToMediaPlayerSearch(hass, entityId, query, mediaType, sea
 }
 
 export function playSearchedMedia(hass, entityId, item) {
-  return hass.callService("media_player", "play_media", {
-    entity_id: entityId,
-    media_content_type: item.media_content_type,
-    media_content_id: item.media_content_id,
-  });
+  return playMedia(hass, entityId, item.media_content_id, item.media_content_type);
 }
 
 // Check if a track is favorited in Music Assistant
