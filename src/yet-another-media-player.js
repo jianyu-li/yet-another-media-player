@@ -696,14 +696,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   get _fullScreenConfig() {
     const raw = this.config?.full_screen;
     if (typeof raw === "string" && (raw.includes("{{") || raw.includes("{%") || raw.trim().startsWith("[[["))) {
-      let resolved = this._fullScreenResolveCache?.["card"]?.value;
-      if (resolved === undefined && raw.trim().startsWith("[[[")) {
-        try {
-          resolved = this._evaluateJsTemplate(raw);
-        } catch (e) {
-          // Ignore sync evaluation error
-        }
-      }
+      const resolved = this._fullScreenResolveCache?.["card"]?.value;
       if (resolved !== undefined && resolved !== null && resolved !== "") {
         if (typeof resolved === "boolean") return resolved;
         const lower = String(resolved).trim().toLowerCase();
