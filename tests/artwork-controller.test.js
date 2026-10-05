@@ -280,5 +280,28 @@ describe("ArtworkController & Pure Artwork Helpers", () => {
       assert.strictEqual(mockElement.style.properties["--yamp-artwork-bg-size"], "cover");
       assert.strictEqual(mockElement.style.properties["--yamp-artwork-position"], "center center");
     });
+
+    it("enforces LRU capacity on aspectRatioCache and evicts oldest items", () => {
+      for (let i = 0; i < 60; i++) {
+        controller._setAspectRatio(`https://example.com/art-${i}.jpg`, 1.5);
+      }
+      const keys = Object.keys(controller.aspectRatioCache);
+      assert.strictEqual(keys.length, 50);
+      assert.strictEqual(controller.aspectRatioCache["https://example.com/art-0.jpg"], undefined);
+      assert.strictEqual(controller.aspectRatioCache["https://example.com/art-9.jpg"], undefined);
+      assert.strictEqual(controller.aspectRatioCache["https://example.com/art-10.jpg"], 1.5);
+      assert.strictEqual(controller.aspectRatioCache["https://example.com/art-59.jpg"], 1.5);
+    });
+
+    it("clears aspectRatioCache and template caches on hostDisconnected", () => {
+      controller._setAspectRatio("https://example.com/test.jpg", 1.0);
+      controller.artworkOverrideTemplateCache["test"] = { value: "val", resolving: false };
+      assert.strictEqual(Object.keys(controller.aspectRatioCache).length, 1);
+
+      controller.hostDisconnected();
+      assert.deepStrictEqual(controller.aspectRatioCache, {});
+      assert.deepStrictEqual(controller.artworkOverrideTemplateCache, {});
+      assert.strictEqual(controller.artworkOverrideIndexMap, null);
+    });
   });
 });

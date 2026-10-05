@@ -723,7 +723,7 @@ export class QueueController {
     this.host._searchTotalRows = Math.max(15, tracks.length);
     this.host._searchAttempted = true;
     this.host._searchLoading = false;
-    this.host.requestUpdate();
+    this.host.triggerRender?.() || this.host.requestUpdate?.();
   }
 
   /**
@@ -986,7 +986,7 @@ export class QueueController {
 
     if (this.host) {
       this.host._latestSearchToken = Date.now();
-      this.host.requestUpdate();
+      this.host.triggerRender?.() || this.host.requestUpdate?.();
     }
   }
 
@@ -1024,7 +1024,7 @@ export class QueueController {
       }
       this.host._searchResults = currentResults;
       this.host._latestSearchToken = Date.now();
-      this.host.requestUpdate();
+      this.host.triggerRender?.() || this.host.requestUpdate?.();
     }
   }
 
@@ -1043,7 +1043,7 @@ export class QueueController {
         this.host._searchResultsByType[cacheKey] = updatedResults;
       }
       this.host._searchResults = updatedResults;
-      this.host.requestUpdate();
+      this.host.triggerRender?.() || this.host.requestUpdate?.();
     }
   }
 
@@ -1257,7 +1257,7 @@ export class QueueController {
       clearTimeout(this.transferQueueAutoCloseTimer);
       this.transferQueueAutoCloseTimer = null;
     }
-    this.host.requestUpdate();
+    this.host.triggerRender?.() || this.host.requestUpdate?.();
   }
 
   /**
@@ -1286,7 +1286,7 @@ export class QueueController {
 
     this.transferQueuePendingTarget = target.maEntityId;
     this.transferQueueStatus = null;
-    this.host.requestUpdate();
+    this.host.triggerRender?.() || this.host.requestUpdate?.();
 
     try {
       const payload = this.buildTransferQueuePayload(sourceMaId, target.maEntityId);
@@ -1345,7 +1345,7 @@ export class QueueController {
       }
     } finally {
       this.transferQueuePendingTarget = null;
-      this.host.requestUpdate();
+      this.host.triggerRender?.() || this.host.requestUpdate?.();
     }
   }
 

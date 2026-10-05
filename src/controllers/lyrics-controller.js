@@ -143,7 +143,7 @@ export class LyricsController {
     this.active = next;
     if (this.host) {
       this.host._lyricsActive = next;
-      this.host.requestUpdate();
+      this.host.triggerRender?.() || this.host.requestUpdate?.();
     }
     return this.active;
   }
