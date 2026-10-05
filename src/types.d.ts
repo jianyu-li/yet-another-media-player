@@ -133,7 +133,12 @@ export interface HomeAssistant {
       callback: (msg: T) => void,
       params: Record<string, any>
     ): Promise<() => Promise<void>>;
+    subscribeEvents<T = any>(
+      callback: (event: T) => void,
+      eventType?: string
+    ): Promise<() => Promise<void> | void>;
     sendMessagePromise<T = any>(message: Record<string, any>): Promise<T>;
+    [key: string]: any;
   };
   localize(key: string, ...args: any[]): string;
   formatEntityName?: (
@@ -518,6 +523,91 @@ export function normalizeImageSourceValue(value: any): string;
 export function resolveImageUrlFromInput(input: string, hass?: any): string | null;
 export function compileArtworkOverrides(overrides?: any): any[];
 
+export declare class QueueController {
+  host: YetAnotherMediaPlayerCard;
+  massQueueAvailable: boolean;
+  hasMassQueueIntegration: boolean | null;
+  checkingMassQueueIntegration: boolean;
+  queueOperationPromise: Promise<void>;
+  queueOpsTotal: number;
+  queueOpsCompleted: number;
+  queueOpsTimeout: any;
+  queueRefreshTimer: any;
+  queueEventSubscription: any;
+  showTransferQueue: boolean;
+  transferQueuePendingTarget: string | null;
+  transferQueueStatus: { type: string; message: string } | null;
+  hasTransferQueueForCurrent: boolean;
+  transferQueueAutoCloseTimer: any;
+  constructor(host: YetAnotherMediaPlayerCard);
+  hostConnected(): void;
+  hostDisconnected(): void;
+  isMassQueueIntegrationAvailable(hass?: HomeAssistant): Promise<boolean>;
+  getUpcomingQueue(hass?: HomeAssistant, entityId?: string, limit?: number): Promise<any>;
+  getUpcomingQueueWithMassQueue(
+    hass?: HomeAssistant,
+    entityId?: string,
+    limit?: number
+  ): Promise<any>;
+  getUpcomingQueueOriginal(hass?: HomeAssistant, entityId?: string, limit?: number): Promise<any>;
+  getRecommendations(
+    hass?: HomeAssistant,
+    entityId?: string,
+    mediaType?: string | null,
+    limit?: number
+  ): Promise<any>;
+  fetchMassQueueTracks(uri: string, serviceName: string): Promise<any[] | null>;
+  setSearchResultsFromMassQueue(tracks: any[], queryName: string): void;
+  enqueueQueueOperation(operationFn: () => Promise<void>): void;
+  moveQueueItemUp(queueItemId: string): Promise<void>;
+  moveQueueItemDown(queueItemId: string): Promise<void>;
+  moveQueueItemNext(queueItemId: string): Promise<void>;
+  removeQueueItem(queueItemId: string): Promise<void>;
+  onQueueItemMoved(e: { detail: { oldIndex: number; newIndex: number } }): Promise<void>;
+  moveQueueItemInUI(queueItemId: string, direction: string): void;
+  moveQueueItemInUIByIndex(oldIndex: number, newIndex: number): void;
+  advanceQueueInUI(queueItemId?: string | null, isManual?: boolean): void;
+  removeQueueItemFromUI(queueItemId: string): void;
+  showQueueError(message: string): void;
+  refreshQueue(options?: { delayMs?: number }): void;
+  subscribeToQueueUpdates(): Promise<void>;
+  unsubscribeFromQueueUpdates(): void;
+  hasQueueInState(maState: any): boolean;
+  getTransferQueueTargets(): any[];
+  updateTransferQueueAvailability(options?: { refresh?: boolean }): Promise<boolean>;
+  canShowTransferQueueOption(): boolean;
+  openTransferQueue(): void;
+  closeTransferQueue(): void;
+  transferQueueTo(target: any): Promise<void>;
+  buildTransferQueuePayload(sourceId: string, targetId: string): Record<string, string>;
+  isMusicAssistantEntity(): boolean;
+  queueMediaFromSearch(item: any): Promise<void>;
+}
+
+export function checkMassQueueServices(services: any): boolean;
+export function calculateQueueMovePlan(
+  oldIndex: number,
+  newIndex: number
+): { strategy: string; steps: Array<{ service: string }> };
+export function transformMassQueueItems(
+  queueItems: any[],
+  currentTrackId?: string | null,
+  limitAfter?: number
+): any[];
+export function transformQueueNextItem(queueData: any): any[];
+export function normalizeRecommendations(
+  payload: any,
+  entityId?: string,
+  mediaType?: string | null,
+  maxItems?: number
+): any[];
+export function buildTransferQueuePayload(
+  sourceId: string,
+  targetId: string,
+  serviceMeta?: any
+): Record<string, string>;
+export function hasQueueInState(maState: any, cachedUpcoming?: any[] | null): boolean;
+
 export function mediaPlay(hass?: HomeAssistant, entityId?: string): Promise<any>;
 export function mediaPause(hass?: HomeAssistant, entityId?: string): Promise<any>;
 export function mediaPlayPause(hass?: HomeAssistant, entityId?: string): Promise<any>;
@@ -595,6 +685,8 @@ export interface YetAnotherMediaPlayerCard {
   lyricsController?: LyricsController;
   artworkController?: ArtworkController;
   _artworkController?: ArtworkController;
+  queueController?: QueueController;
+  _queueController?: QueueController;
   requestUpdate?: (name?: PropertyKey, oldValue?: unknown) => Promise<unknown>;
   [key: string]: any;
 }
