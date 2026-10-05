@@ -463,6 +463,73 @@ export declare class LyricsController {
   ): Promise<LyricsLine[]>;
 }
 
+export function mediaPlay(hass?: HomeAssistant, entityId?: string): Promise<any>;
+export function mediaPause(hass?: HomeAssistant, entityId?: string): Promise<any>;
+export function mediaPlayPause(hass?: HomeAssistant, entityId?: string): Promise<any>;
+export function mediaStop(hass?: HomeAssistant, entityId?: string): Promise<any>;
+export function mediaNextTrack(hass?: HomeAssistant, entityId?: string): Promise<any>;
+export function mediaPreviousTrack(hass?: HomeAssistant, entityId?: string): Promise<any>;
+export function mediaSeek(
+  hass?: HomeAssistant,
+  entityId?: string,
+  seekPosition?: number
+): Promise<any>;
+export function setShuffle(hass?: HomeAssistant, entityId?: string, shuffle?: any): Promise<any>;
+export function setRepeat(hass?: HomeAssistant, entityId?: string, repeat?: string): Promise<any>;
+export function selectSource(
+  hass?: HomeAssistant,
+  entityId?: string,
+  source?: string
+): Promise<any>;
+export function selectSoundMode(
+  hass?: HomeAssistant,
+  entityId?: string,
+  soundMode?: string
+): Promise<any>;
+export function playMedia(
+  hass?: HomeAssistant,
+  entityId?: string,
+  mediaContentId?: string,
+  mediaContentType?: string,
+  enqueue?: string
+): Promise<any>;
+export function turnOn(hass?: HomeAssistant, entityId?: string): Promise<any>;
+export function turnOff(hass?: HomeAssistant, entityId?: string): Promise<any>;
+export function togglePower(
+  hass?: HomeAssistant,
+  entityId?: string,
+  currentState?: string
+): Promise<any>;
+export function mediaToggle(hass?: HomeAssistant, entityId?: string): Promise<any>;
+export function setVolume(
+  hass?: HomeAssistant,
+  entityId?: string,
+  volumeLevel?: number | string
+): Promise<any>;
+export function stepVolume(
+  hass?: HomeAssistant,
+  entityId?: string,
+  currentVolume?: number | string,
+  step?: number | string
+): Promise<any>;
+export function setMute(hass?: HomeAssistant, entityId?: string, isVolumeMuted?: any): Promise<any>;
+export function sendRemoteCommand(
+  hass?: HomeAssistant,
+  entityId?: string,
+  command?: string | string[]
+): Promise<any>;
+export function sendRemoteVolumeStep(
+  hass?: HomeAssistant,
+  entityId?: string,
+  direction?: number
+): Promise<any>;
+export function joinPlayers(
+  hass?: HomeAssistant,
+  masterEntityId?: string,
+  groupMembers?: string | string[]
+): Promise<any>;
+export function unjoinPlayer(hass?: HomeAssistant, entityId?: string): Promise<any>;
+
 export interface YetAnotherMediaPlayerCard {
   hass?: HomeAssistant;
   entityIds?: string[];

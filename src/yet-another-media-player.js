@@ -44,6 +44,25 @@ import {
 } from "./sheets/options-sheet.js";
 import { TemplateController } from "./controllers/template-controller.js";
 import { LyricsController, cleanTrackMetadata } from "./controllers/lyrics-controller.js";
+import {
+  mediaPlay,
+  mediaPause,
+  mediaStop,
+  mediaNextTrack,
+  mediaPreviousTrack,
+  mediaSeek,
+  setShuffle,
+  setRepeat,
+  selectSource,
+  playMedia,
+  togglePower,
+  setVolume,
+  setMute,
+  sendRemoteCommand,
+  sendRemoteVolumeStep,
+  joinPlayers,
+  unjoinPlayer,
+} from "./services/ha-media-services.js";
 
 
 import {
@@ -2152,9 +2171,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       } catch (error) {
         console.error('yamp: Error playing queue item:', error);
         // Fallback to next track if service call fails
-        await this.hass.callService("media_player", "media_next_track", {
-          entity_id: targetEntityId
-        });
+        await mediaNextTrack(this.hass, targetEntityId);
         return true;
       }
     }
@@ -2363,12 +2380,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         radio_mode: true
       });
     } else {
-      this.hass.callService("media_player", "play_media", {
-        entity_id: targetEntityId,
-        media_content_type: item.media_content_type,
-        media_content_id: item.media_content_id,
-        enqueue: "next"
-      });
+      playMedia(this.hass, targetEntityId, item.media_content_id, item.media_content_type, "next");
     }
 
     // Invalidate the "Next Up" cache
@@ -7003,10 +7015,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   _selectSource(src) {
     const entity = this.currentEntityId;
     if (!entity || !src) return;
-    this.hass.callService("media_player", "select_source", {
-      entity_id: entity,
-      source: src
-    });
+    selectSource(this.hass, entity, src);
     // Close the source list sheet after selection
     this._closeEntityOptions();
   }
@@ -7518,7 +7527,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     switch (action) {
       case "play_pause":
         if (this._isEntityPlaying(stateObj)) {
-          this.hass.callService("media_player", "media_pause", { entity_id: targetEntity });
+          mediaPause(this.hass, targetEntity);
           // When pausing, set the last playing entity to the one we just paused (per-chip)
           if (!this._lastPlayingEntityIdByChip) this._lastPlayingEntityIdByChip = {};
           this._lastPlayingEntityIdByChip[this._selectedIndex] = targetEntity;
@@ -7533,7 +7542,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           setTimeout(() => { this._optimisticPlayback = null; this.requestUpdate(); }, 1200);
         } else {
           this._mediaSessionManager?.startPlaybackGesture(targetEntity);
-          this.hass.callService("media_player", "media_play", { entity_id: targetEntity });
+          mediaPlay(this.hass, targetEntity);
           // On resume, clear the paused entity tracking since we're now playing
           if (this._lastPlayingEntityIdByChip) {
             delete this._lastPlayingEntityIdByChip[this._selectedIndex];
@@ -7552,14 +7561,14 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       case "next":
         this._mediaSessionManager?.startPlaybackGesture(targetEntity);
         this._advanceQueueInUI(null, true); // Manual advance
-        this.hass.callService("media_player", "media_next_track", { entity_id: targetEntity });
+        mediaNextTrack(this.hass, targetEntity);
         break;
       case "prev":
         this._mediaSessionManager?.startPlaybackGesture(targetEntity);
-        this.hass.callService("media_player", "media_previous_track", { entity_id: targetEntity });
+        mediaPreviousTrack(this.hass, targetEntity);
         break;
       case "stop":
-        this.hass.callService("media_player", "media_stop", { entity_id: targetEntity });
+        mediaStop(this.hass, targetEntity);
         if (stateObj) {
           // Set optimistic state for the entity we're actually controlling
           const targetEntityId = targetEntity;
@@ -7572,7 +7581,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       case "shuffle": {
         // Toggle shuffle based on current state
         const curr = !!stateObj.attributes.shuffle;
-        this.hass.callService("media_player", "shuffle_set", { entity_id: targetEntity, shuffle: !curr });
+        setShuffle(this.hass, targetEntity, !curr);
         break;
       }
       case "repeat": {
@@ -7582,22 +7591,21 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         if (curr === "off") next = "all";
         else if (curr === "all") next = "one";
         else next = "off";
-        this.hass.callService("media_player", "repeat_set", { entity_id: targetEntity, repeat: next });
+        setRepeat(this.hass, targetEntity, next);
         break;
       }
       case "power": {
         // Toggle main entity power (physical power behavior)
         const mainId = this.currentEntityId;
         const mainState = this.hass?.states?.[mainId] || stateObj;
-        const svc = mainState?.state === "off" ? "turn_on" : "turn_off";
-        this.hass.callService("media_player", svc, { entity_id: mainId });
+        togglePower(this.hass, mainId, mainState?.state);
 
         // Also toggle volume_entity if sync_power is enabled for this entity
         const obj = this.entityObjs[this._selectedIndex];
         if (obj && obj.sync_power) {
           const volEntityId = this._getVolumeEntity(this._selectedIndex);
           if (volEntityId && volEntityId !== obj.entity_id) {
-            this.hass.callService("media_player", svc, { entity_id: volEntityId });
+            togglePower(this.hass, volEntityId, mainState?.state);
           }
         }
         break;
@@ -7710,10 +7718,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const isChipGrouped = this._isActiveChipGrouped(idx);
 
     if (!groupVolume || !isChipGrouped) {
-      this.hass.callService("media_player", "volume_set", {
-        entity_id: this._getVolumeEntity(idx),
-        volume_level: newVol
-      });
+      setVolume(this.hass, this._getVolumeEntity(idx), newVol);
       return;
     }
 
@@ -7744,15 +7749,12 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         const st = this.hass.states[volTarget];
         if (!st) continue;
         let v = Number(st.attributes.volume_level || 0) + delta;
-        v = Math.max(0, Math.min(1, v));
-        // Round to 4 decimal places to prevent floating point precision errors
-        v = Math.round(v * 10000) / 10000;
-        this.hass.callService("media_player", "volume_set", { entity_id: volTarget, volume_level: v });
+        setVolume(this.hass, volTarget, v);
       }
       this._groupBaseVolume = newVol;
     } else {
       const volumeEntity = this._getVolumeEntity(idx);
-      this.hass.callService("media_player", "volume_set", { entity_id: volumeEntity, volume_level: newVol });
+      setVolume(this.hass, volumeEntity, newVol);
     }
   }
 
@@ -7766,10 +7768,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     if (!stateObj) return;
 
     if (isRemoteVolumeEntity) {
-      this.hass.callService("remote", "send_command", {
-        entity_id: entity,
-        command: direction > 0 ? "volume_up" : "volume_down"
-      });
+      sendRemoteVolumeStep(this.hass, entity, direction);
       return;
     }
 
@@ -7802,19 +7801,13 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         const st = this.hass.states[volTarget];
         if (!st) continue;
         let v = Number(st.attributes.volume_level || 0) + step;
-        v = Math.max(0, Math.min(1, v));
-        // Round to 4 decimal places to prevent floating point precision errors
-        v = Math.round(v * 10000) / 10000;
-        this.hass.callService("media_player", "volume_set", { entity_id: volTarget, volume_level: v });
+        setVolume(this.hass, volTarget, v);
       }
     } else {
       // Not grouped, set directly
       let current = Number(stateObj.attributes.volume_level || 0);
       current += this._getEffectiveVolumeStep() * direction;
-      current = Math.max(0, Math.min(1, current));
-      // Round to 4 decimal places to prevent floating point precision errors
-      current = Math.round(current * 10000) / 10000;
-      this.hass.callService("media_player", "volume_set", { entity_id: entity, volume_level: current });
+      setVolume(this.hass, entity, current);
     }
   }
 
@@ -7832,19 +7825,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
     if (isRemoteVolumeEntity) {
       // For remote entities, we can't easily toggle mute, so just set volume to 0 or restore
-      if (isMuted) {
-        // Restore to a reasonable volume if was muted
-        this.hass.callService("media_player", "volume_set", {
-          entity_id: entity,
-          volume_level: 0.5
-        });
-      } else {
-        // Mute by setting volume to 0
-        this.hass.callService("media_player", "volume_set", {
-          entity_id: entity,
-          volume_level: 0
-        });
-      }
+      setVolume(this.hass, entity, isMuted ? 0.5 : 0);
       return;
     }
 
@@ -7856,17 +7837,11 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       if (currentVolume > 0) {
         // Store current volume and mute
         this._previousVolume = currentVolume;
-        this.hass.callService("media_player", "volume_set", {
-          entity_id: entity,
-          volume_level: 0
-        });
+        setVolume(this.hass, entity, 0);
       } else {
         // Restore previous volume
         const restoreVolume = this._previousVolume ?? 0.5;
-        this.hass.callService("media_player", "volume_set", {
-          entity_id: entity,
-          volume_level: restoreVolume
-        });
+        setVolume(this.hass, entity, restoreVolume);
         this._previousVolume = null;
       }
       return;
@@ -7883,8 +7858,6 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       // Grouped: apply mute to all group members (deduplicated)
       const mainEntity = this.entityObjs[idx].entity_id;
       const targets = [...new Set([mainEntity, ...state.attributes.group_members])];
-
-
 
       // Deduplicate resolved volume targets to prevent redundant service calls
       const seen = new Set();
@@ -7903,34 +7876,16 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         const targetSupportsMute = targetState ? this._supportsFeature(targetState, SUPPORT_VOLUME_MUTE) : false;
 
         if (targetSupportsMute) {
-          this.hass.callService("media_player", "volume_mute", {
-            entity_id: volTarget,
-            is_volume_muted: !isMuted
-          });
+          setMute(this.hass, volTarget, !isMuted);
         } else {
           // For entities that don't support mute, set volume to 0 or restore
           const targetVolume = targetState?.attributes?.volume_level ?? 0;
-          if (targetVolume > 0) {
-            // Store current volume and mute (simplified - in a real implementation you'd want to store per entity)
-            this.hass.callService("media_player", "volume_set", {
-              entity_id: volTarget,
-              volume_level: 0
-            });
-          } else {
-            // Restore to a reasonable volume
-            this.hass.callService("media_player", "volume_set", {
-              entity_id: volTarget,
-              volume_level: 0.5
-            });
-          }
+          setVolume(this.hass, volTarget, targetVolume > 0 ? 0 : 0.5);
         }
       }
     } else {
       // Not grouped, toggle mute directly
-      this.hass.callService("media_player", "volume_mute", {
-        entity_id: entity,
-        is_volume_muted: !isMuted
-      });
+      setMute(this.hass, entity, !isMuted);
     }
   }
 
@@ -8024,15 +7979,12 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   _onGroupVolumeChange(entityId, volumeEntity, e) {
     this._suppressVolumeOverlay();
     const vol = Number(e.target.value);
-    this.hass.callService("media_player", "volume_set", { entity_id: volumeEntity, volume_level: vol });
+    setVolume(this.hass, volumeEntity, vol);
     this.requestUpdate();
   }
   _onGroupVolumeStep(volumeEntity, direction) {
     this._suppressVolumeOverlay();
-    this.hass.callService("remote", "send_command", {
-      entity_id: volumeEntity,
-      command: direction > 0 ? "volume_up" : "volume_down"
-    });
+    sendRemoteVolumeStep(this.hass, volumeEntity, direction);
     this.requestUpdate();
   }
 
@@ -8040,10 +7992,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const entity = this.currentEntityId;
     const source = e.target.value;
     if (!entity || !source) return;
-    this.hass.callService("media_player", "select_source", {
-      entity_id: entity,
-      source
-    });
+    selectSource(this.hass, entity, source);
   }
 
   _openMoreInfo() {
@@ -8117,7 +8066,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       // Force immediate update
       this.requestUpdate();
 
-      this.hass.callService("media_player", "media_seek", { entity_id: targetEntity, seek_position: seekTime });
+      mediaSeek(this.hass, targetEntity, seekTime);
     } catch (err) {
       console.error("YAMP: Error in _onProgressBarClick", err);
     }
@@ -10432,10 +10381,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const targetEntity = this._getRemoteControlEntity();
     if (!targetEntity) return;
 
-    this.hass.callService("remote", "send_command", {
-      entity_id: targetEntity,
-      command: command,
-    });
+    sendRemoteCommand(this.hass, targetEntity, command);
   }
 
   _openRemoteControl() {
@@ -10515,14 +10461,9 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       masterState.attributes.group_members.includes(targetGroupId);
 
     if (grouped) {
-      await this.hass.callService("media_player", "unjoin", {
-        entity_id: targetGroupId,
-      });
+      await unjoinPlayer(this.hass, targetGroupId);
     } else {
-      await this.hass.callService("media_player", "join", {
-        entity_id: masterGroupId,
-        group_members: [targetGroupId],
-      });
+      await joinPlayers(this.hass, masterGroupId, [targetGroupId]);
     }
     this._lastGroupingMasterId = masterId || targetId;
   }
@@ -10573,10 +10514,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       }
     }
     if (toJoin.length > 0) {
-      await this.hass.callService("media_player", "join", {
-        entity_id: masterGroupId,
-        group_members: toJoin,
-      });
+      await joinPlayers(this.hass, masterGroupId, toJoin);
     }
     // After grouping, keep the master set if still valid
     this._lastGroupingMasterId = masterId || this.currentEntityId;
@@ -10605,9 +10543,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     });
     // Unjoin each member individually
     for (const id of toUnjoin) {
-      await this.hass.callService("media_player", "unjoin", {
-        entity_id: id,
-      });
+      await unjoinPlayer(this.hass, id);
     }
     // After ungrouping, keep the master set if still valid (may now be solo)
     this._lastGroupingMasterId = masterId || this.currentEntityId;
@@ -10650,16 +10586,10 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
       if (foundIdx !== undefined) {
         const targetVolEntity = this._getVolumeEntity(foundIdx) || memberGroupId;
-        this.hass.callService("media_player", "volume_set", {
-          entity_id: targetVolEntity,
-          volume_level: masterVol
-        });
+        setVolume(this.hass, targetVolEntity, masterVol);
       } else {
         // Fallback: if we can't find a configured entity, just try setting volume on the group member ID acting as an entity
-        this.hass.callService("media_player", "volume_set", {
-          entity_id: memberGroupId,
-          volume_level: masterVol
-        });
+        setVolume(this.hass, memberGroupId, masterVol);
       }
     }
   }
