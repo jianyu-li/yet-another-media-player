@@ -329,6 +329,7 @@ export interface TemplateContext {
   is_transfer_queue?: boolean;
   is_any_menu_open?: boolean;
   is_fullscreen?: boolean;
+  is_full_screen?: boolean;
   is_dark_mode: boolean;
   is_mobile: boolean;
   is_music_assistant: boolean;

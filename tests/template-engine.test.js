@@ -40,25 +40,40 @@ const createMockHass = (partial = {}) =>
  * @param {Record<string, any>} [partial]
  * @returns {Record<string, any>}
  */
-const createMockContext = (partial = {}) => ({
-  entity: "media_player.living_room",
-  current: "media_player.living_room",
-  is_idle: false,
-  is_playing: true,
-  is_search: false,
-  is_grouping: false,
-  is_source: false,
-  is_lyrics: false,
-  is_options: false,
-  is_transfer_queue: false,
-  is_any_menu_open: false,
-  is_fullscreen: false,
-  is_dark_mode: true,
-  is_mobile: false,
-  is_music_assistant: true,
-  is_music: true,
-  ...partial,
-});
+const createMockContext = (partial = {}) => {
+  const fs =
+    partial.is_full_screen !== undefined
+      ? partial.is_full_screen
+      : partial.is_fullscreen !== undefined
+        ? partial.is_fullscreen
+        : false;
+  return {
+    entity: "media_player.living_room",
+    current: "media_player.living_room",
+    is_idle: false,
+    is_playing: true,
+    is_search: false,
+    is_grouping: false,
+    is_source: false,
+    is_lyrics: false,
+    is_options: false,
+    is_transfer_queue: false,
+    is_any_menu_open: false,
+    is_fullscreen: fs,
+    is_full_screen: fs,
+    is_dark_mode: true,
+    is_mobile: false,
+    is_music_assistant: true,
+    is_music: true,
+    ...partial,
+    ...(partial.is_full_screen !== undefined && partial.is_fullscreen === undefined
+      ? { is_fullscreen: partial.is_full_screen }
+      : {}),
+    ...(partial.is_fullscreen !== undefined && partial.is_full_screen === undefined
+      ? { is_full_screen: partial.is_fullscreen }
+      : {}),
+  };
+};
 
 describe("template-engine", () => {
   describe("evaluateJsTemplate (Client-side JavaScript sandbox)", () => {
@@ -177,6 +192,7 @@ describe("template-engine", () => {
           is_playing: true,
           is_idle: false,
           is_fullscreen: true,
+          is_full_screen: true,
           current: "media_player.living_room",
         });
 
@@ -186,6 +202,7 @@ describe("template-engine", () => {
         assert.equal(evaluateJsTemplate("[[[ is_playing ]]]", hass, context), true);
         assert.equal(evaluateJsTemplate("[[[ is_idle ]]]", hass, context), false);
         assert.equal(evaluateJsTemplate("[[[ is_fullscreen ]]]", hass, context), true);
+        assert.equal(evaluateJsTemplate("[[[ is_full_screen ]]]", hass, context), true);
         assert.equal(
           evaluateJsTemplate("[[[ current ]]]", hass, context),
           "media_player.living_room"

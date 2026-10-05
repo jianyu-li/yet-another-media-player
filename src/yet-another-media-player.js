@@ -4232,6 +4232,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       is_transfer_queue: this._showTransferQueue,
       is_any_menu_open: this.isAnyMenuOpen,
       is_fullscreen: this._isFullScreen,
+      is_full_screen: this._isFullScreen,
       is_dark_mode: isDarkMode,
       is_mobile: this._isMobile,
       is_music_assistant: this._isMusicAssistantEntity(),

@@ -74,6 +74,7 @@ Below you will find a list of all configuration options.
 | `hide_menu_player`         | boolean      | No           | `false`     | Hide the persistent media controls in the bottom sheet menu to reclaim space (only available when `always_collapsed` is `false`) |
 | `hide_reorder_progress`   | boolean      | No           | `false`     | Hide the floating queue re-ordering progress indicator at the bottom (also hidden if `hide_menu_player` is `true`) |
 | `lock_screen_controls` *(Experimental)* | boolean / string | No       | `false`     | Enable lock screen and system media controls (Media Session API) *(Experimental)* for active playback on mobile and desktop devices ([Supports Templates](#template-support), see [Lock Screen Controls](#lock-screen--media-session-controls)) |
+| `full_screen`              | boolean / string | No           | `false`     | Display the card as an in-window full-screen dashboard overlay ([Supports Templates](#template-support), see [Full Screen Overlay](#full-screen-overlay)) |
 | `idle_screen`              | choice       | No           | `default`   | Choose the idle experience: `default` keeps the artwork splash, `search` opens the search sheet immediately, `search-recently-played` jumps to the Recently Played view, and `search-next-up` opens the Next Up queue |
 | `dim_chips_on_idle`        | boolean      | No           | `true`      | Dim entity and action chips when the media player is idle                                       |
 | `always_show_quick_group` | boolean      | No           | `false`     | When `true`, Quick Grouping Mode will be active by default. You can still toggle it manually via double-tap. |
@@ -135,10 +136,10 @@ Below you will find a list of all configuration options.
 | `icon`                     | string       | No           | —           | MDI or custom icon for the action chip                                                          |
 | `service`                  | string       | No           | —           | Home Assistant service to call (e.g., `media_player.play_media`)                                |
 | `service_data`             | object       | No           | —           | Data to send with the service call                                                              |
-| `action`                   | string       | No           | —           | Set to `navigate` for navigation shortcuts, `sync_selected_entity` to sync the active entity to a helper, `select_entity` to read a helper and activate the matching chip, `prev_entity`/`next_entity` to navigate chips, or `toggle_lock_screen_controls` to toggle lock screen controls *(Experimental)* |
+| `action`                   | string       | No           | —           | Set to `navigate` for navigation shortcuts, `sync_selected_entity` to sync the active entity to a helper, `select_entity` to read a helper and activate the matching chip, `prev_entity`/`next_entity` to navigate chips, `toggle_lock_screen_controls` to toggle lock screen controls *(Experimental)*, or `full_screen` / `toggle_full_screen` to toggle full-screen overlay mode |
 | `navigation_path`          | string       | No           | —           | Destination for navigation shortcuts (supports anchors like `#pop-up-menu`, relative paths, or full URLs) |
 | `navigation_new_tab`       | boolean      | No           | `false`     | When `true`, external URLs open in a new browser tab instead of replacing the current view      |
-| `menu_item`                | string       | No           | —           | Opens a card menu by type: `search`, `search-recently-played`, `search-next-up`, `source`, `more-info`, `group-players`, `transfer-queue`, `main-menu` |
+| `menu_item`                | string       | No           | —           | Opens a card menu by type: `search`, `search-recently-played`, `search-next-up`, `source`, `more-info`, `group-players`, `transfer-queue`, `main-menu`, `full-screen` |
 | `placement`                | choice       | No           | `chip`      | Placement of the action: `chip` (Action Chip), `menu` (In Menu), `hidden` (Hidden - only triggerable via gestures), `replace_search`, `replace_power`, `replace_mute`, or `replace_favorite` ([Supports Templates](#template-support)) |
 | `card_trigger`             | choice       | No           | `none`      | Assign action to a card-level gesture: `none`, `tap`, `hold`, `double_tap`, `swipe_left`, or `swipe_right` (only for `hidden` actions) |
 | `script_variable`          | boolean      | No           | `false`     | Pass the currently selected entity as `yamp_entity` to a script                                 |
@@ -501,6 +502,43 @@ actions:
 
 ---
 
+## Full Screen Overlay
+> Display the card as an in-window overlay covering the entire dashboard.
+
+When enabled (`full_screen: true`), YAMP expands to an in-window full-screen overlay with a high z-index that covers the entire dashboard and fills the screen. Even if `always_collapsed` or a fixed `card_height` is configured, the card seamlessly expands to its full view to take advantage of the entire display.
+
+### Exiting Full Screen
+You can exit full screen mode at any time using any of the following methods:
+- Pressing the **Escape** key (`Esc`) on your keyboard (any open sheets like search or options will close first).
+- Selecting **Exit Full Screen** from the entity options menu (`...` / hamburger).
+- Tapping a custom action chip or gesture assigned to the `full_screen` or `toggle_full_screen` action.
+
+### Configuration
+```yaml
+type: custom:yet-another-media-player
+full_screen: false # Set to true or use a template
+entities:
+  - media_player.living_room_speaker
+```
+
+`full_screen` also [supports templates](#template-support) (Jinja2 and JavaScript). For example, turn on full screen when a Home Assistant input boolean is enabled:
+
+```yaml
+full_screen: "{{ is_state('input_boolean.theater_mode', 'on') }}"
+```
+
+### Action Chip & Menu Shortcuts
+Add a custom action button to toggle full screen on demand:
+
+```yaml
+actions:
+  - name: Full Screen
+    icon: mdi:fullscreen
+    action: toggle_full_screen
+```
+
+---
+
 ## Idle & Chips
 > Choose when the card goes idle and how entity chips behave.
 
@@ -734,6 +772,7 @@ The following configuration keys support templates:
 - **`music_assistant_entity`**: Dynamically select the companion Music Assistant entity.
 - **`always_collapsed`**: Dynamically determine if the card should be fully collapsed.
 - **`lock_screen_controls`**: Dynamically enable or disable lock screen controls.
+- **`full_screen`**: Dynamically toggle full-screen dashboard overlay mode.
 - **`control_layout`**: Dynamically select the control layout style (`classic` or `modern`).
 - **`in_menu`**: Dynamically determine where an action is placed (`true`, `false`, or `hidden`).
 - **`image_url` / `missing_art_url`**: (Inside `media_artwork_overrides`) Dynamically determine artwork.
@@ -754,6 +793,7 @@ All templates have access to standard Home Assistant template functions (`states
 | `is_source` | `boolean` | `true` if the source selection list is open. |
 | `is_options` | `boolean` | `true` if the entity options menu is open. |
 | `is_transfer_queue` | `boolean` | `true` if the transfer queue menu is open. |
+| `is_full_screen` | `boolean` | `true` if the card is currently in full-screen overlay mode (`is_fullscreen` is also supported as an alias). |
 | `is_dark_mode` | `boolean` | `true` if Home Assistant is currently in dark mode. |
 | `is_mobile` | `boolean` | `true` if the user is on a mobile device or mobile viewport (width &le; 768px). |
 | `is_music_assistant` | `boolean` | `true` if the active player is a Music Assistant entity. |
@@ -874,6 +914,19 @@ lock_screen_controls: "{{ is_mobile }}"
 **JavaScript (Client-Side)**
 ```yaml
 lock_screen_controls: "[[[ return is_mobile; ]]]"
+```
+
+### Conditional Full Screen Overlay
+Trigger full-screen dashboard overlay mode based on entity states or conditions.
+
+**Jinja2 (Server-Side)**
+```yaml
+full_screen: "{{ is_state('input_boolean.theater_mode', 'on') }}"
+```
+
+**JavaScript (Client-Side)**
+```yaml
+full_screen: "[[[ return is_state('input_boolean.theater_mode', 'on'); ]]]"
 ```
 
 ## Controls & Typography
