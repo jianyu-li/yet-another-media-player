@@ -61,6 +61,7 @@ Below you will find a list of all configuration options.
 | `sync_power`               | boolean      | No           | `false`     | Power on/off the volume entity with your main entity                                            |
 | `hidden_controls`          | array/template| No           | `[]`        | Array of control names to hide for this specific entity (Supports Templates) |
 | `hidden_remote_buttons`    | array/template| No           | `[]`        | Array of remote button names to hide for this specific entity's remote overlay (Supports Templates) |
+| `hidden_menu_options`      | array        | No           | `[]`        | Array of options sheet menu items to hide (can be set at card level or per-entity) |
 | `hidden_filter_chips`      | array        | No           | `[]`        | Hide specific search filter chips for this entity (UI only; does not change search results) |
 | `disable_auto_select`      | boolean      | No           | `false`     | Prevents the card from automatically switching to this entity when playback starts, even if it is a group master |
 | `entity_volume_mode`       | choice       | No           | —           | Override global `volume_mode` for this entity (`slider`, `stepper`, `hidden`) |
@@ -436,6 +437,37 @@ entities:
       - menu
 ```
 
+### Hidden Menu Options Configuration
+
+You can hide specific options from the options sheet menu globally at the card level or on a per-entity basis using the `hidden_menu_options` (or `hide_menu_options`) option.
+
+#### Available Menu Option Names
+- `more_info` - More info entity dialog
+- `search` - Music search sheet
+- `source` - Input source selector
+- `transfer_queue` - Transfer queue sheet
+- `group_players` - Group players sheet
+- `remote_controls` - Remote control sheet
+- `lyrics` - Lyrics sheet toggle
+- `full_screen` - Full screen toggle
+- *Custom actions* - Can also be hidden by matching their `id`, `name`, or `action` key.
+
+#### Example Configuration
+```yaml
+type: custom:yet-another-media-player
+# Card-level defaults for all entities
+hidden_menu_options:
+  - full_screen
+entities:
+  - entity_id: media_player.living_room
+    name: Living Room
+    # Per-entity override
+    hidden_menu_options:
+      - remote_controls
+      - lyrics
+  - entity_id: media_player.kitchen
+    name: Kitchen
+```
 
 # Behavior
 
