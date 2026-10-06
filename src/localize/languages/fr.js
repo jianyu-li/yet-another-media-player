@@ -177,6 +177,7 @@ export default {
       idle_screen: "Choisir l'écran à afficher automatiquement en veille.",
       hide_controls: "Sélectionner les commandes à masquer pour cette entité.",
       hide_remote_buttons: "Sélectionnez les boutons à masquer de la télécommande.",
+      hide_menu_options: "Sélectionnez les options à masquer du menu d'options.",
       hide_search_chips: "Masquer des jetons de filtrage spécifiques.",
       hide_active_entity_on_idle:
         "Masque l'étiquette de l'entité au bas de la carte uniquement lorsque le lecteur est en veille.",
@@ -329,6 +330,7 @@ export default {
       name: "Nom",
       hidden_controls: "Commandes masquées",
       hide_remote_buttons: "Boutons de télécommande masqués",
+      hidden_menu_options: "Options de menu masquées",
       ma_template: "Modèle MA (Jinja)",
       hidden_chips: "Jetons masqués",
       vol_template: "Modèle Volume (Jinja)",

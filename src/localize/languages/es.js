@@ -172,6 +172,7 @@ export default {
       hide_controls: "Seleccionar controles a ocultar.",
       hide_remote_buttons:
         "Seleccione botones para ocultar de la superposición del mando a distancia.",
+      hide_menu_options: "Selecciona las opciones que deseas ocultar del menú de opciones.",
       hide_search_chips: "Ocultar chips de filtro de búsqueda.",
       hide_active_entity_on_idle:
         "Oculta la etiqueta de la entidad en la parte inferior de la tarjeta solo cuando el reproductor está inactivo.",
@@ -324,6 +325,7 @@ export default {
       name: "Nombre",
       hidden_controls: "Controles ocultos",
       hide_remote_buttons: "Botones del mando a distancia ocultos",
+      hidden_menu_options: "Opciones de menú ocultas",
       ma_template: "Plantilla MA (Jinja)",
       hidden_chips: "Chips ocultos",
       vol_template: "Plantilla Volumen (Jinja)",

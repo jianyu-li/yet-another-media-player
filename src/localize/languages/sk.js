@@ -180,6 +180,7 @@ export default {
       hide_controls:
         "Vyberte ovládacie prvky, ktoré chcete pre túto entitu skryť (štandardne sú zobrazené všetky).",
       hide_remote_buttons: "Vyberte tlačidlá, ktoré chcete skryť v prekrytí diaľkového ovládania.",
+      hide_menu_options: "Vyberte možnosti, ktoré chcete skryť v ponuke možností.",
       hide_search_chips: "Skryť konkrétne čipy filtra vyhľadávania pre túto entitu.",
       hide_active_entity_on_idle:
         "Skryje štítok entity v dolnej časti karty iba vtedy, keď je prehrávač nečinný.",
@@ -338,6 +339,7 @@ export default {
       name: "Názov",
       hidden_controls: "Skryté ovládacie prvky",
       hide_remote_buttons: "Skryté tlačidlá diaľkového ovládania",
+      hidden_menu_options: "Skryté možnosti ponuky",
       ma_template: "Jinja šablóna pre Music Assistant",
       hidden_chips: "Skryté čipy filtrov hľadania",
       vol_template: "Jinja šablóna pre hlasitosť",

@@ -171,6 +171,8 @@ describe("config-schema", () => {
       assert.equal(isFieldTemplateSupported("volume_step"), false);
       assert.equal(isFieldTemplateSupported("entities"), false);
       assert.equal(isFieldTemplateSupported("template"), false);
+      assert.equal(isFieldTemplateSupported("hidden_menu_options"), false);
+      assert.equal(isFieldTemplateSupported("hide_menu_options"), false);
     });
 
     it("returns false for invalid, null, or empty field names", () => {

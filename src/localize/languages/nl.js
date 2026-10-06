@@ -186,6 +186,7 @@ export default {
       hide_controls:
         "Selecteer welke knoppen je wilt verbergen voor deze entiteit (standaard worden ze allemaal getoond)",
       hide_remote_buttons: "Selecteer knoppen om te verbergen in de afstandsbediening-overlay.",
+      hide_menu_options: "Selecteer opties om te verbergen in het optiemenu.",
       hide_search_chips: "Verberg specifieke zoekfilterchips voor deze entiteit",
       hide_active_entity_on_idle:
         "Verbergt het entiteitslabel onderaan de kaart alleen wanneer de speler inactief is.",
@@ -347,6 +348,7 @@ export default {
       name: "Naam",
       hidden_controls: "Verborgen Knoppen",
       hide_remote_buttons: "Verborgen afstandsbediening knoppen",
+      hidden_menu_options: "Verborgen Menu-opties",
       ma_template: "Music Assistant Entiteit Sjabloon (Jinja)",
       hidden_chips: "Verborgen Zoekfilterchips",
       vol_template: "Volume Entiteit Sjabloon (Jinja)",

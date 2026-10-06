@@ -170,6 +170,7 @@ export default {
       idle_screen: "Scegli schermata da mostrare in riposo.",
       hide_controls: "Seleziona controlli da nascondere.",
       hide_remote_buttons: "Seleziona i pulsanti da nascondere dal telecomando.",
+      hide_menu_options: "Seleziona le opzioni da nascondere dal menu delle opzioni.",
       hide_search_chips: "Nascondi chip di filtro ricerca.",
       hide_active_entity_on_idle:
         "Nasconde l'etichetta dell'entità in fondo alla scheda solo quando il lettore è inattivo.",
@@ -322,6 +323,7 @@ export default {
       name: "Nome",
       hidden_controls: "Controlli nascosti",
       hide_remote_buttons: "Pulsanti del telecomando nascosti",
+      hidden_menu_options: "Opzioni di menu nascoste",
       ma_template: "Modello MA (Jinja)",
       hidden_chips: "Chip nascosti",
       vol_template: "Modello Volume (Jinja)",

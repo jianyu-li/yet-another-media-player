@@ -176,6 +176,7 @@ export default {
       idle_screen: "Choose which screen to display automatically when the card becomes idle.",
       hide_controls: "Select buttons to hide from the persistent playback controls row.",
       hide_remote_buttons: "Select buttons to hide from the Remote Control overlay.",
+      hide_menu_options: "Select options to hide from the options menu.",
       hide_search_chips: "Hide specific search filter chips for this entity",
       hide_active_entity_on_idle:
         "Hide the entity label at the bottom of the card only when the player is idle.",
@@ -332,6 +333,7 @@ export default {
       name: "Name",
       hidden_controls: "Hidden Controls",
       hide_remote_buttons: "Hidden Remote Buttons",
+      hidden_menu_options: "Hidden Menu Options",
       ma_template: "Music Assistant Entity Template (Jinja)",
       hidden_chips: "Hidden Search Filter Chips",
       vol_template: "Volume Entity Template (Jinja)",

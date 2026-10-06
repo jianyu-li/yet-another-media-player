@@ -171,6 +171,7 @@ export default {
       idle_screen: "Izberi zaslon, prikazan v mirovanju.",
       hide_controls: "Izberi kontrolnike za skrivanje.",
       hide_remote_buttons: "Izberite gumbe za skrivanje na daljinskem upravljalniku.",
+      hide_menu_options: "Izberite možnosti za skrivanje v meniju z možnostmi.",
       hide_search_chips: "Skrij določene iskalne filtre.",
       hide_active_entity_on_idle:
         "Skrije oznako entitete na dnu kartice le, ko je predvajalnik v stanju mirovanja.",
@@ -319,6 +320,7 @@ export default {
       name: "Ime",
       hidden_controls: "Skriti kontrolniki",
       hide_remote_buttons: "Skriti gumbi daljinskega upravljalnika",
+      hidden_menu_options: "Skrite možnosti menija",
       ma_template: "Predloga Music Assistant (Jinja)",
       hidden_chips: "Skriti iskalni čipi",
       vol_template: "Predloga entitete glasnosti (Jinja)",

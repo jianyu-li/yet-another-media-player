@@ -37,26 +37,34 @@ export function renderMainMenu(sourceList, menuOnlyActions, showChipsInMenu) {
       }"
       style="${!isGridMode ? "display:flex; flex-direction:column;" : ""}"
     >
-      ${renderMenuItem(localize("card.menu.more_info"), "mdi:information-outline", () => {
-        const resolvedEntities = this._getResolvedEntitiesForCurrentChip();
-        if (resolvedEntities.length === 1) {
-          this._openMoreInfoForEntity(resolvedEntities[0]);
-          this._showEntityOptions = false;
-        } else {
-          this._showResolvedEntities = true;
-        }
-        this.requestUpdate();
-      })}
-      ${renderMenuItem(localize("common.search"), "mdi:magnify", () => {
-        this._showSearchSheetInOptions();
-      })}
       ${
-        Array.isArray(sourceList) && sourceList.length > 0
+        !this._isMenuOptionHidden?.("more_info")
+          ? renderMenuItem(localize("card.menu.more_info"), "mdi:information-outline", () => {
+              const resolvedEntities = this._getResolvedEntitiesForCurrentChip();
+              if (resolvedEntities.length === 1) {
+                this._openMoreInfoForEntity(resolvedEntities[0]);
+                this._showEntityOptions = false;
+              } else {
+                this._showResolvedEntities = true;
+              }
+              this.requestUpdate();
+            })
+          : nothing
+      }
+      ${
+        !this._isMenuOptionHidden?.("search")
+          ? renderMenuItem(localize("common.search"), "mdi:magnify", () => {
+              this._showSearchSheetInOptions();
+            })
+          : nothing
+      }
+      ${
+        !this._isMenuOptionHidden?.("source") && Array.isArray(sourceList) && sourceList.length > 0
           ? renderMenuItem(localize("card.menu.source"), "mdi:import", () => this._openSourceList())
           : nothing
       }
       ${
-        this._canShowTransferQueueOption()
+        !this._isMenuOptionHidden?.("transfer_queue") && this._canShowTransferQueueOption()
           ? renderMenuItem(localize("card.menu.transfer_queue"), "mdi:swap-horizontal", () =>
               this._openTransferQueue()
             )
@@ -64,14 +72,14 @@ export function renderMainMenu(sourceList, menuOnlyActions, showChipsInMenu) {
       }
       ${this._renderGroupingMenuOption(isGridMode)}
       ${
-        this._hasRemoteControlSupport()
+        !this._isMenuOptionHidden?.("remote_controls") && this._hasRemoteControlSupport()
           ? renderMenuItem(localize("card.menu.remote_controls"), "mdi:remote", () =>
               this._openRemoteControl()
             )
           : nothing
       }
       ${
-        !this._alwaysCollapsed
+        !this._isMenuOptionHidden?.("lyrics") && !this._alwaysCollapsed
           ? renderMenuItem(
               localize(this._lyricsActive ? "card.menu.hide_lyrics" : "card.menu.show_lyrics"),
               "mdi:script-text-outline",
@@ -89,34 +97,42 @@ export function renderMainMenu(sourceList, menuOnlyActions, showChipsInMenu) {
             )
           : nothing
       }
-      ${renderMenuItem(
-        localize(this._isFullScreen ? "card.menu.exit_full_screen" : "card.menu.full_screen"),
-        this._isFullScreen ? "mdi:fullscreen-exit" : "mdi:fullscreen",
-        () => {
-          this._toggleFullScreen();
-          this._showEntityOptions = false;
-          this.requestUpdate();
-        }
-      )}
+      ${
+        !this._isMenuOptionHidden?.("full_screen")
+          ? renderMenuItem(
+              localize(this._isFullScreen ? "card.menu.exit_full_screen" : "card.menu.full_screen"),
+              this._isFullScreen ? "mdi:fullscreen-exit" : "mdi:fullscreen",
+              () => {
+                this._toggleFullScreen();
+                this._showEntityOptions = false;
+                this.requestUpdate();
+              }
+            )
+          : nothing
+      }
       ${
         menuOnlyActions.length
           ? html`
-              ${menuOnlyActions.map(({ action, idx }) => {
-                const label = this._getActionLabel(action);
-                return html`
-                  <button
-                    class="entity-options-item menu-action-item"
-                    @click=${() => this._onMenuActionClick(idx)}
-                  >
-                    ${
-                      action.icon
-                        ? html` <ha-icon class="menu-action-icon" .icon=${action.icon}></ha-icon> `
-                        : nothing
-                    }
-                    ${label ? html`<span class="menu-action-label">${label}</span>` : nothing}
-                  </button>
-                `;
-              })}
+              ${menuOnlyActions
+                .filter(({ action }) => !this._isMenuActionHidden?.(action))
+                .map(({ action, idx }) => {
+                  const label = this._getActionLabel(action);
+                  return html`
+                    <button
+                      class="entity-options-item menu-action-item"
+                      @click=${() => this._onMenuActionClick(idx)}
+                    >
+                      ${
+                        action.icon
+                          ? html`
+                              <ha-icon class="menu-action-icon" .icon=${action.icon}></ha-icon>
+                            `
+                          : nothing
+                      }
+                      ${label ? html`<span class="menu-action-label">${label}</span>` : nothing}
+                    </button>
+                  `;
+                })}
             `
           : nothing
       }
@@ -130,6 +146,7 @@ export function renderMainMenu(sourceList, menuOnlyActions, showChipsInMenu) {
  * @param {boolean} [isGridMode=false]
  */
 export function renderGroupingMenuOption(isGridMode = false) {
+  if (this._isMenuOptionHidden?.("group_players")) return nothing;
   const totalEntities = this.entityIds.length;
   if (totalEntities <= 1) return nothing;
 
