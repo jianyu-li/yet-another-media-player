@@ -27,6 +27,26 @@ export const ARTWORK_OVERRIDE_MATCH_KEYS = Object.freeze([
   "entity_state",
 ]);
 
+export const CANONICAL_MENU_OPTION_MAP = Object.freeze({
+  more_info: "more_info",
+  moreinfo: "more_info",
+  search: "search",
+  source: "source",
+  transfer_queue: "transfer_queue",
+  queue: "transfer_queue",
+  group_players: "group_players",
+  group: "group_players",
+  grouping: "group_players",
+  remote_controls: "remote_controls",
+  remote_control: "remote_controls",
+  remote: "remote_controls",
+  lyrics: "lyrics",
+  show_lyrics: "lyrics",
+  hide_lyrics: "lyrics",
+  full_screen: "full_screen",
+  fullscreen: "full_screen",
+});
+
 export {
   DEFAULT_PROGRESS_BAR_HEIGHT,
   DEFAULT_IDLE_TIMEOUT_MS,

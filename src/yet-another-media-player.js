@@ -91,7 +91,8 @@ import {
   SUPPORT_GROUPING,
   DEFAULT_PROGRESS_BAR_HEIGHT,
   DEFAULT_LYRICS_BACKGROUND_FADE,
-  TEMPLATE_CONFIGS
+  TEMPLATE_CONFIGS,
+  CANONICAL_MENU_OPTION_MAP,
 } from "./constants.js";
 
 const PLAYLIST_FETCH_LIMIT = 500;
@@ -9655,31 +9656,12 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     if (!optionKey) return false;
     const hidden = this._getHiddenMenuOptions(idx);
     if (!hidden || hidden.length === 0) return false;
-    const canonicalMap = {
-      more_info: "more_info",
-      moreinfo: "more_info",
-      search: "search",
-      source: "source",
-      transfer_queue: "transfer_queue",
-      queue: "transfer_queue",
-      group_players: "group_players",
-      group: "group_players",
-      grouping: "group_players",
-      remote_controls: "remote_controls",
-      remote_control: "remote_controls",
-      remote: "remote_controls",
-      lyrics: "lyrics",
-      show_lyrics: "lyrics",
-      hide_lyrics: "lyrics",
-      full_screen: "full_screen",
-      fullscreen: "full_screen",
-    };
     const normKey = String(optionKey).toLowerCase().replace(/[-\s]+/g, "_");
-    const canonicalTarget = canonicalMap[normKey] || normKey;
-    return hidden.some(opt => {
+    const canonicalTarget = CANONICAL_MENU_OPTION_MAP[normKey] || normKey;
+    return hidden.some((opt) => {
       if (typeof opt !== "string") return false;
       const normOpt = opt.toLowerCase().replace(/[-\s]+/g, "_");
-      const canonicalOpt = canonicalMap[normOpt] || normOpt;
+      const canonicalOpt = CANONICAL_MENU_OPTION_MAP[normOpt] || normOpt;
       return canonicalTarget === canonicalOpt;
     });
   }
