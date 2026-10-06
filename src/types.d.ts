@@ -247,12 +247,19 @@ export interface YampEntityConfig {
   control_layout?: "classic" | "modern" | "stacked";
   progress_bar_height?: number;
   lyrics?: boolean | string;
+  hidden_controls?: string[] | string;
+  hidden_filter_chips?: string[];
+  hide_remote_buttons?: string[] | string;
+  hidden_menu_options?: string[] | string;
+  hide_menu_options?: string[] | string;
 }
 
 export type YampEntityEntry = string | YampEntityConfig;
 
 export interface YampCardConfig {
   type: "custom:yet-another-media-player";
+  hidden_menu_options?: string[] | string;
+  hide_menu_options?: string[] | string;
   template?: string;
   entities: YampEntityEntry[];
   card_height?: string;
@@ -707,6 +714,9 @@ export interface YetAnotherMediaPlayerCard {
   _actionHelperEntities?: string[] | null;
   _jsTemplateEntities?: string[] | null;
   _handleVisibilityChangeBound?: () => void;
+  _getHiddenMenuOptions?: (idx?: number) => string[];
+  _isMenuOptionHidden?: (optionKey: string, idx?: number) => boolean;
+  _isMenuActionHidden?: (action: any, idx?: number) => boolean;
   shouldUpdate?: (changedProps: Map<string | number | symbol, unknown>) => boolean;
   requestUpdate?: (name?: PropertyKey, oldValue?: unknown) => Promise<unknown>;
   [key: string]: any;

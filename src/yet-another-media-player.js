@@ -4690,6 +4690,8 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         hidden_controls,
         hidden_filter_chips: typeof e === "string" ? undefined : e.hidden_filter_chips,
         hide_remote_buttons: typeof e === "string" ? undefined : e.hide_remote_buttons,
+        hidden_menu_options: typeof e === "string" ? undefined : (e.hidden_menu_options ?? e.hide_menu_options),
+        hide_menu_options: typeof e === "string" ? undefined : (e.hidden_menu_options ?? e.hide_menu_options),
         disable_auto_select: this._isAutoSelectDisabled(index),
         prefer_ma_metadata: typeof e === "string" ? false : !!e.prefer_ma_metadata,
         ...(typeof group_volume !== "undefined" ? { group_volume } : {}),
@@ -9633,6 +9635,60 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       }
     }
     return Array.isArray(raw) ? raw : [];
+  }
+
+  _getHiddenMenuOptions(idx = this._selectedIndex) {
+    const obj = (this.entityObjs || [])[idx];
+    let raw = obj?.hidden_menu_options ?? obj?.hide_menu_options ?? this.config?.hidden_menu_options ?? this.config?.hide_menu_options;
+
+    if (typeof raw === "string") {
+      try {
+        raw = JSON.parse(raw.replace(/'/g, '"'));
+      } catch (e) {
+        raw = raw.split(",").map(s => s.trim()).filter(s => s !== "");
+      }
+    }
+    return Array.isArray(raw) ? raw : [];
+  }
+
+  _isMenuOptionHidden(optionKey, idx = this._selectedIndex) {
+    if (!optionKey) return false;
+    const hidden = this._getHiddenMenuOptions(idx);
+    if (!hidden || hidden.length === 0) return false;
+    const canonicalMap = {
+      more_info: "more_info",
+      moreinfo: "more_info",
+      search: "search",
+      source: "source",
+      transfer_queue: "transfer_queue",
+      queue: "transfer_queue",
+      group_players: "group_players",
+      group: "group_players",
+      grouping: "group_players",
+      remote_controls: "remote_controls",
+      remote_control: "remote_controls",
+      remote: "remote_controls",
+      lyrics: "lyrics",
+      show_lyrics: "lyrics",
+      hide_lyrics: "lyrics",
+      full_screen: "full_screen",
+      fullscreen: "full_screen",
+    };
+    const normKey = String(optionKey).toLowerCase().replace(/[-\s]+/g, "_");
+    const canonicalTarget = canonicalMap[normKey] || normKey;
+    return hidden.some(opt => {
+      if (typeof opt !== "string") return false;
+      const normOpt = opt.toLowerCase().replace(/[-\s]+/g, "_");
+      const canonicalOpt = canonicalMap[normOpt] || normOpt;
+      return canonicalTarget === canonicalOpt;
+    });
+  }
+
+  _isMenuActionHidden(action, idx = this._selectedIndex) {
+    if (!action) return false;
+    const label = this._getActionLabel ? this._getActionLabel(action) : "";
+    const candidates = [action.id, action.name, action.action, label].filter(Boolean);
+    return candidates.some(cand => this._isMenuOptionHidden(cand, idx));
   }
 
   _renderRemoteControlSheet() {

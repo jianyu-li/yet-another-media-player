@@ -183,6 +183,7 @@ export default {
         "Wählen Sie Steuerelemente aus, die für diese Entität ausgeblendet werden sollen.",
       hide_remote_buttons:
         "Wählen Sie die Tasten aus, die im Fernbedienungs-Overlay ausgeblendet werden sollen.",
+      hide_menu_options: "Wählen Sie Optionen aus, die im Optionsmenü ausgeblendet werden sollen.",
       hide_search_chips: "Bestimmte Suchfilter-Chips für diese Entität ausblenden.",
       hide_active_entity_on_idle:
         "Blendet die Entitätsbeschriftung am unteren Rand der Karte nur aus, wenn der Player im Leerlauf ist.",
@@ -338,6 +339,7 @@ export default {
       name: "Name",
       hidden_controls: "Ausgeblendete Steuerungen",
       hide_remote_buttons: "Ausgeblendete Fernbedienungstasten",
+      hidden_menu_options: "Ausgeblendete Menüoptionen",
       ma_template: "Music Assistant Entitäts-Template (Jinja)",
       hidden_chips: "Ausgeblendete Suchfilter-Chips",
       vol_template: "Lautstärke-Entitäts-Template (Jinja)",

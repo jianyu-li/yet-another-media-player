@@ -287,6 +287,105 @@ export function renderEntityEditor(entity, idx = this._entityEditorIndex, isSear
           </div>
         </div>
 
+        ${(() => {
+          const standardOptions = [
+            { value: "more_info", label: localize("card.menu.more_info") || "More Info" },
+            { value: "search", label: localize("common.search") || "Search" },
+            { value: "source", label: localize("card.menu.source") || "Source" },
+            {
+              value: "transfer_queue",
+              label: localize("card.menu.transfer_queue") || "Transfer Queue",
+            },
+            {
+              value: "group_players",
+              label: localize("card.menu.group_players") || "Group Players",
+            },
+            {
+              value: "remote_controls",
+              label: localize("card.menu.remote_controls") || "Remote Control",
+            },
+            { value: "lyrics", label: localize("card.sections.lyrics") || "Lyrics" },
+            {
+              value: "full_screen",
+              label: localize("card.menu.full_screen") || "Full Screen",
+            },
+          ];
+
+          const configuredActions = [
+            ...(this._config?.actions || []),
+            ...(entity?.custom_actions || []),
+          ];
+
+          const customActionOptions = configuredActions
+            .filter(
+              (a) =>
+                a && (a.placement === "menu" || a.in_menu === true || a.id || a.name || a.label)
+            )
+            .map((a) => {
+              const val = a.id || a.name || a.label || a.service || "custom_action";
+              const label = a.name || a.label || a.id || a.service || "Custom Action";
+              return {
+                value: val,
+                label: `${label} (${localize("editor.fields.menu_item") || "Menu Item"})`,
+              };
+            });
+
+          const existingValues = (() => {
+            let val = entity?.hidden_menu_options ?? entity?.hide_menu_options;
+            if (typeof val === "string") {
+              try {
+                val = JSON.parse(val.replace(/'/g, '"'));
+              } catch (e) {
+                val = val
+                  .split(",")
+                  .map((s) => s.trim())
+                  .filter((s) => s !== "");
+              }
+            }
+            return Array.isArray(val) ? val : [];
+          })();
+
+          const knownValues = new Set([
+            ...standardOptions.map((o) => o.value),
+            ...customActionOptions.map((o) => o.value),
+          ]);
+          const extraOptions = existingValues
+            .filter((v) => !knownValues.has(v))
+            .map((v) => ({ value: v, label: v }));
+
+          const allMenuOptions = [
+            ...standardOptions,
+            ...customActionOptions.filter(
+              (ca, i, self) => self.findIndex((o) => o.value === ca.value) === i
+            ),
+            ...extraOptions,
+          ];
+
+          return html`
+            <div
+              class="form-row"
+              data-search-keys="hidden_menu_options hide_menu_options more_info search source transfer_queue group_players remote_controls lyrics full_screen menu options"
+            >
+              <ha-selector
+                .hass=${this.hass}
+                .selector=${{
+                  select: {
+                    mode: "dropdown",
+                    multiple: true,
+                    custom_value: true,
+                    options: allMenuOptions,
+                  },
+                }}
+                .value=${existingValues}
+                label="${localize("editor.fields.hidden_menu_options")}"
+                helper="${localize("editor.subtitles.hide_menu_options")}"
+                @value-changed=${(e) =>
+                  this._updateEntityProperty("hidden_menu_options", e.detail.value)}
+              ></ha-selector>
+            </div>
+          `;
+        })()}
+
  
 
         <div class="form-row">
