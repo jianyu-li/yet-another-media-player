@@ -515,6 +515,10 @@ export default {
       current: "Atual",
       unjoin_from: "Desvincular de {master}",
       join_with: "Juntar-se a {master}",
+      transfer_to_player: "Transferir fila para {player}",
+      transfer_to_group: "Transferir fila para o grupo {master}",
+      transfer_current_player: "A reproduzir aqui",
+      transfer_no_queue: "Sem fila ativa para transferir",
     },
   },
   search: {

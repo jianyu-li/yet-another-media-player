@@ -521,6 +521,10 @@ export default {
       current: "Actuel",
       unjoin_from: "Se désolidariser de {master}",
       join_with: "Se joindre à {master}",
+      transfer_to_player: "Transférer la file d'attente à {player}",
+      transfer_to_group: "Transférer la file d'attente au groupe {master}",
+      transfer_current_player: "Lecture en cours ici",
+      transfer_no_queue: "Aucune file d'attente active à transférer",
     },
   },
   search: {

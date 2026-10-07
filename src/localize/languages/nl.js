@@ -538,6 +538,10 @@ export default {
       current: "Huidig",
       unjoin_from: "Loskoppelen van {master}",
       join_with: "Koppelen met {master}",
+      transfer_to_player: "Wachtrij overdragen naar {player}",
+      transfer_to_group: "Wachtrij overdragen naar {master}-groep",
+      transfer_current_player: "Speelt momenteel hier af",
+      transfer_no_queue: "Geen actieve wachtrij om over te dragen",
     },
   },
   search: {

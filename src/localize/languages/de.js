@@ -529,6 +529,10 @@ export default {
       current: "Aktuell",
       unjoin_from: "Von {master} trennen",
       join_with: "Mit {master} gruppieren",
+      transfer_to_player: "Warteschlange an {player} übertragen",
+      transfer_to_group: "Warteschlange an Gruppe {master} übertragen",
+      transfer_current_player: "Wiedergabe läuft hier",
+      transfer_no_queue: "Keine aktive Warteschlange zum Übertragen",
     },
   },
   search: {

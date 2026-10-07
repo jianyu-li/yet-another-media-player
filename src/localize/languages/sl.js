@@ -511,6 +511,10 @@ export default {
       current: "Trenutni",
       unjoin_from: "Odslopi od {master}",
       join_with: "Pridruži se {master}",
+      transfer_to_player: "Prenesi čakalno vrsto v {player}",
+      transfer_to_group: "Prenesi čakalno vrsto v skupino {master}",
+      transfer_current_player: "Trenutno se predvaja tukaj",
+      transfer_no_queue: "Ni aktivne čakalne vrste za prenos",
     },
   },
   search: {

@@ -536,7 +536,6 @@ export const menusSheetsStyles = css`
   .grid-menu-transfer-btn[disabled] {
     cursor: not-allowed;
     opacity: 0.25;
-    pointer-events: none;
   }
 
   @media (hover: hover) {

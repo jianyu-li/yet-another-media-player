@@ -516,6 +516,10 @@ export default {
       current: "Actual",
       unjoin_from: "Desvincular de {master}",
       join_with: "Unirse a {master}",
+      transfer_to_player: "Transferir cola a {player}",
+      transfer_to_group: "Transferir cola al grupo {master}",
+      transfer_current_player: "Reproduciendo aquí actualmente",
+      transfer_no_queue: "No hay cola activa para transferir",
     },
   },
   search: {

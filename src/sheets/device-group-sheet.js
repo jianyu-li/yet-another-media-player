@@ -326,10 +326,9 @@ export function renderGroupingSheet() {
                         ${
                           hasMaTransferService
                             ? html`
-                                <span
+                                <button
+                                  type="button"
                                   class="grid-menu-transfer-btn"
-                                  role="button"
-                                  tabindex="0"
                                   ?disabled=${isTransferDisabled}
                                   @click=${(e) => {
                                     e.stopPropagation();
@@ -340,16 +339,22 @@ export function renderGroupingSheet() {
                                   title=${transferTooltip}
                                 >
                                   <ha-icon icon="mdi:swap-horizontal"></ha-icon>
-                                </span>
+                                </button>
                               `
                             : nothing
                         }
                         <div
                           class="grid-menu-toggle-action"
                           role="button"
-                          tabindex="0"
+                          tabindex=${isDisabled ? "-1" : "0"}
                           ?disabled=${isDisabled}
                           @click=${() => !isDisabled && this._toggleGroup(id)}
+                          @keydown=${(e) => {
+                            if (!isDisabled && (e.key === "Enter" || e.key === " ")) {
+                              e.preventDefault();
+                              this._toggleGroup(id);
+                            }
+                          }}
                           title=${
                             isBusy
                               ? localize("card.grouping.unavailable")
