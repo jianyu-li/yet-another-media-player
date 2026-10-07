@@ -5470,8 +5470,13 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     let isBusy = false;
     let busyLabel = "";
 
+    // Busy if entity or its grouping entity is unavailable
+    if (st.state === "unavailable" || this.hass?.states?.[targetId]?.state === "unavailable") {
+      isBusy = true;
+      busyLabel = localize('common.unavailable');
+    }
     // Busy if joined to a DIFFERENT group
-    if (playerGroupKey !== targetId && playerGroupKey !== myGroupKey) {
+    else if (playerGroupKey !== targetId && playerGroupKey !== myGroupKey) {
       isBusy = true;
       busyLabel = localize('common.unavailable');
     }

@@ -218,21 +218,6 @@ export function renderGroupingSheet() {
                   const targetGroupMasterIdx = this.entityIds.indexOf(targetGroupMasterId);
                   const targetGroupMasterName = this.getChipName(targetGroupMasterId);
 
-                  let stateLabel;
-                  if (displayVolumeState?.state === "unavailable") {
-                    stateLabel =
-                      busyLabel || localize("card.grouping.unavailable") || "Unavailable";
-                  } else if (isMultiSpeakerGroup) {
-                    stateLabel =
-                      targetGroupMasterId === id
-                        ? localize("card.grouping.master")
-                        : localize("card.grouping.joined");
-                  } else if (isCurrent) {
-                    stateLabel = localize("card.grouping.current");
-                  } else {
-                    stateLabel = localize("card.grouping.available");
-                  }
-
                   const targetIdx = isMultiSpeakerGroup
                     ? targetGroupMasterIdx >= 0
                       ? targetGroupMasterIdx
@@ -248,6 +233,36 @@ export function renderGroupingSheet() {
                     ? `${targetGroupMasterName} (${localize("card.grouping.title") || "Group"})`
                     : name;
 
+                  const mainState = this.hass?.states?.[id];
+                  const groupEntityState = this.hass?.states?.[actualGroupId];
+                  const volumeState = volumeEntity ? this.hass?.states?.[volumeEntity] : null;
+                  const targetEntityState = this.hass?.states?.[targetEntityId];
+                  const targetMaState = this.hass?.states?.[targetMaId];
+                  const targetState = targetEntityState || targetMaState;
+
+                  const isDeviceUnavailable =
+                    mainState?.state === "unavailable" ||
+                    groupEntityState?.state === "unavailable" ||
+                    displayVolumeState?.state === "unavailable" ||
+                    volumeState?.state === "unavailable" ||
+                    targetEntityState?.state === "unavailable" ||
+                    targetMaState?.state === "unavailable";
+
+                  let stateLabel;
+                  if (isDeviceUnavailable) {
+                    stateLabel =
+                      busyLabel || localize("card.grouping.unavailable") || "Unavailable";
+                  } else if (isMultiSpeakerGroup) {
+                    stateLabel =
+                      targetGroupMasterId === id
+                        ? localize("card.grouping.master")
+                        : localize("card.grouping.joined");
+                  } else if (isCurrent) {
+                    stateLabel = localize("card.grouping.current");
+                  } else {
+                    stateLabel = localize("card.grouping.available");
+                  }
+
                   // Self check: is this target the currently active playback entity / group?
                   const isSelf =
                     targetMaId === sourceMaId ||
@@ -257,15 +272,15 @@ export function renderGroupingSheet() {
                         (Boolean(activeGroupKey) && activeGroupKey !== this.currentEntityId)) &&
                       targetGroupMasterId === activeGroupKey);
 
-                  const targetState =
-                    this.hass?.states?.[targetEntityId] || this.hass?.states?.[targetMaId];
-                  const isTargetUnavailable = targetState?.state === "unavailable";
                   const isTransferPending = this._transferQueuePendingTarget === targetMaId;
                   const isTransferDisabled =
-                    !hasQueueToTransfer || isSelf || isTransferPending || isTargetUnavailable;
+                    !hasQueueToTransfer || isSelf || isTransferPending || isDeviceUnavailable;
 
                   let transferTooltip;
-                  if (!hasQueueToTransfer) {
+                  if (isDeviceUnavailable) {
+                    transferTooltip =
+                      localize("card.grouping.unavailable") || "Player is unavailable";
+                  } else if (!hasQueueToTransfer) {
                     transferTooltip =
                       localize("card.grouping.transfer_no_queue") || "No active queue to transfer";
                   } else if (isSelf) {
@@ -293,10 +308,13 @@ export function renderGroupingSheet() {
                   };
 
                   if (isGridMode) {
-                    const isDisabled = isBusy || !showToggleButton;
-                    const toggleTooltip = grouped
-                      ? localize("card.grouping.unjoin_from").replace("{master}", masterName)
-                      : localize("card.grouping.join_with").replace("{master}", masterName);
+                    const isDisabled = isBusy || isDeviceUnavailable || !showToggleButton;
+                    const toggleTooltip =
+                      isDeviceUnavailable || isBusy
+                        ? localize("card.grouping.unavailable")
+                        : grouped
+                          ? localize("card.grouping.unjoin_from").replace("{master}", masterName)
+                          : localize("card.grouping.join_with").replace("{master}", masterName);
 
                     return html`
                       <div
@@ -460,10 +478,11 @@ export function renderGroupingSheet() {
                           ? html`
                               <button
                                 class="group-toggle-btn"
-                                ?disabled=${isBusy}
-                                @click=${() => !isBusy && this._toggleGroup(id)}
+                                ?disabled=${isBusy || isDeviceUnavailable}
+                                @click=${() =>
+                                  !isBusy && !isDeviceUnavailable && this._toggleGroup(id)}
                                 title=${
-                                  isBusy
+                                  isBusy || isDeviceUnavailable
                                     ? localize("card.grouping.unavailable")
                                     : grouped
                                       ? localize("card.grouping.unjoin_from").replace(
@@ -476,7 +495,9 @@ export function renderGroupingSheet() {
                                         )
                                 }
                                 style="margin-left:2px; ${
-                                  isBusy ? "cursor: not-allowed; opacity: 0.35;" : ""
+                                  isBusy || isDeviceUnavailable
+                                    ? "cursor: not-allowed; opacity: 0.35;"
+                                    : ""
                                 }"
                               >
                                 <ha-icon

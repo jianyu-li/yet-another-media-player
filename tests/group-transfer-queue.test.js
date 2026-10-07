@@ -197,9 +197,12 @@ describe("Group Players Menu - Transfer Queue Button", () => {
       tooltip: "",
     });
 
-    let transferredTarget = null;
+    const transferState = {
+      /** @type {any} */
+      target: null,
+    };
     card._transferQueueTo = (payload) => {
-      transferredTarget = payload;
+      transferState.target = payload;
     };
 
     const template = renderGroupingSheet.call(card);
@@ -223,13 +226,13 @@ describe("Group Players Menu - Transfer Queue Button", () => {
 
     // Call each function and check if _transferQueueTo was invoked with living_room as target
     for (const fn of clickFns) {
-      transferredTarget = null;
+      transferState.target = null;
       try {
         fn();
         if (
-          transferredTarget &&
-          transferredTarget.entityId === "media_player.living_room" &&
-          transferredTarget.name.includes("Living Room")
+          transferState.target &&
+          transferState.target.entityId === "media_player.living_room" &&
+          transferState.target.name.includes("Living Room")
         ) {
           break;
         }
@@ -239,10 +242,103 @@ describe("Group Players Menu - Transfer Queue Button", () => {
     }
 
     assert.ok(
-      transferredTarget,
+      transferState.target,
       "Expected transferQueueTo to be called when invoking transfer handler"
     );
-    assert.strictEqual(transferredTarget.entityId, "media_player.living_room");
-    assert.ok(transferredTarget.name.includes("Living Room"));
+    assert.strictEqual(transferState.target.entityId, "media_player.living_room");
+    assert.ok(transferState.target.name.includes("Living Room"));
+  });
+
+  it("greys out both transfer and group toggle buttons when an entity is unavailable", () => {
+    // Living room is current
+    card._selectedIndex = 0;
+    Object.defineProperty(card, "currentEntityId", {
+      get: () => "media_player.living_room",
+      configurable: true,
+    });
+    card._getGroupingMasterId = () => "media_player.living_room";
+
+    // Bedroom is unavailable
+    card.hass.states["media_player.bedroom"] = {
+      entity_id: "media_player.bedroom",
+      state: "unavailable",
+      attributes: {
+        friendly_name: "Bedroom",
+      },
+    };
+
+    let transferredCalled = false;
+    card._transferQueueTo = () => {
+      transferredCalled = true;
+    };
+
+    let toggledCalled = false;
+    card._toggleGroup = () => {
+      toggledCalled = true;
+    };
+
+    const template = renderGroupingSheet.call(card);
+    assert.ok(template);
+
+    // Extract rendered HTML and verify disabled states are present
+    const htmlContent = extractTemplateHtml(template);
+    assert.ok(htmlContent.includes("Player is unavailable") || htmlContent.includes("Unavailable"));
+
+    // Find the row for bedroom
+    // Find click functions specifically within bedroom's template result
+    function findBedroomRow(obj) {
+      if (!obj) return null;
+      if (typeof obj === "object" && obj.strings && Array.isArray(obj.values)) {
+        if (obj.values.some((v) => typeof v === "string" && v.includes("Bedroom"))) {
+          return obj;
+        }
+      }
+      if (Array.isArray(obj)) {
+        for (const item of obj) {
+          const res = findBedroomRow(item);
+          if (res) return res;
+        }
+      } else if (typeof obj === "object" && obj.values) {
+        return findBedroomRow(obj.values);
+      }
+      return null;
+    }
+    /** @type {any} */
+    const bedroomTemplate = findBedroomRow(template.values);
+
+    assert.ok(bedroomTemplate, "Expected to find template row for Bedroom");
+
+    const bedroomClickFns = [];
+    function findFunctions(obj) {
+      if (!obj) return;
+      if (typeof obj === "function") {
+        bedroomClickFns.push(obj);
+      } else if (Array.isArray(obj)) {
+        obj.forEach(findFunctions);
+      } else if (typeof obj === "object" && obj.values) {
+        findFunctions(obj.values);
+      }
+    }
+    findFunctions(bedroomTemplate.values);
+
+    for (const fn of bedroomClickFns) {
+      try {
+        fn();
+      } catch (_e) {
+        // ignore
+      }
+    }
+
+    // Bedroom transfer queue should not have executed because it is disabled
+    assert.strictEqual(
+      transferredCalled,
+      false,
+      "transferQueueTo should not be invoked for unavailable player"
+    );
+    assert.strictEqual(
+      toggledCalled,
+      false,
+      "toggleGroup should not be invoked for unavailable player"
+    );
   });
 });
