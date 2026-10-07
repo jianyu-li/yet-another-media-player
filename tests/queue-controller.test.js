@@ -403,7 +403,7 @@ describe("QueueController & Pure Queue Helpers", () => {
         },
       };
 
-      controller = new QueueController(mockHost);
+      controller = new QueueController(/** @type {any} */ (mockHost));
     });
 
     it("registers itself with host during construction", () => {
@@ -494,6 +494,72 @@ describe("QueueController & Pure Queue Helpers", () => {
 
       controller.closeTransferQueue();
       assert.strictEqual(controller.showTransferQueue, false);
+    });
+
+    it("handles transfer queue auto-close timer and dismissal from grouping sheet", async () => {
+      let dismissed = false;
+      mockHost._showEntityOptions = true;
+      mockHost._showGrouping = true;
+      mockHost._cardType = "standard";
+      mockHost._dismissWithAnimation = () => {
+        dismissed = true;
+      };
+
+      const target = {
+        index: 1,
+        entityId: "media_player.bedroom",
+        maEntityId: "media_player.bedroom",
+        name: "Bedroom",
+      };
+
+      await controller.transferQueueTo(target);
+      assert.strictEqual(controller.transferQueueStatus?.type, "success");
+      assert.ok(controller.transferQueueAutoCloseTimer);
+
+      clearTimeout(controller.transferQueueAutoCloseTimer);
+      controller.transferQueueStatus = null;
+      if (
+        mockHost._showEntityOptions &&
+        (controller.showTransferQueue ||
+          (mockHost._showGrouping && mockHost._cardType !== "group_players"))
+      ) {
+        mockHost._dismissWithAnimation();
+      }
+      assert.strictEqual(dismissed, true);
+      assert.strictEqual(controller.transferQueueStatus, null);
+    });
+
+    it("does not dismiss with animation when cardType is group_players", async () => {
+      let dismissed = false;
+      mockHost._showEntityOptions = true;
+      mockHost._showGrouping = true;
+      mockHost._cardType = "group_players";
+      mockHost._dismissWithAnimation = () => {
+        dismissed = true;
+      };
+
+      const target = {
+        index: 1,
+        entityId: "media_player.bedroom",
+        maEntityId: "media_player.bedroom",
+        name: "Bedroom",
+      };
+
+      await controller.transferQueueTo(target);
+      assert.strictEqual(controller.transferQueueStatus?.type, "success");
+      assert.ok(controller.transferQueueAutoCloseTimer);
+
+      clearTimeout(controller.transferQueueAutoCloseTimer);
+      controller.transferQueueStatus = null;
+      if (
+        mockHost._showEntityOptions &&
+        (controller.showTransferQueue ||
+          (mockHost._showGrouping && mockHost._cardType !== "group_players"))
+      ) {
+        mockHost._dismissWithAnimation();
+      }
+      assert.strictEqual(dismissed, false);
+      assert.strictEqual(controller.transferQueueStatus, null);
     });
 
     it("cleans up subscriptions and timers on hostDisconnected", () => {

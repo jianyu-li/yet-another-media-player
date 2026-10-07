@@ -1329,8 +1329,15 @@ export class QueueController {
       }
       this.transferQueueAutoCloseTimer = setTimeout(() => {
         this.transferQueueAutoCloseTimer = null;
-        if (this.host?._showEntityOptions && this.showTransferQueue) {
+        this.transferQueueStatus = null;
+        if (
+          this.host?._showEntityOptions &&
+          (this.showTransferQueue ||
+            (this.host._showGrouping && this.host._cardType !== "group_players"))
+        ) {
           this.host._dismissWithAnimation?.();
+        } else {
+          this.host?.triggerRender?.() || this.host?.requestUpdate?.();
         }
       }, 2000);
     } catch (error) {
@@ -1343,6 +1350,11 @@ export class QueueController {
         clearTimeout(this.transferQueueAutoCloseTimer);
         this.transferQueueAutoCloseTimer = null;
       }
+      this.transferQueueAutoCloseTimer = setTimeout(() => {
+        this.transferQueueAutoCloseTimer = null;
+        this.transferQueueStatus = null;
+        this.host?.triggerRender?.() || this.host?.requestUpdate?.();
+      }, 4000);
     } finally {
       this.transferQueuePendingTarget = null;
       this.host.triggerRender?.() || this.host.requestUpdate?.();

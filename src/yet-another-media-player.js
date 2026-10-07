@@ -9713,6 +9713,8 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
   _closeGrouping() {
     this._showGrouping = false;
+    this._transferQueuePendingTarget = null;
+    this._transferQueueStatus = null;
     // No requestUpdate here; overlay close will handle it.
   }
   async _toggleGroup(targetId) {

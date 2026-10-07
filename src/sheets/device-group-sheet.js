@@ -77,6 +77,12 @@ export function renderGroupingSheet() {
     `;
   }
 
+  const hasMaTransferService = Boolean(this.hass?.services?.music_assistant?.transfer_queue);
+  const currentIdx = this._selectedIndex;
+  const sourceMaId = this._getActualResolvedMaEntityForState?.(currentIdx);
+  const sourceEntityId = this.entityIds?.[currentIdx];
+  const hasQueueToTransfer = Boolean(this._hasTransferQueueForCurrent);
+
   const sortedGroupIds = [...groupPlayerIds].sort((a, b) => {
     if (groupedAny) {
       if (a.id === masterId) return -1;
@@ -134,6 +140,29 @@ export function renderGroupingSheet() {
         ${groupedAny ? localize("card.grouping.ungroup_all") : localize("card.grouping.group_all")}
       </button>
     </div>
+    ${
+      this._transferQueueStatus
+        ? html`
+            <div
+              style="
+                margin-bottom: 12px;
+                padding: 10px 12px;
+                border-radius: 8px;
+                font-weight: 600;
+                text-align: center;
+                background: ${
+                this._transferQueueStatus.type === "error"
+                  ? "rgba(244, 67, 54, 0.18)"
+                  : "rgba(76, 175, 80, 0.18)"
+              };
+                color: ${this._transferQueueStatus.type === "error" ? "#ff8a80" : "#8bc34a"};
+              "
+            >
+              ${this._transferQueueStatus.message}
+            </div>
+          `
+        : nothing
+    }
     <div class="group-list-scroll ${isGridMode ? "grid-menu" : ""}">
       ${
         sortedGroupIds.length === 0
@@ -187,6 +216,55 @@ export function renderGroupingSheet() {
                     stateLabel = busyLabel || "Unavailable";
                   }
 
+                  const isPartGroup = isPrimaryRow || grouped;
+                  const targetIdx = isPartGroup
+                    ? masterIdx >= 0
+                      ? masterIdx
+                      : entityIdx
+                    : entityIdx;
+                  const targetEntityId = isPartGroup ? masterId : id;
+                  const targetMaId = isPartGroup
+                    ? this._getActualResolvedMaEntityForState?.(targetIdx) || masterGroupId
+                    : this._getActualResolvedMaEntityForState?.(entityIdx) || actualGroupId;
+                  const targetName = isPartGroup
+                    ? groupedAny
+                      ? `${masterName} (${localize("card.grouping.title") || "Group"})`
+                      : masterName
+                    : name;
+
+                  const isSelf = targetMaId === sourceMaId || targetEntityId === sourceEntityId;
+                  const isTransferPending = this._transferQueuePendingTarget === targetMaId;
+                  const isTransferDisabled =
+                    !hasQueueToTransfer || isSelf || isTransferPending || (isBusy && !grouped);
+
+                  let transferTooltip;
+                  if (!hasQueueToTransfer) {
+                    transferTooltip =
+                      localize("card.grouping.transfer_no_queue") || "No active queue to transfer";
+                  } else if (isSelf) {
+                    transferTooltip =
+                      localize("card.grouping.transfer_current_player") || "Currently playing here";
+                  } else if (isPartGroup && groupedAny) {
+                    transferTooltip = (
+                      localize("card.grouping.transfer_to_group") ||
+                      "Transfer queue to {master} group"
+                    ).replace("{master}", masterName);
+                  } else {
+                    transferTooltip = (
+                      localize("card.grouping.transfer_to_player") || "Transfer queue to {player}"
+                    ).replace("{player}", name);
+                  }
+
+                  const targetPayload = {
+                    index: targetIdx,
+                    entityId: targetEntityId,
+                    maEntityId: targetMaId,
+                    name: targetName,
+                    subtitle: targetMaId !== targetEntityId ? targetMaId : targetEntityId,
+                    state: (isPartGroup ? masterState : displayVolumeState)?.state,
+                    icon: isPartGroup && groupedAny ? "mdi:speaker-multiple" : "mdi:music",
+                  };
+
                   if (isGridMode) {
                     const isDisabled = isBusy || !showToggleButton;
                     const toggleTooltip = grouped
@@ -208,6 +286,27 @@ export function renderGroupingSheet() {
                               : toggleTooltip
                         }
                       >
+                        ${
+                          hasMaTransferService
+                            ? html`
+                                <span
+                                  class="grid-menu-transfer-btn"
+                                  role="button"
+                                  tabindex="0"
+                                  ?disabled=${isTransferDisabled}
+                                  @click=${(e) => {
+                                    e.stopPropagation();
+                                    if (!isTransferDisabled) {
+                                      this._transferQueueTo(targetPayload);
+                                    }
+                                  }}
+                                  title=${transferTooltip}
+                                >
+                                  <ha-icon icon="mdi:swap-horizontal"></ha-icon>
+                                </span>
+                              `
+                            : nothing
+                        }
                         <ha-icon
                           class="menu-action-icon"
                           icon=${
@@ -305,6 +404,21 @@ export function renderGroupingSheet() {
                           }</span
                         >
                       </div>
+                      ${
+                        hasMaTransferService
+                          ? html`
+                              <button
+                                class="group-transfer-btn"
+                                ?disabled=${isTransferDisabled}
+                                @click=${() =>
+                                  !isTransferDisabled && this._transferQueueTo(targetPayload)}
+                                title=${transferTooltip}
+                              >
+                                <ha-icon icon="mdi:swap-horizontal"></ha-icon>
+                              </button>
+                            `
+                          : nothing
+                      }
                       ${
                         showToggleButton
                           ? html`
