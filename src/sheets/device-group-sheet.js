@@ -202,40 +202,67 @@ export function renderGroupingSheet() {
                     ? this.getChipName(masterId)
                     : localize("card.grouping.master");
 
-                  let stateLabel = groupedAny
-                    ? isPrimaryRow
-                      ? localize("card.grouping.master")
-                      : grouped
-                        ? localize("card.grouping.joined")
-                        : localize("card.grouping.available")
-                    : isCurrent
-                      ? localize("card.grouping.current")
-                      : localize("card.grouping.available");
+                  // Check if player belongs to any multi-speaker group (its own or the active master's)
+                  const playerGroupKey = this._getGroupKey(id);
+                  const playerGroupingState = this.hass?.states?.[actualGroupId];
+                  const playerMembers = Array.isArray(
+                    playerGroupingState?.attributes?.group_members
+                  )
+                    ? playerGroupingState.attributes.group_members
+                    : [];
+                  const isMultiSpeakerGroup =
+                    playerMembers.length > 1 || (Boolean(playerGroupKey) && playerGroupKey !== id);
 
-                  if (isBusy) {
-                    stateLabel = busyLabel || "Unavailable";
+                  // Group master for this player's group
+                  const targetGroupMasterId = isMultiSpeakerGroup ? playerGroupKey || id : id;
+                  const targetGroupMasterIdx = this.entityIds.indexOf(targetGroupMasterId);
+                  const targetGroupMasterName = this.getChipName(targetGroupMasterId);
+
+                  let stateLabel;
+                  if (displayVolumeState?.state === "unavailable") {
+                    stateLabel =
+                      busyLabel || localize("card.grouping.unavailable") || "Unavailable";
+                  } else if (isMultiSpeakerGroup) {
+                    stateLabel =
+                      targetGroupMasterId === id
+                        ? localize("card.grouping.master")
+                        : localize("card.grouping.joined");
+                  } else if (isCurrent) {
+                    stateLabel = localize("card.grouping.current");
+                  } else {
+                    stateLabel = localize("card.grouping.available");
                   }
 
-                  const isPartGroup = isPrimaryRow || grouped;
-                  const targetIdx = isPartGroup
-                    ? masterIdx >= 0
-                      ? masterIdx
+                  const targetIdx = isMultiSpeakerGroup
+                    ? targetGroupMasterIdx >= 0
+                      ? targetGroupMasterIdx
                       : entityIdx
                     : entityIdx;
-                  const targetEntityId = isPartGroup ? masterId : id;
-                  const targetMaId = isPartGroup
-                    ? this._getActualResolvedMaEntityForState?.(targetIdx) || masterGroupId
+                  const targetEntityId = isMultiSpeakerGroup ? targetGroupMasterId : id;
+                  const targetMaId = isMultiSpeakerGroup
+                    ? this._getActualResolvedMaEntityForState?.(targetIdx) ||
+                      this._getGroupingEntityIdByEntityId?.(targetGroupMasterId) ||
+                      targetGroupMasterId
                     : this._getActualResolvedMaEntityForState?.(entityIdx) || actualGroupId;
-                  const targetName = isPartGroup
-                    ? groupedAny
-                      ? `${masterName} (${localize("card.grouping.title") || "Group"})`
-                      : masterName
+                  const targetName = isMultiSpeakerGroup
+                    ? `${targetGroupMasterName} (${localize("card.grouping.title") || "Group"})`
                     : name;
 
-                  const isSelf = targetMaId === sourceMaId || targetEntityId === sourceEntityId;
+                  // Self check: is this target the currently active playback entity / group?
+                  const isSelf =
+                    targetMaId === sourceMaId ||
+                    targetEntityId === sourceEntityId ||
+                    (isMultiSpeakerGroup &&
+                      (groupedAny ||
+                        (Boolean(activeGroupKey) && activeGroupKey !== this.currentEntityId)) &&
+                      targetGroupMasterId === activeGroupKey);
+
+                  const targetState =
+                    this.hass?.states?.[targetEntityId] || this.hass?.states?.[targetMaId];
+                  const isTargetUnavailable = targetState?.state === "unavailable";
                   const isTransferPending = this._transferQueuePendingTarget === targetMaId;
                   const isTransferDisabled =
-                    !hasQueueToTransfer || isSelf || isTransferPending || (isBusy && !grouped);
+                    !hasQueueToTransfer || isSelf || isTransferPending || isTargetUnavailable;
 
                   let transferTooltip;
                   if (!hasQueueToTransfer) {
@@ -244,11 +271,11 @@ export function renderGroupingSheet() {
                   } else if (isSelf) {
                     transferTooltip =
                       localize("card.grouping.transfer_current_player") || "Currently playing here";
-                  } else if (isPartGroup && groupedAny) {
+                  } else if (isMultiSpeakerGroup) {
                     transferTooltip = (
                       localize("card.grouping.transfer_to_group") ||
                       "Transfer queue to {master} group"
-                    ).replace("{master}", masterName);
+                    ).replace("{master}", targetGroupMasterName);
                   } else {
                     transferTooltip = (
                       localize("card.grouping.transfer_to_player") || "Transfer queue to {player}"
@@ -261,8 +288,8 @@ export function renderGroupingSheet() {
                     maEntityId: targetMaId,
                     name: targetName,
                     subtitle: targetMaId !== targetEntityId ? targetMaId : targetEntityId,
-                    state: (isPartGroup ? masterState : displayVolumeState)?.state,
-                    icon: isPartGroup && groupedAny ? "mdi:speaker-multiple" : "mdi:music",
+                    state: (isMultiSpeakerGroup ? targetState : displayVolumeState)?.state,
+                    icon: isMultiSpeakerGroup ? "mdi:speaker-multiple" : "mdi:music",
                   };
 
                   if (isGridMode) {

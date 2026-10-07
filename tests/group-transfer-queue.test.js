@@ -160,4 +160,89 @@ describe("Group Players Menu - Transfer Queue Button", () => {
       ) || JSON.stringify(template.values).includes("Queue sent to Living Room Group.")
     );
   });
+
+  it("enables transfer button and routes to group master when target belongs to an external group", () => {
+    // Current entity is bedroom (solo)
+    card._selectedIndex = 2; // media_player.bedroom
+    Object.defineProperty(card, "currentEntityId", {
+      get: () => "media_player.bedroom",
+      configurable: true,
+    });
+    card._getGroupingMasterId = () => "media_player.bedroom";
+
+    // Living Room and Kitchen are grouped together in their own group
+    card.hass.states["media_player.living_room"].attributes.group_members = [
+      "media_player.living_room",
+      "media_player.kitchen",
+    ];
+    card.hass.states["media_player.kitchen"].attributes.group_members = [
+      "media_player.living_room",
+      "media_player.kitchen",
+    ];
+    card.hass.states["media_player.bedroom"].attributes.group_members = ["media_player.bedroom"];
+
+    card._getGroupKey = (id) => {
+      if (id === "media_player.kitchen") return "media_player.living_room";
+      return id;
+    };
+
+    // Both Living Room and Kitchen are considered busy for grouping with Bedroom
+    card._getGroupPlayerState = (id) => ({
+      isGroupable: true,
+      entityToCheck: id,
+      isBusy: id !== "media_player.bedroom",
+      busyLabel: id !== "media_player.bedroom" ? "Unavailable" : "",
+      grouped: false,
+      isPrimary: id === "media_player.bedroom",
+      tooltip: "",
+    });
+
+    let transferredTarget = null;
+    card._transferQueueTo = (payload) => {
+      transferredTarget = payload;
+    };
+
+    const template = renderGroupingSheet.call(card);
+    assert.ok(template);
+
+    // Find click handlers in template values that correspond to transferQueueTo
+    // We can simulate clicking the transfer button on kitchen row
+    // In template.values, search for functions that call _transferQueueTo
+    const clickFns = [];
+    function findFunctions(obj) {
+      if (!obj) return;
+      if (typeof obj === "function") {
+        clickFns.push(obj);
+      } else if (Array.isArray(obj)) {
+        obj.forEach(findFunctions);
+      } else if (typeof obj === "object" && obj.values) {
+        findFunctions(obj.values);
+      }
+    }
+    findFunctions(template.values);
+
+    // Call each function and check if _transferQueueTo was invoked with living_room as target
+    for (const fn of clickFns) {
+      transferredTarget = null;
+      try {
+        fn();
+        if (
+          transferredTarget &&
+          transferredTarget.entityId === "media_player.living_room" &&
+          transferredTarget.name.includes("Living Room")
+        ) {
+          break;
+        }
+      } catch (_e) {
+        // ignore other handlers
+      }
+    }
+
+    assert.ok(
+      transferredTarget,
+      "Expected transferQueueTo to be called when invoking transfer handler"
+    );
+    assert.strictEqual(transferredTarget.entityId, "media_player.living_room");
+    assert.ok(transferredTarget.name.includes("Living Room"));
+  });
 });
