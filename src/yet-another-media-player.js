@@ -2831,7 +2831,28 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._applySearchHeaderDelta(delta);
   }
 
+  _handleFilterChipsWheel(e) {
+    if (Math.abs(e.deltaX) >= Math.abs(e.deltaY) && e.deltaX !== 0) {
+      e.stopPropagation();
+    }
+  }
+
   _handleHeaderWheel(e, pinSearchHeaders) {
+    const chipRow =
+      e.target?.closest?.(".search-filter-chips") ||
+      e.composedPath?.().find?.((el) => el?.classList?.contains?.("search-filter-chips"));
+
+    // Allow native horizontal scrolling when scrolling horizontally over filter chips
+    if (chipRow && (Math.abs(e.deltaX) >= Math.abs(e.deltaY) && e.deltaX !== 0)) {
+      e.stopPropagation();
+      return;
+    }
+
+    // Discriminate horizontal gestures across the header panel
+    if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+      return;
+    }
+
     if (e.cancelable) e.preventDefault();
     e.stopPropagation();
     if (pinSearchHeaders || this.config?.pin_search_headers === true) {
@@ -2877,6 +2898,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
   _handleSearchContainerWheel(e, pinSearchHeaders) {
     if (pinSearchHeaders || this.config?.pin_search_headers === true) return;
+    if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
     const headerHeight = this._getSearchHeaderHeight();
     const currentOffset = this._searchHeaderOffset || 0;
     if (e.deltaY < 0) {
