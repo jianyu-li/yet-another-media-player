@@ -299,19 +299,11 @@ export function renderGroupingSheet() {
                       : localize("card.grouping.join_with").replace("{master}", masterName);
 
                     return html`
-                      <button
-                        class="entity-options-item menu-action-item group-toggle-btn ${
+                      <div
+                        class="entity-options-item menu-action-item ${
                           !showToggleButton || grouped ? "grid-active" : ""
                         }"
-                        ?disabled=${isDisabled}
-                        @click=${() => !isDisabled && this._toggleGroup(id)}
-                        title=${
-                          isBusy
-                            ? localize("card.grouping.unavailable")
-                            : !showToggleButton
-                              ? stateLabel
-                              : toggleTooltip
-                        }
+                        style="position: relative;"
                       >
                         ${
                           hasMaTransferService
@@ -334,18 +326,36 @@ export function renderGroupingSheet() {
                               `
                             : nothing
                         }
-                        <ha-icon
-                          class="menu-action-icon"
-                          icon=${
-                            isPrimaryRow
-                              ? "mdi:star"
-                              : grouped
-                                ? "mdi:speaker-multiple"
-                                : "mdi:speaker"
+                        <div
+                          class="grid-menu-toggle-action"
+                          role="button"
+                          tabindex="0"
+                          ?disabled=${isDisabled}
+                          @click=${() => !isDisabled && this._toggleGroup(id)}
+                          title=${
+                            isBusy
+                              ? localize("card.grouping.unavailable")
+                              : !showToggleButton
+                                ? stateLabel
+                                : toggleTooltip
                           }
-                        ></ha-icon>
-                        <span class="menu-action-label">${name}</span>
-                      </button>
+                          style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;width:100%;height:100%;cursor:${
+                            isDisabled ? "default" : "pointer"
+                          };${isDisabled ? "opacity:0.35;" : ""}"
+                        >
+                          <ha-icon
+                            class="menu-action-icon"
+                            icon=${
+                              isPrimaryRow
+                                ? "mdi:star"
+                                : grouped
+                                  ? "mdi:speaker-multiple"
+                                  : "mdi:speaker"
+                            }
+                          ></ha-icon>
+                          <span class="menu-action-label">${name}</span>
+                        </div>
+                      </div>
                     `;
                   }
 
@@ -358,7 +368,6 @@ export function renderGroupingSheet() {
                       gap:6px;
                       padding: 12px 8px 4px 8px;
                       margin-bottom: 1px;
-                      ${isBusy ? "opacity: 0.5;" : ""}
                     "
                     >
                       <div style="flex:0.7; min-width:84px;">
@@ -451,6 +460,7 @@ export function renderGroupingSheet() {
                           ? html`
                               <button
                                 class="group-toggle-btn"
+                                ?disabled=${isBusy}
                                 @click=${() => !isBusy && this._toggleGroup(id)}
                                 title=${
                                   isBusy
@@ -466,7 +476,7 @@ export function renderGroupingSheet() {
                                         )
                                 }
                                 style="margin-left:2px; ${
-                                  isBusy ? "cursor: not-allowed; opacity: 0.5;" : ""
+                                  isBusy ? "cursor: not-allowed; opacity: 0.35;" : ""
                                 }"
                               >
                                 <ha-icon

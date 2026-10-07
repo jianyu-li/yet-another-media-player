@@ -825,6 +825,19 @@ export const menusSheetsStyles = css`
     height: 22px;
   }
 
+  .group-toggle-btn:disabled,
+  .group-toggle-btn[disabled] {
+    cursor: not-allowed;
+    opacity: 0.35;
+  }
+
+  @media (hover: hover) {
+    .group-toggle-btn:not([disabled]):hover {
+      background: var(--yamp-hover-bg, rgba(255, 255, 255, 0.12));
+      color: var(--custom-accent, var(--primary-color));
+    }
+  }
+
   /* Group transfer queue button in list view */
   .group-transfer-btn {
     background: none;
