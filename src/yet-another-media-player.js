@@ -5470,8 +5470,13 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     let isBusy = false;
     let busyLabel = "";
 
+    // Busy if entity or its grouping entity is unavailable
+    if (st.state === "unavailable" || this.hass?.states?.[targetId]?.state === "unavailable") {
+      isBusy = true;
+      busyLabel = localize('common.unavailable');
+    }
     // Busy if joined to a DIFFERENT group
-    if (playerGroupKey !== targetId && playerGroupKey !== myGroupKey) {
+    else if (playerGroupKey !== targetId && playerGroupKey !== myGroupKey) {
       isBusy = true;
       busyLabel = localize('common.unavailable');
     }
@@ -9713,6 +9718,8 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
   _closeGrouping() {
     this._showGrouping = false;
+    this._transferQueuePendingTarget = null;
+    this._transferQueueStatus = null;
     // No requestUpdate here; overlay close will handle it.
   }
   async _toggleGroup(targetId) {

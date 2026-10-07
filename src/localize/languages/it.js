@@ -514,6 +514,10 @@ export default {
       current: "Attuale",
       unjoin_from: "Scollegati da {master}",
       join_with: "Unisciti a {master}",
+      transfer_to_player: "Trasferisci coda a {player}",
+      transfer_to_group: "Trasferisci coda al gruppo {master}",
+      transfer_current_player: "In riproduzione qui",
+      transfer_no_queue: "Nessuna coda attiva da trasferire",
     },
   },
   search: {

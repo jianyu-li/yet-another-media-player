@@ -473,6 +473,7 @@ export const menusSheetsStyles = css`
   }
 
   .grid-menu .entity-options-item {
+    position: relative;
     margin: 0;
     border-radius: 0;
     border-bottom: 1px solid var(--divider-color, var(--yamp-overlay-divider));
@@ -500,6 +501,49 @@ export const menusSheetsStyles = css`
 
   .grid-menu .entity-options-item.grid-active {
     color: var(--custom-accent);
+  }
+
+  .grid-menu-transfer-btn {
+    position: absolute;
+    top: 3px;
+    right: 3px;
+    width: 22px;
+    height: 22px;
+    border-radius: 50%;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    color: var(--yamp-overlay-text);
+    opacity: 0.7;
+    transition:
+      opacity 0.15s ease,
+      color 0.15s ease,
+      background 0.15s ease;
+    z-index: 2;
+  }
+
+  .grid-menu-transfer-btn ha-icon {
+    width: 15px;
+    height: 15px;
+    --mdc-icon-size: 15px;
+  }
+
+  .grid-menu-transfer-btn:disabled,
+  .grid-menu-transfer-btn[disabled] {
+    cursor: not-allowed;
+    opacity: 0.25;
+  }
+
+  @media (hover: hover) {
+    .grid-menu-transfer-btn:not([disabled]):hover {
+      opacity: 1;
+      background: var(--yamp-hover-bg, rgba(255, 255, 255, 0.15));
+      color: var(--custom-accent, var(--primary-color));
+    }
   }
 
   /* Wrapper for grid-menu children — display:contents lets items participate in the grid directly */
@@ -778,6 +822,58 @@ export const menusSheetsStyles = css`
   .group-toggle-btn ha-icon {
     width: 22px;
     height: 22px;
+  }
+
+  .group-toggle-btn:disabled,
+  .group-toggle-btn[disabled] {
+    cursor: not-allowed;
+    opacity: 0.35;
+  }
+
+  @media (hover: hover) {
+    .group-toggle-btn:not([disabled]):hover {
+      background: var(--yamp-hover-bg, rgba(255, 255, 255, 0.12));
+      color: var(--custom-accent, var(--primary-color));
+    }
+  }
+
+  /* Group transfer queue button in list view */
+  .group-transfer-btn {
+    background: none;
+    border: none;
+    border-radius: 50%;
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition:
+      background 0.15s ease,
+      opacity 0.15s ease,
+      color 0.15s ease;
+    color: var(--yamp-overlay-text);
+    padding: 0;
+    margin-left: 2px;
+    flex-shrink: 0;
+  }
+
+  .group-transfer-btn ha-icon {
+    width: 22px;
+    height: 22px;
+  }
+
+  .group-transfer-btn:disabled,
+  .group-transfer-btn[disabled] {
+    cursor: not-allowed;
+    opacity: 0.35;
+  }
+
+  @media (hover: hover) {
+    .group-transfer-btn:not([disabled]):hover {
+      background: var(--yamp-hover-bg, rgba(255, 255, 255, 0.12));
+      color: var(--custom-accent, var(--primary-color));
+    }
   }
 
   .group-toggle-transparent {

@@ -530,6 +530,10 @@ export default {
       current: "Aktuálny",
       unjoin_from: "Odpojiť od {master}",
       join_with: "Pripojiť k {master}",
+      transfer_to_player: "Preniesť rad do {player}",
+      transfer_to_group: "Preniesť rad do skupiny {master}",
+      transfer_current_player: "Práve hrá tu",
+      transfer_no_queue: "Žiadny aktívny rad na prenos",
     },
   },
   search: {

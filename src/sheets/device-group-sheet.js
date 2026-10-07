@@ -77,6 +77,12 @@ export function renderGroupingSheet() {
     `;
   }
 
+  const hasMaTransferService = Boolean(this.hass?.services?.music_assistant?.transfer_queue);
+  const currentIdx = this._selectedIndex;
+  const sourceMaId = this._getActualResolvedMaEntityForState?.(currentIdx);
+  const sourceEntityId = this.entityIds?.[currentIdx];
+  const hasQueueToTransfer = Boolean(this._hasTransferQueueForCurrent);
+
   const sortedGroupIds = [...groupPlayerIds].sort((a, b) => {
     if (groupedAny) {
       if (a.id === masterId) return -1;
@@ -134,6 +140,29 @@ export function renderGroupingSheet() {
         ${groupedAny ? localize("card.grouping.ungroup_all") : localize("card.grouping.group_all")}
       </button>
     </div>
+    ${
+      this._transferQueueStatus
+        ? html`
+            <div
+              style="
+                margin-bottom: 12px;
+                padding: 10px 12px;
+                border-radius: 8px;
+                font-weight: 600;
+                text-align: center;
+                background: ${
+                this._transferQueueStatus.type === "error"
+                  ? "rgba(244, 67, 54, 0.18)"
+                  : "rgba(76, 175, 80, 0.18)"
+              };
+                color: ${this._transferQueueStatus.type === "error" ? "#ff8a80" : "#8bc34a"};
+              "
+            >
+              ${this._transferQueueStatus.message}
+            </div>
+          `
+        : nothing
+    }
     <div class="group-list-scroll ${isGridMode ? "grid-menu" : ""}">
       ${
         sortedGroupIds.length === 0
@@ -173,53 +202,183 @@ export function renderGroupingSheet() {
                     ? this.getChipName(masterId)
                     : localize("card.grouping.master");
 
-                  let stateLabel = groupedAny
-                    ? isPrimaryRow
-                      ? localize("card.grouping.master")
-                      : grouped
-                        ? localize("card.grouping.joined")
-                        : localize("card.grouping.available")
-                    : isCurrent
-                      ? localize("card.grouping.current")
-                      : localize("card.grouping.available");
+                  // Check if player belongs to any multi-speaker group (its own or the active master's)
+                  const playerGroupKey = this._getGroupKey(id);
+                  const playerGroupingState = this.hass?.states?.[actualGroupId];
+                  const playerMembers = Array.isArray(
+                    playerGroupingState?.attributes?.group_members
+                  )
+                    ? playerGroupingState.attributes.group_members
+                    : [];
+                  const isMultiSpeakerGroup =
+                    playerMembers.length > 1 || (Boolean(playerGroupKey) && playerGroupKey !== id);
 
-                  if (isBusy) {
-                    stateLabel = busyLabel || "Unavailable";
+                  // Group master for this player's group
+                  const targetGroupMasterId = isMultiSpeakerGroup ? playerGroupKey || id : id;
+                  const targetGroupMasterIdx = this.entityIds.indexOf(targetGroupMasterId);
+                  const targetGroupMasterName = this.getChipName(targetGroupMasterId);
+
+                  const targetIdx = isMultiSpeakerGroup
+                    ? targetGroupMasterIdx >= 0
+                      ? targetGroupMasterIdx
+                      : entityIdx
+                    : entityIdx;
+                  const targetEntityId = isMultiSpeakerGroup ? targetGroupMasterId : id;
+                  const targetMaId = isMultiSpeakerGroup
+                    ? this._getActualResolvedMaEntityForState?.(targetIdx) ||
+                      this._getGroupingEntityIdByEntityId?.(targetGroupMasterId) ||
+                      targetGroupMasterId
+                    : this._getActualResolvedMaEntityForState?.(entityIdx) || actualGroupId;
+                  const targetName = isMultiSpeakerGroup
+                    ? `${targetGroupMasterName} (${localize("card.grouping.title") || "Group"})`
+                    : name;
+
+                  const mainState = this.hass?.states?.[id];
+                  const groupEntityState = this.hass?.states?.[actualGroupId];
+                  const volumeState = volumeEntity ? this.hass?.states?.[volumeEntity] : null;
+                  const targetEntityState = this.hass?.states?.[targetEntityId];
+                  const targetMaState = this.hass?.states?.[targetMaId];
+                  const targetState = targetEntityState || targetMaState;
+
+                  const isDeviceUnavailable =
+                    mainState?.state === "unavailable" ||
+                    groupEntityState?.state === "unavailable" ||
+                    displayVolumeState?.state === "unavailable" ||
+                    volumeState?.state === "unavailable" ||
+                    targetEntityState?.state === "unavailable" ||
+                    targetMaState?.state === "unavailable";
+
+                  let stateLabel;
+                  if (isDeviceUnavailable) {
+                    stateLabel =
+                      busyLabel || localize("card.grouping.unavailable") || "Unavailable";
+                  } else if (isMultiSpeakerGroup) {
+                    stateLabel =
+                      targetGroupMasterId === id
+                        ? localize("card.grouping.master")
+                        : localize("card.grouping.joined");
+                  } else if (isCurrent) {
+                    stateLabel = localize("card.grouping.current");
+                  } else {
+                    stateLabel = localize("card.grouping.available");
                   }
 
+                  // Self check: is this target the currently active playback entity / group?
+                  const isSelf =
+                    targetMaId === sourceMaId ||
+                    targetEntityId === sourceEntityId ||
+                    (isMultiSpeakerGroup &&
+                      (groupedAny ||
+                        (Boolean(activeGroupKey) && activeGroupKey !== this.currentEntityId)) &&
+                      targetGroupMasterId === activeGroupKey);
+
+                  const isTransferPending = this._transferQueuePendingTarget === targetMaId;
+                  const isTransferDisabled =
+                    !hasQueueToTransfer || isSelf || isTransferPending || isDeviceUnavailable;
+
+                  let transferTooltip;
+                  if (isDeviceUnavailable) {
+                    transferTooltip =
+                      localize("card.grouping.unavailable") || "Player is unavailable";
+                  } else if (!hasQueueToTransfer) {
+                    transferTooltip =
+                      localize("card.grouping.transfer_no_queue") || "No active queue to transfer";
+                  } else if (isSelf) {
+                    transferTooltip =
+                      localize("card.grouping.transfer_current_player") || "Currently playing here";
+                  } else if (isMultiSpeakerGroup) {
+                    transferTooltip = (
+                      localize("card.grouping.transfer_to_group") ||
+                      "Transfer queue to {master} group"
+                    ).replace("{master}", targetGroupMasterName);
+                  } else {
+                    transferTooltip = (
+                      localize("card.grouping.transfer_to_player") || "Transfer queue to {player}"
+                    ).replace("{player}", name);
+                  }
+
+                  const targetPayload = {
+                    index: targetIdx,
+                    entityId: targetEntityId,
+                    maEntityId: targetMaId,
+                    name: targetName,
+                    subtitle: targetMaId !== targetEntityId ? targetMaId : targetEntityId,
+                    state: (isMultiSpeakerGroup ? targetState : displayVolumeState)?.state,
+                    icon: isMultiSpeakerGroup ? "mdi:speaker-multiple" : "mdi:music",
+                  };
+
                   if (isGridMode) {
-                    const isDisabled = isBusy || !showToggleButton;
-                    const toggleTooltip = grouped
-                      ? localize("card.grouping.unjoin_from").replace("{master}", masterName)
-                      : localize("card.grouping.join_with").replace("{master}", masterName);
+                    const isDisabled = isBusy || isDeviceUnavailable || !showToggleButton;
+                    const toggleTooltip =
+                      isDeviceUnavailable || isBusy
+                        ? localize("card.grouping.unavailable")
+                        : grouped
+                          ? localize("card.grouping.unjoin_from").replace("{master}", masterName)
+                          : localize("card.grouping.join_with").replace("{master}", masterName);
 
                     return html`
-                      <button
-                        class="entity-options-item menu-action-item group-toggle-btn ${
+                      <div
+                        class="entity-options-item menu-action-item ${
                           !showToggleButton || grouped ? "grid-active" : ""
                         }"
-                        ?disabled=${isDisabled}
-                        @click=${() => !isDisabled && this._toggleGroup(id)}
-                        title=${
-                          isBusy
-                            ? localize("card.grouping.unavailable")
-                            : !showToggleButton
-                              ? stateLabel
-                              : toggleTooltip
-                        }
+                        style="position: relative;"
                       >
-                        <ha-icon
-                          class="menu-action-icon"
-                          icon=${
-                            isPrimaryRow
-                              ? "mdi:star"
-                              : grouped
-                                ? "mdi:speaker-multiple"
-                                : "mdi:speaker"
+                        ${
+                          hasMaTransferService
+                            ? html`
+                                <button
+                                  type="button"
+                                  class="grid-menu-transfer-btn"
+                                  ?disabled=${isTransferDisabled}
+                                  @click=${(e) => {
+                                    e.stopPropagation();
+                                    if (!isTransferDisabled) {
+                                      this._transferQueueTo(targetPayload);
+                                    }
+                                  }}
+                                  title=${transferTooltip}
+                                >
+                                  <ha-icon icon="mdi:swap-horizontal"></ha-icon>
+                                </button>
+                              `
+                            : nothing
+                        }
+                        <div
+                          class="grid-menu-toggle-action"
+                          role="button"
+                          tabindex=${isDisabled ? "-1" : "0"}
+                          ?disabled=${isDisabled}
+                          @click=${() => !isDisabled && this._toggleGroup(id)}
+                          @keydown=${(e) => {
+                            if (!isDisabled && (e.key === "Enter" || e.key === " ")) {
+                              e.preventDefault();
+                              this._toggleGroup(id);
+                            }
+                          }}
+                          title=${
+                            isBusy
+                              ? localize("card.grouping.unavailable")
+                              : !showToggleButton
+                                ? stateLabel
+                                : toggleTooltip
                           }
-                        ></ha-icon>
-                        <span class="menu-action-label">${name}</span>
-                      </button>
+                          style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;width:100%;height:100%;cursor:${
+                            isDisabled ? "default" : "pointer"
+                          };${isDisabled ? "opacity:0.35;" : ""}"
+                        >
+                          <ha-icon
+                            class="menu-action-icon"
+                            icon=${
+                              isPrimaryRow
+                                ? "mdi:star"
+                                : grouped
+                                  ? "mdi:speaker-multiple"
+                                  : "mdi:speaker"
+                            }
+                          ></ha-icon>
+                          <span class="menu-action-label">${name}</span>
+                        </div>
+                      </div>
                     `;
                   }
 
@@ -232,17 +391,16 @@ export function renderGroupingSheet() {
                       gap:6px;
                       padding: 12px 8px 4px 8px;
                       margin-bottom: 1px;
-                      ${isBusy ? "opacity: 0.5;" : ""}
                     "
                     >
-                      <div style="flex:1; min-width:120px;">
+                      <div style="flex:0.7; min-width:84px;">
                         <div style="text-align:left;">${name}</div>
                         <div style="font-size:0.8em; opacity:0.7; text-align:left;">
                           ${stateLabel}
                         </div>
                       </div>
                       <div
-                        style="flex:1.8;display:flex;align-items:center;gap:4px;margin:0 6px; min-width:160px;"
+                        style="flex:1.8;display:flex;align-items:center;gap:4px;margin:0 4px; min-width:140px;"
                       >
                         ${
                           isRemoteVol
@@ -306,13 +464,30 @@ export function renderGroupingSheet() {
                         >
                       </div>
                       ${
+                        hasMaTransferService
+                          ? html`
+                              <button
+                                class="group-transfer-btn"
+                                ?disabled=${isTransferDisabled}
+                                @click=${() =>
+                                  !isTransferDisabled && this._transferQueueTo(targetPayload)}
+                                title=${transferTooltip}
+                              >
+                                <ha-icon icon="mdi:swap-horizontal"></ha-icon>
+                              </button>
+                            `
+                          : nothing
+                      }
+                      ${
                         showToggleButton
                           ? html`
                               <button
                                 class="group-toggle-btn"
-                                @click=${() => !isBusy && this._toggleGroup(id)}
+                                ?disabled=${isBusy || isDeviceUnavailable}
+                                @click=${() =>
+                                  !isBusy && !isDeviceUnavailable && this._toggleGroup(id)}
                                 title=${
-                                  isBusy
+                                  isBusy || isDeviceUnavailable
                                     ? localize("card.grouping.unavailable")
                                     : grouped
                                       ? localize("card.grouping.unjoin_from").replace(
@@ -324,8 +499,10 @@ export function renderGroupingSheet() {
                                           masterName
                                         )
                                 }
-                                style="margin-left:4px; ${
-                                  isBusy ? "cursor: not-allowed; opacity: 0.5;" : ""
+                                style="margin-left:2px; ${
+                                  isBusy || isDeviceUnavailable
+                                    ? "cursor: not-allowed; opacity: 0.35;"
+                                    : ""
                                 }"
                               >
                                 <ha-icon
@@ -336,7 +513,7 @@ export function renderGroupingSheet() {
                               </button>
                             `
                           : html`<span
-                              style="margin-left:4px;margin-right:10px;width:32px;display:inline-block;"
+                              style="margin-left:2px;margin-right:10px;width:32px;display:inline-block;"
                             ></span>`
                       }
                     </div>

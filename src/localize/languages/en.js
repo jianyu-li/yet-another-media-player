@@ -523,6 +523,10 @@ export default {
       current: "Current",
       unjoin_from: "Unjoin from {master}",
       join_with: "Join with {master}",
+      transfer_to_player: "Transfer queue to {player}",
+      transfer_to_group: "Transfer queue to {master} group",
+      transfer_current_player: "Currently playing here",
+      transfer_no_queue: "No active queue to transfer",
     },
   },
   search: {
