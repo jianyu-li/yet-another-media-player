@@ -343,6 +343,7 @@ export default {
       move_to_main: "Verplaats actie naar hoofdchips",
       move_to_menu: "Verplaats actie naar menu",
       delete_action: "Actie Verwijderen",
+      add_action: "Actie toevoegen",
       volume_mode: "Volume Modus",
       idle_screen: "Inactief Scherm",
       name: "Naam",

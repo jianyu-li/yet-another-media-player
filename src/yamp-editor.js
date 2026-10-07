@@ -484,10 +484,26 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     };
     if (this._isInternalUpdate) {
       this._isInternalUpdate = false;
-    } else {
+    }
+
+    // Validate sub-editor indices against new config to avoid orphaned sub-editors
+    const actionsCount = Array.isArray(this._config.actions) ? this._config.actions.length : 0;
+    if (
+      this._actionEditorIndex !== null &&
+      (this._actionEditorIndex < 0 || this._actionEditorIndex >= actionsCount)
+    ) {
       this._actionEditorIndex = null;
+      this._actionMode = null;
+    }
+
+    const entitiesCount = Array.isArray(this._config.entities) ? this._config.entities.length : 0;
+    if (
+      this._entityEditorIndex !== null &&
+      (this._entityEditorIndex < 0 || this._entityEditorIndex >= entitiesCount)
+    ) {
       this._entityEditorIndex = null;
     }
+
     this._artworkOverrides = this._normalizeArtworkOverrides(config.media_artwork_overrides);
     this._fetchAspectRatios();
   }
@@ -589,6 +605,9 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
   }
 
   _changeTemplate(templateName) {
+    this._actionEditorIndex = null;
+    this._entityEditorIndex = null;
+    this._actionMode = null;
     let newYaml = { ...this._yamlConfig };
 
     // Save snapshot if moving away from custom
@@ -1234,6 +1253,19 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     this._templateModes = {};
   }
 
+  _addAction() {
+    const actions = [...(this._config?.actions ?? [])];
+    const newAction = { service: "" };
+    actions.push(newAction);
+    const newIndex = actions.length - 1;
+    this._actionEditorIndex = newIndex;
+    this._actionMode = "service";
+    this._templateModes = {};
+    this._yamlDraft = undefined;
+    this._yamlError = null;
+    this._updateConfig("actions", actions);
+  }
+
   _onEditAction(index) {
     this._actionEditorIndex = index;
     this._templateModes = {};
@@ -1293,6 +1325,14 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     if (index < 0 || index >= actions.length) return;
 
     actions.splice(index, 1);
+    if (this._actionEditorIndex !== null) {
+      if (this._actionEditorIndex === index) {
+        this._actionEditorIndex = null;
+        this._actionMode = null;
+      } else if (this._actionEditorIndex > index) {
+        this._actionEditorIndex -= 1;
+      }
+    }
     this._updateConfig("actions", actions);
   }
 

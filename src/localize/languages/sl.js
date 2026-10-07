@@ -315,6 +315,7 @@ export default {
       move_to_main: "Premakni dejanje na glavno vrstico",
       move_to_menu: "Premakni dejanje v meni",
       delete_action: "Izbriši dejanje",
+      add_action: "Dodaj dejanje",
       volume_mode: "Način glasnosti",
       idle_screen: "Zaslon v mirovanju",
       name: "Ime",

@@ -726,6 +726,12 @@ export interface YetAnotherMediaPlayerEditor {
   hass?: HomeAssistant;
   _config?: YampCardConfig;
   _yamlConfig?: any;
+  _actionEditorIndex?: number | null;
+  _entityEditorIndex?: number | null;
+  _actionMode?: string | null;
+  _addAction?: () => void;
+  _onEditAction?: (index: number) => void;
+  _onBackFromActionEditor?: () => void;
   requestUpdate?: (name?: PropertyKey, oldValue?: unknown) => Promise<unknown>;
   [key: string]: any;
 }

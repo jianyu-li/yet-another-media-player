@@ -162,13 +162,8 @@ export function renderActionsTab() {
         <ha-icon
           class="icon-button"
           icon="mdi:plus"
-          title="Add Action"
-          @click=${() => {
-            const newActions = [...(this._config.actions ?? []), {}];
-            const newIndex = newActions.length - 1;
-            this._updateConfig("actions", newActions);
-            this._onEditAction(newIndex);
-          }}
+          title="${localize("editor.fields.add_action") || "Add Action"}"
+          @click=${() => this._addAction()}
         ></ha-icon>
       </div>
     </div>

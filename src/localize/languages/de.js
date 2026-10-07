@@ -334,6 +334,7 @@ export default {
       move_to_main: "Aktion in Haupt-Chips verschieben",
       move_to_menu: "Aktion ins Menü verschieben",
       delete_action: "Aktion löschen",
+      add_action: "Aktion hinzufügen",
       volume_mode: "Lautstärke-Modus",
       idle_screen: "Leerlauf-Bildschirm",
       name: "Name",
