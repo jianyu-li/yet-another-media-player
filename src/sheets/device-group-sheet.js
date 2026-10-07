@@ -334,14 +334,14 @@ export function renderGroupingSheet() {
                       ${isBusy ? "opacity: 0.5;" : ""}
                     "
                     >
-                      <div style="flex:1; min-width:120px;">
+                      <div style="flex:0.7; min-width:84px;">
                         <div style="text-align:left;">${name}</div>
                         <div style="font-size:0.8em; opacity:0.7; text-align:left;">
                           ${stateLabel}
                         </div>
                       </div>
                       <div
-                        style="flex:1.8;display:flex;align-items:center;gap:4px;margin:0 6px; min-width:160px;"
+                        style="flex:1.8;display:flex;align-items:center;gap:4px;margin:0 4px; min-width:140px;"
                       >
                         ${
                           isRemoteVol
@@ -438,7 +438,7 @@ export function renderGroupingSheet() {
                                           masterName
                                         )
                                 }
-                                style="margin-left:4px; ${
+                                style="margin-left:2px; ${
                                   isBusy ? "cursor: not-allowed; opacity: 0.5;" : ""
                                 }"
                               >
@@ -450,7 +450,7 @@ export function renderGroupingSheet() {
                               </button>
                             `
                           : html`<span
-                              style="margin-left:4px;margin-right:10px;width:32px;display:inline-block;"
+                              style="margin-left:2px;margin-right:10px;width:32px;display:inline-block;"
                             ></span>`
                       }
                     </div>

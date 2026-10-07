@@ -842,7 +842,7 @@ export const menusSheetsStyles = css`
       color 0.15s ease;
     color: var(--yamp-overlay-text);
     padding: 0;
-    margin-left: 4px;
+    margin-left: 2px;
     flex-shrink: 0;
   }
 
