@@ -328,6 +328,7 @@ export default {
       move_to_main: "Move action to main chips",
       move_to_menu: "Move action into menu",
       delete_action: "Delete Action",
+      add_action: "Add Action",
       volume_mode: "Volume Mode",
       idle_screen: "Idle Screen",
       name: "Name",

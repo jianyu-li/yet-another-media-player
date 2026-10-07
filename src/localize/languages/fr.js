@@ -325,6 +325,7 @@ export default {
       move_to_main: "Mettre dans les jetons principaux",
       move_to_menu: "Mettre dans le menu",
       delete_action: "Supprimer l'action",
+      add_action: "Ajouter une action",
       volume_mode: "Mode volume",
       idle_screen: "Écran de veille",
       name: "Nom",

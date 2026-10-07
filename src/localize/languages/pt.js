@@ -319,6 +319,7 @@ export default {
       move_to_main: "Mover para chips principais",
       move_to_menu: "Mover para o menu",
       delete_action: "Eliminar ação",
+      add_action: "Adicionar ação",
       volume_mode: "Modo volume",
       idle_screen: "Ecrã de repouso",
       name: "Nome",

@@ -334,6 +334,7 @@ export default {
       move_to_main: "Presunúť do hlavných čipov",
       move_to_menu: "Presunúť do menu",
       delete_action: "Vymazať akciu",
+      add_action: "Pridať akciu",
       volume_mode: "Režim hlasitosti",
       idle_screen: "Obrazovka pri nečinnosti",
       name: "Názov",
