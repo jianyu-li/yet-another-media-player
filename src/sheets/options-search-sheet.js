@@ -429,6 +429,7 @@ export function renderSearchInOptions(showSearchHeaders, pinSearchHeaders = fals
                   <div
                     class="chip-row search-filter-chips"
                     id="search-filter-chip-row"
+                    @wheel=${(e) => this._handleFilterChipsWheel(e)}
                     style="margin-bottom:4px; justify-content: center; align-items: center;"
                   >
                     <button
