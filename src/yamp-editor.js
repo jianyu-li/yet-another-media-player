@@ -2,7 +2,7 @@ import { LitElement, html, nothing } from "lit";
 import { editorStyles } from "./styles/editor.js";
 import { localize, setHassLanguage } from "./localize/localize.js";
 
-import { SUPPORT_GROUPING, TEMPLATE_CONFIGS } from "./constants.js";
+import { SUPPORT_GROUPING, TEMPLATE_CONFIGS, getTemplatePresetDefaults } from "./constants.js";
 import { getActionPlacement, getEntityName } from "./yamp-utils.js";
 import "./yamp-sortable.js";
 
@@ -475,7 +475,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     );
 
     const templateName = config.template || "custom";
-    const templateBase = TEMPLATE_CONFIGS[templateName] || {};
+    const templateBase = getTemplatePresetDefaults(templateName);
 
     this._config = {
       ...templateBase,
@@ -622,7 +622,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
         newYaml.template = "custom";
       }
     } else {
-      const templateBase = TEMPLATE_CONFIGS[templateName] || {};
+      const templateBase = getTemplatePresetDefaults(templateName);
       // Delete keys that the template provides so they don't override the template
       for (const k of Object.keys(templateBase)) {
         delete newYaml[k];
@@ -633,7 +633,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     this._yamlConfig = newYaml;
 
     // Compute the new merged UI config
-    const activeTemplateBase = TEMPLATE_CONFIGS[templateName] || {};
+    const activeTemplateBase = getTemplatePresetDefaults(templateName);
     this._config = {
       ...activeTemplateBase,
       ...newYaml,
@@ -866,7 +866,17 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
       }
     }
 
-    const currentTemplate = this._yamlConfig.template || "custom";
+    const rawTemplate = this._yamlConfig.template || "custom";
+    let currentTemplate = rawTemplate;
+    if (
+      currentTemplate === "speakers_and_groups" ||
+      currentTemplate === "group_players" ||
+      currentTemplate === "dedicated_speakers_and_groups" ||
+      currentTemplate === "transfer_queue" ||
+      currentTemplate === "dedicated_transfer_queue"
+    ) {
+      currentTemplate = "dedicated_grouping";
+    }
 
     // When editing an entity/action, keep tabs visible but show editor content
     const editingEntity = this._entityEditorIndex !== null;
@@ -885,10 +895,17 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
               .selector=${{
                 select: {
                   mode: "dropdown",
-                  options: Object.keys(TEMPLATE_CONFIGS).map((key) => ({
-                    value: key,
-                    label: localize(`editor.templates.${key}.label`),
-                  })),
+                  options: Object.keys(TEMPLATE_CONFIGS)
+                    .filter(
+                      (key) =>
+                        key !== "dedicated_speakers_and_groups" &&
+                        key !== "speakers_and_groups" &&
+                        key !== "group_players"
+                    )
+                    .map((key) => ({
+                      value: key,
+                      label: localize(`editor.templates.${key}.label`),
+                    })),
                 },
               }}
               .value=${currentTemplate}

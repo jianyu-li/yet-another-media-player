@@ -726,7 +726,7 @@ Set `card_type: search` to turn YAMP into a permanent search interface for your 
 
 ### Dedicated Speakers & Groups Mode
 
-Set `card_type: speakers_and_groups` (or `group_players`) to lock YAMP to the Speakers & Groups menu. 
+Set `template: speakers_and_groups` (or `template: group_players` / `template: dedicated_grouping`), or `card_type: speakers_and_groups` (or `card_type: group_players`) to lock YAMP to the Speakers & Groups menu. 
 
 **Dedicated Mode Behavior:**
 - **Permanent View**: The Speakers & Groups menu is always visible as the primary view.
@@ -762,7 +762,7 @@ entities:
 - **`minimal_mini`**: A compact mini card with no visible artwork, stepper volume control, and clean text alignment.
 - **`normal_mini`**: The standard compact mini player card with a blurred background artwork effect.
 - **`dedicated_search`**: A standalone search and library browsing card without the main media player interface (forces `card_type: search`).
-- **`dedicated_grouping`**: A standalone player grouping card (forces `card_type: group_players`).
+- **`dedicated_grouping`** (or **`speakers_and_groups`**, **`group_players`**): A standalone player grouping card (forces `card_type: group_players`).
 - **`quick_and_easy`**: Designed for high accessibility and fast control, featuring a persistent entity chip row, volume overlays, and always-active quick grouping mode.
 - **`huge_yamp`**: Maximized controls, large text, and a massive progress bar designed for across-the-room viewing.
 

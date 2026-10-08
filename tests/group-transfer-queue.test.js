@@ -608,4 +608,100 @@ describe("Group Players Menu - Transfer Queue Button", () => {
       "Should have tooltip explaining Music Assistant player required"
     );
   });
+
+  describe("Dedicated Group Players Mode Locking and Navigation", () => {
+    it("locks to grouping menu with template: speakers_and_groups", () => {
+      const dedicatedCard = new YetAnotherMediaPlayerCard();
+      dedicatedCard.setConfig({
+        type: "custom:yet-another-media-player",
+        template: "speakers_and_groups",
+        entities: ["media_player.kitchen", "media_player.office"],
+      });
+
+      assert.equal(dedicatedCard._cardType, "group_players");
+      assert.equal(dedicatedCard._showEntityOptions, true);
+      assert.equal(dedicatedCard._showGrouping, true);
+      assert.equal(dedicatedCard._isIdle, false);
+    });
+
+    it("locks to grouping menu with template: group_players", () => {
+      const dedicatedCard = new YetAnotherMediaPlayerCard();
+      dedicatedCard.setConfig({
+        type: "custom:yet-another-media-player",
+        template: "group_players",
+        entities: ["media_player.kitchen", "media_player.office"],
+      });
+
+      assert.equal(dedicatedCard._cardType, "group_players");
+      assert.equal(dedicatedCard._showEntityOptions, true);
+      assert.equal(dedicatedCard._showGrouping, true);
+      assert.equal(dedicatedCard._isIdle, false);
+    });
+
+    it("preserves backward compatibility with template: dedicated_grouping", () => {
+      const dedicatedCard = new YetAnotherMediaPlayerCard();
+      dedicatedCard.setConfig({
+        type: "custom:yet-another-media-player",
+        template: "dedicated_grouping",
+        entities: ["media_player.kitchen", "media_player.office"],
+      });
+
+      assert.equal(dedicatedCard._cardType, "group_players");
+      assert.equal(dedicatedCard._showEntityOptions, true);
+      assert.equal(dedicatedCard._showGrouping, true);
+      assert.equal(dedicatedCard._isIdle, false);
+    });
+
+    it("locks to grouping menu with card_type: speakers_and_groups", () => {
+      const dedicatedCard = new YetAnotherMediaPlayerCard();
+      dedicatedCard.setConfig({
+        type: "custom:yet-another-media-player",
+        card_type: "speakers_and_groups",
+        entities: ["media_player.kitchen", "media_player.office"],
+      });
+
+      assert.equal(dedicatedCard._cardType, "group_players");
+      assert.equal(dedicatedCard._showEntityOptions, true);
+      assert.equal(dedicatedCard._showGrouping, true);
+      assert.equal(dedicatedCard._isIdle, false);
+    });
+
+    it("prevents closing grouping menu via _closeGrouping or _closeEntityOptions", () => {
+      const dedicatedCard = new YetAnotherMediaPlayerCard();
+      dedicatedCard.setConfig({
+        type: "custom:yet-another-media-player",
+        template: "speakers_and_groups",
+        entities: ["media_player.kitchen", "media_player.office"],
+      });
+
+      dedicatedCard._closeGrouping();
+      assert.equal(dedicatedCard._showGrouping, true);
+      assert.equal(dedicatedCard._showEntityOptions, true);
+
+      dedicatedCard._closeEntityOptions();
+      assert.equal(dedicatedCard._showGrouping, true);
+      assert.equal(dedicatedCard._showEntityOptions, true);
+
+      dedicatedCard._dismissWithAnimation();
+      assert.equal(dedicatedCard._showGrouping, true);
+      assert.equal(dedicatedCard._showEntityOptions, true);
+    });
+
+    it("bypasses idle timeout and maintains grouping view in group_players mode", () => {
+      const dedicatedCard = new YetAnotherMediaPlayerCard();
+      dedicatedCard.setConfig({
+        type: "custom:yet-another-media-player",
+        template: "speakers_and_groups",
+        entities: ["media_player.kitchen", "media_player.office"],
+      });
+
+      dedicatedCard._updateIdleState();
+      assert.equal(dedicatedCard._isIdle, false);
+      assert.equal(dedicatedCard._showGrouping, true);
+
+      dedicatedCard._handleIdleTimeoutCallback();
+      assert.equal(dedicatedCard._isIdle, false);
+      assert.equal(dedicatedCard._showGrouping, true);
+    });
+  });
 });

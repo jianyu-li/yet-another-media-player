@@ -190,6 +190,28 @@ describe("config-schema", () => {
       assert.equal(largeModern.progress_bar_height, 16);
     });
 
+    it("resolves speakers_and_groups, group_players, and dedicated_grouping aliases properly", () => {
+      const aliases = [
+        "dedicated_grouping",
+        "speakers_and_groups",
+        "group_players",
+        "dedicated_speakers_and_groups",
+        "speakers",
+        "transfer_queue",
+        "dedicated_transfer_queue",
+      ];
+      aliases.forEach((alias) => {
+        const defaults = getTemplatePresetDefaults(alias);
+        assert.equal(
+          defaults.card_type,
+          "group_players",
+          `Expected ${alias} to have card_type: group_players`
+        );
+        assert.equal(defaults.hide_menu_player, true);
+        assert.equal(defaults.show_chip_row, "in_menu");
+      });
+    });
+
     it("returns an empty object for custom, undefined, or unknown templates", () => {
       assert.deepEqual(getTemplatePresetDefaults("custom"), {});
       assert.deepEqual(getTemplatePresetDefaults("non_existent_preset"), {});

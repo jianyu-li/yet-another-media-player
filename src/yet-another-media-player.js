@@ -91,7 +91,7 @@ import {
   SUPPORT_GROUPING,
   DEFAULT_PROGRESS_BAR_HEIGHT,
   DEFAULT_LYRICS_BACKGROUND_FADE,
-  TEMPLATE_CONFIGS,
+  getTemplatePresetDefaults,
   CANONICAL_MENU_OPTION_MAP,
 } from "./constants.js";
 
@@ -151,6 +151,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _applyIdleScreen() {
+    if (this._cardType === "group_players") return;
     if (this._idleScreenApplied) return;
     const mode = this._idleScreen || "default";
     switch (mode) {
@@ -795,17 +796,28 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   get _cardType() {
-    const type = this.config?.card_type || "default";
+    let type = this.config?.card_type;
+    if (!type && this.config?.template) {
+      type = getTemplatePresetDefaults(this.config.template)?.card_type;
+    }
+    type = type || "default";
     if (
       type === "group_players" ||
       type === "group-players" ||
       type === "speakers_and_groups" ||
       type === "speakers-and-groups" ||
       type === "speakers" ||
+      type === "dedicated_grouping" ||
+      type === "dedicated-grouping" ||
+      type === "dedicated_speakers_and_groups" ||
+      type === "dedicated-speakers-and-groups" ||
       type === "transfer_queue" ||
       type === "transfer-queue"
     ) {
       return "group_players";
+    }
+    if (type === "dedicated_search") {
+      return "search";
     }
     return type;
   }
@@ -4547,7 +4559,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     }
     const oldConfig = this.config;
     const templateName = rawConfig.template || "custom";
-    const templateBase = TEMPLATE_CONFIGS[templateName] || {};
+    const templateBase = getTemplatePresetDefaults(templateName);
     const config = { ...templateBase, ...rawConfig };
     if (oldConfig?.lock_screen_controls !== config.lock_screen_controls) {
       this._mediaSessionOverride = null;
@@ -4556,6 +4568,23 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       this._fullScreenOverride = null;
     }
     this.config = config;
+    if (this._cardType === "group_players") {
+      this._showEntityOptions = true;
+      this._setIdleState(false);
+      this._showGrouping = true;
+    } else if (this._cardType === "search") {
+      this._showEntityOptions = true;
+      this._setIdleState(false);
+      this._showSearchSheetInOptions?.();
+    } else if (this._cardType === "up_next") {
+      this._showEntityOptions = true;
+      this._setIdleState(false);
+      this._showSearchSheetInOptions?.("next-up");
+    } else if (this._cardType === "remote_control") {
+      this._showEntityOptions = true;
+      this._setIdleState(false);
+      this._showRemoteControl = true;
+    }
     this._cachedEntityIds = null;
     this._cachedEntityObjs = null;
 
@@ -8835,6 +8864,14 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _updateIdleState(changedProps) {
+    if (this._cardType === "group_players") {
+      if (this._idleTimeout) clearTimeout(this._idleTimeout);
+      this._idleTimeout = null;
+      this._setIdleState(false);
+      this._showEntityOptions = true;
+      this._showGrouping = true;
+      return;
+    }
     // Consider both main and Music Assistant entities so we can wake from idle
     // even if the active selection is frozen while idle.
     const isAnyUnrestrictedPlaying = this.entityIds.some((id, idx) => {
@@ -8946,6 +8983,14 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _handleIdleTimeoutCallback() {
+    if (this._cardType === "group_players") {
+      this._idleTimeout = null;
+      this._setIdleState(false);
+      this._showEntityOptions = true;
+      this._showGrouping = true;
+      this.requestUpdate();
+      return;
+    }
     // In search card mode: reset drill-down instead of going idle
     if (this._cardType === "search" || this._cardType === "up_next") {
       this._idleTimeout = null;
@@ -9201,6 +9246,12 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
   firstUpdated() {
     super.firstUpdated?.();
+    if (this._cardType === "group_players") {
+      this._showEntityOptions = true;
+      this._setIdleState(false);
+      this._showGrouping = true;
+      this.requestUpdate();
+    }
     // Trap scroll events inside floating index so they don't scroll the page
     const index = this.renderRoot.querySelector('.floating-source-index');
     if (index) {
@@ -9522,6 +9573,19 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       this.requestUpdate();
       return;
     }
+    if (this._cardType === "group_players") {
+      this._showSourceList = false;
+      this._showSearchInSheet = false;
+      this._showResolvedEntities = false;
+      this._showTransferQueue = false;
+      this._transferQueuePendingTarget = null;
+      this._transferQueueStatus = null;
+      this._showEntityOptions = true;
+      this._showGrouping = true;
+      this._quickMenuInvoke = false;
+      this.requestUpdate();
+      return;
+    }
     this._applyClosingAnimations();
     if (this._transferQueueAutoCloseTimer) {
       clearTimeout(this._transferQueueAutoCloseTimer);
@@ -9559,6 +9623,18 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       this._transferQueuePendingTarget = null;
       this._transferQueueStatus = null;
       this._showResolvedEntities = false;
+      this.requestUpdate();
+      return;
+    }
+    if (this._cardType === "group_players") {
+      this._showSourceList = false;
+      this._showSearchInSheet = false;
+      this._showTransferQueue = false;
+      this._transferQueuePendingTarget = null;
+      this._transferQueueStatus = null;
+      this._showResolvedEntities = false;
+      this._showEntityOptions = true;
+      this._showGrouping = true;
       this.requestUpdate();
       return;
     }
@@ -9821,6 +9897,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this.requestUpdate();
   }
   _closeGrouping() {
+    if (this._cardType === "group_players") return;
     this._showGrouping = false;
     this._transferQueuePendingTarget = null;
     this._transferQueueStatus = null;
