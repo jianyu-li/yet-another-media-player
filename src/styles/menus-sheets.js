@@ -570,7 +570,7 @@ export const menusSheetsStyles = css`
     display: flex;
     align-items: center;
     justify-content: space-between;
-    padding: 8px 10px;
+    padding: 8px 7px;
     border-bottom: 1px solid var(--divider-color, var(--yamp-overlay-divider));
     font-size: 0.85em;
     font-weight: 600;
@@ -687,7 +687,7 @@ export const menusSheetsStyles = css`
   }
 
   .grouped-players-card .group-player-row {
-    padding: 10px 10px 8px 10px;
+    padding: 10px 7px 8px 7px;
     margin: 0;
   }
 
