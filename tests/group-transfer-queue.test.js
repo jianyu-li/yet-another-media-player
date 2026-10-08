@@ -341,4 +341,155 @@ describe("Group Players Menu - Transfer Queue Button", () => {
       "toggleGroup should not be invoked for unavailable player"
     );
   });
+
+  it("resolves to main entity when main entity is MA player and music_assistant_entity is non-MA", () => {
+    card.setConfig({
+      type: "custom:yet-another-media-player",
+      entities: [
+        {
+          entity_id: "media_player.kitchen_homepod_2",
+          name: "Kitchen",
+          music_assistant_entity: "media_player.kitchen_homepod",
+        },
+        {
+          entity_id: "media_player.white_echo_8",
+          name: "Office",
+        },
+      ],
+    });
+    card.hass = {
+      states: {
+        "media_player.kitchen_homepod_2": {
+          entity_id: "media_player.kitchen_homepod_2",
+          state: "playing",
+          attributes: {
+            app_id: "music_assistant",
+            mass_player_type: "player",
+            active_queue: "queue_123",
+            group_members: [],
+          },
+        },
+        "media_player.kitchen_homepod": {
+          entity_id: "media_player.kitchen_homepod",
+          state: "playing",
+          attributes: {
+            app_id: "com.apple.tvairplayd",
+          },
+        },
+        "media_player.white_echo_8": {
+          entity_id: "media_player.white_echo_8",
+          state: "idle",
+          attributes: {
+            app_id: "music_assistant",
+            mass_player_type: "player",
+            active_queue: "queue_456",
+            group_members: [],
+          },
+        },
+      },
+    };
+
+    // Test _getActualResolvedMaEntityForState directly
+    assert.strictEqual(
+      card._getActualResolvedMaEntityForState(0),
+      "media_player.kitchen_homepod_2",
+      "Should resolve to kitchen_homepod_2 because it is the actual MA entity"
+    );
+    assert.strictEqual(
+      card._getActualResolvedMaEntityForState(1),
+      "media_player.white_echo_8",
+      "Should resolve to white_echo_8"
+    );
+
+    // Test _getGroupingEntityId directly
+    assert.strictEqual(
+      card._getGroupingEntityId(0),
+      "media_player.kitchen_homepod_2",
+      "Should resolve grouping entity to kitchen_homepod_2 because kitchen_homepod is not group capable"
+    );
+  });
+
+  it("correctly routes sourceMaId in transferQueueTo when main entity is the active MA player", async () => {
+    card.setConfig({
+      type: "custom:yet-another-media-player",
+      entities: [
+        {
+          entity_id: "media_player.kitchen_homepod_2",
+          name: "Kitchen",
+          music_assistant_entity: "media_player.kitchen_homepod",
+        },
+        {
+          entity_id: "media_player.white_echo_8",
+          name: "Office",
+        },
+      ],
+    });
+    let serviceCalled = false;
+    let servicePayload = null;
+    card.hass = {
+      states: {
+        "media_player.kitchen_homepod_2": {
+          entity_id: "media_player.kitchen_homepod_2",
+          state: "playing",
+          attributes: {
+            app_id: "music_assistant",
+            mass_player_type: "player",
+            active_queue: "queue_123",
+          },
+        },
+        "media_player.kitchen_homepod": {
+          entity_id: "media_player.kitchen_homepod",
+          state: "playing",
+          attributes: {
+            app_id: "com.apple.tvairplayd",
+          },
+        },
+        "media_player.white_echo_8": {
+          entity_id: "media_player.white_echo_8",
+          state: "idle",
+          attributes: {
+            app_id: "music_assistant",
+            mass_player_type: "player",
+            active_queue: "queue_456",
+          },
+        },
+      },
+      services: {
+        music_assistant: {
+          transfer_queue: {
+            fields: {
+              source_player: {},
+            },
+          },
+        },
+      },
+      callService: async (domain, service, data) => {
+        serviceCalled = true;
+        servicePayload = data;
+        return { success: true };
+      },
+    };
+
+    card._selectedIndex = 0;
+    const target = {
+      index: 1,
+      entityId: "media_player.white_echo_8",
+      maEntityId: "media_player.white_echo_8",
+      name: "Office",
+    };
+
+    await card._queueController.transferQueueTo(target);
+
+    assert.strictEqual(serviceCalled, true, "transfer_queue service should be called");
+    assert.strictEqual(
+      servicePayload.source_player,
+      "media_player.kitchen_homepod_2",
+      "source_player must be kitchen_homepod_2 (the MA player), not kitchen_homepod"
+    );
+    assert.strictEqual(
+      servicePayload.entity_id,
+      "media_player.white_echo_8",
+      "target player entity_id must be white_echo_8"
+    );
+  });
 });

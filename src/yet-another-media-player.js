@@ -1305,20 +1305,57 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const obj = this.entityObjs[idx];
     if (!obj) return null;
 
+    let candidateMaId = null;
     const cached = this._maResolveCache?.[idx]?.id;
     if (cached && typeof cached === 'string') {
-      return cached;
+      candidateMaId = cached;
+    } else {
+      // No cache - check if we have a static MA entity
+      const rawMaEntity = obj.music_assistant_entity;
+      if (
+        rawMaEntity &&
+        typeof rawMaEntity === 'string' &&
+        !rawMaEntity.includes('{{') &&
+        !rawMaEntity.includes('{%') &&
+        !rawMaEntity.trim().startsWith('[[[')
+      ) {
+        candidateMaId = rawMaEntity;
+      }
     }
 
-    // No cache - check if we have a static MA entity
-    const rawMaEntity = obj.music_assistant_entity;
-    if (rawMaEntity && typeof rawMaEntity === 'string' &&
-      !rawMaEntity.includes('{{') && !rawMaEntity.includes('{%') && !rawMaEntity.trim().startsWith('[[[')) {
-      return rawMaEntity;
+    const mainId = obj.entity_id;
+    if (!candidateMaId || candidateMaId === mainId) {
+      return mainId;
     }
 
-    // No MA entity or template - use main entity
-    return obj.entity_id;
+    const mainState = mainId ? this.hass?.states?.[mainId] : null;
+    const candidateState = candidateMaId ? this.hass?.states?.[candidateMaId] : null;
+
+    const mainIsMa = mainState ? isMusicAssistantEntity(mainState) : false;
+    const candidateIsMa = candidateState ? isMusicAssistantEntity(candidateState) : false;
+
+    // If main entity is a Music Assistant player, but configured candidate is NOT,
+    // prefer the actual Music Assistant player (mainId).
+    if (mainIsMa && !candidateIsMa) {
+      return mainId;
+    }
+
+    // If both are Music Assistant entities, prioritize the one with an active queue or playing
+    if (mainIsMa && candidateIsMa) {
+      const mainHasQueue = Boolean(mainState?.attributes?.active_queue);
+      const candHasQueue = Boolean(candidateState?.attributes?.active_queue);
+      if (mainHasQueue && !candHasQueue) {
+        return mainId;
+      }
+      if (candHasQueue && !mainHasQueue) {
+        return candidateMaId;
+      }
+      if (this._isEntityPlaying?.(mainState) && !this._isEntityPlaying?.(candidateState)) {
+        return mainId;
+      }
+    }
+
+    return candidateMaId;
   }
 
   _isEntityPlaying(stateObj) {
@@ -4925,13 +4962,17 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     if (!obj || !obj.music_assistant_entity) return obj?.entity_id;
 
     // Check if it's a template
-    if (typeof obj.music_assistant_entity === 'string' &&
-      (obj.music_assistant_entity.includes('{{') || obj.music_assistant_entity.includes('{%') || obj.music_assistant_entity.trim().startsWith('[[['))) {
+    if (
+      typeof obj.music_assistant_entity === 'string' &&
+      (obj.music_assistant_entity.includes('{{') ||
+        obj.music_assistant_entity.includes('{%') ||
+        obj.music_assistant_entity.trim().startsWith('[[['))
+    ) {
       // For templates, resolve at action time - return template string for now
       return obj.music_assistant_entity;
     }
 
-    return obj.music_assistant_entity;
+    return this._getActualResolvedMaEntityForState(idx);
   }
   // Prefer Music Assistant entity for playback controls (play/pause/seek/etc.) if configured
   _getPlaybackEntityId(idx) {
@@ -5059,15 +5100,34 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   _getGroupingEntityId(idx) {
     const obj = this.entityObjs[idx];
     if (!obj) return null;
+    const mainId = obj.entity_id;
+    let candidateId = null;
     if (obj.music_assistant_entity) {
-      if (typeof obj.music_assistant_entity === 'string' &&
-        (obj.music_assistant_entity.includes('{{') || obj.music_assistant_entity.includes('{%') || obj.music_assistant_entity.trim().startsWith('[[['))) {
+      if (
+        typeof obj.music_assistant_entity === 'string' &&
+        (obj.music_assistant_entity.includes('{{') ||
+          obj.music_assistant_entity.includes('{%') ||
+          obj.music_assistant_entity.trim().startsWith('[[['))
+      ) {
         const cached = this._maResolveCache?.[idx]?.id;
-        return cached || obj.entity_id;
+        candidateId = cached || mainId;
+      } else {
+        candidateId = obj.music_assistant_entity;
       }
-      return obj.music_assistant_entity;
     }
-    return obj.entity_id;
+    if (!candidateId || candidateId === mainId) {
+      return mainId;
+    }
+    const candidateState = this.hass?.states?.[candidateId];
+    const mainState = mainId ? this.hass?.states?.[mainId] : null;
+    if (
+      mainState &&
+      this._isGroupCapable(mainState) &&
+      (!candidateState || !this._isGroupCapable(candidateState))
+    ) {
+      return mainId;
+    }
+    return candidateId;
   }
 
   _getGroupingEntityIdByEntityId(entityId) {

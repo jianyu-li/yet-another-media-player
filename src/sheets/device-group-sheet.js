@@ -78,7 +78,12 @@ export function renderGroupingSheet() {
 
   const hasMaTransferService = Boolean(this.hass?.services?.music_assistant?.transfer_queue);
   const currentIdx = this._selectedIndex;
-  const sourceMaId = this._getActualResolvedMaEntityForState?.(currentIdx);
+  const activeMaState = this._getMusicAssistantState?.();
+  const sourceMaId =
+    (activeMaState &&
+      this._looksLikeMusicAssistantState?.(activeMaState) &&
+      activeMaState.entity_id) ||
+    this._getActualResolvedMaEntityForState?.(currentIdx);
   const sourceEntityId = this.entityIds?.[currentIdx];
   const hasQueueToTransfer = Boolean(this._hasTransferQueueForCurrent);
 
@@ -277,6 +282,8 @@ export function renderGroupingSheet() {
                   const isSelf =
                     targetMaId === sourceMaId ||
                     targetEntityId === sourceEntityId ||
+                    targetMaId === sourceEntityId ||
+                    targetEntityId === sourceMaId ||
                     (isMultiSpeakerGroup &&
                       (groupedAny ||
                         (Boolean(activeGroupKey) && activeGroupKey !== this.currentEntityId)) &&

@@ -1137,7 +1137,12 @@ export class QueueController {
     const currentIdx = this.host._selectedIndex;
     if (currentIdx === null || currentIdx === undefined || currentIdx < 0) return [];
 
-    const sourceMaId = this.host._getActualResolvedMaEntityForState(currentIdx);
+    const activeMaState = this.host._getMusicAssistantState?.();
+    const sourceMaId =
+      (activeMaState &&
+        this.host._looksLikeMusicAssistantState?.(activeMaState) &&
+        activeMaState.entity_id) ||
+      this.host._getActualResolvedMaEntityForState(currentIdx);
     if (!sourceMaId) return [];
 
     const seen = new Set([sourceMaId]);
@@ -1204,7 +1209,9 @@ export class QueueController {
     let hasQueue = this.hasQueueInState(maState);
 
     if (!hasQueue && refresh && this.host?.hass) {
-      const entityId = this.host._getActualResolvedMaEntityForState?.(this.host._selectedIndex);
+      const entityId =
+        (maState && this.host._looksLikeMusicAssistantState?.(maState) && maState.entity_id) ||
+        this.host._getActualResolvedMaEntityForState?.(this.host._selectedIndex);
       if (entityId) {
         try {
           const queueInfo = await this.getUpcomingQueue(this.host.hass, entityId, 2);
@@ -1264,7 +1271,12 @@ export class QueueController {
   async transferQueueTo(target) {
     if (!target || !this.host) return;
 
-    const sourceMaId = this.host._getActualResolvedMaEntityForState?.(this.host._selectedIndex);
+    const activeMaState = this.host._getMusicAssistantState?.();
+    const sourceMaId =
+      (activeMaState &&
+        this.host._looksLikeMusicAssistantState?.(activeMaState) &&
+        activeMaState.entity_id) ||
+      this.host._getActualResolvedMaEntityForState?.(this.host._selectedIndex);
     if (!sourceMaId) return;
 
     this.transferQueuePendingTarget = target.maEntityId;
