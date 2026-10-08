@@ -10112,14 +10112,16 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     // Remain in grouping sheet
   }
 
-  // Ungroup all members from current master
-  async _ungroupAll() {
-    const masterId = this._getGroupingMasterId();
+  // Ungroup all members from specified master (or current master if not provided)
+  async _ungroupAll(targetMasterId = null) {
+    const masterId = targetMasterId || this._getGroupingMasterId();
     const masterIdx = masterId ? this.entityIds.indexOf(masterId) : -1;
     const masterObj = masterIdx >= 0 ? this.entityObjs[masterIdx] : null;
-    if (!masterObj) return;
 
-    const masterGroupId = await this._resolveGroupingEntityId(masterObj, masterId);
+    const masterGroupId =
+      (masterObj && (await this._resolveGroupingEntityId(masterObj, masterId))) ||
+      this._getGroupingEntityIdByEntityId(masterId) ||
+      masterId;
     if (!masterGroupId) return;
     const masterState = this.hass.states[masterGroupId];
     if (!this._isGroupCapable(masterState)) return;
@@ -10138,7 +10140,9 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       await unjoinPlayer(this.hass, id);
     }
     // After ungrouping, keep the master set if still valid (may now be solo)
-    this._lastGroupingMasterId = masterId || this.currentEntityId;
+    if (!targetMasterId || targetMasterId === this.currentEntityId) {
+      this._lastGroupingMasterId = masterId || this.currentEntityId;
+    }
     // Remain in grouping sheet
   }
 

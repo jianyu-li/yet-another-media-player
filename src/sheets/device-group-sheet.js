@@ -619,13 +619,26 @@ export function renderGroupingSheet() {
                         <ha-icon icon="mdi:speaker-multiple"></ha-icon>
                         <span>${group.groupLabel}</span>
                       </div>
-                      ${
-                        group.isCurrentGroup
-                          ? html`<span class="grouped-card-badge"
-                              >${localize("card.grouping.current")}</span
-                            >`
-                          : nothing
-                      }
+                      <div class="grouped-card-actions">
+                        ${
+                          group.isCurrentGroup
+                            ? html`<span class="grouped-card-badge"
+                                >${localize("card.grouping.current")}</span
+                              >`
+                            : nothing
+                        }
+                        <button
+                          type="button"
+                          class="grouped-card-ungroup-btn"
+                          @click=${(e) => {
+                            e.stopPropagation();
+                            this._ungroupAll(group.masterId);
+                          }}
+                          title="${localize("card.grouping.ungroup_all") || "Ungroup All"}"
+                        >
+                          ${localize("card.grouping.ungroup_all") || "Ungroup All"}
+                        </button>
+                      </div>
                     </div>
                     ${
                       isGridMode

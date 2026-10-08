@@ -581,6 +581,10 @@ export const menusSheetsStyles = css`
     display: flex;
     align-items: center;
     gap: 6px;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
   }
 
   .grouped-card-title ha-icon {
@@ -588,6 +592,14 @@ export const menusSheetsStyles = css`
     width: 16px;
     height: 16px;
     color: var(--custom-accent, currentColor);
+    flex-shrink: 0;
+  }
+
+  .grouped-card-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
   }
 
   .grouped-card-badge {
@@ -600,6 +612,32 @@ export const menusSheetsStyles = css`
     text-transform: uppercase;
     letter-spacing: 0.5px;
     line-height: 1.2;
+  }
+
+  .grouped-card-ungroup-btn {
+    background: var(--yamp-button-bg, rgba(255, 255, 255, 0.1));
+    border: 1px solid var(--yamp-button-border, rgba(255, 255, 255, 0.2));
+    border-radius: var(--button-border-radius, 6px);
+    color: var(--yamp-overlay-text, #fff);
+    font-size: 0.72em;
+    font-weight: 600;
+    padding: 2px 8px;
+    cursor: pointer;
+    transition:
+      background var(--transition-fast),
+      color var(--transition-fast),
+      border-color var(--transition-fast);
+    display: inline-flex;
+    align-items: center;
+    line-height: 1.3;
+  }
+
+  @media (hover: hover) {
+    .grouped-card-ungroup-btn:hover {
+      background: var(--yamp-hover-bg, rgba(255, 255, 255, 0.2));
+      color: var(--custom-accent, var(--primary-color, #ff9800));
+      border-color: var(--custom-accent, var(--primary-color, #ff9800));
+    }
   }
 
   .group-player-row {

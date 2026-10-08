@@ -1207,6 +1207,109 @@ describe("Group Players Menu - Transfer Queue Button", () => {
           "Active group (Living Room Group) should be rendered before Bedroom Group"
         );
       });
+
+      it("renders ungroup all button in the top right corner of grouped cards", () => {
+        Object.defineProperty(testCard, "_isGridMode", { value: false, configurable: true });
+        testCard.hass.states["media_player.living_room"].attributes.group_members = [
+          "media_player.living_room",
+          "media_player.kitchen",
+        ];
+        testCard.hass.states["media_player.kitchen"].attributes.group_members = [
+          "media_player.living_room",
+          "media_player.kitchen",
+        ];
+        testCard._getGroupKey = (id) =>
+          id === "media_player.kitchen" ? "media_player.living_room" : id;
+
+        const template = renderGroupingSheet.call(testCard);
+        assert.ok(template);
+        const htmlContent = extractTemplateHtml(template);
+
+        assert.ok(
+          htmlContent.includes("grouped-card-ungroup-btn"),
+          "Should render grouped-card-ungroup-btn"
+        );
+        assert.ok(htmlContent.includes("Ungroup All"), "Should render Ungroup All text on button");
+      });
+
+      it("ungroups a specific targeted group when targetMasterId is passed to _ungroupAll", async () => {
+        const calls = [];
+        const card = new YetAnotherMediaPlayerCard();
+        card.setConfig({
+          type: "custom:yet-another-media-player",
+          entities: [
+            "media_player.living_room",
+            "media_player.kitchen",
+            "media_player.bedroom",
+            "media_player.office",
+          ],
+        });
+        card._selectedIndex = 0; // Living Room is current
+        card.hass = {
+          states: {
+            "media_player.living_room": {
+              entity_id: "media_player.living_room",
+              state: "playing",
+              attributes: {
+                friendly_name: "Living Room",
+                group_members: ["media_player.living_room", "media_player.kitchen"],
+                supported_features: 512,
+                app_id: "music_assistant",
+              },
+            },
+            "media_player.kitchen": {
+              entity_id: "media_player.kitchen",
+              state: "playing",
+              attributes: {
+                friendly_name: "Kitchen",
+                supported_features: 512,
+                app_id: "music_assistant",
+              },
+            },
+            "media_player.bedroom": {
+              entity_id: "media_player.bedroom",
+              state: "playing",
+              attributes: {
+                friendly_name: "Bedroom",
+                group_members: ["media_player.bedroom", "media_player.office"],
+                supported_features: 512,
+                app_id: "music_assistant",
+              },
+            },
+            "media_player.office": {
+              entity_id: "media_player.office",
+              state: "playing",
+              attributes: {
+                friendly_name: "Office",
+                supported_features: 512,
+                app_id: "music_assistant",
+              },
+            },
+          },
+          services: {
+            media_player: { unjoin: {} },
+          },
+          callService: (domain, service, data) => {
+            calls.push({ domain, service, data });
+            return Promise.resolve();
+          },
+        };
+        card._isGroupCapable = () => true;
+        card._getGroupingMasterId = () => "media_player.living_room";
+        card._getGroupingEntityId = (idx) => card.entityIds[idx];
+
+        // Call _ungroupAll specifically on Bedroom group
+        await card._ungroupAll("media_player.bedroom");
+
+        assert.strictEqual(calls.length, 1);
+        assert.strictEqual(calls[0].domain, "media_player");
+        assert.strictEqual(calls[0].service, "unjoin");
+        assert.strictEqual(
+          calls[0].data.entity_id,
+          "media_player.office",
+          "Should unjoin office from bedroom, leaving living room group alone"
+        );
+      });
     });
   });
 });
