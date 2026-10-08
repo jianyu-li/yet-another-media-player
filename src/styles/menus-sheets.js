@@ -333,8 +333,11 @@ export const menusSheetsStyles = css`
     font-size: 0.78em;
     font-weight: 500;
     letter-spacing: 0.05em;
-    color: #fff;
-    opacity: 0.78;
+    color: var(
+      --in-menu-active-label-color,
+      var(--secondary-text, var(--secondary-text-color, #aaa))
+    );
+    opacity: 0.85;
     pointer-events: none !important;
   }
 
