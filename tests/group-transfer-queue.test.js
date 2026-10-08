@@ -1004,7 +1004,7 @@ describe("Group Players Menu - Transfer Queue Button", () => {
     });
 
     describe("Grouped Players Visual Card Containers", () => {
-      it("renders grouped-players-card enclosing grouped players with header and badge in list mode", () => {
+      it("renders grouped-players-card enclosing grouped players in list mode with no header actions on current group and hides row transfer buttons", () => {
         Object.defineProperty(testCard, "_isGridMode", { value: false, configurable: true });
         // Living Room & Kitchen are grouped together, Bedroom is standalone
         testCard.hass.states["media_player.living_room"].attributes.group_members = [
@@ -1037,9 +1037,26 @@ describe("Group Players Menu - Transfer Queue Button", () => {
           htmlContent.includes("Living Room Group"),
           "Should render group label based on master entity name"
         );
-        assert.ok(
+        assert.strictEqual(
           htmlContent.includes("grouped-card-badge"),
-          "Should render badge for current group"
+          false,
+          "Should not render badge for current group"
+        );
+        assert.strictEqual(
+          htmlContent.includes("grouped-card-transfer-btn"),
+          false,
+          "Current group should not render transfer queue button"
+        );
+        assert.ok(
+          htmlContent.includes("grouped-card-ungroup-btn"),
+          "Current group should still render ungroup all button"
+        );
+        // Bedroom is standalone and should have a group-transfer-btn, but Living Room & Kitchen inside group should not
+        const transferBtnMatches = htmlContent.match(/class="group-transfer-btn"/g);
+        assert.strictEqual(
+          transferBtnMatches?.length,
+          1,
+          "Only standalone bedroom player should have individual group-transfer-btn"
         );
       });
 
@@ -1208,8 +1225,14 @@ describe("Group Players Menu - Transfer Queue Button", () => {
         );
       });
 
-      it("renders ungroup all button in the top right corner of grouped cards", () => {
+      it("renders ungroup all and transfer buttons in the top right corner of non-current grouped cards", () => {
         Object.defineProperty(testCard, "_isGridMode", { value: false, configurable: true });
+        testCard._selectedIndex = 2; // Bedroom is current, Living Room Group is non-current
+        Object.defineProperty(testCard, "currentEntityId", {
+          get: () => "media_player.bedroom",
+          configurable: true,
+        });
+        testCard._getGroupingMasterId = () => "media_player.bedroom";
         testCard.hass.states["media_player.living_room"].attributes.group_members = [
           "media_player.living_room",
           "media_player.kitchen",
@@ -1217,6 +1240,9 @@ describe("Group Players Menu - Transfer Queue Button", () => {
         testCard.hass.states["media_player.kitchen"].attributes.group_members = [
           "media_player.living_room",
           "media_player.kitchen",
+        ];
+        testCard.hass.states["media_player.bedroom"].attributes.group_members = [
+          "media_player.bedroom",
         ];
         testCard._getGroupKey = (id) =>
           id === "media_player.kitchen" ? "media_player.living_room" : id;
@@ -1227,9 +1253,140 @@ describe("Group Players Menu - Transfer Queue Button", () => {
 
         assert.ok(
           htmlContent.includes("grouped-card-ungroup-btn"),
-          "Should render grouped-card-ungroup-btn"
+          "Should render grouped-card-ungroup-btn on non-current group"
         );
         assert.ok(htmlContent.includes("Ungroup All"), "Should render Ungroup All text on button");
+        assert.ok(
+          htmlContent.includes("grouped-card-transfer-btn"),
+          "Should render grouped-card-transfer-btn on non-current group"
+        );
+      });
+
+      it("hides individual transfer buttons on grouped rows in grid mode while showing on standalone", () => {
+        Object.defineProperty(testCard, "_isGridMode", { value: true, configurable: true });
+        testCard.hass.states["media_player.living_room"].attributes.group_members = [
+          "media_player.living_room",
+          "media_player.kitchen",
+        ];
+        testCard.hass.states["media_player.kitchen"].attributes.group_members = [
+          "media_player.living_room",
+          "media_player.kitchen",
+        ];
+        testCard.hass.states["media_player.bedroom"].attributes.group_members = [];
+        testCard._getGroupKey = (id) =>
+          id === "media_player.kitchen" ? "media_player.living_room" : id;
+
+        const template = renderGroupingSheet.call(testCard);
+        assert.ok(template);
+        const htmlContent = extractTemplateHtml(template);
+
+        // grid-menu-transfer-btn should only appear for standalone bedroom, not inside the grid group card
+        const gridTransferMatches = htmlContent.match(/class="grid-menu-transfer-btn"/g);
+        assert.strictEqual(
+          gridTransferMatches?.length,
+          1,
+          "Only standalone bedroom item should have grid-menu-transfer-btn"
+        );
+      });
+
+      it("invokes _transferQueueTo with group coordinator payload when clicking group card transfer button", () => {
+        Object.defineProperty(testCard, "_isGridMode", { value: false, configurable: true });
+        testCard._selectedIndex = 2; // Bedroom is current
+        Object.defineProperty(testCard, "currentEntityId", {
+          get: () => "media_player.bedroom",
+          configurable: true,
+        });
+        testCard._getGroupingMasterId = () => "media_player.bedroom";
+        testCard.hass.states["media_player.living_room"].attributes.group_members = [
+          "media_player.living_room",
+          "media_player.kitchen",
+        ];
+        testCard.hass.states["media_player.kitchen"].attributes.group_members = [
+          "media_player.living_room",
+          "media_player.kitchen",
+        ];
+        testCard.hass.states["media_player.bedroom"].attributes.group_members = [
+          "media_player.bedroom",
+        ];
+        testCard._getGroupKey = (id) =>
+          id === "media_player.kitchen" ? "media_player.living_room" : id;
+
+        const transferState = {
+          /** @type {any} */
+          target: null,
+        };
+        testCard._transferQueueTo = (payload) => {
+          transferState.target = payload;
+        };
+
+        const template = renderGroupingSheet.call(testCard);
+        assert.ok(template);
+
+        // Find all functions in template values and execute
+        const clickFns = [];
+        function findFunctions(obj) {
+          if (!obj) return;
+          if (typeof obj === "function") {
+            clickFns.push(obj);
+          } else if (Array.isArray(obj)) {
+            obj.forEach(findFunctions);
+          } else if (typeof obj === "object" && obj.values) {
+            findFunctions(obj.values);
+          }
+        }
+        findFunctions(template.values);
+
+        for (const fn of clickFns) {
+          try {
+            fn({ stopPropagation() {} });
+            if (
+              transferState.target &&
+              transferState.target.entityId === "media_player.living_room"
+            ) {
+              break;
+            }
+          } catch (_e) {
+            // ignore
+          }
+        }
+
+        assert.ok(transferState.target, "Expected _transferQueueTo to be called");
+        assert.strictEqual(transferState.target.entityId, "media_player.living_room");
+        assert.ok(transferState.target.name.includes("Living Room"));
+        assert.strictEqual(transferState.target.icon, "mdi:speaker-multiple");
+      });
+
+      it("disables group header transfer button when there is no active queue to transfer", () => {
+        Object.defineProperty(testCard, "_isGridMode", { value: false, configurable: true });
+        testCard._selectedIndex = 2; // Bedroom is current
+        Object.defineProperty(testCard, "currentEntityId", {
+          get: () => "media_player.bedroom",
+          configurable: true,
+        });
+        testCard._getGroupingMasterId = () => "media_player.bedroom";
+        testCard._hasTransferQueueForCurrent = false; // No queue to transfer
+        testCard.hass.states["media_player.living_room"].attributes.group_members = [
+          "media_player.living_room",
+          "media_player.kitchen",
+        ];
+        testCard.hass.states["media_player.kitchen"].attributes.group_members = [
+          "media_player.living_room",
+          "media_player.kitchen",
+        ];
+        testCard.hass.states["media_player.bedroom"].attributes.group_members = [
+          "media_player.bedroom",
+        ];
+        testCard._getGroupKey = (id) =>
+          id === "media_player.kitchen" ? "media_player.living_room" : id;
+
+        const template = renderGroupingSheet.call(testCard);
+        assert.ok(template);
+        const htmlContent = extractTemplateHtml(template);
+
+        assert.ok(
+          htmlContent.includes("No active queue to transfer"),
+          "Tooltip should reflect no active queue"
+        );
       });
 
       it("ungroups a specific targeted group when targetMasterId is passed to _ungroupAll", async () => {

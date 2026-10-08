@@ -147,12 +147,74 @@ export function renderGroupingSheet() {
         ? groupLabelTemplate.replace("{master}", masterName)
         : localize("card.grouping.title") || "Group";
 
+      const masterIdx = this.entityIds.indexOf(masterEntityId);
+      const targetIdx = masterIdx >= 0 ? masterIdx : 0;
+      const masterMaId =
+        (masterIdx >= 0 && this._getActualResolvedMaEntityForState?.(masterIdx)) ||
+        this._getGroupingEntityIdByEntityId?.(masterEntityId) ||
+        masterEntityId;
+
+      const targetEntityState = this.hass?.states?.[masterEntityId];
+      const targetMaState = this.hass?.states?.[masterMaId];
+      const targetState = targetEntityState || targetMaState;
+
+      const targetIsMa = this._queueController?.isTargetMusicAssistant
+        ? this._queueController.isTargetMusicAssistant({
+            maEntityId: masterMaId,
+            entityId: masterEntityId,
+            mainEntityId: masterEntityId,
+          })
+        : Boolean(
+            (targetMaState && this._looksLikeMusicAssistantState?.(targetMaState)) ||
+            (targetEntityState && this._looksLikeMusicAssistantState?.(targetEntityState))
+          );
+
+      const isDeviceUnavailable =
+        targetEntityState?.state === "unavailable" || targetMaState?.state === "unavailable";
+
+      const isTransferPending = this._transferQueuePendingTarget === masterMaId;
+      const isTransferDisabled =
+        !hasQueueToTransfer ||
+        !targetIsMa ||
+        isCurrentGroup ||
+        isTransferPending ||
+        isDeviceUnavailable;
+
+      let transferTooltip;
+      if (isDeviceUnavailable) {
+        transferTooltip = localize("card.grouping.unavailable") || "Player is unavailable";
+      } else if (!targetIsMa) {
+        transferTooltip =
+          localize("card.grouping.transfer_not_ma") || "Music Assistant player required";
+      } else if (!hasQueueToTransfer) {
+        transferTooltip =
+          localize("card.grouping.transfer_no_queue") || "No active queue to transfer";
+      } else {
+        transferTooltip = (
+          localize("card.grouping.transfer_to_group") || "Transfer queue to {master} group"
+        ).replace("{master}", masterName);
+      }
+
+      const targetPayload = {
+        index: targetIdx,
+        entityId: masterEntityId,
+        maEntityId: masterMaId,
+        mainEntityId: masterEntityId,
+        name: `${masterName} (${localize("card.grouping.title") || "Group"})`,
+        subtitle: masterMaId !== masterEntityId ? masterMaId : masterEntityId,
+        state: targetState?.state,
+        icon: "mdi:speaker-multiple",
+      };
+
       groupedCards.push({
         groupKey,
         masterId: masterEntityId,
         masterName,
         groupLabel,
         isCurrentGroup,
+        isTransferDisabled,
+        transferTooltip,
+        targetPayload,
         items,
       });
     } else {
@@ -176,7 +238,7 @@ export function renderGroupingSheet() {
     return a.isBusy ? 1 : -1;
   });
 
-  const renderGroupItem = (item) => {
+  const renderGroupItem = (item, isInsideGroup = false) => {
     const id = item.id;
     const actualGroupId = item.groupId;
     const grouped = filteredMembers.includes(actualGroupId);
@@ -348,7 +410,7 @@ export function renderGroupingSheet() {
           style="position: relative;"
         >
           ${
-            hasMaTransferService
+            hasMaTransferService && !isInsideGroup
               ? html`
                   <button
                     type="button"
@@ -479,7 +541,7 @@ export function renderGroupingSheet() {
           >
         </div>
         ${
-          hasMaTransferService
+          hasMaTransferService && !isInsideGroup
             ? html`
                 <button
                   class="group-transfer-btn"
@@ -621,17 +683,30 @@ export function renderGroupingSheet() {
                       </div>
                       <div class="grouped-card-actions">
                         ${
-                          group.isCurrentGroup
-                            ? html`<span class="grouped-card-badge"
-                                >${localize("card.grouping.current")}</span
-                              >`
+                          !group.isCurrentGroup && hasMaTransferService
+                            ? html`
+                                <button
+                                  type="button"
+                                  class="grouped-card-transfer-btn"
+                                  ?disabled=${group.isTransferDisabled}
+                                  @click=${(e) => {
+                                    e?.stopPropagation?.();
+                                    if (!group.isTransferDisabled) {
+                                      this._transferQueueTo(group.targetPayload);
+                                    }
+                                  }}
+                                  title=${group.transferTooltip}
+                                >
+                                  <ha-icon icon="mdi:swap-horizontal"></ha-icon>
+                                </button>
+                              `
                             : nothing
                         }
                         <button
                           type="button"
                           class="grouped-card-ungroup-btn"
                           @click=${(e) => {
-                            e.stopPropagation();
+                            e?.stopPropagation?.();
                             this._ungroupAll(group.masterId);
                           }}
                           title="${localize("card.grouping.ungroup_all") || "Ungroup All"}"
@@ -643,9 +718,9 @@ export function renderGroupingSheet() {
                     ${
                       isGridMode
                         ? html`<div class="grid-group-card-items">
-                            ${group.items.map((item) => renderGroupItem(item))}
+                            ${group.items.map((item) => renderGroupItem(item, true))}
                           </div>`
-                        : group.items.map((item) => renderGroupItem(item))
+                        : group.items.map((item) => renderGroupItem(item, true))
                     }
                   </div>
                 `
@@ -655,11 +730,11 @@ export function renderGroupingSheet() {
                   ? standaloneItems.length > 0
                     ? html`
                         <div class="grid-menu-items">
-                          ${standaloneItems.map((item) => renderGroupItem(item))}
+                          ${standaloneItems.map((item) => renderGroupItem(item, false))}
                         </div>
                       `
                     : nothing
-                  : standaloneItems.map((item) => renderGroupItem(item))
+                  : standaloneItems.map((item) => renderGroupItem(item, false))
               }
             `
       }

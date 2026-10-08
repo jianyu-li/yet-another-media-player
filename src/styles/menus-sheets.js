@@ -614,6 +614,44 @@ export const menusSheetsStyles = css`
     line-height: 1.2;
   }
 
+  .grouped-card-transfer-btn {
+    background: var(--yamp-button-bg, rgba(255, 255, 255, 0.1));
+    border: 1px solid var(--yamp-button-border, rgba(255, 255, 255, 0.2));
+    border-radius: var(--button-border-radius, 6px);
+    color: var(--yamp-overlay-text, #fff);
+    padding: 2px 6px;
+    cursor: pointer;
+    transition:
+      background var(--transition-fast),
+      color var(--transition-fast),
+      border-color var(--transition-fast),
+      opacity var(--transition-fast);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1.3;
+  }
+
+  .grouped-card-transfer-btn ha-icon {
+    --mdc-icon-size: 16px;
+    width: 16px;
+    height: 16px;
+  }
+
+  .grouped-card-transfer-btn:disabled,
+  .grouped-card-transfer-btn[disabled] {
+    cursor: not-allowed;
+    opacity: 0.35;
+  }
+
+  @media (hover: hover) {
+    .grouped-card-transfer-btn:not([disabled]):hover {
+      background: var(--yamp-hover-bg, rgba(255, 255, 255, 0.2));
+      color: var(--custom-accent, var(--primary-color, #ff9800));
+      border-color: var(--custom-accent, var(--primary-color, #ff9800));
+    }
+  }
+
   .grouped-card-ungroup-btn {
     background: var(--yamp-button-bg, rgba(255, 255, 255, 0.1));
     border: 1px solid var(--yamp-button-border, rgba(255, 255, 255, 0.2));
