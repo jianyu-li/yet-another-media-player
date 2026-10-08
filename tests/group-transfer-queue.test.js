@@ -115,6 +115,30 @@ describe("Group Players Menu - Transfer Queue Button", () => {
     );
   });
 
+  it("renders spaced out vol-stepper aligned with sliders when volume entity is a remote", () => {
+    Object.defineProperty(card, "_isGridMode", { value: false, configurable: true });
+    card._getVolumeEntity = (idx) => (idx === 2 ? "remote.bedroom_remote" : null);
+    card.hass.states["remote.bedroom_remote"] = {
+      entity_id: "remote.bedroom_remote",
+      state: "on",
+      attributes: { volume_level: 0 },
+    };
+
+    const template = renderGroupingSheet.call(card);
+    assert.ok(template);
+
+    const htmlContent = extractTemplateHtml(template);
+    assert.ok(htmlContent.includes("vol-stepper"), "Template should contain vol-stepper class");
+    assert.ok(
+      htmlContent.includes("justify-content:space-between"),
+      "vol-stepper should have justify-content:space-between to space out minus and plus"
+    );
+    assert.ok(
+      htmlContent.includes("flex:1"),
+      "vol-stepper should have flex:1 to match slider container width"
+    );
+  });
+
   it("renders grid-menu-transfer-btn in grid mode when MA transfer_queue is supported", () => {
     Object.defineProperty(card, "_isGridMode", { value: true, configurable: true });
     const template = renderGroupingSheet.call(card);

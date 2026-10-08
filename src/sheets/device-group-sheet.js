@@ -424,19 +424,29 @@ export function renderGroupingSheet() {
                             ? html`
                                 <div
                                   class="vol-stepper"
-                                  style="display:flex;align-items:center;gap:4px;"
+                                  style="flex:1;padding:0 4px;display:flex;align-items:center;justify-content:space-between;box-sizing:border-box;"
                                 >
                                   <button
-                                    @click=${() => this._onGroupVolumeStep(displayEntity, -1)}
+                                    ?disabled=${isDeviceUnavailable}
+                                    @click=${() =>
+                                      !isDeviceUnavailable &&
+                                      this._onGroupVolumeStep(displayEntity, -1)}
                                     title="${localize("common.vol_down")}"
-                                    style="background:none;border:none;padding:0;width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:inherit;"
+                                    style="background:none;border:none;padding:0;width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:inherit;cursor:${
+                                      isDeviceUnavailable ? "not-allowed" : "pointer"
+                                    };${isDeviceUnavailable ? "opacity:0.35;" : ""}"
                                   >
                                     <ha-icon icon="mdi:minus"></ha-icon>
                                   </button>
                                   <button
-                                    @click=${() => this._onGroupVolumeStep(displayEntity, 1)}
+                                    ?disabled=${isDeviceUnavailable}
+                                    @click=${() =>
+                                      !isDeviceUnavailable &&
+                                      this._onGroupVolumeStep(displayEntity, 1)}
                                     title="${localize("common.vol_up")}"
-                                    style="background:none;border:none;padding:0;width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:inherit;"
+                                    style="background:none;border:none;padding:0;width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:inherit;cursor:${
+                                      isDeviceUnavailable ? "not-allowed" : "pointer"
+                                    };${isDeviceUnavailable ? "opacity:0.35;" : ""}"
                                   >
                                     <ha-icon icon="mdi:plus"></ha-icon>
                                   </button>
