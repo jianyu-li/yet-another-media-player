@@ -520,6 +520,8 @@ export default {
       transfer_to_group: "Trasferisci coda al gruppo {master}",
       transfer_current_player: "In riproduzione qui",
       transfer_no_queue: "Nessuna coda attiva da trasferire",
+      transfer_not_ma: "Lettore Music Assistant richiesto",
+      standalone: "Autonomo",
     },
   },
   search: {

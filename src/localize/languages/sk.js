@@ -536,6 +536,8 @@ export default {
       transfer_to_group: "Preniesť rad do skupiny {master}",
       transfer_current_player: "Práve hrá tu",
       transfer_no_queue: "Žiadny aktívny rad na prenos",
+      transfer_not_ma: "Vyžaduje sa prehrávač Music Assistant",
+      standalone: "Samostatný",
     },
   },
   search: {

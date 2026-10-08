@@ -517,6 +517,8 @@ export default {
       transfer_to_group: "Prenesi čakalno vrsto v skupino {master}",
       transfer_current_player: "Trenutno se predvaja tukaj",
       transfer_no_queue: "Ni aktivne čakalne vrste za prenos",
+      transfer_not_ma: "Zahtevan predvajalnik Music Assistant",
+      standalone: "Samostojen",
     },
   },
   search: {

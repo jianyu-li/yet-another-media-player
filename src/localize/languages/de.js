@@ -535,6 +535,8 @@ export default {
       transfer_to_group: "Warteschlange an Gruppe {master} übertragen",
       transfer_current_player: "Wiedergabe läuft hier",
       transfer_no_queue: "Keine aktive Warteschlange zum Übertragen",
+      transfer_not_ma: "Music Assistant Player erforderlich",
+      standalone: "Eigenständig",
     },
   },
   search: {

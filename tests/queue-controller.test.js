@@ -505,6 +505,18 @@ describe("QueueController & Pure Queue Helpers", () => {
       assert.strictEqual(mockHost._showGrouping, false);
     });
 
+    it("identifies whether target is a Music Assistant player via isTargetMusicAssistant", () => {
+      assert.strictEqual(
+        controller.isTargetMusicAssistant({ maEntityId: "media_player.bedroom" }),
+        true
+      );
+      assert.strictEqual(
+        controller.isTargetMusicAssistant({ entityId: "media_player.non_existent" }),
+        false
+      );
+      assert.strictEqual(controller.isTargetMusicAssistant(null), false);
+    });
+
     it("handles transfer queue auto-close timer and dismissal from grouping sheet", async () => {
       let dismissed = false;
       mockHost._showEntityOptions = true;

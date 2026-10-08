@@ -521,6 +521,8 @@ export default {
       transfer_to_group: "Transferir fila para o grupo {master}",
       transfer_current_player: "A reproduzir aqui",
       transfer_no_queue: "Sem fila ativa para transferir",
+      transfer_not_ma: "Reprodutor Music Assistant necessário",
+      standalone: "Independente",
     },
   },
   search: {

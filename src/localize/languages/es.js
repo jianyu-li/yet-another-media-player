@@ -522,6 +522,8 @@ export default {
       transfer_to_group: "Transferir cola al grupo {master}",
       transfer_current_player: "Reproduciendo aquí actualmente",
       transfer_no_queue: "No hay cola activa para transferir",
+      transfer_not_ma: "Se requiere reproductor de Music Assistant",
+      standalone: "Independiente",
     },
   },
   search: {

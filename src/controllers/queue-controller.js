@@ -1265,6 +1265,28 @@ export class QueueController {
   }
 
   /**
+   * Check if a target player or target entity states represent a Music Assistant player.
+   * @param {{ maEntityId?: string, entityId?: string, mainEntityId?: string } | null | undefined} target
+   * @returns {boolean}
+   */
+  isTargetMusicAssistant(target) {
+    if (!target || !this.host?.hass?.states) return false;
+    const states = this.host.hass.states;
+    const maState = target.maEntityId ? states[target.maEntityId] : null;
+    const entityState = target.entityId ? states[target.entityId] : null;
+    const mainState = target.mainEntityId ? states[target.mainEntityId] : null;
+    return Boolean(
+      (maState &&
+        (this.host._looksLikeMusicAssistantState?.(maState) || isMusicAssistantEntity(maState))) ||
+      (entityState &&
+        (this.host._looksLikeMusicAssistantState?.(entityState) ||
+          isMusicAssistantEntity(entityState))) ||
+      (mainState &&
+        (this.host._looksLikeMusicAssistantState?.(mainState) || isMusicAssistantEntity(mainState)))
+    );
+  }
+
+  /**
    * Transfers current Music Assistant queue to a target player.
    * @param {any} target
    */
@@ -1279,11 +1301,7 @@ export class QueueController {
       this.host._getActualResolvedMaEntityForState?.(this.host._selectedIndex);
     if (!sourceMaId) return;
 
-    const targetMaState = this.host.hass?.states?.[target.maEntityId];
-    const targetEntityState = this.host.hass?.states?.[target.entityId];
-    const isTargetMa =
-      this.host._looksLikeMusicAssistantState?.(targetMaState) ||
-      this.host._looksLikeMusicAssistantState?.(targetEntityState);
+    const isTargetMa = this.isTargetMusicAssistant(target);
     if (!isTargetMa) {
       console.warn("yamp: Target player is not a Music Assistant entity:", target);
       return;

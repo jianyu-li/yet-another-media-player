@@ -527,6 +527,8 @@ export default {
       transfer_to_group: "Transférer la file d'attente au groupe {master}",
       transfer_current_player: "Lecture en cours ici",
       transfer_no_queue: "Aucune file d'attente active à transférer",
+      transfer_not_ma: "Lecteur Music Assistant requis",
+      standalone: "Autonome",
     },
   },
   search: {

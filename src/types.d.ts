@@ -597,6 +597,7 @@ export declare class QueueController {
   canShowTransferQueueOption(): boolean;
   openTransferQueue(): void;
   closeTransferQueue(): void;
+  isTargetMusicAssistant(target?: any): boolean;
   transferQueueTo(target: any): Promise<void>;
   buildTransferQueuePayload(sourceId: string, targetId: string): Record<string, string>;
   isMusicAssistantEntity(): boolean;

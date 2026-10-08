@@ -255,12 +255,18 @@ export function renderGroupingSheet() {
                   const targetMaState = this.hass?.states?.[targetMaId];
                   const targetState = targetEntityState || targetMaState;
 
-                  const targetIsMa = Boolean(
-                    (targetMaState && this._looksLikeMusicAssistantState?.(targetMaState)) ||
-                    (targetEntityState &&
-                      this._looksLikeMusicAssistantState?.(targetEntityState)) ||
-                    (mainState && this._looksLikeMusicAssistantState?.(mainState))
-                  );
+                  const targetIsMa = this._queueController?.isTargetMusicAssistant
+                    ? this._queueController.isTargetMusicAssistant({
+                        maEntityId: targetMaId,
+                        entityId: targetEntityId,
+                        mainEntityId: id,
+                      })
+                    : Boolean(
+                        (targetMaState && this._looksLikeMusicAssistantState?.(targetMaState)) ||
+                        (targetEntityState &&
+                          this._looksLikeMusicAssistantState?.(targetEntityState)) ||
+                        (mainState && this._looksLikeMusicAssistantState?.(mainState))
+                      );
 
                   const isDeviceUnavailable =
                     mainState?.state === "unavailable" ||
@@ -416,6 +422,10 @@ export function renderGroupingSheet() {
                     `;
                   }
 
+                  const stepperBtnStyle = `background:none;border:none;padding:0;width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:inherit;cursor:${
+                    isDeviceUnavailable ? "not-allowed" : "pointer"
+                  };${isDeviceUnavailable ? "opacity:0.35;" : ""}`;
+
                   return html`
                     <div
                       class="entity-options-item group-player-row"
@@ -449,9 +459,7 @@ export function renderGroupingSheet() {
                                       !isDeviceUnavailable &&
                                       this._onGroupVolumeStep(displayEntity, -1)}
                                     title="${localize("common.vol_down")}"
-                                    style="background:none;border:none;padding:0;width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:inherit;cursor:${
-                                      isDeviceUnavailable ? "not-allowed" : "pointer"
-                                    };${isDeviceUnavailable ? "opacity:0.35;" : ""}"
+                                    style="${stepperBtnStyle}"
                                   >
                                     <ha-icon icon="mdi:minus"></ha-icon>
                                   </button>
@@ -461,9 +469,7 @@ export function renderGroupingSheet() {
                                       !isDeviceUnavailable &&
                                       this._onGroupVolumeStep(displayEntity, 1)}
                                     title="${localize("common.vol_up")}"
-                                    style="background:none;border:none;padding:0;width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:inherit;cursor:${
-                                      isDeviceUnavailable ? "not-allowed" : "pointer"
-                                    };${isDeviceUnavailable ? "opacity:0.35;" : ""}"
+                                    style="${stepperBtnStyle}"
                                   >
                                     <ha-icon icon="mdi:plus"></ha-icon>
                                   </button>
