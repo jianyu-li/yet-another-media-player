@@ -523,6 +523,7 @@ export default {
       joined: "Joined",
       available: "Available",
       current: "Current",
+      group_label: "{master} Group",
       unjoin_from: "Unjoin from {master}",
       join_with: "Join with {master}",
       transfer_to_player: "Transfer queue to {player}",

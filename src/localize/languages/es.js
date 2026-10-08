@@ -516,6 +516,7 @@ export default {
       joined: "Unido",
       available: "Disponible",
       current: "Actual",
+      group_label: "Grupo {master}",
       unjoin_from: "Desvincular de {master}",
       join_with: "Unirse a {master}",
       transfer_to_player: "Transferir cola a {player}",

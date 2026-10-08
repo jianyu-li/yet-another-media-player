@@ -51,6 +51,8 @@ export const lightModeVariables = css`
   --yamp-chip-bg: rgba(255, 255, 255, 0.8);
   --yamp-chip-text: #222;
   --yamp-chip-border: rgba(0, 0, 0, 0.1);
+  --yamp-grouped-card-bg: rgba(0, 0, 0, 0.04);
+  --yamp-grouped-card-border: var(--yamp-overlay-divider, rgba(0, 0, 0, 0.1));
   --search-card-bg: rgba(0, 0, 0, 0.03);
   --search-text-secondary: #666;
   --search-thumb-placeholder-bg: rgba(0, 0, 0, 0.05);

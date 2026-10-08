@@ -57,6 +57,8 @@ export const baseCardStyles = css`
     --yamp-chip-text: #fff;
     --yamp-chip-selected-bg: var(--custom-accent);
     --yamp-chip-selected-text: #fff;
+    --yamp-grouped-card-bg: rgba(255, 255, 255, 0.05);
+    --yamp-grouped-card-border: var(--yamp-overlay-divider, rgba(255, 255, 255, 0.2));
     --search-text-secondary: #bbb;
     --search-error-bg: rgba(244, 67, 54, 0.8);
     --search-card-bg: rgba(255, 255, 255, 0.05);

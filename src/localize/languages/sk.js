@@ -530,6 +530,7 @@ export default {
       joined: "Pripojený",
       available: "Dostupný",
       current: "Aktuálny",
+      group_label: "Skupina {master}",
       unjoin_from: "Odpojiť od {master}",
       join_with: "Pripojiť k {master}",
       transfer_to_player: "Preniesť rad do {player}",

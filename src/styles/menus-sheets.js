@@ -551,6 +551,113 @@ export const menusSheetsStyles = css`
     display: contents;
   }
 
+  /* Grouped players card box (list and grid modes) */
+  .grouped-players-card {
+    background: var(--yamp-grouped-card-bg, rgba(255, 255, 255, 0.05));
+    border: 1px solid var(--yamp-grouped-card-border, var(--yamp-overlay-divider));
+    border-radius: var(--button-border-radius, 8px);
+    margin-bottom: 12px;
+    padding: 0;
+    overflow: hidden;
+    box-sizing: border-box;
+  }
+
+  .grouped-players-card.is-current-group {
+    border-color: var(--custom-accent, var(--primary-color, #ff9800));
+  }
+
+  .grouped-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 10px;
+    border-bottom: 1px solid var(--divider-color, var(--yamp-overlay-divider));
+    font-size: 0.85em;
+    font-weight: 600;
+    color: var(--yamp-overlay-text);
+  }
+
+  .grouped-card-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .grouped-card-title ha-icon {
+    --mdc-icon-size: 16px;
+    width: 16px;
+    height: 16px;
+    color: var(--custom-accent, currentColor);
+  }
+
+  .grouped-card-badge {
+    font-size: 0.7em;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    background: var(--custom-accent, #ff9800);
+    color: var(--yamp-chip-selected-text, #fff);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    line-height: 1.2;
+  }
+
+  .group-player-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 8px 4px 8px;
+    margin-bottom: 1px;
+  }
+
+  .grouped-players-card .group-player-row {
+    padding: 10px 10px 8px 10px;
+    margin: 0;
+  }
+
+  .grouped-players-card .group-player-row:not(:last-child) {
+    border-bottom: 1px solid var(--divider-color, var(--yamp-overlay-divider));
+  }
+
+  .grid-group-card {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    background: var(--yamp-grouped-card-bg, rgba(255, 255, 255, 0.05));
+    border: 1px solid var(--yamp-grouped-card-border, var(--yamp-overlay-divider));
+    border-radius: var(--button-border-radius, 8px);
+    margin-bottom: 12px;
+    overflow: hidden;
+    box-sizing: border-box;
+  }
+
+  .grid-group-card.is-current-group {
+    border-color: var(--custom-accent, var(--primary-color, #ff9800));
+  }
+
+  .grid-group-card .grouped-card-header {
+    border-bottom: 1px solid var(--divider-color, var(--yamp-overlay-divider));
+  }
+
+  .grid-group-card-items {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0;
+    width: 100%;
+  }
+
+  .grid-group-card-items .entity-options-item:nth-child(5n) {
+    border-right: none;
+  }
+
+  .grid-group-card-items .entity-options-item:last-child {
+    border-right: none;
+  }
+
+  .grid-group-card-items .entity-options-item:nth-last-child(-n + 5) {
+    border-bottom: none;
+  }
+
   /* Non-grid transfer queue layout */
   .transfer-queue-list {
     display: flex;

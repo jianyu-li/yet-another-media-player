@@ -521,6 +521,7 @@ export default {
       joined: "Lié",
       available: "Disponible",
       current: "Actuel",
+      group_label: "Groupe {master}",
       unjoin_from: "Se désolidariser de {master}",
       join_with: "Se joindre à {master}",
       transfer_to_player: "Transférer la file d'attente à {player}",

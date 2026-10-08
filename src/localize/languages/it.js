@@ -514,6 +514,7 @@ export default {
       joined: "Unito",
       available: "Disponibile",
       current: "Attuale",
+      group_label: "Gruppo {master}",
       unjoin_from: "Scollegati da {master}",
       join_with: "Unisciti a {master}",
       transfer_to_player: "Trasferisci coda a {player}",

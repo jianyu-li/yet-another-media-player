@@ -511,6 +511,7 @@ export default {
       joined: "Pridružen",
       available: "Na voljo",
       current: "Trenutni",
+      group_label: "Skupina {master}",
       unjoin_from: "Odslopi od {master}",
       join_with: "Pridruži se {master}",
       transfer_to_player: "Prenesi čakalno vrsto v {player}",

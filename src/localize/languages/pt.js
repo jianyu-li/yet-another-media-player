@@ -515,6 +515,7 @@ export default {
       joined: "Unido",
       available: "Disponível",
       current: "Atual",
+      group_label: "Grupo {master}",
       unjoin_from: "Desvincular de {master}",
       join_with: "Juntar-se a {master}",
       transfer_to_player: "Transferir fila para {player}",

@@ -529,6 +529,7 @@ export default {
       joined: "Verbunden",
       available: "Verfügbar",
       current: "Aktuell",
+      group_label: "Gruppe {master}",
       unjoin_from: "Von {master} trennen",
       join_with: "Mit {master} gruppieren",
       transfer_to_player: "Warteschlange an {player} übertragen",

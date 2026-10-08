@@ -538,6 +538,7 @@ export default {
       joined: "Gekoppeld",
       available: "Beschikbaar",
       current: "Huidig",
+      group_label: "{master}-groep",
       unjoin_from: "Loskoppelen van {master}",
       join_with: "Koppelen met {master}",
       transfer_to_player: "Wachtrij overdragen naar {player}",
