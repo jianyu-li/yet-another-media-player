@@ -54,6 +54,8 @@ const createMockContext = (partial = {}) => {
     is_playing: true,
     is_search: false,
     is_grouping: false,
+    is_speakers_and_groups: false,
+    is_group_players: false,
     is_source: false,
     is_lyrics: false,
     is_options: false,
@@ -201,6 +203,8 @@ describe("template-engine", () => {
         assert.equal(evaluateJsTemplate("[[[ is_music_assistant ]]]", hass, context), true);
         assert.equal(evaluateJsTemplate("[[[ is_playing ]]]", hass, context), true);
         assert.equal(evaluateJsTemplate("[[[ is_idle ]]]", hass, context), false);
+        assert.equal(evaluateJsTemplate("[[[ is_speakers_and_groups ]]]", hass, context), false);
+        assert.equal(evaluateJsTemplate("[[[ is_group_players ]]]", hass, context), false);
         assert.equal(evaluateJsTemplate("[[[ is_fullscreen ]]]", hass, context), true);
         assert.equal(evaluateJsTemplate("[[[ is_full_screen ]]]", hass, context), true);
         assert.equal(

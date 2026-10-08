@@ -293,12 +293,11 @@ export function renderEntityEditor(entity, idx = this._entityEditorIndex, isSear
             { value: "search", label: localize("common.search") || "Search" },
             { value: "source", label: localize("card.menu.source") || "Source" },
             {
-              value: "transfer_queue",
-              label: localize("card.menu.transfer_queue") || "Transfer Queue",
-            },
-            {
               value: "group_players",
-              label: localize("card.menu.group_players") || "Group Players",
+              label:
+                localize("card.menu.speakers_and_groups") ||
+                localize("card.menu.group_players") ||
+                "Speakers & Groups",
             },
             {
               value: "remote_controls",

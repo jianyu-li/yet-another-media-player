@@ -795,7 +795,19 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   get _cardType() {
-    return this.config?.card_type || "default";
+    const type = this.config?.card_type || "default";
+    if (
+      type === "group_players" ||
+      type === "group-players" ||
+      type === "speakers_and_groups" ||
+      type === "speakers-and-groups" ||
+      type === "speakers" ||
+      type === "transfer_queue" ||
+      type === "transfer-queue"
+    ) {
+      return "group_players";
+    }
+    return type;
   }
 
   get _isSpecializedCard() {
@@ -4400,10 +4412,12 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       is_playing: this._isCurrentEntityPlaying(),
       is_search: this._showSearchInSheet,
       is_grouping: this._showGrouping,
+      is_speakers_and_groups: this._showGrouping,
+      is_group_players: this._showGrouping,
       is_source: this._showSourceList || this._showSourceMenu,
       is_lyrics: this._lyricsActive,
       is_options: this._showEntityOptions,
-      is_transfer_queue: this._showTransferQueue,
+      is_transfer_queue: this._showGrouping || this._showTransferQueue,
       is_any_menu_open: this.isAnyMenuOpen,
       is_fullscreen: this._isFullScreen,
       is_full_screen: this._isFullScreen,
@@ -6330,9 +6344,12 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           this.requestUpdate();
           break;
         case "group-players":
-          this._showEntityOptions = true;
-          this._showGrouping = true;
-          this.requestUpdate();
+        case "group_players":
+        case "speakers-and-groups":
+        case "speakers_and_groups":
+        case "transfer-queue":
+        case "transfer_queue":
+          this._openGrouping();
           break;
         case "search":
           this._openQuickSearchOverlay();
@@ -6356,10 +6373,6 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           this._showSourceList = true;
           this._showGrouping = false;
           this.requestUpdate();
-          break;
-        case "transfer-queue":
-          this._showEntityOptions = true;
-          this._openTransferQueue();
           break;
         case "main-menu":
           this._showGrouping = false;
@@ -6412,6 +6425,18 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
     if (action.action === "toggle_lyrics") {
       this._lyricsController.toggle();
+      return;
+    }
+
+    if (
+      action.action === "group_players" ||
+      action.action === "group-players" ||
+      action.action === "speakers_and_groups" ||
+      action.action === "speakers-and-groups" ||
+      action.action === "transfer_queue" ||
+      action.action === "transfer-queue"
+    ) {
+      this._openGrouping();
       return;
     }
 
@@ -6708,8 +6733,13 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         "search-next-up": localize("search.next_up"),
         "source": localize("card.menu.source"),
         "more-info": localize("card.menu.more_info"),
-        "group-players": localize("card.menu.group_players"),
-        "transfer-queue": localize("card.menu.transfer_queue"),
+        "group-players": localize("card.menu.speakers_and_groups") || localize("card.menu.group_players"),
+        "group_players": localize("card.menu.speakers_and_groups") || localize("card.menu.group_players"),
+        "speakers-and-groups": localize("card.menu.speakers_and_groups") || localize("card.menu.group_players"),
+        "speakers_and_groups": localize("card.menu.speakers_and_groups") || localize("card.menu.group_players"),
+        "speakers": localize("card.menu.speakers_and_groups") || localize("card.menu.group_players"),
+        "transfer-queue": localize("card.menu.speakers_and_groups") || localize("card.menu.group_players"),
+        "transfer_queue": localize("card.menu.speakers_and_groups") || localize("card.menu.group_players"),
         "main-menu": localize("card.menu.main_menu"),
         "full-screen": localize(this._isFullScreen ? "card.menu.exit_full_screen" : "card.menu.full_screen"),
       };
@@ -6726,6 +6756,20 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     }
     if (action.action === "toggle_lyrics") {
       return iconOnly ? "" : localize("editor.action_types.toggle_lyrics") || "Toggle Lyrics Overlay";
+    }
+    if (
+      action.action === "group_players" ||
+      action.action === "group-players" ||
+      action.action === "speakers_and_groups" ||
+      action.action === "speakers-and-groups" ||
+      action.action === "transfer_queue" ||
+      action.action === "transfer-queue"
+    ) {
+      return iconOnly
+        ? ""
+        : localize("card.menu.speakers_and_groups") ||
+            localize("card.menu.group_players") ||
+            "Speakers & Groups";
     }
     if (action.action === "remote_control") {
       return iconOnly ? "" : localize("editor.action_types.remote_control") || "Open Remote Controls Overlay";
@@ -8961,8 +9005,8 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
               { value: "search", label: "Search" },
               { value: "source", label: "Source" },
               { value: "more-info", label: "More Info" },
-              { value: "group-players", label: "Group Players" },
-              { value: "transfer-queue", label: "Transfer Queue" }
+              { value: "group-players", label: "Speakers & Groups" },
+              { value: "transfer-queue", label: "Speakers & Groups (Legacy)" }
             ]
           }
         },

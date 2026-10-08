@@ -833,6 +833,16 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     if (action.action === "sync_selected_entity" || action.sync_entity_helper)
       return "sync_selected_entity";
     if (typeof action.menu_item === "string" && action.menu_item.trim() !== "") return "menu";
+    if (
+      action.action === "group_players" ||
+      action.action === "group-players" ||
+      action.action === "speakers_and_groups" ||
+      action.action === "speakers-and-groups" ||
+      action.action === "transfer_queue" ||
+      action.action === "transfer-queue"
+    ) {
+      return "menu";
+    }
     const navPath = typeof action.navigation_path === "string" ? action.navigation_path.trim() : "";
     if (action.action === "navigate" || navPath) return "navigate";
     if (action.action === "toggle_lyrics") return "toggle_lyrics";

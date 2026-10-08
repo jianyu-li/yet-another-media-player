@@ -408,7 +408,8 @@ export default {
     card_type_options: {
       default: "Padrão",
       search: "Procurar",
-      group_players: "Agrupar",
+      speakers_and_groups: "Colunas e grupos",
+      group_players: "Colunas e grupos",
       up_next: "A seguir",
       remote_control: "Controle Remoto",
     },
@@ -480,7 +481,8 @@ export default {
       exit_full_screen: "Sair do ecrã inteiro",
       transfer_queue: "Transferir fila",
       main_menu: "Menu Principal",
-      group_players: "Agrupar",
+      speakers_and_groups: "Colunas e grupos",
+      group_players: "Colunas e grupos",
       up_next: "A seguir",
       remote_control: "Controle Remoto",
       select_entity: "Selecionar",
@@ -503,7 +505,7 @@ export default {
       power: "Ligar/Desligar",
     },
     grouping: {
-      title: "Agrupar",
+      title: "Colunas e grupos",
       sync_volume: "Sincronizar volume",
       group_all: "Agrupar todos",
       ungroup_all: "Separar todos",

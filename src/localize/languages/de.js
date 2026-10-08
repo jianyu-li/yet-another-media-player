@@ -422,7 +422,8 @@ export default {
     card_type_options: {
       default: "Standard",
       search: "Suche",
-      group_players: "Player gruppieren",
+      speakers_and_groups: "Lautsprecher & Gruppen",
+      group_players: "Lautsprecher & Gruppen",
       up_next: "Als Nächstes",
       remote_control: "Fernbedienung",
     },
@@ -494,7 +495,8 @@ export default {
       exit_full_screen: "Vollbild beenden",
       transfer_queue: "Warteschlange übertragen",
       main_menu: "Hauptmenü",
-      group_players: "Player gruppieren",
+      speakers_and_groups: "Lautsprecher & Gruppen",
+      group_players: "Lautsprecher & Gruppen",
       up_next: "Als Nächstes",
       remote_control: "Fernbedienung",
       select_entity: "Entität für mehr Info wählen",
@@ -517,7 +519,7 @@ export default {
       power: "Ein/Aus",
     },
     grouping: {
-      title: "Player gruppieren",
+      title: "Lautsprecher & Gruppen",
       sync_volume: "Lautstärke synchronisieren",
       group_all: "Alle gruppieren",
       ungroup_all: "Alle trennen",

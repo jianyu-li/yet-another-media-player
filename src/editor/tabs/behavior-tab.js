@@ -19,7 +19,9 @@ export function renderBehaviorTab() {
                 { value: "search", label: localize("editor.card_type_options.search") },
                 {
                   value: "group_players",
-                  label: localize("editor.card_type_options.group_players"),
+                  label:
+                    localize("editor.card_type_options.speakers_and_groups") ||
+                    localize("editor.card_type_options.group_players"),
                 },
                 { value: "up_next", label: localize("editor.card_type_options.up_next") },
                 {
@@ -29,7 +31,14 @@ export function renderBehaviorTab() {
               ],
             },
           }}
-          .value=${this._config.card_type ?? "default"}
+          .value=${
+            this._config.card_type === "speakers_and_groups" ||
+            this._config.card_type === "transfer_queue" ||
+            this._config.card_type === "transfer-queue" ||
+            this._config.card_type === "group-players"
+              ? "group_players"
+              : (this._config.card_type ?? "default")
+          }
           label="${localize("editor.fields.card_type")}"
           @value-changed=${(e) => this._updateConfig("card_type", e.detail.value)}
         ></ha-selector>

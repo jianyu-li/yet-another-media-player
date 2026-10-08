@@ -265,7 +265,7 @@ export interface YampCardConfig {
   card_height?: string;
   appearance?:
     "automatic" | "glassmorphism" | "minimal" | "flat" | "transparent" | "custom" | string;
-  card_type?: "standard" | "search" | "group_players" | string;
+  card_type?: "standard" | "search" | "group_players" | "speakers_and_groups" | string;
   control_layout?: "classic" | "modern" | "stacked" | string;
   volume_mode?: "slider" | "stepper" | "buttons" | "none" | string;
   volume_step?: number;
@@ -330,6 +330,8 @@ export interface TemplateContext {
   is_off?: boolean;
   is_search?: boolean;
   is_grouping?: boolean;
+  is_speakers_and_groups?: boolean;
+  is_group_players?: boolean;
   is_source?: boolean;
   is_lyrics?: boolean;
   is_options?: boolean;

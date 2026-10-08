@@ -423,7 +423,8 @@ export default {
     card_type_options: {
       default: "Predvolené",
       search: "Hľadať",
-      group_players: "Zoskupiť prehrávače",
+      speakers_and_groups: "Reproduktory a skupiny",
+      group_players: "Reproduktory a skupiny",
       up_next: "Nasleduje",
       remote_control: "Diaľkové ovládanie",
     },
@@ -495,7 +496,8 @@ export default {
       exit_full_screen: "Ukončiť celú obrazovku",
       transfer_queue: "Presunúť frontu",
       main_menu: "Hlavné menu",
-      group_players: "Zoskupiť prehrávače",
+      speakers_and_groups: "Reproduktory a skupiny",
+      group_players: "Reproduktory a skupiny",
       up_next: "Nasleduje",
       remote_control: "Diaľkové ovládanie",
       select_entity: "Vyberte entitu pre viac info",
@@ -518,7 +520,7 @@ export default {
       power: "Napájanie",
     },
     grouping: {
-      title: "Zoskupiť prehrávače",
+      title: "Reproduktory a skupiny",
       sync_volume: "Synchronizovať hlasitosť",
       group_all: "Zoskupiť všetko",
       ungroup_all: "Zrušiť zoskupenie všetkého",

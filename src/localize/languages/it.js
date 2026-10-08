@@ -407,7 +407,8 @@ export default {
     card_type_options: {
       default: "Predefinito",
       search: "Cerca",
-      group_players: "Raggruppa i lettori",
+      speakers_and_groups: "Altoparlanti e gruppi",
+      group_players: "Altoparlanti e gruppi",
       up_next: "In coda",
       remote_control: "Telecomando",
     },
@@ -479,7 +480,8 @@ export default {
       exit_full_screen: "Esci dallo schermo intero",
       transfer_queue: "Trasferisci coda",
       main_menu: "Menu Principale",
-      group_players: "Raggruppa",
+      speakers_and_groups: "Altoparlanti e gruppi",
+      group_players: "Altoparlanti e gruppi",
       up_next: "In coda",
       remote_control: "Telecomando",
       select_entity: "Seleziona",
@@ -502,7 +504,7 @@ export default {
       power: "Accensione",
     },
     grouping: {
-      title: "Raggruppa",
+      title: "Altoparlanti e gruppi",
       sync_volume: "Sincronizza volume",
       group_all: "Raggruppa tutti",
       ungroup_all: "Separa tutti",

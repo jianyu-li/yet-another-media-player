@@ -404,7 +404,8 @@ export default {
     card_type_options: {
       default: "Privzeto",
       search: "Iskanje",
-      group_players: "Zoskupi predvajalnike",
+      speakers_and_groups: "Zvočniki in skupine",
+      group_players: "Zvočniki in skupine",
       up_next: "Sledi",
       remote_control: "Daljinski upravljalnik",
     },
@@ -476,7 +477,8 @@ export default {
       exit_full_screen: "Izhod iz celozaslonskega načina",
       transfer_queue: "Prenesi čakalno vrsto",
       main_menu: "Glavni meni",
-      group_players: "Združi predvajalnike",
+      speakers_and_groups: "Zvočniki in skupine",
+      group_players: "Zvočniki in skupine",
       up_next: "Sledi",
       remote_control: "Daljinski upravljalnik",
       select_entity: "Izberi entiteto za več informacij",
@@ -499,7 +501,7 @@ export default {
       power: "Vklop/Izklop",
     },
     grouping: {
-      title: "Združi predvajalnike",
+      title: "Zvočniki in skupine",
       sync_volume: "Sinhroniziraj glasnost",
       group_all: "Združi vse",
       ungroup_all: "Razdruži vse",

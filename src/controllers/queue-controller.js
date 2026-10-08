@@ -1241,23 +1241,12 @@ export class QueueController {
   }
 
   /**
-   * Opens the transfer queue sheet overlay.
+   * Opens the transfer queue sheet overlay (routes to consolidated Speakers & Groups sheet).
    */
   openTransferQueue() {
     if (!this.host) return;
-    this.host._showEntityOptions = true;
-    this.showTransferQueue = true;
-    this.host._showGrouping = false;
-    this.host._showSourceList = false;
-    this.host._showSearchInSheet = false;
-    this.host._showResolvedEntities = false;
-    this.transferQueuePendingTarget = null;
-    this.transferQueueStatus = null;
-    if (this.transferQueueAutoCloseTimer) {
-      clearTimeout(this.transferQueueAutoCloseTimer);
-      this.transferQueueAutoCloseTimer = null;
-    }
-    this.host.triggerRender?.() || this.host.requestUpdate?.();
+    this.showTransferQueue = false;
+    this.host._openGrouping?.();
   }
 
   /**
@@ -1265,13 +1254,7 @@ export class QueueController {
    */
   closeTransferQueue() {
     this.showTransferQueue = false;
-    this.transferQueuePendingTarget = null;
-    this.transferQueueStatus = null;
-    if (this.transferQueueAutoCloseTimer) {
-      clearTimeout(this.transferQueueAutoCloseTimer);
-      this.transferQueueAutoCloseTimer = null;
-    }
-    this.host?.requestUpdate?.();
+    this.host?._closeGrouping?.();
   }
 
   /**
@@ -1333,7 +1316,9 @@ export class QueueController {
         if (
           this.host?._showEntityOptions &&
           (this.showTransferQueue ||
-            (this.host._showGrouping && this.host._cardType !== "group_players"))
+            (this.host._showGrouping &&
+              this.host._cardType !== "group_players" &&
+              this.host._cardType !== "speakers_and_groups"))
         ) {
           this.host._dismissWithAnimation?.();
         } else {

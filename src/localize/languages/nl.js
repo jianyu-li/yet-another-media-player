@@ -431,7 +431,8 @@ export default {
     card_type_options: {
       default: "Standaard",
       search: "Zoeken",
-      group_players: "Spelers groeperen",
+      speakers_and_groups: "Speakers en groepen",
+      group_players: "Speakers en groepen",
       up_next: "Hierna",
       remote_control: "Afstandsbediening",
     },
@@ -503,7 +504,8 @@ export default {
       exit_full_screen: "Volledig scherm verlaten",
       transfer_queue: "Wachtrij Overdragen",
       main_menu: "Hoofdmenu",
-      group_players: "Spelers Groeperen",
+      speakers_and_groups: "Speakers en groepen",
+      group_players: "Speakers en groepen",
       up_next: "Hierna",
       remote_control: "Afstandsbediening",
       select_entity: "Selecteer Entiteit voor Meer Info",
@@ -526,7 +528,7 @@ export default {
       power: "AAN/UIT",
     },
     grouping: {
-      title: "Spelers Groeperen",
+      title: "Speakers en groepen",
       sync_volume: "Volume Synchroniseren",
       group_all: "Alles Groeperen",
       ungroup_all: "Alles Loskoppelen",
