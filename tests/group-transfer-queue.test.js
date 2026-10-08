@@ -449,6 +449,7 @@ describe("Group Players Menu - Transfer Queue Button", () => {
       ],
     });
     let serviceCalled = false;
+    /** @type {any} */
     let servicePayload = null;
     card.hass = {
       states: {
@@ -505,15 +506,106 @@ describe("Group Players Menu - Transfer Queue Button", () => {
     await card._queueController.transferQueueTo(target);
 
     assert.strictEqual(serviceCalled, true, "transfer_queue service should be called");
+    assert.ok(servicePayload, "servicePayload should not be null");
     assert.strictEqual(
-      servicePayload.source_player,
+      servicePayload?.source_player,
       "media_player.kitchen_homepod_2",
       "source_player must be kitchen_homepod_2 (the MA player), not kitchen_homepod"
     );
     assert.strictEqual(
-      servicePayload.entity_id,
+      servicePayload?.entity_id,
       "media_player.white_echo_8",
       "target player entity_id must be white_echo_8"
+    );
+  });
+
+  it("disables transfer button and labels non-MA entity as Standalone when not groupable", () => {
+    card.setConfig({
+      type: "custom:yet-another-media-player",
+      entities: [
+        {
+          entity_id: "media_player.white_echo_8",
+          name: "Office",
+        },
+        {
+          entity_id: "media_player.playstation_5_2",
+          name: "PlayStation 5",
+        },
+      ],
+    });
+    card.hass = {
+      states: {
+        "media_player.white_echo_8": {
+          entity_id: "media_player.white_echo_8",
+          state: "playing",
+          attributes: {
+            app_id: "music_assistant",
+            mass_player_type: "player",
+            active_queue: "queue_456",
+            group_members: [],
+          },
+        },
+        "media_player.playstation_5_2": {
+          entity_id: "media_player.playstation_5_2",
+          state: "off",
+          attributes: {
+            device_class: "receiver",
+            friendly_name: "PlayStation 5",
+            supported_features: 0,
+          },
+        },
+      },
+      services: {
+        music_assistant: {
+          transfer_queue: {},
+        },
+      },
+    };
+
+    card._selectedIndex = 0; // Office is selected/active
+    card._hasTransferQueueForCurrent = true;
+    card._isGroupCapable = (st) => Array.isArray(st?.attributes?.group_members);
+    card._getGroupingMasterId = () => "media_player.white_echo_8";
+    card._getGroupPlayerState = (id) => ({
+      isGroupable: id === "media_player.white_echo_8",
+      entityToCheck: id,
+      isBusy: false,
+      busyLabel: "",
+      grouped: false,
+      isPrimary: id === "media_player.white_echo_8",
+      tooltip: "",
+    });
+
+    const template = renderGroupingSheet.call(card);
+    assert.ok(template);
+
+    // Verify PlayStation row rendered with Standalone and disabled transfer button
+    function extractTemplateHtml(val) {
+      if (!val) return "";
+      if (typeof val === "string") return val;
+      if (Array.isArray(val)) return val.map(extractTemplateHtml).join("");
+      if (val.strings && Array.isArray(val.values)) {
+        let result = "";
+        val.strings.forEach((str, i) => {
+          result += str;
+          if (i < val.values.length) {
+            result += extractTemplateHtml(val.values[i]);
+          }
+        });
+        return result;
+      }
+      return "";
+    }
+
+    const htmlContent = extractTemplateHtml(template);
+    assert.ok(htmlContent.includes("PlayStation 5"), "Should render PlayStation 5 row");
+    assert.ok(
+      htmlContent.includes("Standalone"),
+      "Should display Standalone label for non-MA, non-groupable entity"
+    );
+    assert.ok(
+      htmlContent.includes("Music Assistant player required"),
+      "Should have tooltip explaining Music Assistant player required"
     );
   });
 });

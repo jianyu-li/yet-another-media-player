@@ -529,6 +529,8 @@ export default {
       transfer_to_group: "Transfer queue to {master} group",
       transfer_current_player: "Currently playing here",
       transfer_no_queue: "No active queue to transfer",
+      transfer_not_ma: "Music Assistant player required",
+      standalone: "Standalone",
     },
   },
   search: {

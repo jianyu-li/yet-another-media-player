@@ -1279,6 +1279,16 @@ export class QueueController {
       this.host._getActualResolvedMaEntityForState?.(this.host._selectedIndex);
     if (!sourceMaId) return;
 
+    const targetMaState = this.host.hass?.states?.[target.maEntityId];
+    const targetEntityState = this.host.hass?.states?.[target.entityId];
+    const isTargetMa =
+      this.host._looksLikeMusicAssistantState?.(targetMaState) ||
+      this.host._looksLikeMusicAssistantState?.(targetEntityState);
+    if (!isTargetMa) {
+      console.warn("yamp: Target player is not a Music Assistant entity:", target);
+      return;
+    }
+
     this.transferQueuePendingTarget = target.maEntityId;
     this.transferQueueStatus = null;
     this.host.triggerRender?.() || this.host.requestUpdate?.();

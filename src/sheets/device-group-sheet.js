@@ -255,6 +255,13 @@ export function renderGroupingSheet() {
                   const targetMaState = this.hass?.states?.[targetMaId];
                   const targetState = targetEntityState || targetMaState;
 
+                  const targetIsMa = Boolean(
+                    (targetMaState && this._looksLikeMusicAssistantState?.(targetMaState)) ||
+                    (targetEntityState &&
+                      this._looksLikeMusicAssistantState?.(targetEntityState)) ||
+                    (mainState && this._looksLikeMusicAssistantState?.(mainState))
+                  );
+
                   const isDeviceUnavailable =
                     mainState?.state === "unavailable" ||
                     groupEntityState?.state === "unavailable" ||
@@ -274,6 +281,8 @@ export function renderGroupingSheet() {
                         : localize("card.grouping.joined");
                   } else if (isCurrent) {
                     stateLabel = localize("card.grouping.current");
+                  } else if (!isGroupable && !targetIsMa) {
+                    stateLabel = localize("card.grouping.standalone") || "Standalone";
                   } else {
                     stateLabel = localize("card.grouping.available");
                   }
@@ -291,12 +300,20 @@ export function renderGroupingSheet() {
 
                   const isTransferPending = this._transferQueuePendingTarget === targetMaId;
                   const isTransferDisabled =
-                    !hasQueueToTransfer || isSelf || isTransferPending || isDeviceUnavailable;
+                    !hasQueueToTransfer ||
+                    !targetIsMa ||
+                    isSelf ||
+                    isTransferPending ||
+                    isDeviceUnavailable;
 
                   let transferTooltip;
                   if (isDeviceUnavailable) {
                     transferTooltip =
                       localize("card.grouping.unavailable") || "Player is unavailable";
+                  } else if (!targetIsMa) {
+                    transferTooltip =
+                      localize("card.grouping.transfer_not_ma") ||
+                      "Music Assistant player required";
                   } else if (!hasQueueToTransfer) {
                     transferTooltip =
                       localize("card.grouping.transfer_no_queue") || "No active queue to transfer";
