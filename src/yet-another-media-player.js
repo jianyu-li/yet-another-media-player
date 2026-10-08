@@ -10030,9 +10030,8 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
       await this._transferQueueTo(targetPayload);
 
-      // If transfer succeeded, unjoin former master and keep other members grouped
+      // If transfer succeeded, keep other members grouped with the new master
       if (this._transferQueueStatus?.type !== "error") {
-        await unjoinPlayer(this.hass, masterGroupId);
         const otherMembers = remainingMembers.slice(1);
         if (otherMembers.length > 0) {
           await joinPlayers(this.hass, successorGroupId, otherMembers);
@@ -10128,12 +10127,13 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const members = Array.isArray(masterState.attributes?.group_members)
       ? masterState.attributes.group_members
       : [];
-    // Only unjoin those that support grouping
+    // Only unjoin follower members (exclude the coordinator itself to avoid invalid coordinator unjoin errors)
     const toUnjoin = members.filter(id => {
+      if (id === masterGroupId) return false;
       const st = this.hass.states[id];
       return this._isGroupCapable(st);
     });
-    // Unjoin each member individually
+    // Unjoin each follower individually
     for (const id of toUnjoin) {
       await unjoinPlayer(this.hass, id);
     }

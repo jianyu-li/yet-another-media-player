@@ -805,12 +805,11 @@ describe("Group Players Menu - Transfer Queue Button", () => {
       assert.ok(transferPayload, "transferQueueTo should be called");
       assert.strictEqual(transferPayload.entityId, "media_player.kitchen");
 
-      // Verify former master was unjoined
+      // Verify former master coordinator was not unjoined via service call (not supported / unnecessary)
       const unjoinCalls = servicesCalled.filter(
         (s) => s.domain === "media_player" && s.service === "unjoin"
       );
-      assert.strictEqual(unjoinCalls.length, 1);
-      assert.strictEqual(unjoinCalls[0].data.entity_id, "media_player.living_room");
+      assert.strictEqual(unjoinCalls.length, 0, "Former coordinator should not have unjoin called");
 
       // Verify remaining member (Bedroom) was joined to new master (Kitchen)
       const joinCalls = servicesCalled.filter(
@@ -853,6 +852,18 @@ describe("Group Players Menu - Transfer Queue Button", () => {
 
       assert.strictEqual(transferCalled, false, "Should not transfer queue when sole player");
       assert.strictEqual(servicesCalled.length, 0, "No services should be called");
+    });
+
+    it("_ungroupAll unjoins followers only and excludes the master coordinator", async () => {
+      await testCard._ungroupAll();
+      const unjoinCalls = servicesCalled.filter(
+        (s) => s.domain === "media_player" && s.service === "unjoin"
+      );
+      assert.strictEqual(unjoinCalls.length, 2);
+      assert.deepStrictEqual(
+        unjoinCalls.map((c) => c.data.entity_id),
+        ["media_player.kitchen", "media_player.bedroom"]
+      );
     });
 
     it("greys out button for sole playing player and enables join for other players", () => {
