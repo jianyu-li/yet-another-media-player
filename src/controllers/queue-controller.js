@@ -9,6 +9,7 @@
 import { isMusicAssistantEntity, getEntityName } from "../yamp-utils.js";
 import { playMedia } from "../services/ha-media-services.js";
 import { getMassQueueConfigEntryId } from "../search-sheet.js";
+import { localize } from "../localize/localize.js";
 
 /**
  * @typedef {import("../types.d.ts").HassEntity} HassEntity
@@ -1303,7 +1304,11 @@ export class QueueController {
 
     const isTargetMa = this.isTargetMusicAssistant(target);
     if (!isTargetMa) {
-      console.warn("yamp: Target player is not a Music Assistant entity:", target);
+      this.transferQueueStatus = {
+        type: "error",
+        message: localize("card.grouping.transfer_not_ma") || "Music Assistant player required",
+      };
+      this.host.triggerRender?.() || this.host.requestUpdate?.();
       return;
     }
 

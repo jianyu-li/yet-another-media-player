@@ -494,22 +494,33 @@ export function renderGroupingSheet() {
                                     min="0"
                                     max="1"
                                     step="0.01"
+                                    ?disabled=${isDeviceUnavailable}
                                     .value=${volVal}
-                                    @mousedown=${(e) => this._onVolumeDragStart(e, id)}
-                                    @touchstart=${(e) => this._onVolumeDragStart(e, id)}
-                                    @input=${(e) => this._onVolumeInput(e)}
-                                    @mouseup=${(e) => this._onVolumeDragEnd(e)}
-                                    @touchend=${(e) => this._onVolumeDragEnd(e)}
-                                    @change=${(e) => this._onGroupVolumeChange(id, displayEntity, e)}
+                                    @mousedown=${(e) =>
+                                      !isDeviceUnavailable && this._onVolumeDragStart(e, id)}
+                                    @touchstart=${(e) =>
+                                      !isDeviceUnavailable && this._onVolumeDragStart(e, id)}
+                                    @input=${(e) => !isDeviceUnavailable && this._onVolumeInput(e)}
+                                    @mouseup=${(e) =>
+                                      !isDeviceUnavailable && this._onVolumeDragEnd(e)}
+                                    @touchend=${(e) =>
+                                      !isDeviceUnavailable && this._onVolumeDragEnd(e)}
+                                    @change=${(e) =>
+                                      !isDeviceUnavailable &&
+                                      this._onGroupVolumeChange(id, displayEntity, e)}
                                     title="${localize("common.volume")}"
-                                    style="width:100%;max-width:260px;"
+                                    style="width:100%;max-width:260px;cursor:${
+                                      isDeviceUnavailable ? "not-allowed" : "pointer"
+                                    };${isDeviceUnavailable ? "opacity:0.35;" : ""}"
                                   />
                                 </div>
                               `
                         }
                         <span style="min-width:36px;display:inline-block;text-align:right;"
                           >${
-                            typeof volVal === "number" ? Math.round(volVal * 100) + "%" : "--"
+                            !isDeviceUnavailable && typeof volVal === "number"
+                              ? Math.round(volVal * 100) + "%"
+                              : "--"
                           }</span
                         >
                       </div>
