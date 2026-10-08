@@ -211,7 +211,7 @@ export function renderGroupingSheet() {
                   const volVal = Number(displayVolumeState?.attributes?.volume_level || 0);
                   const isPrimaryRow = id === masterId;
                   const isGroupable = item.isGroupable !== false;
-                  const showToggleButton = isGroupable && !isPrimaryRow;
+                  const showToggleButton = isGroupable;
                   const isCurrent = id === activeId;
                   const masterName = masterId
                     ? this.getChipName(masterId)
@@ -281,10 +281,7 @@ export function renderGroupingSheet() {
                     stateLabel =
                       busyLabel || localize("card.grouping.unavailable") || "Unavailable";
                   } else if (isMultiSpeakerGroup) {
-                    stateLabel =
-                      targetGroupMasterId === id
-                        ? localize("card.grouping.master")
-                        : localize("card.grouping.joined");
+                    stateLabel = localize("card.grouping.joined");
                   } else if (isCurrent) {
                     stateLabel = localize("card.grouping.current");
                   } else if (!isGroupable && !targetIsMa) {
@@ -337,6 +334,34 @@ export function renderGroupingSheet() {
                     ).replace("{player}", name);
                   }
 
+                  const isGroupActive = isPrimaryRow ? groupedAny || isCurrent : grouped;
+                  const isSolePlayer = isGroupActive && !groupedAny;
+                  const canUnjoinMaster = hasMaTransferService && targetIsMa && groupedAny;
+                  const isMasterLocked = isPrimaryRow && !canUnjoinMaster;
+                  const isTransferInProgress = Boolean(this._transferQueuePendingTarget);
+
+                  const isToggleDisabled = Boolean(
+                    isBusy ||
+                    isDeviceUnavailable ||
+                    isSolePlayer ||
+                    isMasterLocked ||
+                    isTransferInProgress
+                  );
+
+                  const unjoinTooltip = isPrimaryRow
+                    ? localize("card.grouping.unjoin_from")?.replace(" {master}", "") || "Unjoin"
+                    : localize("card.grouping.unjoin_from")?.replace("{master}", masterName) ||
+                      "Unjoin";
+
+                  const toggleTooltip =
+                    isDeviceUnavailable || isBusy
+                      ? localize("card.grouping.unavailable")
+                      : isSolePlayer
+                        ? localize("card.grouping.current")
+                        : isGroupActive
+                          ? unjoinTooltip
+                          : localize("card.grouping.join_with")?.replace("{master}", masterName);
+
                   const targetPayload = {
                     index: targetIdx,
                     entityId: targetEntityId,
@@ -348,18 +373,12 @@ export function renderGroupingSheet() {
                   };
 
                   if (isGridMode) {
-                    const isDisabled = isBusy || isDeviceUnavailable || !showToggleButton;
-                    const toggleTooltip =
-                      isDeviceUnavailable || isBusy
-                        ? localize("card.grouping.unavailable")
-                        : grouped
-                          ? localize("card.grouping.unjoin_from").replace("{master}", masterName)
-                          : localize("card.grouping.join_with").replace("{master}", masterName);
+                    const isDisabled = isToggleDisabled;
 
                     return html`
                       <div
                         class="entity-options-item menu-action-item ${
-                          !showToggleButton || grouped ? "grid-active" : ""
+                          isGroupActive ? "grid-active" : ""
                         }"
                         style="position: relative;"
                       >
@@ -395,13 +414,7 @@ export function renderGroupingSheet() {
                               this._toggleGroup(id);
                             }
                           }}
-                          title=${
-                            isBusy
-                              ? localize("card.grouping.unavailable")
-                              : !showToggleButton
-                                ? stateLabel
-                                : toggleTooltip
-                          }
+                          title=${isBusy ? localize("card.grouping.unavailable") : toggleTooltip}
                           style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;width:100%;height:100%;cursor:${
                             isDisabled ? "default" : "pointer"
                           };${isDisabled ? "opacity:0.35;" : ""}"
@@ -409,11 +422,7 @@ export function renderGroupingSheet() {
                           <ha-icon
                             class="menu-action-icon"
                             icon=${
-                              isPrimaryRow
-                                ? "mdi:star"
-                                : grouped
-                                  ? "mdi:speaker-multiple"
-                                  : "mdi:speaker"
+                              isGroupActive && groupedAny ? "mdi:speaker-multiple" : "mdi:speaker"
                             }
                           ></ha-icon>
                           <span class="menu-action-label">${name}</span>
@@ -544,31 +553,18 @@ export function renderGroupingSheet() {
                           ? html`
                               <button
                                 class="group-toggle-btn"
-                                ?disabled=${isBusy || isDeviceUnavailable}
-                                @click=${() =>
-                                  !isBusy && !isDeviceUnavailable && this._toggleGroup(id)}
-                                title=${
-                                  isBusy || isDeviceUnavailable
-                                    ? localize("card.grouping.unavailable")
-                                    : grouped
-                                      ? localize("card.grouping.unjoin_from").replace(
-                                          "{master}",
-                                          masterName
-                                        )
-                                      : localize("card.grouping.join_with").replace(
-                                          "{master}",
-                                          masterName
-                                        )
-                                }
+                                ?disabled=${isToggleDisabled}
+                                @click=${() => !isToggleDisabled && this._toggleGroup(id)}
+                                title=${toggleTooltip}
                                 style="margin-left:2px; ${
-                                  isBusy || isDeviceUnavailable
-                                    ? "cursor: not-allowed; opacity: 0.35;"
-                                    : ""
+                                  isToggleDisabled ? "cursor: not-allowed; opacity: 0.35;" : ""
                                 }"
                               >
                                 <ha-icon
                                   icon=${
-                                    grouped ? "mdi:minus-circle-outline" : "mdi:plus-circle-outline"
+                                    isGroupActive
+                                      ? "mdi:minus-circle-outline"
+                                      : "mdi:plus-circle-outline"
                                   }
                                 ></ha-icon>
                               </button>

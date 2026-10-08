@@ -4973,8 +4973,9 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   _resolveEntityIdxByGroupingId(groupingEntityId) {
     const objs = this.entityObjs;
     for (let i = 0; i < objs.length; i++) {
+      if (this._getGroupingEntityId(i) === groupingEntityId) return i;
       const resolvedId = this._resolveMaEntityForObj(objs[i], i);
-      if (resolvedId === groupingEntityId) return i;
+      if (resolvedId === groupingEntityId || objs[i].entity_id === groupingEntityId) return i;
     }
     return -1;
   }
@@ -5330,14 +5331,29 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _resolveGroupingEntityId(obj, fallbackEntityId) {
-    if (!obj?.music_assistant_entity) return fallbackEntityId;
-    if (typeof obj.music_assistant_entity === 'string' &&
-      (obj.music_assistant_entity.includes('{{') || obj.music_assistant_entity.includes('{%') || obj.music_assistant_entity.trim().startsWith('[[['))) {
-      const idx = this.entityIds.indexOf(fallbackEntityId);
-      const cached = this._maResolveCache?.[idx]?.id;
-      return cached || fallbackEntityId;
+    let idx = -1;
+    if (fallbackEntityId) {
+      idx = this.entityIds.indexOf(fallbackEntityId);
     }
-    return obj.music_assistant_entity;
+    if (idx < 0 && obj) {
+      idx = this.entityObjs.indexOf(obj);
+    }
+    if (idx >= 0) {
+      return this._getGroupingEntityId(idx);
+    }
+    const mainId = fallbackEntityId || obj?.entity_id || null;
+    let candidateId = obj?.music_assistant_entity || null;
+    if (!candidateId || candidateId === mainId) return mainId;
+    const candidateState = this.hass?.states?.[candidateId];
+    const mainState = mainId ? this.hass?.states?.[mainId] : null;
+    if (
+      mainState &&
+      this._isGroupCapable(mainState) &&
+      (!candidateState || !this._isGroupCapable(candidateState))
+    ) {
+      return mainId;
+    }
+    return candidateId;
   }
 
   get currentEntityId() {
@@ -5557,16 +5573,44 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     return renderGroupingMenuOption.call(this, isGridMode);
   }
 
-  // Determine the grouping state of a player ID relative to an active ID
+  /**
+   * Determine the grouping state of a player ID relative to an active ID
+   * @param {string} targetId
+   * @param {string|null} [activeId]
+   * @param {string|null} [activeGroupKey]
+   * @param {any} [masterState]
+   * @param {string|null} [myGroupKey]
+   * @returns {import("./types.d.ts").GroupPlayerState}
+   */
   _getGroupPlayerState(targetId, activeId, activeGroupKey, masterState, myGroupKey) {
     const targetIdx = this.entityIds.indexOf(targetId);
-    if (targetIdx < 0) return { isGroupable: false, isBusy: false, busyLabel: "", grouped: false };
+    if (targetIdx < 0) {
+      return {
+        isGroupable: false,
+        isBusy: false,
+        busyLabel: "",
+        grouped: false,
+        isPrimary: false,
+        disabled: true,
+        entityToCheck: null,
+        tooltip: "",
+      };
+    }
 
     const entityToCheck = this._getGroupingEntityId(targetIdx);
     const st = this.hass.states[entityToCheck];
 
     if (!st || !this._isGroupCapable(st)) {
-      return { isGroupable: false, isBusy: false, busyLabel: "", grouped: false };
+      return {
+        isGroupable: false,
+        isBusy: false,
+        busyLabel: "",
+        grouped: false,
+        isPrimary: false,
+        disabled: true,
+        entityToCheck,
+        tooltip: "",
+      };
     }
 
     const playerGroupKey = this._getGroupKey(targetId);
@@ -5594,14 +5638,25 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const filteredMembers = Array.isArray(masterState?.attributes?.group_members) ? masterState.attributes.group_members : [];
     const grouped = filteredMembers.includes(entityToCheck);
     const isPrimary = targetId === myGroupKey;
+    const groupedAny = filteredMembers.length > 1;
+    const hasMaTransfer = Boolean(this.hass?.services?.music_assistant?.transfer_queue);
+
+    const isGroupActive = isPrimary ? (groupedAny || targetId === activeId) : grouped;
+    const isSolePlayer = isGroupActive && !groupedAny;
+    const isMasterLocked = isPrimary && (!hasMaTransfer || !groupedAny);
+    const isActionDisabled = Boolean(isBusy || isSolePlayer || isMasterLocked);
 
     const masterName = this.getChipName(activeId);
     let tooltip;
-    if (isPrimary) {
-      tooltip = localize('card.grouping.master');
-    } else if (grouped) {
-      tooltip = localize('card.grouping.unjoin_from', '{master}', masterName);
-      if (tooltip === 'card.grouping.unjoin_from') tooltip = `Unjoin from ${masterName}`;
+    if (isSolePlayer) {
+      tooltip = localize('card.grouping.current') || 'Current';
+    } else if (isGroupActive) {
+      if (isPrimary) {
+        tooltip = (localize('card.grouping.unjoin_from') || 'Unjoin from {master}').replace(' {master}', '') || 'Unjoin';
+      } else {
+        tooltip = localize('card.grouping.unjoin_from', '{master}', masterName);
+        if (tooltip === 'card.grouping.unjoin_from') tooltip = `Unjoin from ${masterName}`;
+      }
     } else {
       tooltip = localize('card.grouping.join_with', '{master}', masterName);
       if (tooltip === 'card.grouping.join_with') tooltip = `Join with ${masterName}`;
@@ -5611,8 +5666,9 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       isGroupable: true,
       isBusy,
       busyLabel,
-      grouped,
+      grouped: isGroupActive,
       isPrimary,
+      disabled: isActionDisabled,
       entityToCheck,
       tooltip
     };
@@ -9912,16 +9968,84 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const masterGroupId = await this._resolveGroupingEntityId(masterObj, masterId);
     if (!masterGroupId) return;
 
-    const targetObj = this.entityObjs.find(e => e.entity_id === targetId);
+    const targetObj = this._findEntityObjByAnyId(targetId) || this.entityObjs.find(e => e.entity_id === targetId);
     if (!targetObj) return;
 
     const targetGroupId = await this._resolveGroupingEntityId(targetObj, targetId);
     if (!targetGroupId) return;
 
     const masterState = masterGroupId ? this.hass.states[masterGroupId] : null;
-    const grouped =
-      Array.isArray(masterState?.attributes?.group_members) &&
-      masterState.attributes.group_members.includes(targetGroupId);
+    const members = Array.isArray(masterState?.attributes?.group_members)
+      ? masterState.attributes.group_members
+      : [];
+    const grouped = members.includes(targetGroupId);
+
+    // If unjoining the active master:
+    if (targetId === masterId || targetGroupId === masterGroupId) {
+      const remainingMembers = members.filter(m => m !== masterGroupId);
+      const hasMaTransferService = Boolean(this.hass?.services?.music_assistant?.transfer_queue);
+
+      const activeMaState = this._getMusicAssistantState?.();
+      const sourceMaId =
+        (activeMaState &&
+          this._looksLikeMusicAssistantState?.(activeMaState) &&
+          activeMaState.entity_id) ||
+        this._getActualResolvedMaEntityForState?.(masterIdx) ||
+        masterGroupId;
+      const sourceState = this.hass?.states?.[sourceMaId] || masterState;
+      const isSourceMa = this._queueController?.isTargetMusicAssistant
+        ? this._queueController.isTargetMusicAssistant({
+            maEntityId: sourceMaId,
+            entityId: masterId,
+            mainEntityId: masterId,
+          })
+        : Boolean(
+            (sourceState && this._looksLikeMusicAssistantState?.(sourceState)) ||
+            isMusicAssistantEntity(sourceState)
+          );
+
+      // Only unjoin master if multiple members are playing and transfer_queue is supported
+      if (remainingMembers.length === 0 || !hasMaTransferService || !isSourceMa) {
+        return;
+      }
+
+      // Elect successor from remaining members
+      const successorGroupId = remainingMembers[0];
+      const successorEntityId = this.entityIds.find(eId => {
+        const gId = this._getGroupingEntityIdByEntityId(eId);
+        return gId === successorGroupId;
+      }) || successorGroupId;
+      const successorIdx = this.entityIds.indexOf(successorEntityId);
+      const successorMaId =
+        (successorIdx >= 0 ? this._getActualResolvedMaEntityForState?.(successorIdx) : null) ||
+        successorGroupId;
+      const successorName = this.getChipName(successorEntityId);
+
+      const targetPayload = {
+        index: successorIdx,
+        entityId: successorEntityId,
+        maEntityId: successorMaId,
+        name: successorName,
+      };
+
+      await this._transferQueueTo(targetPayload);
+
+      // If transfer succeeded, unjoin former master and keep other members grouped
+      if (this._transferQueueStatus?.type !== "error") {
+        await unjoinPlayer(this.hass, masterGroupId);
+        const otherMembers = remainingMembers.slice(1);
+        if (otherMembers.length > 0) {
+          await joinPlayers(this.hass, successorGroupId, otherMembers);
+        }
+        this._lastGroupingMasterId = successorEntityId;
+        if (this.triggerRender) {
+          this.triggerRender();
+        } else {
+          this.requestUpdate?.();
+        }
+      }
+      return;
+    }
 
     if (grouped) {
       await unjoinPlayer(this.hass, targetGroupId);
@@ -9929,6 +10053,11 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       await joinPlayers(this.hass, masterGroupId, [targetGroupId]);
     }
     this._lastGroupingMasterId = masterId || targetId;
+    if (this.triggerRender) {
+      this.triggerRender();
+    } else {
+      this.requestUpdate?.();
+    }
   }
 
 
