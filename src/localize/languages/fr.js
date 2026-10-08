@@ -414,7 +414,8 @@ export default {
     card_type_options: {
       default: "Par défaut",
       search: "Rechercher",
-      group_players: "Grouper les lecteurs",
+      speakers_and_groups: "Enceintes et groupes",
+      group_players: "Enceintes et groupes",
       up_next: "À suivre",
       remote_control: "Télécommande",
     },
@@ -486,7 +487,8 @@ export default {
       exit_full_screen: "Quitter le plein écran",
       transfer_queue: "Transférer la file",
       main_menu: "Menu Principal",
-      group_players: "Grouper les lecteurs",
+      speakers_and_groups: "Enceintes et groupes",
+      group_players: "Enceintes et groupes",
       up_next: "À suivre",
       remote_control: "Télécommande",
       select_entity: "Choisir pour plus d'infos",
@@ -509,7 +511,7 @@ export default {
       power: "Alimentation",
     },
     grouping: {
-      title: "Grouper les lecteurs",
+      title: "Enceintes et groupes",
       sync_volume: "Synchroniser volume",
       group_all: "Grouper tout",
       ungroup_all: "Dégrouper tout",
@@ -525,6 +527,8 @@ export default {
       transfer_to_group: "Transférer la file d'attente au groupe {master}",
       transfer_current_player: "Lecture en cours ici",
       transfer_no_queue: "Aucune file d'attente active à transférer",
+      transfer_not_ma: "Lecteur Music Assistant requis",
+      standalone: "Autonome",
     },
   },
   search: {

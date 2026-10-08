@@ -9,6 +9,7 @@
 import { isMusicAssistantEntity, getEntityName } from "../yamp-utils.js";
 import { playMedia } from "../services/ha-media-services.js";
 import { getMassQueueConfigEntryId } from "../search-sheet.js";
+import { localize } from "../localize/localize.js";
 
 /**
  * @typedef {import("../types.d.ts").HassEntity} HassEntity
@@ -1137,7 +1138,12 @@ export class QueueController {
     const currentIdx = this.host._selectedIndex;
     if (currentIdx === null || currentIdx === undefined || currentIdx < 0) return [];
 
-    const sourceMaId = this.host._getActualResolvedMaEntityForState(currentIdx);
+    const activeMaState = this.host._getMusicAssistantState?.();
+    const sourceMaId =
+      (activeMaState &&
+        this.host._looksLikeMusicAssistantState?.(activeMaState) &&
+        activeMaState.entity_id) ||
+      this.host._getActualResolvedMaEntityForState(currentIdx);
     if (!sourceMaId) return [];
 
     const seen = new Set([sourceMaId]);
@@ -1204,7 +1210,9 @@ export class QueueController {
     let hasQueue = this.hasQueueInState(maState);
 
     if (!hasQueue && refresh && this.host?.hass) {
-      const entityId = this.host._getActualResolvedMaEntityForState?.(this.host._selectedIndex);
+      const entityId =
+        (maState && this.host._looksLikeMusicAssistantState?.(maState) && maState.entity_id) ||
+        this.host._getActualResolvedMaEntityForState?.(this.host._selectedIndex);
       if (entityId) {
         try {
           const queueInfo = await this.getUpcomingQueue(this.host.hass, entityId, 2);
@@ -1241,23 +1249,12 @@ export class QueueController {
   }
 
   /**
-   * Opens the transfer queue sheet overlay.
+   * Opens the transfer queue sheet overlay (routes to consolidated Speakers & Groups sheet).
    */
   openTransferQueue() {
     if (!this.host) return;
-    this.host._showEntityOptions = true;
-    this.showTransferQueue = true;
-    this.host._showGrouping = false;
-    this.host._showSourceList = false;
-    this.host._showSearchInSheet = false;
-    this.host._showResolvedEntities = false;
-    this.transferQueuePendingTarget = null;
-    this.transferQueueStatus = null;
-    if (this.transferQueueAutoCloseTimer) {
-      clearTimeout(this.transferQueueAutoCloseTimer);
-      this.transferQueueAutoCloseTimer = null;
-    }
-    this.host.triggerRender?.() || this.host.requestUpdate?.();
+    this.showTransferQueue = false;
+    this.host._openGrouping?.();
   }
 
   /**
@@ -1265,13 +1262,29 @@ export class QueueController {
    */
   closeTransferQueue() {
     this.showTransferQueue = false;
-    this.transferQueuePendingTarget = null;
-    this.transferQueueStatus = null;
-    if (this.transferQueueAutoCloseTimer) {
-      clearTimeout(this.transferQueueAutoCloseTimer);
-      this.transferQueueAutoCloseTimer = null;
-    }
-    this.host?.requestUpdate?.();
+    this.host?._closeGrouping?.();
+  }
+
+  /**
+   * Check if a target player or target entity states represent a Music Assistant player.
+   * @param {{ maEntityId?: string, entityId?: string, mainEntityId?: string } | null | undefined} target
+   * @returns {boolean}
+   */
+  isTargetMusicAssistant(target) {
+    if (!target || !this.host?.hass?.states) return false;
+    const states = this.host.hass.states;
+    const maState = target.maEntityId ? states[target.maEntityId] : null;
+    const entityState = target.entityId ? states[target.entityId] : null;
+    const mainState = target.mainEntityId ? states[target.mainEntityId] : null;
+    return Boolean(
+      (maState &&
+        (this.host._looksLikeMusicAssistantState?.(maState) || isMusicAssistantEntity(maState))) ||
+      (entityState &&
+        (this.host._looksLikeMusicAssistantState?.(entityState) ||
+          isMusicAssistantEntity(entityState))) ||
+      (mainState &&
+        (this.host._looksLikeMusicAssistantState?.(mainState) || isMusicAssistantEntity(mainState)))
+    );
   }
 
   /**
@@ -1281,8 +1294,23 @@ export class QueueController {
   async transferQueueTo(target) {
     if (!target || !this.host) return;
 
-    const sourceMaId = this.host._getActualResolvedMaEntityForState?.(this.host._selectedIndex);
+    const activeMaState = this.host._getMusicAssistantState?.();
+    const sourceMaId =
+      (activeMaState &&
+        this.host._looksLikeMusicAssistantState?.(activeMaState) &&
+        activeMaState.entity_id) ||
+      this.host._getActualResolvedMaEntityForState?.(this.host._selectedIndex);
     if (!sourceMaId) return;
+
+    const isTargetMa = this.isTargetMusicAssistant(target);
+    if (!isTargetMa) {
+      this.transferQueueStatus = {
+        type: "error",
+        message: localize("card.grouping.transfer_not_ma") || "Music Assistant player required",
+      };
+      this.host.triggerRender?.() || this.host.requestUpdate?.();
+      return;
+    }
 
     this.transferQueuePendingTarget = target.maEntityId;
     this.transferQueueStatus = null;
@@ -1333,7 +1361,9 @@ export class QueueController {
         if (
           this.host?._showEntityOptions &&
           (this.showTransferQueue ||
-            (this.host._showGrouping && this.host._cardType !== "group_players"))
+            (this.host._showGrouping &&
+              this.host._cardType !== "group_players" &&
+              this.host._cardType !== "speakers_and_groups"))
         ) {
           this.host._dismissWithAnimation?.();
         } else {

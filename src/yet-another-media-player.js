@@ -91,7 +91,7 @@ import {
   SUPPORT_GROUPING,
   DEFAULT_PROGRESS_BAR_HEIGHT,
   DEFAULT_LYRICS_BACKGROUND_FADE,
-  TEMPLATE_CONFIGS,
+  getTemplatePresetDefaults,
   CANONICAL_MENU_OPTION_MAP,
 } from "./constants.js";
 
@@ -151,6 +151,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _applyIdleScreen() {
+    if (this._cardType === "group_players") return;
     if (this._idleScreenApplied) return;
     const mode = this._idleScreen || "default";
     switch (mode) {
@@ -795,7 +796,30 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   get _cardType() {
-    return this.config?.card_type || "default";
+    let type = this.config?.card_type;
+    if (!type && this.config?.template) {
+      type = getTemplatePresetDefaults(this.config.template)?.card_type;
+    }
+    type = type || "default";
+    if (
+      type === "group_players" ||
+      type === "group-players" ||
+      type === "speakers_and_groups" ||
+      type === "speakers-and-groups" ||
+      type === "speakers" ||
+      type === "dedicated_grouping" ||
+      type === "dedicated-grouping" ||
+      type === "dedicated_speakers_and_groups" ||
+      type === "dedicated-speakers-and-groups" ||
+      type === "transfer_queue" ||
+      type === "transfer-queue"
+    ) {
+      return "group_players";
+    }
+    if (type === "dedicated_search") {
+      return "search";
+    }
+    return type;
   }
 
   get _isSpecializedCard() {
@@ -1293,20 +1317,57 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const obj = this.entityObjs[idx];
     if (!obj) return null;
 
+    let candidateMaId = null;
     const cached = this._maResolveCache?.[idx]?.id;
     if (cached && typeof cached === 'string') {
-      return cached;
+      candidateMaId = cached;
+    } else {
+      // No cache - check if we have a static MA entity
+      const rawMaEntity = obj.music_assistant_entity;
+      if (
+        rawMaEntity &&
+        typeof rawMaEntity === 'string' &&
+        !rawMaEntity.includes('{{') &&
+        !rawMaEntity.includes('{%') &&
+        !rawMaEntity.trim().startsWith('[[[')
+      ) {
+        candidateMaId = rawMaEntity;
+      }
     }
 
-    // No cache - check if we have a static MA entity
-    const rawMaEntity = obj.music_assistant_entity;
-    if (rawMaEntity && typeof rawMaEntity === 'string' &&
-      !rawMaEntity.includes('{{') && !rawMaEntity.includes('{%') && !rawMaEntity.trim().startsWith('[[[')) {
-      return rawMaEntity;
+    const mainId = obj.entity_id;
+    if (!candidateMaId || candidateMaId === mainId) {
+      return mainId;
     }
 
-    // No MA entity or template - use main entity
-    return obj.entity_id;
+    const mainState = mainId ? this.hass?.states?.[mainId] : null;
+    const candidateState = candidateMaId ? this.hass?.states?.[candidateMaId] : null;
+
+    const mainIsMa = mainState ? isMusicAssistantEntity(mainState) : false;
+    const candidateIsMa = candidateState ? isMusicAssistantEntity(candidateState) : false;
+
+    // If main entity is a Music Assistant player, but configured candidate is NOT,
+    // prefer the actual Music Assistant player (mainId).
+    if (mainIsMa && !candidateIsMa) {
+      return mainId;
+    }
+
+    // If both are Music Assistant entities, prioritize the one with an active queue or playing
+    if (mainIsMa && candidateIsMa) {
+      const mainHasQueue = Boolean(mainState?.attributes?.active_queue);
+      const candHasQueue = Boolean(candidateState?.attributes?.active_queue);
+      if (mainHasQueue && !candHasQueue) {
+        return mainId;
+      }
+      if (candHasQueue && !mainHasQueue) {
+        return candidateMaId;
+      }
+      if (this._isEntityPlaying?.(mainState) && !this._isEntityPlaying?.(candidateState)) {
+        return mainId;
+      }
+    }
+
+    return candidateMaId;
   }
 
   _isEntityPlaying(stateObj) {
@@ -4400,10 +4461,12 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       is_playing: this._isCurrentEntityPlaying(),
       is_search: this._showSearchInSheet,
       is_grouping: this._showGrouping,
+      is_speakers_and_groups: this._showGrouping,
+      is_group_players: this._showGrouping,
       is_source: this._showSourceList || this._showSourceMenu,
       is_lyrics: this._lyricsActive,
       is_options: this._showEntityOptions,
-      is_transfer_queue: this._showTransferQueue,
+      is_transfer_queue: this._showGrouping || this._showTransferQueue,
       is_any_menu_open: this.isAnyMenuOpen,
       is_fullscreen: this._isFullScreen,
       is_full_screen: this._isFullScreen,
@@ -4496,7 +4559,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     }
     const oldConfig = this.config;
     const templateName = rawConfig.template || "custom";
-    const templateBase = TEMPLATE_CONFIGS[templateName] || {};
+    const templateBase = getTemplatePresetDefaults(templateName);
     const config = { ...templateBase, ...rawConfig };
     if (oldConfig?.lock_screen_controls !== config.lock_screen_controls) {
       this._mediaSessionOverride = null;
@@ -4505,6 +4568,23 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       this._fullScreenOverride = null;
     }
     this.config = config;
+    if (this._cardType === "group_players") {
+      this._showEntityOptions = true;
+      this._setIdleState(false);
+      this._showGrouping = true;
+    } else if (this._cardType === "search") {
+      this._showEntityOptions = true;
+      this._setIdleState(false);
+      this._showSearchSheetInOptions?.();
+    } else if (this._cardType === "up_next") {
+      this._showEntityOptions = true;
+      this._setIdleState(false);
+      this._showSearchSheetInOptions?.("next-up");
+    } else if (this._cardType === "remote_control") {
+      this._showEntityOptions = true;
+      this._setIdleState(false);
+      this._showRemoteControl = true;
+    }
     this._cachedEntityIds = null;
     this._cachedEntityObjs = null;
 
@@ -4911,13 +4991,17 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     if (!obj || !obj.music_assistant_entity) return obj?.entity_id;
 
     // Check if it's a template
-    if (typeof obj.music_assistant_entity === 'string' &&
-      (obj.music_assistant_entity.includes('{{') || obj.music_assistant_entity.includes('{%') || obj.music_assistant_entity.trim().startsWith('[[['))) {
+    if (
+      typeof obj.music_assistant_entity === 'string' &&
+      (obj.music_assistant_entity.includes('{{') ||
+        obj.music_assistant_entity.includes('{%') ||
+        obj.music_assistant_entity.trim().startsWith('[[['))
+    ) {
       // For templates, resolve at action time - return template string for now
       return obj.music_assistant_entity;
     }
 
-    return obj.music_assistant_entity;
+    return this._getActualResolvedMaEntityForState(idx);
   }
   // Prefer Music Assistant entity for playback controls (play/pause/seek/etc.) if configured
   _getPlaybackEntityId(idx) {
@@ -5045,15 +5129,34 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   _getGroupingEntityId(idx) {
     const obj = this.entityObjs[idx];
     if (!obj) return null;
+    const mainId = obj.entity_id;
+    let candidateId = null;
     if (obj.music_assistant_entity) {
-      if (typeof obj.music_assistant_entity === 'string' &&
-        (obj.music_assistant_entity.includes('{{') || obj.music_assistant_entity.includes('{%') || obj.music_assistant_entity.trim().startsWith('[[['))) {
+      if (
+        typeof obj.music_assistant_entity === 'string' &&
+        (obj.music_assistant_entity.includes('{{') ||
+          obj.music_assistant_entity.includes('{%') ||
+          obj.music_assistant_entity.trim().startsWith('[[['))
+      ) {
         const cached = this._maResolveCache?.[idx]?.id;
-        return cached || obj.entity_id;
+        candidateId = cached || mainId;
+      } else {
+        candidateId = obj.music_assistant_entity;
       }
-      return obj.music_assistant_entity;
     }
-    return obj.entity_id;
+    if (!candidateId || candidateId === mainId) {
+      return mainId;
+    }
+    const candidateState = this.hass?.states?.[candidateId];
+    const mainState = mainId ? this.hass?.states?.[mainId] : null;
+    if (
+      mainState &&
+      this._isGroupCapable(mainState) &&
+      (!candidateState || !this._isGroupCapable(candidateState))
+    ) {
+      return mainId;
+    }
+    return candidateId;
   }
 
   _getGroupingEntityIdByEntityId(entityId) {
@@ -6330,9 +6433,12 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           this.requestUpdate();
           break;
         case "group-players":
-          this._showEntityOptions = true;
-          this._showGrouping = true;
-          this.requestUpdate();
+        case "group_players":
+        case "speakers-and-groups":
+        case "speakers_and_groups":
+        case "transfer-queue":
+        case "transfer_queue":
+          this._openGrouping();
           break;
         case "search":
           this._openQuickSearchOverlay();
@@ -6356,10 +6462,6 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           this._showSourceList = true;
           this._showGrouping = false;
           this.requestUpdate();
-          break;
-        case "transfer-queue":
-          this._showEntityOptions = true;
-          this._openTransferQueue();
           break;
         case "main-menu":
           this._showGrouping = false;
@@ -6412,6 +6514,18 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
     if (action.action === "toggle_lyrics") {
       this._lyricsController.toggle();
+      return;
+    }
+
+    if (
+      action.action === "group_players" ||
+      action.action === "group-players" ||
+      action.action === "speakers_and_groups" ||
+      action.action === "speakers-and-groups" ||
+      action.action === "transfer_queue" ||
+      action.action === "transfer-queue"
+    ) {
+      this._openGrouping();
       return;
     }
 
@@ -6708,8 +6822,13 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         "search-next-up": localize("search.next_up"),
         "source": localize("card.menu.source"),
         "more-info": localize("card.menu.more_info"),
-        "group-players": localize("card.menu.group_players"),
-        "transfer-queue": localize("card.menu.transfer_queue"),
+        "group-players": localize("card.menu.speakers_and_groups") || localize("card.menu.group_players"),
+        "group_players": localize("card.menu.speakers_and_groups") || localize("card.menu.group_players"),
+        "speakers-and-groups": localize("card.menu.speakers_and_groups") || localize("card.menu.group_players"),
+        "speakers_and_groups": localize("card.menu.speakers_and_groups") || localize("card.menu.group_players"),
+        "speakers": localize("card.menu.speakers_and_groups") || localize("card.menu.group_players"),
+        "transfer-queue": localize("card.menu.speakers_and_groups") || localize("card.menu.group_players"),
+        "transfer_queue": localize("card.menu.speakers_and_groups") || localize("card.menu.group_players"),
         "main-menu": localize("card.menu.main_menu"),
         "full-screen": localize(this._isFullScreen ? "card.menu.exit_full_screen" : "card.menu.full_screen"),
       };
@@ -6726,6 +6845,20 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     }
     if (action.action === "toggle_lyrics") {
       return iconOnly ? "" : localize("editor.action_types.toggle_lyrics") || "Toggle Lyrics Overlay";
+    }
+    if (
+      action.action === "group_players" ||
+      action.action === "group-players" ||
+      action.action === "speakers_and_groups" ||
+      action.action === "speakers-and-groups" ||
+      action.action === "transfer_queue" ||
+      action.action === "transfer-queue"
+    ) {
+      return iconOnly
+        ? ""
+        : localize("card.menu.speakers_and_groups") ||
+            localize("card.menu.group_players") ||
+            "Speakers & Groups";
     }
     if (action.action === "remote_control") {
       return iconOnly ? "" : localize("editor.action_types.remote_control") || "Open Remote Controls Overlay";
@@ -8731,6 +8864,14 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _updateIdleState(changedProps) {
+    if (this._cardType === "group_players") {
+      if (this._idleTimeout) clearTimeout(this._idleTimeout);
+      this._idleTimeout = null;
+      this._setIdleState(false);
+      this._showEntityOptions = true;
+      this._showGrouping = true;
+      return;
+    }
     // Consider both main and Music Assistant entities so we can wake from idle
     // even if the active selection is frozen while idle.
     const isAnyUnrestrictedPlaying = this.entityIds.some((id, idx) => {
@@ -8842,6 +8983,14 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _handleIdleTimeoutCallback() {
+    if (this._cardType === "group_players") {
+      this._idleTimeout = null;
+      this._setIdleState(false);
+      this._showEntityOptions = true;
+      this._showGrouping = true;
+      this.requestUpdate();
+      return;
+    }
     // In search card mode: reset drill-down instead of going idle
     if (this._cardType === "search" || this._cardType === "up_next") {
       this._idleTimeout = null;
@@ -8961,8 +9110,8 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
               { value: "search", label: "Search" },
               { value: "source", label: "Source" },
               { value: "more-info", label: "More Info" },
-              { value: "group-players", label: "Group Players" },
-              { value: "transfer-queue", label: "Transfer Queue" }
+              { value: "group-players", label: "Speakers & Groups" },
+              { value: "transfer-queue", label: "Speakers & Groups (Legacy)" }
             ]
           }
         },
@@ -9097,6 +9246,12 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
   firstUpdated() {
     super.firstUpdated?.();
+    if (this._cardType === "group_players") {
+      this._showEntityOptions = true;
+      this._setIdleState(false);
+      this._showGrouping = true;
+      this.requestUpdate();
+    }
     // Trap scroll events inside floating index so they don't scroll the page
     const index = this.renderRoot.querySelector('.floating-source-index');
     if (index) {
@@ -9418,6 +9573,19 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       this.requestUpdate();
       return;
     }
+    if (this._cardType === "group_players") {
+      this._showSourceList = false;
+      this._showSearchInSheet = false;
+      this._showResolvedEntities = false;
+      this._showTransferQueue = false;
+      this._transferQueuePendingTarget = null;
+      this._transferQueueStatus = null;
+      this._showEntityOptions = true;
+      this._showGrouping = true;
+      this._quickMenuInvoke = false;
+      this.requestUpdate();
+      return;
+    }
     this._applyClosingAnimations();
     if (this._transferQueueAutoCloseTimer) {
       clearTimeout(this._transferQueueAutoCloseTimer);
@@ -9455,6 +9623,18 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       this._transferQueuePendingTarget = null;
       this._transferQueueStatus = null;
       this._showResolvedEntities = false;
+      this.requestUpdate();
+      return;
+    }
+    if (this._cardType === "group_players") {
+      this._showSourceList = false;
+      this._showSearchInSheet = false;
+      this._showTransferQueue = false;
+      this._transferQueuePendingTarget = null;
+      this._transferQueueStatus = null;
+      this._showResolvedEntities = false;
+      this._showEntityOptions = true;
+      this._showGrouping = true;
       this.requestUpdate();
       return;
     }
@@ -9717,6 +9897,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this.requestUpdate();
   }
   _closeGrouping() {
+    if (this._cardType === "group_players") return;
     this._showGrouping = false;
     this._transferQueuePendingTarget = null;
     this._transferQueueStatus = null;

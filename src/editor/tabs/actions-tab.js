@@ -553,14 +553,28 @@ export function renderActionEditor(action, idx = this._actionEditorIndex, isSear
                           { value: "search-next-up", label: localize("search.next_up") },
                           { value: "source", label: localize("card.menu.source") },
                           { value: "more-info", label: localize("card.menu.more_info") },
-                          { value: "group-players", label: localize("card.menu.group_players") },
-                          { value: "transfer-queue", label: localize("card.menu.transfer_queue") },
+                          {
+                            value: "group-players",
+                            label:
+                              localize("card.menu.speakers_and_groups") ||
+                              localize("card.menu.group_players"),
+                          },
+                          {
+                            value: "transfer-queue",
+                            label: `${localize("card.menu.speakers_and_groups") || localize("card.menu.group_players")} (${localize("card.menu.transfer_queue")})`,
+                          },
                           { value: "main-menu", label: localize("card.menu.main_menu") },
                           { value: "full-screen", label: localize("card.menu.full_screen") },
                         ],
                       },
                     }}
-                    .value=${action?.menu_item ?? ""}
+                    .value=${
+                      action?.menu_item === "speakers-and-groups" ||
+                      action?.menu_item === "speakers_and_groups" ||
+                      action?.menu_item === "group_players"
+                        ? "group-players"
+                        : (action?.menu_item ?? "")
+                    }
                     @value-changed=${(e) =>
                       this._updateActionProperty("menu_item", e.detail.value || undefined)}
                   ></ha-selector>

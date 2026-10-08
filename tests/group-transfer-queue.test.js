@@ -115,6 +115,30 @@ describe("Group Players Menu - Transfer Queue Button", () => {
     );
   });
 
+  it("renders spaced out vol-stepper aligned with sliders when volume entity is a remote", () => {
+    Object.defineProperty(card, "_isGridMode", { value: false, configurable: true });
+    card._getVolumeEntity = (idx) => (idx === 2 ? "remote.bedroom_remote" : null);
+    card.hass.states["remote.bedroom_remote"] = {
+      entity_id: "remote.bedroom_remote",
+      state: "on",
+      attributes: { volume_level: 0 },
+    };
+
+    const template = renderGroupingSheet.call(card);
+    assert.ok(template);
+
+    const htmlContent = extractTemplateHtml(template);
+    assert.ok(htmlContent.includes("vol-stepper"), "Template should contain vol-stepper class");
+    assert.ok(
+      htmlContent.includes("justify-content:space-between"),
+      "vol-stepper should have justify-content:space-between to space out minus and plus"
+    );
+    assert.ok(
+      htmlContent.includes("flex:1"),
+      "vol-stepper should have flex:1 to match slider container width"
+    );
+  });
+
   it("renders grid-menu-transfer-btn in grid mode when MA transfer_queue is supported", () => {
     Object.defineProperty(card, "_isGridMode", { value: true, configurable: true });
     const template = renderGroupingSheet.call(card);
@@ -340,5 +364,344 @@ describe("Group Players Menu - Transfer Queue Button", () => {
       false,
       "toggleGroup should not be invoked for unavailable player"
     );
+  });
+
+  it("resolves to main entity when main entity is MA player and music_assistant_entity is non-MA", () => {
+    card.setConfig({
+      type: "custom:yet-another-media-player",
+      entities: [
+        {
+          entity_id: "media_player.kitchen_homepod_2",
+          name: "Kitchen",
+          music_assistant_entity: "media_player.kitchen_homepod",
+        },
+        {
+          entity_id: "media_player.white_echo_8",
+          name: "Office",
+        },
+      ],
+    });
+    card.hass = {
+      states: {
+        "media_player.kitchen_homepod_2": {
+          entity_id: "media_player.kitchen_homepod_2",
+          state: "playing",
+          attributes: {
+            app_id: "music_assistant",
+            mass_player_type: "player",
+            active_queue: "queue_123",
+            group_members: [],
+          },
+        },
+        "media_player.kitchen_homepod": {
+          entity_id: "media_player.kitchen_homepod",
+          state: "playing",
+          attributes: {
+            app_id: "com.apple.tvairplayd",
+          },
+        },
+        "media_player.white_echo_8": {
+          entity_id: "media_player.white_echo_8",
+          state: "idle",
+          attributes: {
+            app_id: "music_assistant",
+            mass_player_type: "player",
+            active_queue: "queue_456",
+            group_members: [],
+          },
+        },
+      },
+    };
+
+    // Test _getActualResolvedMaEntityForState directly
+    assert.strictEqual(
+      card._getActualResolvedMaEntityForState(0),
+      "media_player.kitchen_homepod_2",
+      "Should resolve to kitchen_homepod_2 because it is the actual MA entity"
+    );
+    assert.strictEqual(
+      card._getActualResolvedMaEntityForState(1),
+      "media_player.white_echo_8",
+      "Should resolve to white_echo_8"
+    );
+
+    // Test _getGroupingEntityId directly
+    assert.strictEqual(
+      card._getGroupingEntityId(0),
+      "media_player.kitchen_homepod_2",
+      "Should resolve grouping entity to kitchen_homepod_2 because kitchen_homepod is not group capable"
+    );
+  });
+
+  it("correctly routes sourceMaId in transferQueueTo when main entity is the active MA player", async () => {
+    card.setConfig({
+      type: "custom:yet-another-media-player",
+      entities: [
+        {
+          entity_id: "media_player.kitchen_homepod_2",
+          name: "Kitchen",
+          music_assistant_entity: "media_player.kitchen_homepod",
+        },
+        {
+          entity_id: "media_player.white_echo_8",
+          name: "Office",
+        },
+      ],
+    });
+    let serviceCalled = false;
+    /** @type {any} */
+    let servicePayload = null;
+    card.hass = {
+      states: {
+        "media_player.kitchen_homepod_2": {
+          entity_id: "media_player.kitchen_homepod_2",
+          state: "playing",
+          attributes: {
+            app_id: "music_assistant",
+            mass_player_type: "player",
+            active_queue: "queue_123",
+          },
+        },
+        "media_player.kitchen_homepod": {
+          entity_id: "media_player.kitchen_homepod",
+          state: "playing",
+          attributes: {
+            app_id: "com.apple.tvairplayd",
+          },
+        },
+        "media_player.white_echo_8": {
+          entity_id: "media_player.white_echo_8",
+          state: "idle",
+          attributes: {
+            app_id: "music_assistant",
+            mass_player_type: "player",
+            active_queue: "queue_456",
+          },
+        },
+      },
+      services: {
+        music_assistant: {
+          transfer_queue: {
+            fields: {
+              source_player: {},
+            },
+          },
+        },
+      },
+      callService: async (domain, service, data) => {
+        serviceCalled = true;
+        servicePayload = data;
+        return { success: true };
+      },
+    };
+
+    card._selectedIndex = 0;
+    const target = {
+      index: 1,
+      entityId: "media_player.white_echo_8",
+      maEntityId: "media_player.white_echo_8",
+      name: "Office",
+    };
+
+    await card._queueController.transferQueueTo(target);
+
+    assert.strictEqual(serviceCalled, true, "transfer_queue service should be called");
+    assert.ok(servicePayload, "servicePayload should not be null");
+    assert.strictEqual(
+      servicePayload?.source_player,
+      "media_player.kitchen_homepod_2",
+      "source_player must be kitchen_homepod_2 (the MA player), not kitchen_homepod"
+    );
+    assert.strictEqual(
+      servicePayload?.entity_id,
+      "media_player.white_echo_8",
+      "target player entity_id must be white_echo_8"
+    );
+  });
+
+  it("disables transfer button and labels non-MA entity as Standalone when not groupable", () => {
+    card.setConfig({
+      type: "custom:yet-another-media-player",
+      entities: [
+        {
+          entity_id: "media_player.white_echo_8",
+          name: "Office",
+        },
+        {
+          entity_id: "media_player.playstation_5_2",
+          name: "PlayStation 5",
+        },
+      ],
+    });
+    card.hass = {
+      states: {
+        "media_player.white_echo_8": {
+          entity_id: "media_player.white_echo_8",
+          state: "playing",
+          attributes: {
+            app_id: "music_assistant",
+            mass_player_type: "player",
+            active_queue: "queue_456",
+            group_members: [],
+          },
+        },
+        "media_player.playstation_5_2": {
+          entity_id: "media_player.playstation_5_2",
+          state: "off",
+          attributes: {
+            device_class: "receiver",
+            friendly_name: "PlayStation 5",
+            supported_features: 0,
+          },
+        },
+      },
+      services: {
+        music_assistant: {
+          transfer_queue: {},
+        },
+      },
+    };
+
+    card._selectedIndex = 0; // Office is selected/active
+    card._hasTransferQueueForCurrent = true;
+    card._isGroupCapable = (st) => Array.isArray(st?.attributes?.group_members);
+    card._getGroupingMasterId = () => "media_player.white_echo_8";
+    card._getGroupPlayerState = (id) => ({
+      isGroupable: id === "media_player.white_echo_8",
+      entityToCheck: id,
+      isBusy: false,
+      busyLabel: "",
+      grouped: false,
+      isPrimary: id === "media_player.white_echo_8",
+      tooltip: "",
+    });
+
+    const template = renderGroupingSheet.call(card);
+    assert.ok(template);
+
+    // Verify PlayStation row rendered with Standalone and disabled transfer button
+    function extractTemplateHtml(val) {
+      if (!val) return "";
+      if (typeof val === "string") return val;
+      if (Array.isArray(val)) return val.map(extractTemplateHtml).join("");
+      if (val.strings && Array.isArray(val.values)) {
+        let result = "";
+        val.strings.forEach((str, i) => {
+          result += str;
+          if (i < val.values.length) {
+            result += extractTemplateHtml(val.values[i]);
+          }
+        });
+        return result;
+      }
+      return "";
+    }
+
+    const htmlContent = extractTemplateHtml(template);
+    assert.ok(htmlContent.includes("PlayStation 5"), "Should render PlayStation 5 row");
+    assert.ok(
+      htmlContent.includes("Standalone"),
+      "Should display Standalone label for non-MA, non-groupable entity"
+    );
+    assert.ok(
+      htmlContent.includes("Music Assistant player required"),
+      "Should have tooltip explaining Music Assistant player required"
+    );
+  });
+
+  describe("Dedicated Group Players Mode Locking and Navigation", () => {
+    it("locks to grouping menu with template: speakers_and_groups", () => {
+      const dedicatedCard = new YetAnotherMediaPlayerCard();
+      dedicatedCard.setConfig({
+        type: "custom:yet-another-media-player",
+        template: "speakers_and_groups",
+        entities: ["media_player.kitchen", "media_player.office"],
+      });
+
+      assert.equal(dedicatedCard._cardType, "group_players");
+      assert.equal(dedicatedCard._showEntityOptions, true);
+      assert.equal(dedicatedCard._showGrouping, true);
+      assert.equal(dedicatedCard._isIdle, false);
+    });
+
+    it("locks to grouping menu with template: group_players", () => {
+      const dedicatedCard = new YetAnotherMediaPlayerCard();
+      dedicatedCard.setConfig({
+        type: "custom:yet-another-media-player",
+        template: "group_players",
+        entities: ["media_player.kitchen", "media_player.office"],
+      });
+
+      assert.equal(dedicatedCard._cardType, "group_players");
+      assert.equal(dedicatedCard._showEntityOptions, true);
+      assert.equal(dedicatedCard._showGrouping, true);
+      assert.equal(dedicatedCard._isIdle, false);
+    });
+
+    it("preserves backward compatibility with template: dedicated_grouping", () => {
+      const dedicatedCard = new YetAnotherMediaPlayerCard();
+      dedicatedCard.setConfig({
+        type: "custom:yet-another-media-player",
+        template: "dedicated_grouping",
+        entities: ["media_player.kitchen", "media_player.office"],
+      });
+
+      assert.equal(dedicatedCard._cardType, "group_players");
+      assert.equal(dedicatedCard._showEntityOptions, true);
+      assert.equal(dedicatedCard._showGrouping, true);
+      assert.equal(dedicatedCard._isIdle, false);
+    });
+
+    it("locks to grouping menu with card_type: speakers_and_groups", () => {
+      const dedicatedCard = new YetAnotherMediaPlayerCard();
+      dedicatedCard.setConfig({
+        type: "custom:yet-another-media-player",
+        card_type: "speakers_and_groups",
+        entities: ["media_player.kitchen", "media_player.office"],
+      });
+
+      assert.equal(dedicatedCard._cardType, "group_players");
+      assert.equal(dedicatedCard._showEntityOptions, true);
+      assert.equal(dedicatedCard._showGrouping, true);
+      assert.equal(dedicatedCard._isIdle, false);
+    });
+
+    it("prevents closing grouping menu via _closeGrouping or _closeEntityOptions", () => {
+      const dedicatedCard = new YetAnotherMediaPlayerCard();
+      dedicatedCard.setConfig({
+        type: "custom:yet-another-media-player",
+        template: "speakers_and_groups",
+        entities: ["media_player.kitchen", "media_player.office"],
+      });
+
+      dedicatedCard._closeGrouping();
+      assert.equal(dedicatedCard._showGrouping, true);
+      assert.equal(dedicatedCard._showEntityOptions, true);
+
+      dedicatedCard._closeEntityOptions();
+      assert.equal(dedicatedCard._showGrouping, true);
+      assert.equal(dedicatedCard._showEntityOptions, true);
+
+      dedicatedCard._dismissWithAnimation();
+      assert.equal(dedicatedCard._showGrouping, true);
+      assert.equal(dedicatedCard._showEntityOptions, true);
+    });
+
+    it("bypasses idle timeout and maintains grouping view in group_players mode", () => {
+      const dedicatedCard = new YetAnotherMediaPlayerCard();
+      dedicatedCard.setConfig({
+        type: "custom:yet-another-media-player",
+        template: "speakers_and_groups",
+        entities: ["media_player.kitchen", "media_player.office"],
+      });
+
+      dedicatedCard._updateIdleState();
+      assert.equal(dedicatedCard._isIdle, false);
+      assert.equal(dedicatedCard._showGrouping, true);
+
+      dedicatedCard._handleIdleTimeoutCallback();
+      assert.equal(dedicatedCard._isIdle, false);
+      assert.equal(dedicatedCard._showGrouping, true);
+    });
   });
 });

@@ -63,13 +63,6 @@ export function renderMainMenu(sourceList, menuOnlyActions, showChipsInMenu) {
           ? renderMenuItem(localize("card.menu.source"), "mdi:import", () => this._openSourceList())
           : nothing
       }
-      ${
-        !this._isMenuOptionHidden?.("transfer_queue") && this._canShowTransferQueueOption()
-          ? renderMenuItem(localize("card.menu.transfer_queue"), "mdi:swap-horizontal", () =>
-              this._openTransferQueue()
-            )
-          : nothing
-      }
       ${this._renderGroupingMenuOption(isGridMode)}
       ${
         !this._isMenuOptionHidden?.("remote_controls") && this._hasRemoteControlSupport()
@@ -146,40 +139,31 @@ export function renderMainMenu(sourceList, menuOnlyActions, showChipsInMenu) {
  * @param {boolean} [isGridMode=false]
  */
 export function renderGroupingMenuOption(isGridMode = false) {
-  if (this._isMenuOptionHidden?.("group_players")) return nothing;
-  const totalEntities = this.entityIds.length;
+  if (
+    this._isMenuOptionHidden?.("speakers_and_groups") ||
+    this._isMenuOptionHidden?.("group_players")
+  ) {
+    return nothing;
+  }
+  const totalEntities = this.entityIds?.length || 0;
   if (totalEntities <= 1) return nothing;
 
-  const groupableCount = this.entityIds.reduce((acc, id, idx) => {
-    const actualGroupId = this._getGroupingEntityId(idx);
-    const st = this.hass.states[actualGroupId];
-    return acc + (this._isGroupCapable(st) ? 1 : 0);
-  }, 0);
+  const label =
+    localize("card.menu.speakers_and_groups") ||
+    localize("card.menu.group_players") ||
+    "Speakers & Groups";
 
-  const currGroupId = this._getGroupingEntityId(this._selectedIndex);
-  const currGroupState = this.hass.states[currGroupId];
-
-  // Check if the current entity is a follower (unavailable for acting as a new group master)
-  const currentId = this.currentEntityId;
-  const groupKey = this._getGroupKey(currentId);
-  const isFollower = groupKey !== currentId;
-
-  if (groupableCount > 1 && this._isGroupCapable(currGroupState) && !isFollower) {
-    if (isGridMode) {
-      return html`
-        <button class="entity-options-item menu-action-item" @click=${() => this._openGrouping()}>
-          <ha-icon class="menu-action-icon" icon="mdi:speaker-multiple"></ha-icon>
-          <span class="menu-action-label">${localize("card.menu.group_players")}</span>
-        </button>
-      `;
-    }
+  if (isGridMode) {
     return html`
-      <button class="entity-options-item" @click=${() => this._openGrouping()}>
-        ${localize("card.menu.group_players")}
+      <button class="entity-options-item menu-action-item" @click=${() => this._openGrouping()}>
+        <ha-icon class="menu-action-icon" icon="mdi:speaker-multiple"></ha-icon>
+        <span class="menu-action-label">${label}</span>
       </button>
     `;
   }
-  return nothing;
+  return html`
+    <button class="entity-options-item" @click=${() => this._openGrouping()}>${label}</button>
+  `;
 }
 
 /**
@@ -258,19 +242,17 @@ export function renderOptionsOverlay(props) {
               ? this._renderMainMenu(sourceList, menuOnlyActions, showChipsInMenu)
               : this._showRemoteControl
                 ? this._renderRemoteControlSheet()
-                : this._showGrouping
+                : this._showGrouping || this._showTransferQueue
                   ? this._renderGroupingSheet()
-                  : this._showTransferQueue
-                    ? this._renderTransferQueueSheet()
-                    : this._showResolvedEntities
-                      ? this._renderResolvedEntitiesSheet()
-                      : this._showSearchInSheet
-                        ? this._renderSearchInOptions(showSearchHeaders, effectivePinHeaders)
-                        : this._renderSourceListSheet(
-                            sourceList,
-                            sourceLetters,
-                            availableSourceFirstLetters
-                          )
+                  : this._showResolvedEntities
+                    ? this._renderResolvedEntitiesSheet()
+                    : this._showSearchInSheet
+                      ? this._renderSearchInOptions(showSearchHeaders, effectivePinHeaders)
+                      : this._renderSourceListSheet(
+                          sourceList,
+                          sourceLetters,
+                          availableSourceFirstLetters
+                        )
           }
         </div>
       </div>

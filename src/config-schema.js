@@ -94,6 +94,27 @@ export const TEMPLATE_CONFIGS = Object.freeze({
     hide_menu_player: true,
     show_chip_row: "in_menu",
   },
+  dedicated_speakers_and_groups: {
+    match_theme: true,
+    appearance: "automatic",
+    card_type: "group_players",
+    hide_menu_player: true,
+    show_chip_row: "in_menu",
+  },
+  speakers_and_groups: {
+    match_theme: true,
+    appearance: "automatic",
+    card_type: "group_players",
+    hide_menu_player: true,
+    show_chip_row: "in_menu",
+  },
+  group_players: {
+    match_theme: true,
+    appearance: "automatic",
+    card_type: "group_players",
+    hide_menu_player: true,
+    show_chip_row: "in_menu",
+  },
   quick_and_easy: {
     match_theme: true,
     appearance: "automatic",
@@ -227,7 +248,26 @@ export function isFieldTemplateSupported(fieldName) {
  * @returns {Record<string, any>}
  */
 export function getTemplatePresetDefaults(templateName = "custom") {
-  return TEMPLATE_CONFIGS[templateName] || {};
+  if (!templateName || typeof templateName !== "string") return {};
+  const norm = templateName
+    .toLowerCase()
+    .trim()
+    .replace(/[-\s]+/g, "_");
+  if (
+    norm === "speakers_and_groups" ||
+    norm === "speakers" ||
+    norm === "group_players" ||
+    norm === "dedicated_grouping" ||
+    norm === "dedicated_speakers_and_groups" ||
+    norm === "transfer_queue" ||
+    norm === "dedicated_transfer_queue"
+  ) {
+    return TEMPLATE_CONFIGS.dedicated_grouping;
+  }
+  if (norm === "search" || norm === "dedicated_search") {
+    return TEMPLATE_CONFIGS.dedicated_search;
+  }
+  return TEMPLATE_CONFIGS[norm] || TEMPLATE_CONFIGS[templateName] || {};
 }
 
 /**

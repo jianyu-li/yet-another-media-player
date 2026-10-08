@@ -412,7 +412,8 @@ export default {
     card_type_options: {
       default: "Default",
       search: "Search",
-      group_players: "Group Players",
+      speakers_and_groups: "Speakers & Groups",
+      group_players: "Speakers & Groups",
       up_next: "Up Next",
       remote_control: "Remote Control",
     },
@@ -488,7 +489,8 @@ export default {
       exit_full_screen: "Exit Full Screen",
       transfer_queue: "Transfer Queue",
       main_menu: "Main Menu",
-      group_players: "Group Players",
+      speakers_and_groups: "Speakers & Groups",
+      group_players: "Speakers & Groups",
       up_next: "Up Next",
       remote_control: "Remote Control",
       select_entity: "Select Entity for More Info",
@@ -511,7 +513,7 @@ export default {
       power: "Power",
     },
     grouping: {
-      title: "Group Players",
+      title: "Speakers & Groups",
       sync_volume: "Sync Volume",
       group_all: "Group All",
       ungroup_all: "Ungroup All",
@@ -527,6 +529,8 @@ export default {
       transfer_to_group: "Transfer queue to {master} group",
       transfer_current_player: "Currently playing here",
       transfer_no_queue: "No active queue to transfer",
+      transfer_not_ma: "Music Assistant player required",
+      standalone: "Standalone",
     },
   },
   search: {

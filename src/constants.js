@@ -37,6 +37,8 @@ export const CANONICAL_MENU_OPTION_MAP = Object.freeze({
   group_players: "group_players",
   group: "group_players",
   grouping: "group_players",
+  speakers_and_groups: "group_players",
+  speakers: "group_players",
   remote_controls: "remote_controls",
   remote_control: "remote_controls",
   remote: "remote_controls",

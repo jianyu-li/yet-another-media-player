@@ -409,7 +409,8 @@ export default {
     card_type_options: {
       default: "Por defecto",
       search: "Buscar",
-      group_players: "Agrupar",
+      speakers_and_groups: "Altavoces y grupos",
+      group_players: "Altavoces y grupos",
       up_next: "A continuación",
       remote_control: "Control remoto",
     },
@@ -481,7 +482,8 @@ export default {
       exit_full_screen: "Salir de pantalla completa",
       transfer_queue: "Transferir cola",
       main_menu: "Menú Principal",
-      group_players: "Agrupar",
+      speakers_and_groups: "Altavoces y grupos",
+      group_players: "Altavoces y grupos",
       up_next: "A continuación",
       remote_control: "Control remoto",
       select_entity: "Seleccionar",
@@ -504,7 +506,7 @@ export default {
       power: "Encendido",
     },
     grouping: {
-      title: "Agrupar",
+      title: "Altavoces y grupos",
       sync_volume: "Sincronizar volumen",
       group_all: "Agrupar todos",
       ungroup_all: "Desagrupar todos",
@@ -520,6 +522,8 @@ export default {
       transfer_to_group: "Transferir cola al grupo {master}",
       transfer_current_player: "Reproduciendo aquí actualmente",
       transfer_no_queue: "No hay cola activa para transferir",
+      transfer_not_ma: "Se requiere reproductor de Music Assistant",
+      standalone: "Independiente",
     },
   },
   search: {

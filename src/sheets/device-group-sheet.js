@@ -27,14 +27,13 @@ export function renderGroupingSheet() {
       masterState,
       myGroupKey
     );
-    if (state.isGroupable) {
-      groupPlayerIds.push({
-        id: id,
-        groupId: state.entityToCheck,
-        isBusy: state.isBusy,
-        busyLabel: state.busyLabel,
-      });
-    }
+    groupPlayerIds.push({
+      id: id,
+      groupId: state.entityToCheck || id,
+      isBusy: state.isBusy,
+      busyLabel: state.busyLabel,
+      isGroupable: state.isGroupable,
+    });
   });
 
   const activeId = this.currentEntityId;
@@ -47,7 +46,7 @@ export function renderGroupingSheet() {
   const activeGroupKey = this._getGroupKey(activeId);
   const activeIsBusy = activeGroupKey !== activeId;
 
-  if (!groupedAny && (!activeIsGroupCapable || activeIsBusy)) {
+  if (groupPlayerIds.length === 0) {
     return html`
       <div class="entity-options-header">
         ${
@@ -72,14 +71,19 @@ export function renderGroupingSheet() {
       </div>
       ${nothing}
       <div class="entity-options-item" style="padding:12px; opacity:0.75; text-align:center;">
-        ${activeIsBusy ? localize("card.grouping.unavailable") : localize("card.grouping.no_players")}
+        ${localize("card.grouping.no_players")}
       </div>
     `;
   }
 
   const hasMaTransferService = Boolean(this.hass?.services?.music_assistant?.transfer_queue);
   const currentIdx = this._selectedIndex;
-  const sourceMaId = this._getActualResolvedMaEntityForState?.(currentIdx);
+  const activeMaState = this._getMusicAssistantState?.();
+  const sourceMaId =
+    (activeMaState &&
+      this._looksLikeMusicAssistantState?.(activeMaState) &&
+      activeMaState.entity_id) ||
+    this._getActualResolvedMaEntityForState?.(currentIdx);
   const sourceEntityId = this.entityIds?.[currentIdx];
   const hasQueueToTransfer = Boolean(this._hasTransferQueueForCurrent);
 
@@ -132,13 +136,23 @@ export function renderGroupingSheet() {
             `
           : nothing
       }
-      <button
-        class="entity-options-item"
-        @click=${() => (groupedAny ? this._ungroupAll() : this._groupAll())}
-        style="flex:0 0 auto; min-width:140px; text-align:center; margin-left:auto;"
-      >
-        ${groupedAny ? localize("card.grouping.ungroup_all") : localize("card.grouping.group_all")}
-      </button>
+      ${
+        activeIsGroupCapable && !activeIsBusy
+          ? html`
+              <button
+                class="entity-options-item"
+                @click=${() => (groupedAny ? this._ungroupAll() : this._groupAll())}
+                style="flex:0 0 auto; min-width:140px; text-align:center; margin-left:auto;"
+              >
+                ${
+                  groupedAny
+                    ? localize("card.grouping.ungroup_all")
+                    : localize("card.grouping.group_all")
+                }
+              </button>
+            `
+          : nothing
+      }
     </div>
     ${
       this._transferQueueStatus
@@ -196,7 +210,8 @@ export function renderGroupingSheet() {
                     displayEntity?.startsWith && displayEntity.startsWith("remote.");
                   const volVal = Number(displayVolumeState?.attributes?.volume_level || 0);
                   const isPrimaryRow = id === masterId;
-                  const showToggleButton = !isPrimaryRow;
+                  const isGroupable = item.isGroupable !== false;
+                  const showToggleButton = isGroupable && !isPrimaryRow;
                   const isCurrent = id === activeId;
                   const masterName = masterId
                     ? this.getChipName(masterId)
@@ -240,6 +255,19 @@ export function renderGroupingSheet() {
                   const targetMaState = this.hass?.states?.[targetMaId];
                   const targetState = targetEntityState || targetMaState;
 
+                  const targetIsMa = this._queueController?.isTargetMusicAssistant
+                    ? this._queueController.isTargetMusicAssistant({
+                        maEntityId: targetMaId,
+                        entityId: targetEntityId,
+                        mainEntityId: id,
+                      })
+                    : Boolean(
+                        (targetMaState && this._looksLikeMusicAssistantState?.(targetMaState)) ||
+                        (targetEntityState &&
+                          this._looksLikeMusicAssistantState?.(targetEntityState)) ||
+                        (mainState && this._looksLikeMusicAssistantState?.(mainState))
+                      );
+
                   const isDeviceUnavailable =
                     mainState?.state === "unavailable" ||
                     groupEntityState?.state === "unavailable" ||
@@ -259,6 +287,8 @@ export function renderGroupingSheet() {
                         : localize("card.grouping.joined");
                   } else if (isCurrent) {
                     stateLabel = localize("card.grouping.current");
+                  } else if (!isGroupable && !targetIsMa) {
+                    stateLabel = localize("card.grouping.standalone") || "Standalone";
                   } else {
                     stateLabel = localize("card.grouping.available");
                   }
@@ -267,6 +297,8 @@ export function renderGroupingSheet() {
                   const isSelf =
                     targetMaId === sourceMaId ||
                     targetEntityId === sourceEntityId ||
+                    targetMaId === sourceEntityId ||
+                    targetEntityId === sourceMaId ||
                     (isMultiSpeakerGroup &&
                       (groupedAny ||
                         (Boolean(activeGroupKey) && activeGroupKey !== this.currentEntityId)) &&
@@ -274,12 +306,20 @@ export function renderGroupingSheet() {
 
                   const isTransferPending = this._transferQueuePendingTarget === targetMaId;
                   const isTransferDisabled =
-                    !hasQueueToTransfer || isSelf || isTransferPending || isDeviceUnavailable;
+                    !hasQueueToTransfer ||
+                    !targetIsMa ||
+                    isSelf ||
+                    isTransferPending ||
+                    isDeviceUnavailable;
 
                   let transferTooltip;
                   if (isDeviceUnavailable) {
                     transferTooltip =
                       localize("card.grouping.unavailable") || "Player is unavailable";
+                  } else if (!targetIsMa) {
+                    transferTooltip =
+                      localize("card.grouping.transfer_not_ma") ||
+                      "Music Assistant player required";
                   } else if (!hasQueueToTransfer) {
                     transferTooltip =
                       localize("card.grouping.transfer_no_queue") || "No active queue to transfer";
@@ -382,6 +422,10 @@ export function renderGroupingSheet() {
                     `;
                   }
 
+                  const stepperBtnStyle = `background:none;border:none;padding:0;width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:inherit;cursor:${
+                    isDeviceUnavailable ? "not-allowed" : "pointer"
+                  };${isDeviceUnavailable ? "opacity:0.35;" : ""}`;
+
                   return html`
                     <div
                       class="entity-options-item group-player-row"
@@ -407,19 +451,25 @@ export function renderGroupingSheet() {
                             ? html`
                                 <div
                                   class="vol-stepper"
-                                  style="display:flex;align-items:center;gap:4px;"
+                                  style="flex:1;padding:0 4px;display:flex;align-items:center;justify-content:space-between;box-sizing:border-box;"
                                 >
                                   <button
-                                    @click=${() => this._onGroupVolumeStep(displayEntity, -1)}
+                                    ?disabled=${isDeviceUnavailable}
+                                    @click=${() =>
+                                      !isDeviceUnavailable &&
+                                      this._onGroupVolumeStep(displayEntity, -1)}
                                     title="${localize("common.vol_down")}"
-                                    style="background:none;border:none;padding:0;width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:inherit;"
+                                    style="${stepperBtnStyle}"
                                   >
                                     <ha-icon icon="mdi:minus"></ha-icon>
                                   </button>
                                   <button
-                                    @click=${() => this._onGroupVolumeStep(displayEntity, 1)}
+                                    ?disabled=${isDeviceUnavailable}
+                                    @click=${() =>
+                                      !isDeviceUnavailable &&
+                                      this._onGroupVolumeStep(displayEntity, 1)}
                                     title="${localize("common.vol_up")}"
-                                    style="background:none;border:none;padding:0;width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:inherit;"
+                                    style="${stepperBtnStyle}"
                                   >
                                     <ha-icon icon="mdi:plus"></ha-icon>
                                   </button>
@@ -444,22 +494,33 @@ export function renderGroupingSheet() {
                                     min="0"
                                     max="1"
                                     step="0.01"
+                                    ?disabled=${isDeviceUnavailable}
                                     .value=${volVal}
-                                    @mousedown=${(e) => this._onVolumeDragStart(e, id)}
-                                    @touchstart=${(e) => this._onVolumeDragStart(e, id)}
-                                    @input=${(e) => this._onVolumeInput(e)}
-                                    @mouseup=${(e) => this._onVolumeDragEnd(e)}
-                                    @touchend=${(e) => this._onVolumeDragEnd(e)}
-                                    @change=${(e) => this._onGroupVolumeChange(id, displayEntity, e)}
+                                    @mousedown=${(e) =>
+                                      !isDeviceUnavailable && this._onVolumeDragStart(e, id)}
+                                    @touchstart=${(e) =>
+                                      !isDeviceUnavailable && this._onVolumeDragStart(e, id)}
+                                    @input=${(e) => !isDeviceUnavailable && this._onVolumeInput(e)}
+                                    @mouseup=${(e) =>
+                                      !isDeviceUnavailable && this._onVolumeDragEnd(e)}
+                                    @touchend=${(e) =>
+                                      !isDeviceUnavailable && this._onVolumeDragEnd(e)}
+                                    @change=${(e) =>
+                                      !isDeviceUnavailable &&
+                                      this._onGroupVolumeChange(id, displayEntity, e)}
                                     title="${localize("common.volume")}"
-                                    style="width:100%;max-width:260px;"
+                                    style="width:100%;max-width:260px;cursor:${
+                                      isDeviceUnavailable ? "not-allowed" : "pointer"
+                                    };${isDeviceUnavailable ? "opacity:0.35;" : ""}"
                                   />
                                 </div>
                               `
                         }
                         <span style="min-width:36px;display:inline-block;text-align:right;"
                           >${
-                            typeof volVal === "number" ? Math.round(volVal * 100) + "%" : "--"
+                            !isDeviceUnavailable && typeof volVal === "number"
+                              ? Math.round(volVal * 100) + "%"
+                              : "--"
                           }</span
                         >
                       </div>
@@ -527,107 +588,11 @@ export function renderGroupingSheet() {
 }
 
 /**
- * Render the Transfer Queue overlay sheet.
+ * Render the Transfer Queue overlay sheet (consolidated into Speakers & Groups).
  * @this {import("../types.d.ts").YetAnotherMediaPlayerCard}
  */
 export function renderTransferQueueSheet() {
-  const isGridMode = this._isGridMode;
-  const targets = this._getTransferQueueTargets();
-  return html`
-    <div class="entity-options-header">
-      <button
-        class="entity-options-item close-item"
-        @click=${() => {
-          if (this._quickMenuInvoke) {
-            this._dismissWithAnimation();
-          } else {
-            this._closeTransferQueue();
-          }
-        }}
-      >
-        ${localize("common.back")}
-      </button>
-      <div class="entity-options-divider"></div>
-      ${
-        !isGridMode
-          ? html`<div class="entity-options-title" style="margin-bottom:12px;">
-              ${localize("card.menu.transfer_to")}
-            </div>`
-          : nothing
-      }
-    </div>
-    <div class="entity-options-scroll ${isGridMode ? "grid-menu" : ""}">
-      ${
-        !targets.length
-          ? html`
-              <div style="padding: 12px; opacity: 0.75;">${localize("card.menu.no_players")}</div>
-            `
-          : html`
-              <div class="${isGridMode ? "grid-menu-items" : "transfer-queue-list"}">
-                ${targets.map((target) => {
-                  if (isGridMode) {
-                    return html`
-                      <button
-                        class="entity-options-item menu-action-item"
-                        ?disabled=${this._transferQueuePendingTarget === target.maEntityId}
-                        @click=${() => this._transferQueueTo(target)}
-                      >
-                        <ha-icon class="menu-action-icon" .icon=${target.icon}></ha-icon>
-                        <span class="menu-action-label">${target.name}</span>
-                      </button>
-                    `;
-                  }
-                  return html`
-                    <button
-                      class="entity-options-item transfer-queue-item"
-                      ?disabled=${this._transferQueuePendingTarget === target.maEntityId}
-                      @click=${() => this._transferQueueTo(target)}
-                    >
-                      <ha-icon .icon=${target.icon} style="margin-right:4px;"></ha-icon>
-                      <div style="display:flex;flex-direction:column;align-items:flex-start;">
-                        <div>${target.name}</div>
-                        <div style="font-size:0.82em;opacity:0.7;">${target.subtitle}</div>
-                      </div>
-                      ${
-                        target.state
-                          ? html`<div
-                              style="margin-left:auto;font-size:0.82em;opacity:0.7;text-transform:capitalize;"
-                            >
-                              ${target.state}
-                            </div>`
-                          : nothing
-                      }
-                    </button>
-                  `;
-                })}
-              </div>
-            `
-      }
-      ${
-        this._transferQueueStatus
-          ? html`
-              <div
-                style="
-            margin-top: 14px;
-            padding: 10px 12px;
-            border-radius: 8px;
-            font-weight: 600;
-            text-align: center;
-            background: ${
-                  this._transferQueueStatus.type === "error"
-                    ? "rgba(244, 67, 54, 0.18)"
-                    : "rgba(76, 175, 80, 0.18)"
-                };
-            color: ${this._transferQueueStatus.type === "error" ? "#ff8a80" : "#8bc34a"};
-          "
-              >
-                ${this._transferQueueStatus.message}
-              </div>
-            `
-          : nothing
-      }
-    </div>
-  `;
+  return renderGroupingSheet.call(this);
 }
 
 /**
