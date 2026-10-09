@@ -333,8 +333,11 @@ export const menusSheetsStyles = css`
     font-size: 0.78em;
     font-weight: 500;
     letter-spacing: 0.05em;
-    color: #fff;
-    opacity: 0.78;
+    color: var(
+      --in-menu-active-label-color,
+      var(--secondary-text, var(--secondary-text-color, #aaa))
+    );
+    opacity: 0.85;
     pointer-events: none !important;
   }
 
@@ -549,6 +552,177 @@ export const menusSheetsStyles = css`
   /* Wrapper for grid-menu children — display:contents lets items participate in the grid directly */
   .grid-menu-items {
     display: contents;
+  }
+
+  /* Grouped players card box (list and grid modes) */
+  .grouped-players-card {
+    background: var(--yamp-grouped-card-bg, rgba(255, 255, 255, 0.05));
+    border: 1px solid var(--yamp-grouped-card-border, var(--yamp-overlay-divider));
+    border-radius: var(--button-border-radius, 8px);
+    margin-bottom: 12px;
+    padding: 0;
+    overflow: hidden;
+    box-sizing: border-box;
+  }
+
+  .grouped-players-card.is-current-group {
+    border-color: var(--custom-accent, var(--primary-color, #ff9800));
+  }
+
+  .grouped-card-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 8px 7px;
+    border-bottom: 1px solid var(--divider-color, var(--yamp-overlay-divider));
+    font-size: 0.85em;
+    font-weight: 600;
+    color: var(--yamp-overlay-text);
+  }
+
+  .grouped-card-title {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .grouped-card-title ha-icon {
+    --mdc-icon-size: 16px;
+    width: 16px;
+    height: 16px;
+    color: var(--custom-accent, currentColor);
+    flex-shrink: 0;
+  }
+
+  .grouped-card-actions {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+
+  .grouped-card-transfer-btn {
+    background: var(--yamp-button-bg, rgba(255, 255, 255, 0.1));
+    border: 1px solid var(--yamp-button-border, rgba(255, 255, 255, 0.2));
+    border-radius: var(--button-border-radius, 6px);
+    color: var(--yamp-overlay-text, #fff);
+    padding: 2px 6px;
+    cursor: pointer;
+    transition:
+      background var(--transition-fast),
+      color var(--transition-fast),
+      border-color var(--transition-fast),
+      opacity var(--transition-fast);
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    line-height: 1.3;
+  }
+
+  .grouped-card-transfer-btn ha-icon {
+    --mdc-icon-size: 16px;
+    width: 16px;
+    height: 16px;
+  }
+
+  .grouped-card-transfer-btn:disabled,
+  .grouped-card-transfer-btn[disabled] {
+    cursor: not-allowed;
+    opacity: 0.35;
+  }
+
+  @media (hover: hover) {
+    .grouped-card-transfer-btn:not([disabled]):hover {
+      background: var(--yamp-hover-bg, rgba(255, 255, 255, 0.2));
+      color: var(--custom-accent, var(--primary-color, #ff9800));
+      border-color: var(--custom-accent, var(--primary-color, #ff9800));
+    }
+  }
+
+  .grouped-card-ungroup-btn {
+    background: var(--yamp-button-bg, rgba(255, 255, 255, 0.1));
+    border: 1px solid var(--yamp-button-border, rgba(255, 255, 255, 0.2));
+    border-radius: var(--button-border-radius, 6px);
+    color: var(--yamp-overlay-text, #fff);
+    font-size: 0.72em;
+    font-weight: 600;
+    padding: 2px 8px;
+    cursor: pointer;
+    transition:
+      background var(--transition-fast),
+      color var(--transition-fast),
+      border-color var(--transition-fast);
+    display: inline-flex;
+    align-items: center;
+    line-height: 1.3;
+  }
+
+  @media (hover: hover) {
+    .grouped-card-ungroup-btn:hover {
+      background: var(--yamp-hover-bg, rgba(255, 255, 255, 0.2));
+      color: var(--custom-accent, var(--primary-color, #ff9800));
+      border-color: var(--custom-accent, var(--primary-color, #ff9800));
+    }
+  }
+
+  .group-player-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 8px 4px 8px;
+    margin-bottom: 1px;
+  }
+
+  .grouped-players-card .group-player-row {
+    padding: 10px 7px 8px 7px;
+    margin: 0;
+  }
+
+  .grouped-players-card .group-player-row:not(:last-child) {
+    border-bottom: 1px solid var(--divider-color, var(--yamp-overlay-divider));
+  }
+
+  .grid-group-card {
+    grid-column: 1 / -1;
+    display: flex;
+    flex-direction: column;
+    background: var(--yamp-grouped-card-bg, rgba(255, 255, 255, 0.05));
+    border: 1px solid var(--yamp-grouped-card-border, var(--yamp-overlay-divider));
+    border-radius: var(--button-border-radius, 8px);
+    margin-bottom: 12px;
+    overflow: hidden;
+    box-sizing: border-box;
+  }
+
+  .grid-group-card.is-current-group {
+    border-color: var(--custom-accent, var(--primary-color, #ff9800));
+  }
+
+  .grid-group-card .grouped-card-header {
+    border-bottom: 1px solid var(--divider-color, var(--yamp-overlay-divider));
+  }
+
+  .grid-group-card-items {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 0;
+    width: 100%;
+  }
+
+  .grid-group-card-items .entity-options-item:nth-child(5n) {
+    border-right: none;
+  }
+
+  .grid-group-card-items .entity-options-item:last-child {
+    border-right: none;
+  }
+
+  .grid-group-card-items .entity-options-item:nth-last-child(-n + 5) {
+    border-bottom: none;
   }
 
   /* Non-grid transfer queue layout */
@@ -1206,5 +1380,18 @@ export const menusSheetsStyles = css`
 
   .queue-play-next-dropzone ha-icon {
     color: var(--custom-accent, var(--accent-color, #ff9800));
+  }
+
+  .spin {
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
   }
 `;

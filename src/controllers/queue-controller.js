@@ -1313,16 +1313,34 @@ export class QueueController {
     }
 
     this.transferQueuePendingTarget = target.maEntityId;
-    this.transferQueueStatus = null;
+    const targetDisplayName = target.name || "player";
+    const pendingMsg =
+      target.pendingMessage ||
+      (localize("card.grouping.transferring_to") || "Transferring queue to {player}...").replace(
+        "{player}",
+        targetDisplayName
+      );
+    this.transferQueueStatus = {
+      type: "pending",
+      message: pendingMsg,
+    };
     this.host.triggerRender?.() || this.host.requestUpdate?.();
 
     try {
       const payload = this.buildTransferQueuePayload(sourceMaId, target.maEntityId);
       await this.host.hass.callService("music_assistant", "transfer_queue", payload);
-      this.transferQueueStatus = {
-        type: "success",
-        message: `Queue sent to ${target.name}.`,
-      };
+      const successMsg =
+        target.successMessage ||
+        (localize("card.grouping.transfer_success") || "Queue sent to {player}.").replace(
+          "{player}",
+          targetDisplayName
+        );
+      if (!target.deferSuccess) {
+        this.transferQueueStatus = {
+          type: "success",
+          message: successMsg,
+        };
+      }
       const targetIdx =
         typeof target.index === "number"
           ? target.index
@@ -1352,43 +1370,45 @@ export class QueueController {
         }
       }
       await this.updateTransferQueueAvailability({ refresh: true });
-      if (this.transferQueueAutoCloseTimer) {
-        clearTimeout(this.transferQueueAutoCloseTimer);
+      if (!target.deferSuccess) {
+        this.scheduleTransferQueueAutoClose(2000);
       }
-      this.transferQueueAutoCloseTimer = setTimeout(() => {
-        this.transferQueueAutoCloseTimer = null;
-        this.transferQueueStatus = null;
-        if (
-          this.host?._showEntityOptions &&
-          (this.showTransferQueue ||
-            (this.host._showGrouping &&
-              this.host._cardType !== "group_players" &&
-              this.host._cardType !== "speakers_and_groups"))
-        ) {
-          this.host._dismissWithAnimation?.();
-        } else {
-          this.host?.triggerRender?.() || this.host?.requestUpdate?.();
-        }
-      }, 2000);
     } catch (error) {
       console.error("yamp: Error transferring queue:", error);
       this.transferQueueStatus = {
         type: "error",
         message: error?.message || "Failed to transfer queue.",
       };
-      if (this.transferQueueAutoCloseTimer) {
-        clearTimeout(this.transferQueueAutoCloseTimer);
-        this.transferQueueAutoCloseTimer = null;
-      }
-      this.transferQueueAutoCloseTimer = setTimeout(() => {
-        this.transferQueueAutoCloseTimer = null;
-        this.transferQueueStatus = null;
-        this.host?.triggerRender?.() || this.host?.requestUpdate?.();
-      }, 4000);
+      this.scheduleTransferQueueAutoClose(4000);
     } finally {
       this.transferQueuePendingTarget = null;
       this.host.triggerRender?.() || this.host.requestUpdate?.();
     }
+  }
+
+  /**
+   * Schedules auto-closing/clearing of the transfer queue status banner.
+   * @param {number} [delay]
+   */
+  scheduleTransferQueueAutoClose(delay = 2000) {
+    if (this.transferQueueAutoCloseTimer) {
+      clearTimeout(this.transferQueueAutoCloseTimer);
+    }
+    this.transferQueueAutoCloseTimer = setTimeout(() => {
+      this.transferQueueAutoCloseTimer = null;
+      this.transferQueueStatus = null;
+      if (
+        this.host?._showEntityOptions &&
+        (this.showTransferQueue ||
+          (this.host._showGrouping &&
+            this.host._cardType !== "group_players" &&
+            this.host._cardType !== "speakers_and_groups"))
+      ) {
+        this.host._dismissWithAnimation?.();
+      } else {
+        this.host?.triggerRender?.() || this.host?.requestUpdate?.();
+      }
+    }, delay);
   }
 
   /**

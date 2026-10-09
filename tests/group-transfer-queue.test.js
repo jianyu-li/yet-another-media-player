@@ -21,6 +21,7 @@ const { YetAnotherMediaPlayerCard } = await import("../src/yet-another-media-pla
 const { renderGroupingSheet } = await import("../src/sheets/device-group-sheet.js");
 
 describe("Group Players Menu - Transfer Queue Button", () => {
+  /** @type {any} */
   let card;
 
   beforeEach(() => {
@@ -78,6 +79,7 @@ describe("Group Players Menu - Transfer Queue Button", () => {
       busyLabel: "",
       grouped: false,
       isPrimary: false,
+      disabled: false,
       tooltip: "",
     });
     card.getChipName = (id) => card.hass.states[id]?.attributes?.friendly_name || id;
@@ -179,9 +181,29 @@ describe("Group Players Menu - Transfer Queue Button", () => {
         (v) =>
           v &&
           typeof v === "object" &&
-          v.values &&
+          "values" in v &&
+          Array.isArray(v.values) &&
           v.values.includes("Queue sent to Living Room Group.")
       ) || JSON.stringify(template.values).includes("Queue sent to Living Room Group.")
+    );
+  });
+
+  it("renders pending status banner with spinner icon when transfer is in progress", () => {
+    card._transferQueueStatus = {
+      type: "pending",
+      message: "Transferring playback to Kitchen...",
+    };
+    const template = renderGroupingSheet.call(card);
+    assert.ok(template);
+    const htmlContent = extractTemplateHtml(template);
+    assert.ok(
+      htmlContent.includes("transfer-status-banner pending"),
+      "Should include pending class"
+    );
+    assert.ok(htmlContent.includes("mdi:loading"), "Should render loading icon for pending status");
+    assert.ok(
+      htmlContent.includes("Transferring playback to Kitchen..."),
+      "Should render pending message"
     );
   });
 
@@ -218,6 +240,7 @@ describe("Group Players Menu - Transfer Queue Button", () => {
       busyLabel: id !== "media_player.bedroom" ? "Unavailable" : "",
       grouped: false,
       isPrimary: id === "media_player.bedroom",
+      disabled: id !== "media_player.bedroom",
       tooltip: "",
     });
 
@@ -573,6 +596,7 @@ describe("Group Players Menu - Transfer Queue Button", () => {
       busyLabel: "",
       grouped: false,
       isPrimary: id === "media_player.white_echo_8",
+      disabled: false,
       tooltip: "",
     });
 
@@ -702,6 +726,782 @@ describe("Group Players Menu - Transfer Queue Button", () => {
       dedicatedCard._handleIdleTimeoutCallback();
       assert.equal(dedicatedCard._isIdle, false);
       assert.equal(dedicatedCard._showGrouping, true);
+    });
+  });
+
+  describe("Seamless Master Unjoin & Coordinator Handoff", () => {
+    /** @type {any} */
+    let testCard;
+    let servicesCalled;
+
+    beforeEach(() => {
+      testCard = new YetAnotherMediaPlayerCard();
+      servicesCalled = [];
+      testCard.setConfig({
+        type: "custom:yet-another-media-player",
+        entities: ["media_player.living_room", "media_player.kitchen", "media_player.bedroom"],
+      });
+      testCard.hass = {
+        states: {
+          "media_player.living_room": {
+            entity_id: "media_player.living_room",
+            state: "playing",
+            attributes: {
+              friendly_name: "Living Room",
+              group_members: [
+                "media_player.living_room",
+                "media_player.kitchen",
+                "media_player.bedroom",
+              ],
+              supported_features: 512,
+              app_id: "music_assistant",
+            },
+          },
+          "media_player.kitchen": {
+            entity_id: "media_player.kitchen",
+            state: "playing",
+            attributes: {
+              friendly_name: "Kitchen",
+              group_members: [
+                "media_player.living_room",
+                "media_player.kitchen",
+                "media_player.bedroom",
+              ],
+              supported_features: 512,
+              app_id: "music_assistant",
+            },
+          },
+          "media_player.bedroom": {
+            entity_id: "media_player.bedroom",
+            state: "playing",
+            attributes: {
+              friendly_name: "Bedroom",
+              group_members: [
+                "media_player.living_room",
+                "media_player.kitchen",
+                "media_player.bedroom",
+              ],
+              supported_features: 512,
+              app_id: "music_assistant",
+            },
+          },
+        },
+        services: {
+          music_assistant: {
+            transfer_queue: {},
+          },
+          media_player: {
+            join: {},
+            unjoin: {},
+          },
+        },
+        callService: async (domain, service, data) => {
+          servicesCalled.push({ domain, service, data });
+          return { success: true };
+        },
+      };
+      testCard._selectedIndex = 0;
+      testCard._getGroupingMasterId = () => "media_player.living_room";
+      testCard._getGroupingEntityId = (idx) => testCard.entityIds[idx];
+      testCard._getGroupKey = (id) => id;
+      testCard._hasTransferQueueForCurrent = true;
+      testCard._getActualResolvedMaEntityForState = (idx) => testCard.entityIds[idx];
+      testCard._isGroupCapable = () => true;
+      testCard.getChipName = (id) => testCard.hass.states[id]?.attributes?.friendly_name || id;
+    });
+
+    it("unjoins master by transferring queue to successor, unjoining master, and joining remaining members", async () => {
+      /** @type {any} */
+      let transferPayload = null;
+      testCard._transferQueueTo = async (payload) => {
+        transferPayload = payload;
+        testCard._transferQueueStatus = { type: "success" };
+      };
+
+      await testCard._toggleGroup("media_player.living_room");
+
+      // Verify queue was transferred to Kitchen (the first follower)
+      assert.ok(transferPayload, "transferQueueTo should be called");
+      assert.strictEqual(transferPayload.entityId, "media_player.kitchen");
+      assert.strictEqual(
+        transferPayload.deferSuccess,
+        true,
+        "Should defer success when remaining members exist"
+      );
+      assert.ok(
+        transferPayload.pendingMessage.includes("Kitchen"),
+        "Pending message should name Kitchen"
+      );
+
+      // Verify former master coordinator was not unjoined via service call (not supported / unnecessary)
+      const unjoinCalls = servicesCalled.filter(
+        (s) => s.domain === "media_player" && s.service === "unjoin"
+      );
+      assert.strictEqual(unjoinCalls.length, 0, "Former coordinator should not have unjoin called");
+
+      // Verify remaining member (Bedroom) was joined to new master (Kitchen)
+      const joinCalls = servicesCalled.filter(
+        (s) => s.domain === "media_player" && s.service === "join"
+      );
+      assert.strictEqual(joinCalls.length, 1);
+      assert.strictEqual(joinCalls[0].data.entity_id, "media_player.kitchen");
+      assert.deepStrictEqual(joinCalls[0].data.group_members, ["media_player.bedroom"]);
+
+      // Verify new master is tracked and final status is success
+      assert.strictEqual(testCard._lastGroupingMasterId, "media_player.kitchen");
+      assert.strictEqual(testCard._transferQueueStatus?.type, "success");
+      assert.ok(testCard._transferQueueStatus?.message.includes("Kitchen"));
+    });
+
+    it("does not unjoin master when music_assistant.transfer_queue service is unavailable (native HA/Sonos fallback)", async () => {
+      delete testCard.hass.services.music_assistant.transfer_queue;
+      let transferCalled = false;
+      testCard._transferQueueTo = async () => {
+        transferCalled = true;
+      };
+
+      await testCard._toggleGroup("media_player.living_room");
+
+      assert.strictEqual(transferCalled, false, "Should not transfer queue without service");
+      const unjoinCalls = servicesCalled.filter(
+        (s) => s.domain === "media_player" && s.service === "unjoin"
+      );
+      assert.strictEqual(unjoinCalls.length, 0, "Should not unjoin master without transfer_queue");
+    });
+
+    it("does not unjoin master when only one speaker is playing (sole player)", async () => {
+      testCard.hass.states["media_player.living_room"].attributes.group_members = [
+        "media_player.living_room",
+      ];
+      let transferCalled = false;
+      testCard._transferQueueTo = async () => {
+        transferCalled = true;
+      };
+
+      await testCard._toggleGroup("media_player.living_room");
+
+      assert.strictEqual(transferCalled, false, "Should not transfer queue when sole player");
+      assert.strictEqual(servicesCalled.length, 0, "No services should be called");
+    });
+
+    it("_ungroupAll unjoins followers only and excludes the master coordinator", async () => {
+      let renderTriggered = false;
+      testCard.triggerRender = () => {
+        renderTriggered = true;
+      };
+      await testCard._ungroupAll();
+      const unjoinCalls = servicesCalled.filter(
+        (s) => s.domain === "media_player" && s.service === "unjoin"
+      );
+      assert.strictEqual(unjoinCalls.length, 2);
+      assert.deepStrictEqual(
+        unjoinCalls.map((c) => c.data.entity_id),
+        ["media_player.kitchen", "media_player.bedroom"]
+      );
+      assert.strictEqual(renderTriggered, true, "Should trigger render after ungrouping");
+    });
+
+    it("greys out button for sole playing player and enables join for other players", () => {
+      testCard.hass.states["media_player.living_room"].attributes.group_members = [
+        "media_player.living_room",
+      ];
+      Object.defineProperty(testCard, "_isGridMode", { value: false, configurable: true });
+
+      const template = renderGroupingSheet.call(testCard);
+      assert.ok(template);
+      const htmlContent = extractTemplateHtml(template);
+
+      // Living Room toggle button should be disabled
+      assert.ok(htmlContent.includes("opacity: 0.35"));
+    });
+
+    it("removes Master vs Joined distinction in multi-speaker group state labels", () => {
+      Object.defineProperty(testCard, "_isGridMode", { value: false, configurable: true });
+
+      const template = renderGroupingSheet.call(testCard);
+      assert.ok(template);
+      const htmlContent = extractTemplateHtml(template);
+
+      // State label should say "Joined", not "Master"
+      assert.strictEqual(htmlContent.includes("Master"), false, "Should not render Master label");
+      assert.ok(htmlContent.includes("Joined"), "Should render Joined label");
+    });
+
+    it("uses mdi:speaker-multiple in grid mode without mdi:star", () => {
+      Object.defineProperty(testCard, "_isGridMode", { value: true, configurable: true });
+
+      const template = renderGroupingSheet.call(testCard);
+      assert.ok(template);
+      const htmlContent = extractTemplateHtml(template);
+
+      assert.strictEqual(htmlContent.includes("mdi:star"), false, "Should not render mdi:star");
+      assert.ok(
+        htmlContent.includes("mdi:speaker-multiple"),
+        "Should render mdi:speaker-multiple for grouped players"
+      );
+    });
+
+    it("computes disabled and seamless unjoin states in _getGroupPlayerState", () => {
+      // Living Room (master) with Kitchen in group
+      const masterState = testCard.hass.states["media_player.living_room"];
+      const stateLiving = testCard._getGroupPlayerState(
+        "media_player.living_room",
+        "media_player.living_room",
+        "media_player.living_room",
+        masterState,
+        "media_player.living_room"
+      );
+      assert.strictEqual(stateLiving.disabled, false, "Master can unjoin when grouped with MA");
+      assert.strictEqual(stateLiving.grouped, true, "Master is active in group");
+
+      // Now test solo player
+      masterState.attributes.group_members = ["media_player.living_room"];
+      const stateSolo = testCard._getGroupPlayerState(
+        "media_player.living_room",
+        "media_player.living_room",
+        "media_player.living_room",
+        masterState,
+        "media_player.living_room"
+      );
+      assert.strictEqual(stateSolo.disabled, true, "Sole player button must be disabled");
+    });
+
+    it("resolves group-capable main entity when candidate music_assistant_entity lacks group support", async () => {
+      const card = new YetAnotherMediaPlayerCard();
+      const calls = [];
+      card.setConfig({
+        type: "custom:yet-another-media-player",
+        entities: [
+          { entity_id: "media_player.white_echo_8", name: "Office" },
+          {
+            entity_id: "media_player.kitchen_homepod_2",
+            name: "Kitchen",
+            music_assistant_entity: "media_player.kitchen_homepod",
+          },
+        ],
+      });
+      card.hass = {
+        states: {
+          "media_player.white_echo_8": {
+            entity_id: "media_player.white_echo_8",
+            state: "idle",
+            attributes: {
+              friendly_name: "White Echo 8",
+              group_members: [],
+              supported_features: 8320575,
+              app_id: "music_assistant",
+            },
+          },
+          "media_player.kitchen_homepod_2": {
+            entity_id: "media_player.kitchen_homepod_2",
+            state: "idle",
+            attributes: {
+              friendly_name: "Kitchen Homepod",
+              group_members: [],
+              supported_features: 8320575,
+              app_id: "music_assistant",
+            },
+          },
+          "media_player.kitchen_homepod": {
+            entity_id: "media_player.kitchen_homepod",
+            state: "idle",
+            attributes: {
+              friendly_name: "Kitchen Homepod Apple TV",
+              supported_features: 448439, // No group support
+            },
+          },
+        },
+        services: {
+          music_assistant: { transfer_queue: {} },
+          media_player: { join: {}, unjoin: {} },
+        },
+        callService: (domain, service, data) => {
+          calls.push({ domain, service, data });
+          return Promise.resolve();
+        },
+      };
+
+      // Office is active master
+      assert.strictEqual(card._getGroupingMasterId(), "media_player.white_echo_8");
+
+      // Verify _resolveGroupingEntityId returns media_player.kitchen_homepod_2 (not kitchen_homepod)
+      const kitchenObj = card.entityObjs?.[1];
+      const resolved = card._resolveGroupingEntityId(kitchenObj, "media_player.kitchen_homepod_2");
+      assert.strictEqual(resolved, "media_player.kitchen_homepod_2");
+
+      // Clicking toggle on Kitchen from Office should call join with kitchen_homepod_2
+      await card._toggleGroup("media_player.kitchen_homepod_2");
+      assert.strictEqual(calls.length, 1);
+      assert.strictEqual(calls[0].domain, "media_player");
+      assert.strictEqual(calls[0].service, "join");
+      assert.strictEqual(calls[0].data.entity_id, "media_player.white_echo_8");
+      assert.deepStrictEqual(calls[0].data.group_members, ["media_player.kitchen_homepod_2"]);
+    });
+
+    describe("Grouped Players Visual Card Containers", () => {
+      it("renders grouped-players-card enclosing grouped players in list mode with no header actions on current group and hides row transfer buttons", () => {
+        Object.defineProperty(testCard, "_isGridMode", { value: false, configurable: true });
+        // Living Room & Kitchen are grouped together, Bedroom is standalone
+        testCard.hass.states["media_player.living_room"].attributes.group_members = [
+          "media_player.living_room",
+          "media_player.kitchen",
+        ];
+        testCard.hass.states["media_player.kitchen"].attributes.group_members = [
+          "media_player.living_room",
+          "media_player.kitchen",
+        ];
+        testCard.hass.states["media_player.bedroom"].attributes.group_members = [];
+
+        testCard._getGroupKey = (id) =>
+          id === "media_player.kitchen" ? "media_player.living_room" : id;
+
+        const template = renderGroupingSheet.call(testCard);
+        assert.ok(template);
+        const htmlContent = extractTemplateHtml(template);
+
+        assert.ok(
+          htmlContent.includes("grouped-players-card"),
+          "Should render grouped-players-card container"
+        );
+        assert.ok(
+          htmlContent.includes("is-current-group"),
+          "Active group should have is-current-group class"
+        );
+        assert.ok(htmlContent.includes("grouped-card-header"), "Should render grouped-card-header");
+        assert.ok(
+          htmlContent.includes("Living Room Group"),
+          "Should render group label based on master entity name"
+        );
+        assert.strictEqual(
+          htmlContent.includes("grouped-card-badge"),
+          false,
+          "Should not render badge for current group"
+        );
+        assert.strictEqual(
+          htmlContent.includes("grouped-card-transfer-btn"),
+          false,
+          "Current group should not render transfer queue button"
+        );
+        assert.ok(
+          htmlContent.includes("grouped-card-ungroup-btn"),
+          "Current group should still render ungroup all button"
+        );
+        // Bedroom is standalone and should have a group-transfer-btn, but Living Room & Kitchen inside group should not
+        const transferBtnMatches = htmlContent.match(/class="group-transfer-btn"/g);
+        assert.strictEqual(
+          transferBtnMatches?.length,
+          1,
+          "Only standalone bedroom player should have individual group-transfer-btn"
+        );
+      });
+
+      it("renders grid-group-card enclosing grouped players in grid mode", () => {
+        Object.defineProperty(testCard, "_isGridMode", { value: true, configurable: true });
+        testCard.hass.states["media_player.living_room"].attributes.group_members = [
+          "media_player.living_room",
+          "media_player.kitchen",
+        ];
+        testCard.hass.states["media_player.kitchen"].attributes.group_members = [
+          "media_player.living_room",
+          "media_player.kitchen",
+        ];
+        testCard.hass.states["media_player.bedroom"].attributes.group_members = [];
+
+        testCard._getGroupKey = (id) =>
+          id === "media_player.kitchen" ? "media_player.living_room" : id;
+
+        const template = renderGroupingSheet.call(testCard);
+        assert.ok(template);
+        const htmlContent = extractTemplateHtml(template);
+
+        assert.ok(
+          htmlContent.includes("grid-group-card"),
+          "Should render grid-group-card container in grid mode"
+        );
+        assert.ok(
+          htmlContent.includes("grid-group-card-items"),
+          "Should render grid-group-card-items subgrid"
+        );
+        assert.ok(
+          htmlContent.includes("grid-menu-items"),
+          "Should render grid-menu-items for standalone players"
+        );
+      });
+
+      it("does not render grouped card boxes when no players are grouped", () => {
+        Object.defineProperty(testCard, "_isGridMode", { value: false, configurable: true });
+        testCard.hass.states["media_player.living_room"].attributes.group_members = [
+          "media_player.living_room",
+        ];
+        testCard.hass.states["media_player.kitchen"].attributes.group_members = [];
+        testCard.hass.states["media_player.bedroom"].attributes.group_members = [];
+
+        testCard._getGroupKey = (id) => id;
+
+        const template = renderGroupingSheet.call(testCard);
+        assert.ok(template);
+        const htmlContent = extractTemplateHtml(template);
+
+        assert.strictEqual(
+          htmlContent.includes("grouped-players-card"),
+          false,
+          "Should not render grouped-players-card when all players are solo"
+        );
+        assert.strictEqual(
+          htmlContent.includes("grid-group-card"),
+          false,
+          "Should not render grid-group-card when all players are solo"
+        );
+        assert.strictEqual(
+          htmlContent.includes("grouped-card-header"),
+          false,
+          "Should not render grouped-card-header when all players are solo"
+        );
+      });
+
+      it("renders multiple distinct group card boxes when multiple groups exist in the house", () => {
+        const multiCard = new YetAnotherMediaPlayerCard();
+        multiCard.setConfig({
+          type: "custom:yet-another-media-player",
+          entities: [
+            "media_player.living_room",
+            "media_player.kitchen",
+            "media_player.bedroom",
+            "media_player.office",
+          ],
+        });
+        multiCard._selectedIndex = 0; // Living Room is current
+        multiCard.hass = {
+          states: {
+            "media_player.living_room": {
+              entity_id: "media_player.living_room",
+              state: "playing",
+              attributes: {
+                friendly_name: "Living Room",
+                group_members: ["media_player.living_room", "media_player.kitchen"],
+                supported_features: 512,
+                app_id: "music_assistant",
+              },
+            },
+            "media_player.kitchen": {
+              entity_id: "media_player.kitchen",
+              state: "playing",
+              attributes: {
+                friendly_name: "Kitchen",
+                supported_features: 512,
+                app_id: "music_assistant",
+              },
+            },
+            "media_player.bedroom": {
+              entity_id: "media_player.bedroom",
+              state: "playing",
+              attributes: {
+                friendly_name: "Bedroom",
+                group_members: ["media_player.bedroom", "media_player.office"],
+                supported_features: 512,
+                app_id: "music_assistant",
+              },
+            },
+            "media_player.office": {
+              entity_id: "media_player.office",
+              state: "playing",
+              attributes: {
+                friendly_name: "Office",
+                supported_features: 512,
+                app_id: "music_assistant",
+              },
+            },
+          },
+          services: {
+            music_assistant: { transfer_queue: {} },
+          },
+        };
+        multiCard._isGroupCapable = () => true;
+        multiCard._getGroupingMasterId = () => "media_player.living_room";
+        multiCard._getGroupingEntityId = (idx) => multiCard.entityIds[idx];
+        multiCard._getGroupKey = (id) => {
+          if (id === "media_player.kitchen") return "media_player.living_room";
+          if (id === "media_player.office") return "media_player.bedroom";
+          return id;
+        };
+        multiCard._getGroupPlayerState = (id) => ({
+          isGroupable: true,
+          entityToCheck: id,
+          isBusy: id === "media_player.bedroom" || id === "media_player.office",
+          busyLabel: id === "media_player.bedroom" || id === "media_player.office" ? "Joined" : "",
+          grouped: id === "media_player.kitchen" || id === "media_player.living_room",
+          isPrimary: id === "media_player.living_room",
+          disabled: false,
+          tooltip: "",
+        });
+        multiCard.getChipName = (id) => multiCard.hass.states[id]?.attributes?.friendly_name || id;
+        multiCard._getVolumeEntity = () => null;
+        multiCard._hasTransferQueueForCurrent = true;
+        multiCard._getActualResolvedMaEntityForState = (idx) => multiCard.entityIds[idx];
+        Object.defineProperty(multiCard, "_isGridMode", { value: false, configurable: true });
+
+        const template = renderGroupingSheet.call(multiCard);
+        assert.ok(template);
+        const htmlContent = extractTemplateHtml(template);
+
+        // Verify both group cards are rendered
+        assert.ok(
+          htmlContent.includes("Living Room Group"),
+          "Should render Living Room Group card"
+        );
+        assert.ok(htmlContent.includes("Bedroom Group"), "Should render Bedroom Group card");
+
+        // Verify Living Room Group has is-current-group while Bedroom Group does not
+        const livingRoomGroupIdx = htmlContent.indexOf("Living Room Group");
+        const bedroomGroupIdx = htmlContent.indexOf("Bedroom Group");
+        assert.ok(
+          livingRoomGroupIdx < bedroomGroupIdx,
+          "Active group (Living Room Group) should be rendered before Bedroom Group"
+        );
+      });
+
+      it("renders ungroup all and transfer buttons in the top right corner of non-current grouped cards", () => {
+        Object.defineProperty(testCard, "_isGridMode", { value: false, configurable: true });
+        testCard._selectedIndex = 2; // Bedroom is current, Living Room Group is non-current
+        Object.defineProperty(testCard, "currentEntityId", {
+          get: () => "media_player.bedroom",
+          configurable: true,
+        });
+        testCard._getGroupingMasterId = () => "media_player.bedroom";
+        testCard.hass.states["media_player.living_room"].attributes.group_members = [
+          "media_player.living_room",
+          "media_player.kitchen",
+        ];
+        testCard.hass.states["media_player.kitchen"].attributes.group_members = [
+          "media_player.living_room",
+          "media_player.kitchen",
+        ];
+        testCard.hass.states["media_player.bedroom"].attributes.group_members = [
+          "media_player.bedroom",
+        ];
+        testCard._getGroupKey = (id) =>
+          id === "media_player.kitchen" ? "media_player.living_room" : id;
+
+        const template = renderGroupingSheet.call(testCard);
+        assert.ok(template);
+        const htmlContent = extractTemplateHtml(template);
+
+        assert.ok(
+          htmlContent.includes("grouped-card-ungroup-btn"),
+          "Should render grouped-card-ungroup-btn on non-current group"
+        );
+        assert.ok(htmlContent.includes("Ungroup All"), "Should render Ungroup All text on button");
+        assert.ok(
+          htmlContent.includes("grouped-card-transfer-btn"),
+          "Should render grouped-card-transfer-btn on non-current group"
+        );
+      });
+
+      it("hides individual transfer buttons on grouped rows in grid mode while showing on standalone", () => {
+        Object.defineProperty(testCard, "_isGridMode", { value: true, configurable: true });
+        testCard.hass.states["media_player.living_room"].attributes.group_members = [
+          "media_player.living_room",
+          "media_player.kitchen",
+        ];
+        testCard.hass.states["media_player.kitchen"].attributes.group_members = [
+          "media_player.living_room",
+          "media_player.kitchen",
+        ];
+        testCard.hass.states["media_player.bedroom"].attributes.group_members = [];
+        testCard._getGroupKey = (id) =>
+          id === "media_player.kitchen" ? "media_player.living_room" : id;
+
+        const template = renderGroupingSheet.call(testCard);
+        assert.ok(template);
+        const htmlContent = extractTemplateHtml(template);
+
+        // grid-menu-transfer-btn should only appear for standalone bedroom, not inside the grid group card
+        const gridTransferMatches = htmlContent.match(/class="grid-menu-transfer-btn"/g);
+        assert.strictEqual(
+          gridTransferMatches?.length,
+          1,
+          "Only standalone bedroom item should have grid-menu-transfer-btn"
+        );
+      });
+
+      it("invokes _transferQueueTo with group coordinator payload when clicking group card transfer button", () => {
+        Object.defineProperty(testCard, "_isGridMode", { value: false, configurable: true });
+        testCard._selectedIndex = 2; // Bedroom is current
+        Object.defineProperty(testCard, "currentEntityId", {
+          get: () => "media_player.bedroom",
+          configurable: true,
+        });
+        testCard._getGroupingMasterId = () => "media_player.bedroom";
+        testCard.hass.states["media_player.living_room"].attributes.group_members = [
+          "media_player.living_room",
+          "media_player.kitchen",
+        ];
+        testCard.hass.states["media_player.kitchen"].attributes.group_members = [
+          "media_player.living_room",
+          "media_player.kitchen",
+        ];
+        testCard.hass.states["media_player.bedroom"].attributes.group_members = [
+          "media_player.bedroom",
+        ];
+        testCard._getGroupKey = (id) =>
+          id === "media_player.kitchen" ? "media_player.living_room" : id;
+
+        const transferState = {
+          /** @type {any} */
+          target: null,
+        };
+        testCard._transferQueueTo = (payload) => {
+          transferState.target = payload;
+        };
+
+        const template = renderGroupingSheet.call(testCard);
+        assert.ok(template);
+
+        // Find all functions in template values and execute
+        const clickFns = [];
+        function findFunctions(obj) {
+          if (!obj) return;
+          if (typeof obj === "function") {
+            clickFns.push(obj);
+          } else if (Array.isArray(obj)) {
+            obj.forEach(findFunctions);
+          } else if (typeof obj === "object" && obj.values) {
+            findFunctions(obj.values);
+          }
+        }
+        findFunctions(template.values);
+
+        for (const fn of clickFns) {
+          try {
+            fn({ stopPropagation() {} });
+            if (
+              transferState.target &&
+              transferState.target.entityId === "media_player.living_room"
+            ) {
+              break;
+            }
+          } catch (_e) {
+            // ignore
+          }
+        }
+
+        assert.ok(transferState.target, "Expected _transferQueueTo to be called");
+        assert.strictEqual(transferState.target.entityId, "media_player.living_room");
+        assert.ok(transferState.target.name.includes("Living Room"));
+        assert.strictEqual(transferState.target.icon, "mdi:speaker-multiple");
+      });
+
+      it("disables group header transfer button when there is no active queue to transfer", () => {
+        Object.defineProperty(testCard, "_isGridMode", { value: false, configurable: true });
+        testCard._selectedIndex = 2; // Bedroom is current
+        Object.defineProperty(testCard, "currentEntityId", {
+          get: () => "media_player.bedroom",
+          configurable: true,
+        });
+        testCard._getGroupingMasterId = () => "media_player.bedroom";
+        testCard._hasTransferQueueForCurrent = false; // No queue to transfer
+        testCard.hass.states["media_player.living_room"].attributes.group_members = [
+          "media_player.living_room",
+          "media_player.kitchen",
+        ];
+        testCard.hass.states["media_player.kitchen"].attributes.group_members = [
+          "media_player.living_room",
+          "media_player.kitchen",
+        ];
+        testCard.hass.states["media_player.bedroom"].attributes.group_members = [
+          "media_player.bedroom",
+        ];
+        testCard._getGroupKey = (id) =>
+          id === "media_player.kitchen" ? "media_player.living_room" : id;
+
+        const template = renderGroupingSheet.call(testCard);
+        assert.ok(template);
+        const htmlContent = extractTemplateHtml(template);
+
+        assert.ok(
+          htmlContent.includes("No active queue to transfer"),
+          "Tooltip should reflect no active queue"
+        );
+      });
+
+      it("ungroups a specific targeted group when targetMasterId is passed to _ungroupAll", async () => {
+        const calls = [];
+        const card = new YetAnotherMediaPlayerCard();
+        card.setConfig({
+          type: "custom:yet-another-media-player",
+          entities: [
+            "media_player.living_room",
+            "media_player.kitchen",
+            "media_player.bedroom",
+            "media_player.office",
+          ],
+        });
+        card._selectedIndex = 0; // Living Room is current
+        card.hass = {
+          states: {
+            "media_player.living_room": {
+              entity_id: "media_player.living_room",
+              state: "playing",
+              attributes: {
+                friendly_name: "Living Room",
+                group_members: ["media_player.living_room", "media_player.kitchen"],
+                supported_features: 512,
+                app_id: "music_assistant",
+              },
+            },
+            "media_player.kitchen": {
+              entity_id: "media_player.kitchen",
+              state: "playing",
+              attributes: {
+                friendly_name: "Kitchen",
+                supported_features: 512,
+                app_id: "music_assistant",
+              },
+            },
+            "media_player.bedroom": {
+              entity_id: "media_player.bedroom",
+              state: "playing",
+              attributes: {
+                friendly_name: "Bedroom",
+                group_members: ["media_player.bedroom", "media_player.office"],
+                supported_features: 512,
+                app_id: "music_assistant",
+              },
+            },
+            "media_player.office": {
+              entity_id: "media_player.office",
+              state: "playing",
+              attributes: {
+                friendly_name: "Office",
+                supported_features: 512,
+                app_id: "music_assistant",
+              },
+            },
+          },
+          services: {
+            media_player: { unjoin: {} },
+          },
+          callService: (domain, service, data) => {
+            calls.push({ domain, service, data });
+            return Promise.resolve();
+          },
+        };
+        card._isGroupCapable = () => true;
+        card._getGroupingMasterId = () => "media_player.living_room";
+        card._getGroupingEntityId = (idx) => card.entityIds[idx];
+
+        // Call _ungroupAll specifically on Bedroom group
+        await card._ungroupAll("media_player.bedroom");
+
+        assert.strictEqual(calls.length, 1);
+        assert.strictEqual(calls[0].domain, "media_player");
+        assert.strictEqual(calls[0].service, "unjoin");
+        assert.strictEqual(
+          calls[0].data.entity_id,
+          "media_player.office",
+          "Should unjoin office from bedroom, leaving living room group alone"
+        );
+      });
     });
   });
 });

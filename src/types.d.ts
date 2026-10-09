@@ -695,6 +695,17 @@ export function joinPlayers(
 ): Promise<any>;
 export function unjoinPlayer(hass?: HomeAssistant, entityId?: string): Promise<any>;
 
+export interface GroupPlayerState {
+  isGroupable: boolean;
+  isBusy: boolean;
+  busyLabel: string;
+  grouped: boolean;
+  isPrimary?: boolean;
+  disabled?: boolean;
+  entityToCheck?: string | null;
+  tooltip?: string;
+}
+
 export interface YetAnotherMediaPlayerCard {
   hass?: HomeAssistant;
   entityIds?: string[];
@@ -720,6 +731,13 @@ export interface YetAnotherMediaPlayerCard {
   _getHiddenMenuOptions?: (idx?: number) => string[];
   _isMenuOptionHidden?: (optionKey: string, idx?: number) => boolean;
   _isMenuActionHidden?: (action: any, idx?: number) => boolean;
+  _getGroupPlayerState?: (
+    targetId: string,
+    activeId?: string | null,
+    activeGroupKey?: string | null,
+    masterState?: any,
+    myGroupKey?: string | null
+  ) => GroupPlayerState;
   shouldUpdate?: (changedProps: Map<string | number | symbol, unknown>) => boolean;
   requestUpdate?: (name?: PropertyKey, oldValue?: unknown) => Promise<unknown>;
   [key: string]: any;
