@@ -14,6 +14,8 @@ export const SUPPORT_SHUFFLE = 32768;
 export const SUPPORT_GROUPING = 524288;
 export const SUPPORT_REPEAT_SET = 262144;
 
+export const GROUP_SELECTION_FEEDBACK_DURATION_MS = 1200;
+
 export const ARTWORK_OVERRIDE_MATCH_KEYS = Object.freeze([
   "aspect_ratio",
   "media_title",

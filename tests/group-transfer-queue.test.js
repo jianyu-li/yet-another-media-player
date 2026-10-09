@@ -19,6 +19,7 @@ g.__VERSION__ = "1.0.0-test";
 
 const { YetAnotherMediaPlayerCard } = await import("../src/yet-another-media-player.js");
 const { renderGroupingSheet } = await import("../src/sheets/device-group-sheet.js");
+const { GROUP_SELECTION_FEEDBACK_DURATION_MS } = await import("../src/constants.js");
 
 describe("Group Players Menu - Transfer Queue Button", () => {
   /** @type {any} */
@@ -1502,6 +1503,455 @@ describe("Group Players Menu - Transfer Queue Button", () => {
           "Should unjoin office from bedroom, leaving living room group alone"
         );
       });
+
+      it("ungroups ALL entities across all groups when _ungroupAll is called without targetMasterId", async () => {
+        const calls = [];
+        const card = new YetAnotherMediaPlayerCard();
+        card.setConfig({
+          type: "custom:yet-another-media-player",
+          entities: [
+            "media_player.living_room",
+            "media_player.kitchen",
+            "media_player.bedroom",
+            "media_player.office",
+          ],
+        });
+        card._selectedIndex = 0;
+        card.hass = {
+          states: {
+            "media_player.living_room": {
+              entity_id: "media_player.living_room",
+              state: "playing",
+              attributes: {
+                friendly_name: "Living Room",
+                group_members: ["media_player.living_room", "media_player.kitchen"],
+                supported_features: 512,
+                app_id: "music_assistant",
+              },
+            },
+            "media_player.kitchen": {
+              entity_id: "media_player.kitchen",
+              state: "playing",
+              attributes: {
+                friendly_name: "Kitchen",
+                supported_features: 512,
+                app_id: "music_assistant",
+              },
+            },
+            "media_player.bedroom": {
+              entity_id: "media_player.bedroom",
+              state: "playing",
+              attributes: {
+                friendly_name: "Bedroom",
+                group_members: ["media_player.bedroom", "media_player.office"],
+                supported_features: 512,
+                app_id: "music_assistant",
+              },
+            },
+            "media_player.office": {
+              entity_id: "media_player.office",
+              state: "playing",
+              attributes: {
+                friendly_name: "Office",
+                supported_features: 512,
+                app_id: "music_assistant",
+              },
+            },
+          },
+          services: {
+            media_player: { unjoin: {} },
+          },
+          callService: (domain, service, data) => {
+            calls.push({ domain, service, data });
+            return Promise.resolve();
+          },
+        };
+        card._isGroupCapable = () => true;
+        card._getGroupingMasterId = () => "media_player.living_room";
+        card._getGroupingEntityId = (idx) => card.entityIds[idx];
+        card._getGroupKey = (id) => {
+          if (id === "media_player.kitchen") return "media_player.living_room";
+          if (id === "media_player.office") return "media_player.bedroom";
+          return id;
+        };
+
+        // Call _ungroupAll globally (top button behavior)
+        await card._ungroupAll();
+
+        assert.strictEqual(calls.length, 2, "Should unjoin followers of all groups");
+        const unjoinedEntities = calls.map((c) => c.data.entity_id);
+        assert.ok(
+          unjoinedEntities.includes("media_player.kitchen"),
+          "Should unjoin kitchen from living room"
+        );
+        assert.ok(
+          unjoinedEntities.includes("media_player.office"),
+          "Should unjoin office from bedroom"
+        );
+        assert.ok(
+          !unjoinedEntities.includes("media_player.living_room"),
+          "Should not unjoin living room coordinator"
+        );
+        assert.ok(
+          !unjoinedEntities.includes("media_player.bedroom"),
+          "Should not unjoin bedroom coordinator"
+        );
+      });
+
+      it("renders Ungroup All in top action bar when any group exists even if active entity is solo", () => {
+        const card = new YetAnotherMediaPlayerCard();
+        card.setConfig({
+          type: "custom:yet-another-media-player",
+          entities: ["media_player.solo", "media_player.bedroom", "media_player.office"],
+        });
+        card._selectedIndex = 0; // Solo player is active
+        card.hass = {
+          states: {
+            "media_player.solo": {
+              entity_id: "media_player.solo",
+              state: "idle",
+              attributes: {
+                friendly_name: "Solo Player",
+                group_members: ["media_player.solo"],
+                supported_features: 512,
+              },
+            },
+            "media_player.bedroom": {
+              entity_id: "media_player.bedroom",
+              state: "playing",
+              attributes: {
+                friendly_name: "Bedroom",
+                group_members: ["media_player.bedroom", "media_player.office"],
+                supported_features: 512,
+              },
+            },
+            "media_player.office": {
+              entity_id: "media_player.office",
+              state: "playing",
+              attributes: {
+                friendly_name: "Office",
+                supported_features: 512,
+              },
+            },
+          },
+          services: {
+            media_player: { unjoin: {}, join: {} },
+          },
+        };
+        card._isGroupCapable = () => true;
+        card._getGroupingMasterId = () => "media_player.solo";
+        card._getGroupingEntityId = (idx) => card.entityIds[idx];
+        card._getGroupKey = (id) => (id === "media_player.office" ? "media_player.bedroom" : id);
+        card.getChipName = (id) => card.hass.states[id]?.attributes?.friendly_name || id;
+        Object.defineProperty(card, "_isGridMode", { value: false, configurable: true });
+
+        const template = renderGroupingSheet.call(card);
+        assert.ok(template);
+        const htmlContent = extractTemplateHtml(template);
+        assert.ok(
+          htmlContent.includes("Ungroup All"),
+          "Top toolbar should display Ungroup All when any other group exists"
+        );
+      });
+
+      it("renders Group All in top action bar only when NO groups exist anywhere in the card", () => {
+        const card = new YetAnotherMediaPlayerCard();
+        card.setConfig({
+          type: "custom:yet-another-media-player",
+          entities: ["media_player.living_room", "media_player.bedroom"],
+        });
+        card._selectedIndex = 0;
+        card.hass = {
+          states: {
+            "media_player.living_room": {
+              entity_id: "media_player.living_room",
+              state: "idle",
+              attributes: {
+                friendly_name: "Living Room",
+                group_members: ["media_player.living_room"],
+                supported_features: 512,
+              },
+            },
+            "media_player.bedroom": {
+              entity_id: "media_player.bedroom",
+              state: "idle",
+              attributes: {
+                friendly_name: "Bedroom",
+                group_members: ["media_player.bedroom"],
+                supported_features: 512,
+              },
+            },
+          },
+          services: {
+            media_player: { unjoin: {}, join: {} },
+          },
+        };
+        card._isGroupCapable = () => true;
+        card._getGroupingMasterId = () => "media_player.living_room";
+        card._getGroupingEntityId = (idx) => card.entityIds[idx];
+        card._getGroupKey = (id) => id;
+        card.getChipName = (id) => card.hass.states[id]?.attributes?.friendly_name || id;
+        Object.defineProperty(card, "_isGridMode", { value: false, configurable: true });
+
+        const template = renderGroupingSheet.call(card);
+        assert.ok(template);
+        const htmlContent = extractTemplateHtml(template);
+        assert.ok(
+          htmlContent.includes("Group All"),
+          "Top toolbar should display Group All when no entities are grouped"
+        );
+      });
+    });
+  });
+
+  describe("Click Entity Name & Subheader to Make Active", () => {
+    it("renders entity name and subheader with role button, tabindex, and cursor pointer", () => {
+      Object.defineProperty(card, "_isGridMode", { value: false, configurable: true });
+      const template = renderGroupingSheet.call(card);
+      assert.ok(template);
+      const htmlContent = extractTemplateHtml(template);
+
+      assert.ok(
+        htmlContent.includes('role="button"'),
+        "Should have role button on clickable entity rows"
+      );
+      assert.ok(
+        htmlContent.includes("cursor:pointer"),
+        "Should have cursor:pointer for selectable entities"
+      );
+      assert.ok(htmlContent.includes("Living Room"), "Should render Living Room name");
+      assert.ok(htmlContent.includes("Kitchen"), "Should render Kitchen name");
+      assert.ok(htmlContent.includes("Bedroom"), "Should render Bedroom name");
+    });
+
+    it("invokes _onChipClick when clicking on an entity name / subheader row", () => {
+      Object.defineProperty(card, "_isGridMode", { value: false, configurable: true });
+      const clickedIndices = [];
+      card._onChipClick = (idx) => {
+        clickedIndices.push(idx);
+      };
+
+      const template = renderGroupingSheet.call(card);
+      assert.ok(template);
+
+      const fns = [];
+      function collectFns(obj) {
+        if (!obj) return;
+        if (typeof obj === "function") {
+          fns.push(obj);
+        } else if (Array.isArray(obj)) {
+          obj.forEach(collectFns);
+        } else if (typeof obj === "object" && obj.values) {
+          collectFns(obj.values);
+        }
+      }
+      collectFns(template.values);
+
+      // Invoke functions simulating click events
+      for (const fn of fns) {
+        try {
+          fn({ stopPropagation() {} });
+        } catch (err) {
+          // Ignore unrelated template functions
+          void err;
+        }
+      }
+
+      // Should have triggered _onChipClick for living_room (0), kitchen (1), and bedroom (2)
+      assert.ok(clickedIndices.includes(0), "Should be able to select Living Room (idx 0)");
+      assert.ok(clickedIndices.includes(1), "Should be able to select Kitchen (idx 1)");
+      assert.ok(clickedIndices.includes(2), "Should be able to select Bedroom (idx 2)");
+    });
+
+    it("invokes _onChipClick when pressing Enter or Space on an entity name / subheader", () => {
+      Object.defineProperty(card, "_isGridMode", { value: false, configurable: true });
+      const keydownIndices = [];
+      card._onChipClick = (idx) => {
+        keydownIndices.push(idx);
+      };
+
+      const template = renderGroupingSheet.call(card);
+      assert.ok(template);
+
+      const fns = [];
+      function collectFns(obj) {
+        if (!obj) return;
+        if (typeof obj === "function") {
+          fns.push(obj);
+        } else if (Array.isArray(obj)) {
+          obj.forEach(collectFns);
+        } else if (typeof obj === "object" && obj.values) {
+          collectFns(obj.values);
+        }
+      }
+      collectFns(template.values);
+
+      // Test Enter key
+      for (const fn of fns) {
+        try {
+          fn({ key: "Enter", preventDefault() {}, stopPropagation() {} });
+        } catch (err) {
+          // Ignore unrelated template functions
+          void err;
+        }
+      }
+      assert.ok(keydownIndices.includes(1), "Should select Kitchen on Enter key");
+
+      // Test Space key
+      keydownIndices.length = 0;
+      for (const fn of fns) {
+        try {
+          fn({ key: " ", preventDefault() {}, stopPropagation() {} });
+        } catch (err) {
+          // Ignore unrelated template functions
+          void err;
+        }
+      }
+      assert.ok(keydownIndices.includes(2), "Should select Bedroom on Space key");
+    });
+
+    it("invokes _onChipClick when clicking on the group card title", () => {
+      Object.defineProperty(card, "_isGridMode", { value: false, configurable: true });
+      const clickedIndices = [];
+      card._onChipClick = (idx) => {
+        clickedIndices.push(idx);
+      };
+
+      const template = renderGroupingSheet.call(card);
+      assert.ok(template);
+
+      const fns = [];
+      function collectFns(obj) {
+        if (!obj) return;
+        if (typeof obj === "function") {
+          fns.push(obj);
+        } else if (Array.isArray(obj)) {
+          obj.forEach(collectFns);
+        } else if (typeof obj === "object" && obj.values) {
+          collectFns(obj.values);
+        }
+      }
+      collectFns(template.values);
+
+      for (const fn of fns) {
+        try {
+          fn({ stopPropagation() {} });
+        } catch (err) {
+          // Ignore unrelated template functions
+          void err;
+        }
+      }
+
+      // Group master is living_room (index 0)
+      assert.ok(clickedIndices.includes(0), "Should select group master on group card click");
+    });
+
+    it("scrolls group list containers back to the top when _scrollGroupingListToTop is invoked", () => {
+      let scrollListCalled = false;
+      const mockList = {
+        scrollTo: (opts) => {
+          if (opts.top === 0) scrollListCalled = true;
+        },
+        scrollTop: 100,
+      };
+      const mockSheet = {
+        scrollTop: 150,
+      };
+
+      card.renderRoot = {
+        querySelector: (sel) => {
+          if (sel === ".group-list-scroll") return mockList;
+          if (sel === ".entity-options-sheet") return mockSheet;
+          return null;
+        },
+      };
+
+      card._scrollGroupingListToTop();
+
+      assert.strictEqual(
+        scrollListCalled,
+        true,
+        "Should call scrollTo with top: 0 on group-list-scroll"
+      );
+      assert.strictEqual(
+        mockSheet.scrollTop,
+        0,
+        "Should reset scrollTop to 0 on entity-options-sheet when scrollTo is not available"
+      );
+    });
+
+    it("selects entity and scrolls to top when _selectEntityFromGrouping is invoked", async () => {
+      let chipClicked = null;
+      let scrollCount = 0;
+      card._onChipClick = (idx) => {
+        chipClicked = idx;
+      };
+      card._scrollGroupingListToTop = () => {
+        scrollCount++;
+      };
+      Object.defineProperty(card, "updateComplete", {
+        value: Promise.resolve(),
+        configurable: true,
+      });
+
+      card._selectEntityFromGrouping(1);
+
+      assert.strictEqual(chipClicked, 1, "Should invoke _onChipClick with target index");
+      assert.strictEqual(scrollCount, 1, "Should immediately call _scrollGroupingListToTop");
+
+      await card.updateComplete;
+      assert.strictEqual(
+        scrollCount,
+        2,
+        "Should call _scrollGroupingListToTop again after updateComplete settles"
+      );
+    });
+
+    it("applies just-moved feedback class on the selected entity row and group card", () => {
+      Object.defineProperty(card, "_isGridMode", { value: false, configurable: true });
+
+      // Before selection
+      let template = renderGroupingSheet.call(card);
+      let htmlContent = extractTemplateHtml(template);
+      assert.strictEqual(
+        htmlContent.includes("just-moved"),
+        false,
+        "Should not have just-moved class before selection"
+      );
+
+      // Select kitchen (media_player.kitchen)
+      card._justSelectedGroupingEntityId = "media_player.kitchen";
+      template = renderGroupingSheet.call(card);
+      htmlContent = extractTemplateHtml(template);
+
+      assert.ok(
+        htmlContent.includes("just-moved"),
+        "Should apply just-moved class to the selected entity and its group card"
+      );
+    });
+
+    it("sets _justSelectedGroupingEntityId on selection and clears it after timeout", async () => {
+      card._scrollGroupingListToTop = () => {};
+      Object.defineProperty(card, "updateComplete", {
+        value: Promise.resolve(),
+        configurable: true,
+      });
+
+      card._selectEntityFromGrouping(2); // media_player.bedroom
+      assert.strictEqual(
+        card._justSelectedGroupingEntityId,
+        "media_player.bedroom",
+        "Should set _justSelectedGroupingEntityId to target entity ID"
+      );
+      assert.ok(card._justSelectedGroupingTimeout, "Should create timer to clear indicator");
+
+      // Fast-forward or wait for timeout
+      await new Promise((r) => setTimeout(r, GROUP_SELECTION_FEEDBACK_DURATION_MS + 100));
+      assert.strictEqual(
+        card._justSelectedGroupingEntityId,
+        null,
+        "Should clear _justSelectedGroupingEntityId after timeout"
+      );
     });
   });
 });

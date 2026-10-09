@@ -94,6 +94,7 @@ import {
   SUPPORT_GROUPING,
   DEFAULT_PROGRESS_BAR_HEIGHT,
   DEFAULT_LYRICS_BACKGROUND_FADE,
+  GROUP_SELECTION_FEEDBACK_DURATION_MS,
   getTemplatePresetDefaults,
   CANONICAL_MENU_OPTION_MAP,
 } from "./constants.js";
@@ -9543,6 +9544,10 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       clearTimeout(this._idleTimeout);
       this._idleTimeout = null;
     }
+    if (this._justSelectedGroupingTimeout) {
+      clearTimeout(this._justSelectedGroupingTimeout);
+      this._justSelectedGroupingTimeout = null;
+    }
     if (this._dragClickCaptureTimeout) {
       clearTimeout(this._dragClickCaptureTimeout);
       this._dragClickCaptureTimeout = null;
@@ -10018,7 +10023,56 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._showGrouping = false;
     this._transferQueuePendingTarget = null;
     this._transferQueueStatus = null;
+    this._justSelectedGroupingEntityId = null;
+    if (this._justSelectedGroupingTimeout) {
+      clearTimeout(this._justSelectedGroupingTimeout);
+      this._justSelectedGroupingTimeout = null;
+    }
     // No requestUpdate here; overlay close will handle it.
+  }
+  _scrollGroupingListToTop() {
+    const root = this.renderRoot || this;
+    if (!root || typeof root.querySelector !== "function") return;
+    const containers = [
+      root.querySelector(".group-list-scroll"),
+      root.querySelector(".entity-options-sheet"),
+      root.querySelector(".entity-options-overlay"),
+      root.querySelector(".entity-options-container"),
+    ].filter(Boolean);
+
+    for (const el of containers) {
+      if (typeof el.scrollTo === "function") {
+        try {
+          el.scrollTo({ top: 0, behavior: "smooth" });
+        } catch {
+          el.scrollTop = 0;
+        }
+      } else {
+        el.scrollTop = 0;
+      }
+    }
+  }
+  _selectEntityFromGrouping(idx) {
+    if (idx === undefined || idx < 0) return;
+    const targetEntityId = this.entityIds?.[idx];
+    if (targetEntityId) {
+      if (this._justSelectedGroupingTimeout) {
+        clearTimeout(this._justSelectedGroupingTimeout);
+      }
+      this._justSelectedGroupingEntityId = targetEntityId;
+      this._justSelectedGroupingTimeout = setTimeout(() => {
+        this._justSelectedGroupingEntityId = null;
+        this._justSelectedGroupingTimeout = null;
+        this.requestUpdate();
+      }, GROUP_SELECTION_FEEDBACK_DURATION_MS);
+    }
+    this._onChipClick(idx);
+    this._scrollGroupingListToTop();
+    if (this.updateComplete?.then) {
+      this.updateComplete.then(() => {
+        this._scrollGroupingListToTop();
+      });
+    }
   }
   async _toggleGroup(targetId) {
     const masterId = this._getGroupingMasterId();
@@ -10208,37 +10262,91 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     // Remain in grouping sheet
   }
 
-  // Ungroup all members from specified master (or current master if not provided)
+  // Ungroup all members from specified master (or all entities across all groups if not provided)
   async _ungroupAll(targetMasterId = null) {
-    const masterId = targetMasterId || this._getGroupingMasterId();
-    const masterIdx = masterId ? this.entityIds.indexOf(masterId) : -1;
-    const masterObj = masterIdx >= 0 ? this.entityObjs[masterIdx] : null;
+    if (targetMasterId) {
+      const masterIdx = this.entityIds.indexOf(targetMasterId);
+      const masterObj = masterIdx >= 0 ? this.entityObjs[masterIdx] : null;
 
-    const masterGroupId =
-      (masterObj && (await this._resolveGroupingEntityId(masterObj, masterId))) ||
-      this._getGroupingEntityIdByEntityId(masterId) ||
-      masterId;
-    if (!masterGroupId) return;
-    const masterState = this.hass.states[masterGroupId];
-    if (!this._isGroupCapable(masterState)) return;
+      const masterGroupId =
+        (masterObj && (await this._resolveGroupingEntityId(masterObj, targetMasterId))) ||
+        this._getGroupingEntityIdByEntityId(targetMasterId) ||
+        targetMasterId;
+      if (!masterGroupId) return;
+      const masterState = this.hass?.states?.[masterGroupId];
+      if (!this._isGroupCapable(masterState)) return;
 
-    const members = Array.isArray(masterState.attributes?.group_members)
-      ? masterState.attributes.group_members
-      : [];
-    // Only unjoin follower members (exclude the coordinator itself to avoid invalid coordinator unjoin errors)
-    const toUnjoin = members.filter(id => {
-      if (id === masterGroupId) return false;
-      const st = this.hass.states[id];
-      return this._isGroupCapable(st);
-    });
+      const members = Array.isArray(masterState.attributes?.group_members)
+        ? masterState.attributes.group_members
+        : [];
+      // Only unjoin follower members (exclude the coordinator itself to avoid invalid coordinator unjoin errors)
+      const toUnjoin = members.filter(id => {
+        if (id === masterGroupId) return false;
+        const st = this.hass?.states?.[id];
+        return !st || this._isGroupCapable(st);
+      });
+      // Unjoin each follower individually
+      for (const id of toUnjoin) {
+        await unjoinPlayer(this.hass, id);
+      }
+      // After ungrouping, keep the master set if still valid (may now be solo)
+      if (targetMasterId === this.currentEntityId) {
+        this._lastGroupingMasterId = targetMasterId;
+      }
+      if (this.triggerRender) {
+        this.triggerRender();
+      } else {
+        this.requestUpdate?.();
+      }
+      return;
+    }
+
+    // Ungroup all entities in the list across all groups
+    const followersToUnjoin = new Set();
+    const entityList = this.entityIds || [];
+
+    for (let idx = 0; idx < entityList.length; idx++) {
+      const id = entityList[idx];
+      const obj = this.entityObjs?.[idx] || null;
+      const groupId =
+        (obj && (await this._resolveGroupingEntityId(obj, id))) ||
+        this._getGroupingEntityIdByEntityId(id) ||
+        id;
+      const state = this.hass?.states?.[groupId];
+      if (!state) continue;
+
+      const members = Array.isArray(state.attributes?.group_members)
+        ? state.attributes.group_members
+        : [];
+
+      if (members.length > 1) {
+        // Coordinator is the first member in group_members
+        const coordinator = members[0];
+        for (const m of members) {
+          if (m !== coordinator) {
+            const memberState = this.hass?.states?.[m];
+            if (!memberState || this._isGroupCapable(memberState)) {
+              followersToUnjoin.add(m);
+            }
+          }
+        }
+      }
+
+      // If this entity itself is a follower of another group
+      const groupKey = this._getGroupKey(id);
+      if (groupKey && groupKey !== id) {
+        if (this._isGroupCapable(state)) {
+          followersToUnjoin.add(groupId);
+        }
+      }
+    }
+
     // Unjoin each follower individually
-    for (const id of toUnjoin) {
+    for (const id of followersToUnjoin) {
       await unjoinPlayer(this.hass, id);
     }
-    // After ungrouping, keep the master set if still valid (may now be solo)
-    if (!targetMasterId || targetMasterId === this.currentEntityId) {
-      this._lastGroupingMasterId = masterId || this.currentEntityId;
-    }
+
+    this._lastGroupingMasterId = this.currentEntityId;
     if (this.triggerRender) {
       this.triggerRender();
     } else {

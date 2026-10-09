@@ -741,6 +741,12 @@ export interface YetAnotherMediaPlayerCard {
   ) => GroupPlayerState;
   shouldUpdate?: (changedProps: Map<string | number | symbol, unknown>) => boolean;
   requestUpdate?: (name?: PropertyKey, oldValue?: unknown) => Promise<unknown>;
+  _scrollGroupingListToTop?: () => void;
+  _selectEntityFromGrouping?: (idx: number) => void;
+  _justSelectedGroupingEntityId?: string | null;
+  _justSelectedGroupingTimeout?: any;
+  _ungroupAll?: (targetMasterId?: string | null) => Promise<void>;
+  _groupAll?: () => Promise<void>;
   [key: string]: any;
 }
 
