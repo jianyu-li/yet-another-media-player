@@ -86,6 +86,15 @@ export const searchSheetStyles = css`
     animation: success-fade-in 0.3s ease;
   }
 
+  .search-row-loading-overlay {
+    background: var(
+      --search-row-loading-bg,
+      color-mix(in srgb, var(--yamp-overlay-base, #000) 25%, transparent)
+    );
+    backdrop-filter: var(--search-row-loading-backdrop-filter, blur(12px) saturate(1.2));
+    -webkit-backdrop-filter: var(--search-row-loading-backdrop-filter, blur(12px) saturate(1.2));
+  }
+
   .search-row-error-overlay {
     background: var(--search-error-bg);
   }

@@ -1,5 +1,21 @@
 import { describe, it, beforeEach, mock } from "node:test";
 import assert from "node:assert/strict";
+
+// Setup mock browser globals before importing Lit component
+const g = /** @type {any} */ (globalThis);
+if (!g.window) g.window = globalThis;
+if (!g.customElements) g.customElements = { define() {} };
+if (!g.HTMLElement) {
+  class MockHTMLElement {
+    attachShadow() {
+      return {};
+    }
+  }
+  g.HTMLElement = MockHTMLElement;
+}
+if (!g.__VERSION__) g.__VERSION__ = "1.0.0-test";
+
+const { YetAnotherMediaPlayerCard } = await import("../src/yet-another-media-player.js");
 import {
   isShow,
   getSearchResultSubtitle,
@@ -336,31 +352,35 @@ describe("Music Assistant AI Radio Shows Search & Playback", () => {
       assert.ok(!html.includes('icon="mdi:loading"'), "should not render loading icon");
     });
 
-    it("renders .search-row-loading-overlay in list mode when item is loading", () => {
+    it("does not render .search-row-loading-overlay during normal search playback loading", () => {
       const template = renderSearchResultItem({
         item: testShowItem,
         loadingSearchRowMenuId: testShowItem.media_content_id,
         isGridMode: false,
         isCard: false,
+        isSelectionFlow: false,
       });
       const html = extractTemplateHtml(template);
-      assert.ok(html.includes("search-row-loading-overlay"), "should include loading overlay");
-      assert.ok(html.includes('icon="mdi:loading"'), "should include loading icon in overlay");
+      assert.ok(
+        !html.includes("search-row-loading-overlay"),
+        "should not include row overlay during playback"
+      );
     });
 
-    it("renders .search-row-loading-overlay in grid mode when item is loading", () => {
+    it("renders .search-row-loading-overlay when isSelectionFlow is true", () => {
       const template = renderSearchResultItem({
         item: testShowItem,
         loadingSearchRowMenuId: testShowItem.media_content_id,
-        isGridMode: true,
+        isGridMode: false,
+        isCard: false,
+        isSelectionFlow: true,
       });
       const html = extractTemplateHtml(template);
       assert.ok(
         html.includes("search-row-loading-overlay"),
-        "should include loading overlay in grid mode"
+        "should include loading overlay during selection flow"
       );
-      assert.ok(html.includes('icon="mdi:loading"'), "should include loading icon in grid overlay");
-      assert.ok(html.includes("?disabled=true"), "should disable grid button when loading");
+      assert.ok(html.includes('icon="mdi:loading"'), "should include loading icon in overlay");
     });
 
     it("does not render .search-row-loading-overlay when item is not loading", () => {
@@ -408,6 +428,95 @@ describe("Music Assistant AI Radio Shows Search & Playback", () => {
       assert.ok(clickHandler, "should have a click handler");
       clickHandler();
       assert.strictEqual(playedItem, null, "should not invoke onPlay while loading");
+    });
+  });
+
+  describe("_waitForPlaybackChange playback detection", () => {
+    it("returns true when idle/paused entity transitions to playing", async () => {
+      let checks = 0;
+      const mockCard = {
+        hass: {
+          states: {
+            "media_player.speaker": {
+              state: "idle",
+              attributes: { media_title: null, media_content_id: null },
+            },
+          },
+        },
+        _isEntityPlaying: (stateObj) => stateObj?.state === "playing",
+        _delay: async () => {
+          checks++;
+          if (checks >= 2) {
+            mockCard.hass.states["media_player.speaker"].state = "playing";
+          }
+        },
+      };
+
+      const snapshot = {
+        "media_player.speaker": {
+          state: "idle",
+          mediaId: null,
+          mediaTitle: null,
+        },
+      };
+
+      const result = await YetAnotherMediaPlayerCard.prototype._waitForPlaybackChange.call(
+        mockCard,
+        snapshot,
+        ["media_player.speaker"],
+        1000,
+        { requireMediaChange: false }
+      );
+      assert.strictEqual(result, true, "should detect transition to playing");
+    });
+
+    it("does not resolve immediately on 'playing' when requireMediaChange is true", async () => {
+      const mockCard = {
+        hass: {
+          states: {
+            "media_player.speaker": {
+              state: "playing",
+              attributes: {
+                media_title: "Old Song",
+                media_content_id: "old_uri",
+              },
+            },
+          },
+        },
+        _isEntityPlaying: (stateObj) => stateObj?.state === "playing",
+        _delay: () => Promise.resolve(),
+      };
+
+      const snapshot = {
+        "media_player.speaker": {
+          state: "playing",
+          mediaId: "old_uri",
+          mediaTitle: "Old Song",
+        },
+      };
+
+      // Call with requireMediaChange: true, when media has NOT changed
+      const resultNoChange = await YetAnotherMediaPlayerCard.prototype._waitForPlaybackChange.call(
+        mockCard,
+        snapshot,
+        ["media_player.speaker"],
+        50,
+        { requireMediaChange: true }
+      );
+      assert.strictEqual(resultNoChange, false, "should return false if media did not change");
+
+      // Update media to new show
+      mockCard.hass.states["media_player.speaker"].attributes.media_title =
+        "Music nerd — Favorite Songs";
+      const resultWithChange =
+        await YetAnotherMediaPlayerCard.prototype._waitForPlaybackChange.call(
+          mockCard,
+          snapshot,
+          ["media_player.speaker"],
+          500,
+          { requireMediaChange: true }
+        );
+      assert.strictEqual(resultWithChange, true, "should return true once media title changes");
     });
   });
 });

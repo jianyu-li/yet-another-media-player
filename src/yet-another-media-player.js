@@ -2466,7 +2466,10 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       if (!attempt) {
         return false;
       }
-      await this._waitForPlaybackChange(snapshot, monitorIds, 5000);
+      const wasPlaying = monitorIds.some((id) => snapshot[id]?.state === "playing");
+      await this._waitForPlaybackChange(snapshot, monitorIds, 25000, {
+        requireMediaChange: wasPlaying,
+      });
       return true;
     }
 
@@ -2477,7 +2480,10 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     if (!firstAttempt) {
       return false;
     }
-    const firstChangeDetected = await this._waitForPlaybackChange(firstSnapshot, monitorIds);
+    const firstWasPlaying = monitorIds.some((id) => firstSnapshot[id]?.state === "playing");
+    const firstChangeDetected = await this._waitForPlaybackChange(firstSnapshot, monitorIds, 2500, {
+      requireMediaChange: firstWasPlaying,
+    });
     if (firstChangeDetected) {
       return true;
     }
@@ -2488,7 +2494,10 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     if (!retryAttempt) {
       return false;
     }
-    return await this._waitForPlaybackChange(retrySnapshot, monitorIds);
+    const retryWasPlaying = monitorIds.some((id) => retrySnapshot[id]?.state === "playing");
+    return await this._waitForPlaybackChange(retrySnapshot, monitorIds, 2500, {
+      requireMediaChange: retryWasPlaying,
+    });
   }
 
   _collectPlaybackMonitorIds(targetEntityId) {
@@ -2519,7 +2528,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     return snapshot;
   }
 
-  async _waitForPlaybackChange(snapshot, entityIds, timeout = 2500) {
+  async _waitForPlaybackChange(snapshot, entityIds, timeout = 2500, { requireMediaChange = false } = {}) {
     if (!Array.isArray(entityIds) || entityIds.length === 0) {
       return true;
     }
@@ -2530,22 +2539,21 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         if (!id) continue;
         const stateObj = this.hass?.states?.[id];
         if (!stateObj) continue;
-        if (this._isEntityPlaying(stateObj)) {
-          return true;
-        }
         const previous = snapshot[id] || {};
+        const wasPlaying = previous.state === "playing";
         const currentMediaId = stateObj.attributes?.media_content_id ?? null;
         const currentTitle = stateObj.attributes?.media_title ?? null;
-        if (currentMediaId && currentMediaId !== previous.mediaId) {
+        const mediaChanged =
+          (currentMediaId && currentMediaId !== previous.mediaId) ||
+          (currentTitle && currentTitle !== previous.mediaTitle) ||
+          (!previous.mediaId && currentMediaId) ||
+          (!previous.mediaTitle && currentTitle);
+
+        if (mediaChanged) {
           return true;
         }
-        if (currentTitle && currentTitle !== previous.mediaTitle) {
-          return true;
-        }
-        if (!previous.mediaId && currentMediaId) {
-          return true;
-        }
-        if (!previous.mediaTitle && currentTitle) {
+
+        if (!requireMediaChange && !wasPlaying && this._isEntityPlaying(stateObj)) {
           return true;
         }
       }

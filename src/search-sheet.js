@@ -860,7 +860,7 @@ export function renderSearchResultItem({
         }
         <span class="menu-action-label">${item.title}</span>
         ${
-          isLoading
+          isSelectionFlow && isLoading
             ? html`
                 <div class="search-row-loading-overlay">
                   <ha-icon icon="mdi:loading" class="spin"></ha-icon>
@@ -1031,6 +1031,7 @@ export function renderSearchResultItem({
         hideActions,
       })}
       ${
+        isSelectionFlow &&
         loadingSearchRowMenuId != null &&
         item.media_content_id != null &&
         loadingSearchRowMenuId === item.media_content_id
