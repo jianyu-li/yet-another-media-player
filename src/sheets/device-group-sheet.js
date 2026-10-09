@@ -257,6 +257,9 @@ export function renderGroupingSheet() {
     const isGroupable = item.isGroupable !== false;
     const showToggleButton = isGroupable;
     const isCurrent = id === activeId;
+    const isJustMoved = Boolean(
+      this._justSelectedGroupingEntityId && this._justSelectedGroupingEntityId === id
+    );
     const masterName = masterId
       ? this.getChipName(masterId)
       : activeId
@@ -406,7 +409,9 @@ export function renderGroupingSheet() {
 
       return html`
         <div
-          class="entity-options-item menu-action-item ${isGroupActive ? "grid-active" : ""}"
+          class="entity-options-item menu-action-item ${isGroupActive ? "grid-active" : ""} ${
+            isJustMoved ? "just-moved" : ""
+          }"
           style="position: relative;"
         >
           ${
@@ -461,7 +466,7 @@ export function renderGroupingSheet() {
     };${isDeviceUnavailable ? "opacity:0.35;" : ""}`;
 
     return html`
-      <div class="entity-options-item group-player-row">
+      <div class="entity-options-item group-player-row ${isJustMoved ? "just-moved" : ""}">
         <div
           role="button"
           tabindex=${entityIdx >= 0 ? "0" : "-1"}
@@ -729,11 +734,16 @@ export function renderGroupingSheet() {
           : html`
               ${groupedCards.map((group) => {
                 const groupMasterIdx = this.entityIds.indexOf(group.masterId);
+                const isCardJustMoved = Boolean(
+                  this._justSelectedGroupingEntityId &&
+                  (this._justSelectedGroupingEntityId === group.masterId ||
+                    group.items.some((it) => it.id === this._justSelectedGroupingEntityId))
+                );
                 return html`
                   <div
                     class="${isGridMode ? "grid-group-card" : "grouped-players-card"} ${
                       group.isCurrentGroup ? "is-current-group" : ""
-                    }"
+                    } ${isCardJustMoved ? "just-moved" : ""}"
                   >
                     <div class="grouped-card-header">
                       <div

@@ -743,6 +743,8 @@ export interface YetAnotherMediaPlayerCard {
   requestUpdate?: (name?: PropertyKey, oldValue?: unknown) => Promise<unknown>;
   _scrollGroupingListToTop?: () => void;
   _selectEntityFromGrouping?: (idx: number) => void;
+  _justSelectedGroupingEntityId?: string | null;
+  _justSelectedGroupingTimeout?: any;
   [key: string]: any;
 }
 

@@ -563,10 +563,18 @@ export const menusSheetsStyles = css`
     padding: 0;
     overflow: hidden;
     box-sizing: border-box;
+    transition:
+      border-color 0.3s ease,
+      box-shadow 0.3s ease;
   }
 
   .grouped-players-card.is-current-group {
     border-color: var(--custom-accent, var(--primary-color, #ff9800));
+  }
+
+  .grouped-players-card.just-moved {
+    border-color: var(--yamp-success-color);
+    animation: speakerCardHighlight 1.2s ease-out;
   }
 
   .grouped-card-header {
@@ -675,6 +683,16 @@ export const menusSheetsStyles = css`
     gap: 6px;
     padding: 12px 8px 4px 8px;
     margin-bottom: 1px;
+    transition:
+      background 0.3s ease,
+      box-shadow 0.3s ease;
+  }
+
+  .group-player-row.just-moved {
+    background: var(--yamp-success-bg-light);
+    box-shadow: inset 3px 0 0 var(--yamp-success-color);
+    animation: speakerMoveHighlight 1.2s ease-out;
+    border-radius: 6px;
   }
 
   .grouped-players-card .group-player-row {
@@ -696,10 +714,42 @@ export const menusSheetsStyles = css`
     margin-bottom: 12px;
     overflow: hidden;
     box-sizing: border-box;
+    transition:
+      border-color 0.3s ease,
+      box-shadow 0.3s ease;
   }
 
   .grid-group-card.is-current-group {
     border-color: var(--custom-accent, var(--primary-color, #ff9800));
+  }
+
+  .grid-group-card.just-moved,
+  .grid-menu .entity-options-item.just-moved {
+    background: var(--yamp-success-bg-light);
+    border-color: var(--yamp-success-color);
+    animation: speakerMoveHighlight 1.2s ease-out;
+  }
+
+  @keyframes speakerMoveHighlight {
+    0% {
+      background: var(--yamp-success-bg-medium);
+      transform: scale(1.02);
+    }
+    100% {
+      background: var(--yamp-success-bg-light);
+      transform: scale(1);
+    }
+  }
+
+  @keyframes speakerCardHighlight {
+    0% {
+      border-color: var(--yamp-success-color);
+      box-shadow: 0 0 10px var(--yamp-success-bg-medium);
+    }
+    100% {
+      border-color: var(--yamp-success-color);
+      box-shadow: none;
+    }
   }
 
   .grid-group-card .grouped-card-header {

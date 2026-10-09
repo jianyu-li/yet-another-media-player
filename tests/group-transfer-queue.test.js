@@ -1708,5 +1708,52 @@ describe("Group Players Menu - Transfer Queue Button", () => {
         "Should call _scrollGroupingListToTop again after updateComplete settles"
       );
     });
+
+    it("applies just-moved feedback class on the selected entity row and group card", () => {
+      Object.defineProperty(card, "_isGridMode", { value: false, configurable: true });
+
+      // Before selection
+      let template = renderGroupingSheet.call(card);
+      let htmlContent = extractTemplateHtml(template);
+      assert.strictEqual(
+        htmlContent.includes("just-moved"),
+        false,
+        "Should not have just-moved class before selection"
+      );
+
+      // Select kitchen (media_player.kitchen)
+      card._justSelectedGroupingEntityId = "media_player.kitchen";
+      template = renderGroupingSheet.call(card);
+      htmlContent = extractTemplateHtml(template);
+
+      assert.ok(
+        htmlContent.includes("just-moved"),
+        "Should apply just-moved class to the selected entity and its group card"
+      );
+    });
+
+    it("sets _justSelectedGroupingEntityId on selection and clears it after timeout", async () => {
+      card._scrollGroupingListToTop = () => {};
+      Object.defineProperty(card, "updateComplete", {
+        value: Promise.resolve(),
+        configurable: true,
+      });
+
+      card._selectEntityFromGrouping(2); // media_player.bedroom
+      assert.strictEqual(
+        card._justSelectedGroupingEntityId,
+        "media_player.bedroom",
+        "Should set _justSelectedGroupingEntityId to target entity ID"
+      );
+      assert.ok(card._justSelectedGroupingTimeout, "Should create timer to clear indicator");
+
+      // Fast-forward or wait for timeout
+      await new Promise((r) => setTimeout(r, 1300));
+      assert.strictEqual(
+        card._justSelectedGroupingEntityId,
+        null,
+        "Should clear _justSelectedGroupingEntityId after timeout"
+      );
+    });
   });
 });

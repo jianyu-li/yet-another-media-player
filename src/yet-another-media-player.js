@@ -9543,6 +9543,10 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       clearTimeout(this._idleTimeout);
       this._idleTimeout = null;
     }
+    if (this._justSelectedGroupingTimeout) {
+      clearTimeout(this._justSelectedGroupingTimeout);
+      this._justSelectedGroupingTimeout = null;
+    }
     if (this._dragClickCaptureTimeout) {
       clearTimeout(this._dragClickCaptureTimeout);
       this._dragClickCaptureTimeout = null;
@@ -10018,6 +10022,11 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._showGrouping = false;
     this._transferQueuePendingTarget = null;
     this._transferQueueStatus = null;
+    this._justSelectedGroupingEntityId = null;
+    if (this._justSelectedGroupingTimeout) {
+      clearTimeout(this._justSelectedGroupingTimeout);
+      this._justSelectedGroupingTimeout = null;
+    }
     // No requestUpdate here; overlay close will handle it.
   }
   _scrollGroupingListToTop() {
@@ -10044,6 +10053,18 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
   _selectEntityFromGrouping(idx) {
     if (idx === undefined || idx < 0) return;
+    const targetEntityId = this.entityIds?.[idx];
+    if (targetEntityId) {
+      if (this._justSelectedGroupingTimeout) {
+        clearTimeout(this._justSelectedGroupingTimeout);
+      }
+      this._justSelectedGroupingEntityId = targetEntityId;
+      this._justSelectedGroupingTimeout = setTimeout(() => {
+        this._justSelectedGroupingEntityId = null;
+        this._justSelectedGroupingTimeout = null;
+        this.requestUpdate();
+      }, 1200);
+    }
     this._onChipClick(idx);
     this._scrollGroupingListToTop();
     if (this.updateComplete?.then) {
