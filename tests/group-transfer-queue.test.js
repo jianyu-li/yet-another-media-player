@@ -188,6 +188,25 @@ describe("Group Players Menu - Transfer Queue Button", () => {
     );
   });
 
+  it("renders pending status banner with spinner icon when transfer is in progress", () => {
+    card._transferQueueStatus = {
+      type: "pending",
+      message: "Transferring playback to Kitchen...",
+    };
+    const template = renderGroupingSheet.call(card);
+    assert.ok(template);
+    const htmlContent = extractTemplateHtml(template);
+    assert.ok(
+      htmlContent.includes("transfer-status-banner pending"),
+      "Should include pending class"
+    );
+    assert.ok(htmlContent.includes("mdi:loading"), "Should render loading icon for pending status");
+    assert.ok(
+      htmlContent.includes("Transferring playback to Kitchen..."),
+      "Should render pending message"
+    );
+  });
+
   it("enables transfer button and routes to group master when target belongs to an external group", () => {
     // Current entity is bedroom (solo)
     card._selectedIndex = 2; // media_player.bedroom
@@ -804,6 +823,15 @@ describe("Group Players Menu - Transfer Queue Button", () => {
       // Verify queue was transferred to Kitchen (the first follower)
       assert.ok(transferPayload, "transferQueueTo should be called");
       assert.strictEqual(transferPayload.entityId, "media_player.kitchen");
+      assert.strictEqual(
+        transferPayload.deferSuccess,
+        true,
+        "Should defer success when remaining members exist"
+      );
+      assert.ok(
+        transferPayload.pendingMessage.includes("Kitchen"),
+        "Pending message should name Kitchen"
+      );
 
       // Verify former master coordinator was not unjoined via service call (not supported / unnecessary)
       const unjoinCalls = servicesCalled.filter(
@@ -819,8 +847,10 @@ describe("Group Players Menu - Transfer Queue Button", () => {
       assert.strictEqual(joinCalls[0].data.entity_id, "media_player.kitchen");
       assert.deepStrictEqual(joinCalls[0].data.group_members, ["media_player.bedroom"]);
 
-      // Verify new master is tracked
+      // Verify new master is tracked and final status is success
       assert.strictEqual(testCard._lastGroupingMasterId, "media_player.kitchen");
+      assert.strictEqual(testCard._transferQueueStatus?.type, "success");
+      assert.ok(testCard._transferQueueStatus?.message.includes("Kitchen"));
     });
 
     it("does not unjoin master when music_assistant.transfer_queue service is unavailable (native HA/Sonos fallback)", async () => {

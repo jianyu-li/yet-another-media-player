@@ -1381,4 +1381,17 @@ export const menusSheetsStyles = css`
   .queue-play-next-dropzone ha-icon {
     color: var(--custom-accent, var(--accent-color, #ff9800));
   }
+
+  .spin {
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
 `;

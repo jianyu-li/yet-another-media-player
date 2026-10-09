@@ -638,21 +638,49 @@ export function renderGroupingSheet() {
       this._transferQueueStatus
         ? html`
             <div
+              class="transfer-status-banner ${this._transferQueueStatus.type || ""}"
               style="
                 margin-bottom: 12px;
                 padding: 10px 12px;
                 border-radius: 8px;
                 font-weight: 600;
                 text-align: center;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                gap: 8px;
                 background: ${
                 this._transferQueueStatus.type === "error"
                   ? "rgba(244, 67, 54, 0.18)"
-                  : "rgba(76, 175, 80, 0.18)"
+                  : this._transferQueueStatus.type === "pending" ||
+                      this._transferQueueStatus.type === "working" ||
+                      this._transferQueueStatus.type === "info"
+                    ? "rgba(33, 150, 243, 0.18)"
+                    : "rgba(76, 175, 80, 0.18)"
               };
-                color: ${this._transferQueueStatus.type === "error" ? "#ff8a80" : "#8bc34a"};
+                color: ${
+                this._transferQueueStatus.type === "error"
+                  ? "#ff8a80"
+                  : this._transferQueueStatus.type === "pending" ||
+                      this._transferQueueStatus.type === "working" ||
+                      this._transferQueueStatus.type === "info"
+                    ? "#64b5f6"
+                    : "#8bc34a"
+              };
               "
             >
-              ${this._transferQueueStatus.message}
+              ${
+                this._transferQueueStatus.type === "pending" ||
+                this._transferQueueStatus.type === "working" ||
+                this._transferQueueStatus.type === "info"
+                  ? html`<ha-icon
+                      icon="mdi:loading"
+                      class="spin"
+                      style="--mdc-icon-size: 18px; width: 18px; height: 18px;"
+                    ></ha-icon>`
+                  : nothing
+              }
+              <span>${this._transferQueueStatus.message}</span>
             </div>
           `
         : nothing

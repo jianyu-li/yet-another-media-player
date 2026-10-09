@@ -10021,20 +10021,55 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         successorGroupId;
       const successorName = this.getChipName(successorEntityId);
 
+      const otherMembers = remainingMembers.slice(1);
+      const hasOtherMembers = otherMembers.length > 0;
+
       const targetPayload = {
         index: successorIdx,
         entityId: successorEntityId,
         maEntityId: successorMaId,
         name: successorName,
+        pendingMessage: (
+          localize("card.grouping.transferring_coordinator") ||
+          "Transferring playback to {player}..."
+        ).replace("{player}", successorName),
+        deferSuccess: hasOtherMembers,
       };
 
       await this._transferQueueTo(targetPayload);
 
       // If transfer succeeded, keep other members grouped with the new master
       if (this._transferQueueStatus?.type !== "error") {
-        const otherMembers = remainingMembers.slice(1);
-        if (otherMembers.length > 0) {
-          await joinPlayers(this.hass, successorGroupId, otherMembers);
+        if (hasOtherMembers) {
+          this._transferQueueStatus = {
+            type: "pending",
+            message: (
+              localize("card.grouping.regrouping") ||
+              "Regrouping speakers with {player}..."
+            ).replace("{player}", successorName),
+          };
+          if (this.triggerRender) {
+            this.triggerRender();
+          } else {
+            this.requestUpdate?.();
+          }
+          try {
+            await joinPlayers(this.hass, successorGroupId, otherMembers);
+            this._transferQueueStatus = {
+              type: "success",
+              message: (
+                localize("card.grouping.transfer_success") ||
+                "Queue sent to {player}."
+              ).replace("{player}", successorName),
+            };
+            this._queueController?.scheduleTransferQueueAutoClose?.(2000);
+          } catch (err) {
+            this._transferQueueStatus = {
+              type: "error",
+              message: err?.message || "Failed to regroup speakers.",
+            };
+            this._queueController?.scheduleTransferQueueAutoClose?.(4000);
+          }
         }
         this._lastGroupingMasterId = successorEntityId;
         if (this.triggerRender) {
