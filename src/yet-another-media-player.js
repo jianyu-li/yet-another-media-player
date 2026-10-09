@@ -94,6 +94,7 @@ import {
   SUPPORT_GROUPING,
   DEFAULT_PROGRESS_BAR_HEIGHT,
   DEFAULT_LYRICS_BACKGROUND_FADE,
+  GROUP_SELECTION_FEEDBACK_DURATION_MS,
   getTemplatePresetDefaults,
   CANONICAL_MENU_OPTION_MAP,
 } from "./constants.js";
@@ -10063,7 +10064,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         this._justSelectedGroupingEntityId = null;
         this._justSelectedGroupingTimeout = null;
         this.requestUpdate();
-      }, 1200);
+      }, GROUP_SELECTION_FEEDBACK_DURATION_MS);
     }
     this._onChipClick(idx);
     this._scrollGroupingListToTop();

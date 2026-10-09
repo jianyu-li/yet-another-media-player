@@ -19,6 +19,7 @@ g.__VERSION__ = "1.0.0-test";
 
 const { YetAnotherMediaPlayerCard } = await import("../src/yet-another-media-player.js");
 const { renderGroupingSheet } = await import("../src/sheets/device-group-sheet.js");
+const { GROUP_SELECTION_FEEDBACK_DURATION_MS } = await import("../src/constants.js");
 
 describe("Group Players Menu - Transfer Queue Button", () => {
   /** @type {any} */
@@ -1945,7 +1946,7 @@ describe("Group Players Menu - Transfer Queue Button", () => {
       assert.ok(card._justSelectedGroupingTimeout, "Should create timer to clear indicator");
 
       // Fast-forward or wait for timeout
-      await new Promise((r) => setTimeout(r, 1300));
+      await new Promise((r) => setTimeout(r, GROUP_SELECTION_FEEDBACK_DURATION_MS + 100));
       assert.strictEqual(
         card._justSelectedGroupingEntityId,
         null,
