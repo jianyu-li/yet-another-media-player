@@ -855,6 +855,10 @@ describe("Group Players Menu - Transfer Queue Button", () => {
     });
 
     it("_ungroupAll unjoins followers only and excludes the master coordinator", async () => {
+      let renderTriggered = false;
+      testCard.triggerRender = () => {
+        renderTriggered = true;
+      };
       await testCard._ungroupAll();
       const unjoinCalls = servicesCalled.filter(
         (s) => s.domain === "media_player" && s.service === "unjoin"
@@ -864,6 +868,7 @@ describe("Group Players Menu - Transfer Queue Button", () => {
         unjoinCalls.map((c) => c.data.entity_id),
         ["media_player.kitchen", "media_player.bedroom"]
       );
+      assert.strictEqual(renderTriggered, true, "Should trigger render after ungrouping");
     });
 
     it("greys out button for sole playing player and enables join for other players", () => {

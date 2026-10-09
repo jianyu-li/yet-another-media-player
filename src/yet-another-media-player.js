@@ -10143,6 +10143,11 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     if (!targetMasterId || targetMasterId === this.currentEntityId) {
       this._lastGroupingMasterId = masterId || this.currentEntityId;
     }
+    if (this.triggerRender) {
+      this.triggerRender();
+    } else {
+      this.requestUpdate?.();
+    }
     // Remain in grouping sheet
   }
 

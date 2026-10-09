@@ -605,18 +605,6 @@ export const menusSheetsStyles = css`
     flex-shrink: 0;
   }
 
-  .grouped-card-badge {
-    font-size: 0.7em;
-    font-weight: 700;
-    padding: 2px 6px;
-    border-radius: 4px;
-    background: var(--custom-accent, #ff9800);
-    color: var(--yamp-chip-selected-text, #fff);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-    line-height: 1.2;
-  }
-
   .grouped-card-transfer-btn {
     background: var(--yamp-button-bg, rgba(255, 255, 255, 0.1));
     border: 1px solid var(--yamp-button-border, rgba(255, 255, 255, 0.2));

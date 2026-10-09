@@ -18,4 +18,13 @@ describe("Test Harness Verification", () => {
       "in-menu-active-label should include #aaa light grey fallback"
     );
   });
+
+  it("does not include unused .grouped-card-badge selector in menus-sheets styles", () => {
+    const cssText = menusSheetsStyles.cssText;
+    assert.strictEqual(
+      cssText.includes(".grouped-card-badge"),
+      false,
+      "Should not contain unused .grouped-card-badge rule"
+    );
+  });
 });
