@@ -483,6 +483,7 @@ export function renderEntityEditor(entity, idx = this._entityEditorIndex, isSear
                       { value: "radio", label: "Radio" },
                       { value: "podcast", label: "Podcast" },
                       { value: "episode", label: "Episode" },
+                      { value: "shows", label: "Shows" },
                     ],
                   },
                 }}

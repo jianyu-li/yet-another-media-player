@@ -582,6 +582,8 @@ export default {
       station: "Station",
       podcast: "Podcast",
       audiobook: "Audiobook",
+      shows: "Shows",
+      show: "Show",
     },
     search_artist: "Browse albums by this artist",
     browse_artist: "Browse albums by {artist}",

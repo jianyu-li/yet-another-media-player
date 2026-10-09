@@ -225,6 +225,7 @@ You can hide specific search filter chips on a per-entity basis using `hidden_fi
 - `radio`
 - `podcast`
 - `episode`
+- `shows`
 
 #### Example Configuration
 ```yaml

@@ -597,6 +597,8 @@ export default {
       station: "Zender",
       podcast: "Podcast",
       audiobook: "Luisterboek",
+      shows: "Shows",
+      show: "Show",
     },
     search_artist: "Blader door albums van deze artiest",
     browse_artist: "Albums van {artist} doorzoeken",

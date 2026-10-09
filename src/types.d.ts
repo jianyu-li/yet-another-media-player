@@ -718,6 +718,7 @@ export interface YetAnotherMediaPlayerCard {
   _artworkController?: ArtworkController;
   queueController?: QueueController;
   _queueController?: QueueController;
+  _aiRadioShowsAvailable?: boolean;
   _isFullScreen?: boolean;
   _fullScreenOverride?: boolean | null;
   _toggleFullScreen?: () => void;
