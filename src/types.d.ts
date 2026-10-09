@@ -741,6 +741,8 @@ export interface YetAnotherMediaPlayerCard {
   ) => GroupPlayerState;
   shouldUpdate?: (changedProps: Map<string | number | symbol, unknown>) => boolean;
   requestUpdate?: (name?: PropertyKey, oldValue?: unknown) => Promise<unknown>;
+  _scrollGroupingListToTop?: () => void;
+  _selectEntityFromGrouping?: (idx: number) => void;
   [key: string]: any;
 }
 

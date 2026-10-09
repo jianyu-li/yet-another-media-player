@@ -1646,5 +1646,67 @@ describe("Group Players Menu - Transfer Queue Button", () => {
       // Group master is living_room (index 0)
       assert.ok(clickedIndices.includes(0), "Should select group master on group card click");
     });
+
+    it("scrolls group list containers back to the top when _scrollGroupingListToTop is invoked", () => {
+      let scrollListCalled = false;
+      let scrollSheetCalled = false;
+      const mockList = {
+        scrollTo: (opts) => {
+          if (opts.top === 0) scrollListCalled = true;
+        },
+        scrollTop: 100,
+      };
+      const mockSheet = {
+        scrollTop: 150,
+      };
+
+      card.renderRoot = {
+        querySelector: (sel) => {
+          if (sel === ".group-list-scroll") return mockList;
+          if (sel === ".entity-options-sheet") return mockSheet;
+          return null;
+        },
+      };
+
+      card._scrollGroupingListToTop();
+
+      assert.strictEqual(
+        scrollListCalled,
+        true,
+        "Should call scrollTo with top: 0 on group-list-scroll"
+      );
+      assert.strictEqual(
+        mockSheet.scrollTop,
+        0,
+        "Should reset scrollTop to 0 on entity-options-sheet when scrollTo is not available"
+      );
+    });
+
+    it("selects entity and scrolls to top when _selectEntityFromGrouping is invoked", async () => {
+      let chipClicked = null;
+      let scrollCount = 0;
+      card._onChipClick = (idx) => {
+        chipClicked = idx;
+      };
+      card._scrollGroupingListToTop = () => {
+        scrollCount++;
+      };
+      Object.defineProperty(card, "updateComplete", {
+        value: Promise.resolve(),
+        configurable: true,
+      });
+
+      card._selectEntityFromGrouping(1);
+
+      assert.strictEqual(chipClicked, 1, "Should invoke _onChipClick with target index");
+      assert.strictEqual(scrollCount, 1, "Should immediately call _scrollGroupingListToTop");
+
+      await card.updateComplete;
+      assert.strictEqual(
+        scrollCount,
+        2,
+        "Should call _scrollGroupingListToTop again after updateComplete settles"
+      );
+    });
   });
 });

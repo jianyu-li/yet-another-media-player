@@ -468,14 +468,22 @@ export function renderGroupingSheet() {
           @click=${(e) => {
             e?.stopPropagation?.();
             if (entityIdx >= 0) {
-              this._onChipClick(entityIdx);
+              if (typeof this._selectEntityFromGrouping === "function") {
+                this._selectEntityFromGrouping(entityIdx);
+              } else {
+                this._onChipClick(entityIdx);
+              }
             }
           }}
           @keydown=${(e) => {
             if (entityIdx >= 0 && (e.key === "Enter" || e.key === " ")) {
               e.preventDefault();
               e?.stopPropagation?.();
-              this._onChipClick(entityIdx);
+              if (typeof this._selectEntityFromGrouping === "function") {
+                this._selectEntityFromGrouping(entityIdx);
+              } else {
+                this._onChipClick(entityIdx);
+              }
             }
           }}
           title=${
@@ -735,14 +743,22 @@ export function renderGroupingSheet() {
                         @click=${(e) => {
                           e?.stopPropagation?.();
                           if (groupMasterIdx >= 0) {
-                            this._onChipClick(groupMasterIdx);
+                            if (typeof this._selectEntityFromGrouping === "function") {
+                              this._selectEntityFromGrouping(groupMasterIdx);
+                            } else {
+                              this._onChipClick(groupMasterIdx);
+                            }
                           }
                         }}
                         @keydown=${(e) => {
                           if (groupMasterIdx >= 0 && (e.key === "Enter" || e.key === " ")) {
                             e.preventDefault();
                             e?.stopPropagation?.();
-                            this._onChipClick(groupMasterIdx);
+                            if (typeof this._selectEntityFromGrouping === "function") {
+                              this._selectEntityFromGrouping(groupMasterIdx);
+                            } else {
+                              this._onChipClick(groupMasterIdx);
+                            }
                           }
                         }}
                         title=${

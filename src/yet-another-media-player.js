@@ -10020,6 +10020,38 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._transferQueueStatus = null;
     // No requestUpdate here; overlay close will handle it.
   }
+  _scrollGroupingListToTop() {
+    const root = this.renderRoot || this;
+    if (!root || typeof root.querySelector !== "function") return;
+    const containers = [
+      root.querySelector(".group-list-scroll"),
+      root.querySelector(".entity-options-sheet"),
+      root.querySelector(".entity-options-overlay"),
+      root.querySelector(".entity-options-container"),
+    ].filter(Boolean);
+
+    for (const el of containers) {
+      if (typeof el.scrollTo === "function") {
+        try {
+          el.scrollTo({ top: 0, behavior: "smooth" });
+        } catch {
+          el.scrollTop = 0;
+        }
+      } else {
+        el.scrollTop = 0;
+      }
+    }
+  }
+  _selectEntityFromGrouping(idx) {
+    if (idx === undefined || idx < 0) return;
+    this._onChipClick(idx);
+    this._scrollGroupingListToTop();
+    if (this.updateComplete?.then) {
+      this.updateComplete.then(() => {
+        this._scrollGroupingListToTop();
+      });
+    }
+  }
   async _toggleGroup(targetId) {
     const masterId = this._getGroupingMasterId();
     const masterIdx = masterId ? this.entityIds.indexOf(masterId) : -1;
