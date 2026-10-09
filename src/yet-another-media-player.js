@@ -10261,37 +10261,91 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     // Remain in grouping sheet
   }
 
-  // Ungroup all members from specified master (or current master if not provided)
+  // Ungroup all members from specified master (or all entities across all groups if not provided)
   async _ungroupAll(targetMasterId = null) {
-    const masterId = targetMasterId || this._getGroupingMasterId();
-    const masterIdx = masterId ? this.entityIds.indexOf(masterId) : -1;
-    const masterObj = masterIdx >= 0 ? this.entityObjs[masterIdx] : null;
+    if (targetMasterId) {
+      const masterIdx = this.entityIds.indexOf(targetMasterId);
+      const masterObj = masterIdx >= 0 ? this.entityObjs[masterIdx] : null;
 
-    const masterGroupId =
-      (masterObj && (await this._resolveGroupingEntityId(masterObj, masterId))) ||
-      this._getGroupingEntityIdByEntityId(masterId) ||
-      masterId;
-    if (!masterGroupId) return;
-    const masterState = this.hass.states[masterGroupId];
-    if (!this._isGroupCapable(masterState)) return;
+      const masterGroupId =
+        (masterObj && (await this._resolveGroupingEntityId(masterObj, targetMasterId))) ||
+        this._getGroupingEntityIdByEntityId(targetMasterId) ||
+        targetMasterId;
+      if (!masterGroupId) return;
+      const masterState = this.hass?.states?.[masterGroupId];
+      if (!this._isGroupCapable(masterState)) return;
 
-    const members = Array.isArray(masterState.attributes?.group_members)
-      ? masterState.attributes.group_members
-      : [];
-    // Only unjoin follower members (exclude the coordinator itself to avoid invalid coordinator unjoin errors)
-    const toUnjoin = members.filter(id => {
-      if (id === masterGroupId) return false;
-      const st = this.hass.states[id];
-      return this._isGroupCapable(st);
-    });
+      const members = Array.isArray(masterState.attributes?.group_members)
+        ? masterState.attributes.group_members
+        : [];
+      // Only unjoin follower members (exclude the coordinator itself to avoid invalid coordinator unjoin errors)
+      const toUnjoin = members.filter(id => {
+        if (id === masterGroupId) return false;
+        const st = this.hass?.states?.[id];
+        return !st || this._isGroupCapable(st);
+      });
+      // Unjoin each follower individually
+      for (const id of toUnjoin) {
+        await unjoinPlayer(this.hass, id);
+      }
+      // After ungrouping, keep the master set if still valid (may now be solo)
+      if (targetMasterId === this.currentEntityId) {
+        this._lastGroupingMasterId = targetMasterId;
+      }
+      if (this.triggerRender) {
+        this.triggerRender();
+      } else {
+        this.requestUpdate?.();
+      }
+      return;
+    }
+
+    // Ungroup all entities in the list across all groups
+    const followersToUnjoin = new Set();
+    const entityList = this.entityIds || [];
+
+    for (let idx = 0; idx < entityList.length; idx++) {
+      const id = entityList[idx];
+      const obj = this.entityObjs?.[idx] || null;
+      const groupId =
+        (obj && (await this._resolveGroupingEntityId(obj, id))) ||
+        this._getGroupingEntityIdByEntityId(id) ||
+        id;
+      const state = this.hass?.states?.[groupId];
+      if (!state) continue;
+
+      const members = Array.isArray(state.attributes?.group_members)
+        ? state.attributes.group_members
+        : [];
+
+      if (members.length > 1) {
+        // Coordinator is the first member in group_members
+        const coordinator = members[0];
+        for (const m of members) {
+          if (m !== coordinator) {
+            const memberState = this.hass?.states?.[m];
+            if (!memberState || this._isGroupCapable(memberState)) {
+              followersToUnjoin.add(m);
+            }
+          }
+        }
+      }
+
+      // If this entity itself is a follower of another group
+      const groupKey = this._getGroupKey(id);
+      if (groupKey && groupKey !== id) {
+        if (this._isGroupCapable(state)) {
+          followersToUnjoin.add(groupId);
+        }
+      }
+    }
+
     // Unjoin each follower individually
-    for (const id of toUnjoin) {
+    for (const id of followersToUnjoin) {
       await unjoinPlayer(this.hass, id);
     }
-    // After ungrouping, keep the master set if still valid (may now be solo)
-    if (!targetMasterId || targetMasterId === this.currentEntityId) {
-      this._lastGroupingMasterId = masterId || this.currentEntityId;
-    }
+
+    this._lastGroupingMasterId = this.currentEntityId;
     if (this.triggerRender) {
       this.triggerRender();
     } else {

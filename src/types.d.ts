@@ -745,6 +745,8 @@ export interface YetAnotherMediaPlayerCard {
   _selectEntityFromGrouping?: (idx: number) => void;
   _justSelectedGroupingEntityId?: string | null;
   _justSelectedGroupingTimeout?: any;
+  _ungroupAll?: (targetMasterId?: string | null) => Promise<void>;
+  _groupAll?: () => Promise<void>;
   [key: string]: any;
 }
 

@@ -1502,6 +1502,204 @@ describe("Group Players Menu - Transfer Queue Button", () => {
           "Should unjoin office from bedroom, leaving living room group alone"
         );
       });
+
+      it("ungroups ALL entities across all groups when _ungroupAll is called without targetMasterId", async () => {
+        const calls = [];
+        const card = new YetAnotherMediaPlayerCard();
+        card.setConfig({
+          type: "custom:yet-another-media-player",
+          entities: [
+            "media_player.living_room",
+            "media_player.kitchen",
+            "media_player.bedroom",
+            "media_player.office",
+          ],
+        });
+        card._selectedIndex = 0;
+        card.hass = {
+          states: {
+            "media_player.living_room": {
+              entity_id: "media_player.living_room",
+              state: "playing",
+              attributes: {
+                friendly_name: "Living Room",
+                group_members: ["media_player.living_room", "media_player.kitchen"],
+                supported_features: 512,
+                app_id: "music_assistant",
+              },
+            },
+            "media_player.kitchen": {
+              entity_id: "media_player.kitchen",
+              state: "playing",
+              attributes: {
+                friendly_name: "Kitchen",
+                supported_features: 512,
+                app_id: "music_assistant",
+              },
+            },
+            "media_player.bedroom": {
+              entity_id: "media_player.bedroom",
+              state: "playing",
+              attributes: {
+                friendly_name: "Bedroom",
+                group_members: ["media_player.bedroom", "media_player.office"],
+                supported_features: 512,
+                app_id: "music_assistant",
+              },
+            },
+            "media_player.office": {
+              entity_id: "media_player.office",
+              state: "playing",
+              attributes: {
+                friendly_name: "Office",
+                supported_features: 512,
+                app_id: "music_assistant",
+              },
+            },
+          },
+          services: {
+            media_player: { unjoin: {} },
+          },
+          callService: (domain, service, data) => {
+            calls.push({ domain, service, data });
+            return Promise.resolve();
+          },
+        };
+        card._isGroupCapable = () => true;
+        card._getGroupingMasterId = () => "media_player.living_room";
+        card._getGroupingEntityId = (idx) => card.entityIds[idx];
+        card._getGroupKey = (id) => {
+          if (id === "media_player.kitchen") return "media_player.living_room";
+          if (id === "media_player.office") return "media_player.bedroom";
+          return id;
+        };
+
+        // Call _ungroupAll globally (top button behavior)
+        await card._ungroupAll();
+
+        assert.strictEqual(calls.length, 2, "Should unjoin followers of all groups");
+        const unjoinedEntities = calls.map((c) => c.data.entity_id);
+        assert.ok(
+          unjoinedEntities.includes("media_player.kitchen"),
+          "Should unjoin kitchen from living room"
+        );
+        assert.ok(
+          unjoinedEntities.includes("media_player.office"),
+          "Should unjoin office from bedroom"
+        );
+        assert.ok(
+          !unjoinedEntities.includes("media_player.living_room"),
+          "Should not unjoin living room coordinator"
+        );
+        assert.ok(
+          !unjoinedEntities.includes("media_player.bedroom"),
+          "Should not unjoin bedroom coordinator"
+        );
+      });
+
+      it("renders Ungroup All in top action bar when any group exists even if active entity is solo", () => {
+        const card = new YetAnotherMediaPlayerCard();
+        card.setConfig({
+          type: "custom:yet-another-media-player",
+          entities: ["media_player.solo", "media_player.bedroom", "media_player.office"],
+        });
+        card._selectedIndex = 0; // Solo player is active
+        card.hass = {
+          states: {
+            "media_player.solo": {
+              entity_id: "media_player.solo",
+              state: "idle",
+              attributes: {
+                friendly_name: "Solo Player",
+                group_members: ["media_player.solo"],
+                supported_features: 512,
+              },
+            },
+            "media_player.bedroom": {
+              entity_id: "media_player.bedroom",
+              state: "playing",
+              attributes: {
+                friendly_name: "Bedroom",
+                group_members: ["media_player.bedroom", "media_player.office"],
+                supported_features: 512,
+              },
+            },
+            "media_player.office": {
+              entity_id: "media_player.office",
+              state: "playing",
+              attributes: {
+                friendly_name: "Office",
+                supported_features: 512,
+              },
+            },
+          },
+          services: {
+            media_player: { unjoin: {}, join: {} },
+          },
+        };
+        card._isGroupCapable = () => true;
+        card._getGroupingMasterId = () => "media_player.solo";
+        card._getGroupingEntityId = (idx) => card.entityIds[idx];
+        card._getGroupKey = (id) => (id === "media_player.office" ? "media_player.bedroom" : id);
+        card.getChipName = (id) => card.hass.states[id]?.attributes?.friendly_name || id;
+        Object.defineProperty(card, "_isGridMode", { value: false, configurable: true });
+
+        const template = renderGroupingSheet.call(card);
+        assert.ok(template);
+        const htmlContent = extractTemplateHtml(template);
+        assert.ok(
+          htmlContent.includes("Ungroup All"),
+          "Top toolbar should display Ungroup All when any other group exists"
+        );
+      });
+
+      it("renders Group All in top action bar only when NO groups exist anywhere in the card", () => {
+        const card = new YetAnotherMediaPlayerCard();
+        card.setConfig({
+          type: "custom:yet-another-media-player",
+          entities: ["media_player.living_room", "media_player.bedroom"],
+        });
+        card._selectedIndex = 0;
+        card.hass = {
+          states: {
+            "media_player.living_room": {
+              entity_id: "media_player.living_room",
+              state: "idle",
+              attributes: {
+                friendly_name: "Living Room",
+                group_members: ["media_player.living_room"],
+                supported_features: 512,
+              },
+            },
+            "media_player.bedroom": {
+              entity_id: "media_player.bedroom",
+              state: "idle",
+              attributes: {
+                friendly_name: "Bedroom",
+                group_members: ["media_player.bedroom"],
+                supported_features: 512,
+              },
+            },
+          },
+          services: {
+            media_player: { unjoin: {}, join: {} },
+          },
+        };
+        card._isGroupCapable = () => true;
+        card._getGroupingMasterId = () => "media_player.living_room";
+        card._getGroupingEntityId = (idx) => card.entityIds[idx];
+        card._getGroupKey = (id) => id;
+        card.getChipName = (id) => card.hass.states[id]?.attributes?.friendly_name || id;
+        Object.defineProperty(card, "_isGridMode", { value: false, configurable: true });
+
+        const template = renderGroupingSheet.call(card);
+        assert.ok(template);
+        const htmlContent = extractTemplateHtml(template);
+        assert.ok(
+          htmlContent.includes("Group All"),
+          "Top toolbar should display Group All when no entities are grouped"
+        );
+      });
     });
   });
 
@@ -1649,7 +1847,6 @@ describe("Group Players Menu - Transfer Queue Button", () => {
 
     it("scrolls group list containers back to the top when _scrollGroupingListToTop is invoked", () => {
       let scrollListCalled = false;
-      let scrollSheetCalled = false;
       const mockList = {
         scrollTo: (opts) => {
           if (opts.top === 0) scrollListCalled = true;

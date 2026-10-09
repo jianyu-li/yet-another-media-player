@@ -238,6 +238,15 @@ export function renderGroupingSheet() {
     return a.isBusy ? 1 : -1;
   });
 
+  const hasAnyGroups =
+    groupedCards.length > 0 ||
+    groupedAny ||
+    groupPlayerIds.some((p) => {
+      if (p.isBusy) return true;
+      const st = this.hass?.states?.[p.groupId];
+      return Array.isArray(st?.attributes?.group_members) && st.attributes.group_members.length > 1;
+    });
+
   const renderGroupItem = (item, isInsideGroup = false) => {
     const id = item.id;
     const actualGroupId = item.groupId;
@@ -652,21 +661,27 @@ export function renderGroupingSheet() {
           : nothing
       }
       ${
-        activeIsGroupCapable && !activeIsBusy
+        hasAnyGroups
           ? html`
               <button
                 class="entity-options-item"
-                @click=${() => (groupedAny ? this._ungroupAll() : this._groupAll())}
+                @click=${() => this._ungroupAll()}
                 style="flex:0 0 auto; min-width:140px; text-align:center; margin-left:auto;"
               >
-                ${
-                  groupedAny
-                    ? localize("card.grouping.ungroup_all")
-                    : localize("card.grouping.group_all")
-                }
+                ${localize("card.grouping.ungroup_all") || "Ungroup All"}
               </button>
             `
-          : nothing
+          : activeIsGroupCapable && !activeIsBusy
+            ? html`
+                <button
+                  class="entity-options-item"
+                  @click=${() => this._groupAll()}
+                  style="flex:0 0 auto; min-width:140px; text-align:center; margin-left:auto;"
+                >
+                  ${localize("card.grouping.group_all") || "Group All"}
+                </button>
+              `
+            : nothing
       }
     </div>
     ${
