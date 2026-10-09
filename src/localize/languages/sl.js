@@ -570,6 +570,8 @@ export default {
       station: "Postaja",
       podcast: "Podcast",
       audiobook: "Zvočna knjiga",
+      shows: "Oddaje",
+      show: "Oddaja",
     },
     search_artist: "Prebrskaj albume tega izvajalca",
     browse_artist: "Prebrskaj albume izvajalca {artist}",

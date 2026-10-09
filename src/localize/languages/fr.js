@@ -580,6 +580,8 @@ export default {
       station: "Station",
       podcast: "Podcast",
       audiobook: "Livre audio",
+      shows: "Émissions",
+      show: "Émission",
     },
     search_artist: "Parcourir les albums de cet artiste",
     browse_artist: "Parcourir les albums de {artist}",

@@ -589,6 +589,8 @@ export default {
       station: "Stanica",
       podcast: "Podcast",
       audiobook: "Audiokniha",
+      shows: "Relácie",
+      show: "Relácia",
     },
     search_artist: "Prehľadávať albumy tohto interpreta",
     browse_artist: "Prehľadávať albumy od {artist}",

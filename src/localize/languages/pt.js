@@ -574,6 +574,8 @@ export default {
       station: "Estação",
       podcast: "Podcast",
       audiobook: "Audiolivro",
+      shows: "Programas",
+      show: "Programa",
     },
     search_artist: "Navegar pelos álbuns deste artista",
     browse_artist: "Explorar álbuns de {artist}",

@@ -573,6 +573,8 @@ export default {
       station: "Stazione",
       podcast: "Podcast",
       audiobook: "Audiolibro",
+      shows: "Programmi",
+      show: "Programma",
     },
     search_artist: "Sfoglia gli album di questo artista",
     browse_artist: "Sfoglia gli album di {artist}",
