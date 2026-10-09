@@ -22,7 +22,10 @@ import {
   getMassQueueConfigEntryId,
   getMusicAssistantConfigEntryId,
   ALLOWED_MEDIA_TYPES,
-  transformMusicAssistantItem
+  transformMusicAssistantItem,
+  isAiRadioAvailable,
+  playAiRadioStation,
+  isShow
 } from "./search-sheet.js";
 import "./yamp-editor.js";
 
@@ -1033,6 +1036,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._massQueueAvailable = false;
     this._hasMassQueueIntegration = null;
     this._checkingMassQueueIntegration = false;
+    this._aiRadioShowsAvailable = false;
     this._lyricsCache = new Map();
     // Quick-dismiss mode for action-triggered menu items
     this._quickMenuInvoke = false;
@@ -1728,6 +1732,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._upcomingFilterActive = false; // Track if upcoming queue filter is active
     this._recommendationsFilterActive = false; // Track if recommendations filter is active
     this._initialFavoritesLoaded = false; // Track if initial favorites have been loaded
+    void this._checkAiRadioAvailability();
 
     this.requestUpdate();
 
@@ -2372,7 +2377,11 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const currEntityObj = this.entityObjs?.[this._selectedIndex] || null;
     const hiddenSet = new Set(currEntityObj?.hidden_filter_chips || []);
 
-    return ALLOWED_MEDIA_TYPES.filter(c => !hiddenSet.has(c));
+    const list = [...ALLOWED_MEDIA_TYPES];
+    if (this._aiRadioShowsAvailable) {
+      list.push("shows");
+    }
+    return list.filter(c => !hiddenSet.has(c));
   }
 
   async _playMediaFromSearch(item, event) {
@@ -2438,6 +2447,17 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
     if (!targetEntityId) {
       return false;
+    }
+
+    if (isShow(item)) {
+      const monitorIds = this._collectPlaybackMonitorIds(targetEntityId);
+      const snapshot = this._snapshotPlaybackState(monitorIds);
+      const attempt = await this._invokePlayMedia(targetEntityId, item);
+      if (!attempt) {
+        return false;
+      }
+      await this._waitForPlaybackChange(snapshot, monitorIds, 5000);
+      return true;
     }
 
     // For regular search results or fallback mode, use the normal play method with a retry guard.
@@ -2603,7 +2623,9 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   async _invokePlayMedia(targetEntityId, item) {
     try {
       this._mediaSessionManager?.startPlaybackGesture(targetEntityId);
-      if (this._radioModeActive) {
+      if (isShow(item)) {
+        await playAiRadioStation(this.hass, targetEntityId, item.station_id || item.item_id);
+      } else if (this._radioModeActive) {
         await this.hass.callService("music_assistant", "play_media", {
           entity_id: targetEntityId,
           media_id: item.media_content_id,
@@ -3302,6 +3324,25 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   // Check if mass_queue integration is available and enabled (delegated to QueueController)
   async _isMassQueueIntegrationAvailable(hass) {
     return this._queueController.isMassQueueIntegrationAvailable(hass);
+  }
+
+  // Check if Music Assistant AI Radio shows are available
+  async _checkAiRadioAvailability() {
+    if (!this.hass) return;
+    try {
+      const searchEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
+      const searchEntityId = await this._resolveTemplateAtActionTime(
+        searchEntityIdTemplate,
+        this.currentEntityId
+      );
+      const available = await isAiRadioAvailable(this.hass, searchEntityId);
+      if (this._aiRadioShowsAvailable !== available) {
+        this._aiRadioShowsAvailable = available;
+        this.requestUpdate();
+      }
+    } catch {
+      this._aiRadioShowsAvailable = false;
+    }
   }
 
   // Get queue using mass_queue integration (delegated to QueueController)
@@ -5919,6 +5960,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     }
     if (changedProps.has("_selectedIndex") || changedProps.has("hass")) {
       void this._updateTransferQueueAvailability({ refresh: false });
+      void this._checkAiRadioAvailability();
     }
     if (changedProps.has("hass") || changedProps.has("config")) {
       this._updateArtworkAspectRatios();
@@ -5931,6 +5973,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           this._hasMassQueueIntegration = hasIntegration;
           if (hasIntegration) {
             this._massQueueAvailable = this._massQueueAvailable || hasIntegration;
+            void this._checkAiRadioAvailability();
           }
         })
         .catch(() => {
