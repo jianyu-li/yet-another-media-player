@@ -2396,7 +2396,17 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const targetEntityId = await this._resolveTemplateAtActionTime(targetEntityIdTemplate, this.currentEntityId);
     this._mediaSessionManager?.startPlaybackGesture(targetEntityId);
     this._searchError = "";
-    const playbackStarted = await this._performSearchPlayback(item, targetEntityId);
+
+    this._loadingSearchRowMenuId = item?.media_content_id || null;
+    this.requestUpdate();
+
+    let playbackStarted;
+    try {
+      playbackStarted = await this._performSearchPlayback(item, targetEntityId);
+    } finally {
+      this._loadingSearchRowMenuId = null;
+      this.requestUpdate();
+    }
 
     if (!playbackStarted) {
       this._searchError = "Unable to start playback. Please try again.";

@@ -437,6 +437,7 @@ export function transformMusicAssistantItem(item) {
  * @param {Function} [opts.onRemove]
  * @param {boolean} [opts.minimal]
  * @param {boolean} [opts.hideActions]
+ * @param {string|null} [opts.loadingSearchRowMenuId]
  */
 export function renderSearchResultActions({
   item,
@@ -454,6 +455,7 @@ export function renderSearchResultActions({
   onRemove,
   minimal = false,
   hideActions = false,
+  loadingSearchRowMenuId = null,
 }) {
   if (hideActions) return nothing;
   const isQueueItem = !!(
@@ -479,6 +481,11 @@ export function renderSearchResultActions({
     : isCard
       ? "search-sheet-queue icon-only"
       : "search-sheet-queue";
+
+  const isLoading =
+    loadingSearchRowMenuId != null &&
+    item?.media_content_id != null &&
+    loadingSearchRowMenuId === item.media_content_id;
 
   return html`
     <div class="${containerClass}">
@@ -547,11 +554,17 @@ export function renderSearchResultActions({
         class="${playClass}"
         @click=${(e) => {
           e.stopPropagation();
-          onPlay(item);
+          if (!isLoading) {
+            onPlay(item);
+          }
         }}
+        ?disabled=${isLoading}
         title="${localize("search.play_item", "{item}", item.title)}"
       >
-        <ha-icon icon="mdi:play"></ha-icon>
+        <ha-icon
+          icon="${isLoading ? "mdi:loading" : "mdi:play"}"
+          class="${isLoading ? "spin" : ""}"
+        ></ha-icon>
       </button>
       ${
         !isQueueItem && !isRadio(item) && !isShow(item) && !minimal
@@ -728,6 +741,38 @@ export function renderSearchResultSlideOut({
   `;
 }
 
+/**
+ * Renders a single search result item row or card.
+ * @param {Object} opts
+ * @param {any} [opts.item]
+ * @param {boolean} [opts.isCard]
+ * @param {boolean} [opts.isMinimal]
+ * @param {boolean} [opts.isGridMode]
+ * @param {string|null} [opts.activeSearchRowMenuId]
+ * @param {string|null} [opts.loadingSearchRowMenuId]
+ * @param {string|null} [opts.errorSearchRowMenuId]
+ * @param {string|null} [opts.successSearchRowMenuId]
+ * @param {string|null} [opts.successSearchRowType]
+ * @param {boolean} [opts.isSelectionFlow]
+ * @param {boolean} [opts.massQueueAvailable]
+ * @param {boolean} [opts.upcomingFilterActive]
+ * @param {boolean} [opts.recentlyPlayedFilterActive]
+ * @param {boolean} [opts.recommendationsFilterActive]
+ * @param {string} [opts.searchMediaClassFilter]
+ * @param {string} [opts.queueControlsStyle]
+ * @param {Function} [opts.onPlay]
+ * @param {Function} [opts.onResultClick]
+ * @param {Function} [opts.onOptionsToggle]
+ * @param {Function} [opts.onPlayOption]
+ * @param {Function} [opts.onMoveUp]
+ * @param {Function} [opts.onMoveDown]
+ * @param {Function} [opts.onMoveNext]
+ * @param {Function} [opts.onRemove]
+ * @param {boolean} [opts.isMusicAssistant]
+ * @param {Function} [opts.isValidArtwork]
+ * @param {Function} [opts.getClickTitle]
+ * @param {string} [opts.artworkHostname]
+ */
 export function renderSearchResultItem({
   item,
   isCard,
@@ -772,6 +817,11 @@ export function renderSearchResultItem({
   const hideActions = isSelectionFlow;
 
   if (isGridMode) {
+    const isLoading =
+      loadingSearchRowMenuId != null &&
+      item.media_content_id != null &&
+      loadingSearchRowMenuId === item.media_content_id;
+
     return html`
       <button
         class="entity-options-item menu-action-item search-result-grid-mode ${
@@ -780,12 +830,14 @@ export function renderSearchResultItem({
             : "nodrag no-drag ignore-drag"
         } ${item._justMoved ? "just-moved" : ""} ${isActive ? "menu-active" : ""}"
         @click=${(e) => {
+          if (isLoading) return;
           if (!isSelectionFlow) {
             onPlay?.(item, e);
           } else {
             onResultClick?.(item, e);
           }
         }}
+        ?disabled=${isLoading}
         title=${getClickTitle(item) || item.title}
       >
         ${
@@ -807,6 +859,16 @@ export function renderSearchResultItem({
               `
         }
         <span class="menu-action-label">${item.title}</span>
+        ${
+          isLoading
+            ? html`
+                <div class="search-row-loading-overlay">
+                  <ha-icon icon="mdi:loading" class="spin"></ha-icon>
+                  <span>${localize("common.loading")}</span>
+                </div>
+              `
+            : nothing
+        }
       </button>
     `;
   }
@@ -819,9 +881,16 @@ export function renderSearchResultItem({
         isActive ? "menu-active" : ""
       } ${isClickable ? "clickable" : ""}"
       @click=${(e) => {
+        if (
+          loadingSearchRowMenuId != null &&
+          item.media_content_id != null &&
+          loadingSearchRowMenuId === item.media_content_id
+        ) {
+          return;
+        }
         if (isSelectionFlow || (!isCard && isClickable)) {
           onResultClick?.(item, e);
-        } else if (isCard) {
+        } else {
           onPlay?.(item, e);
         }
       }}
@@ -862,6 +931,7 @@ export function renderSearchResultItem({
                 onRemove,
                 minimal: isMinimal,
                 hideActions,
+                loadingSearchRowMenuId,
               })
             : nothing
         }
@@ -942,6 +1012,7 @@ export function renderSearchResultItem({
               onMoveNext,
               onRemove,
               hideActions,
+              loadingSearchRowMenuId,
             })
           : nothing
       }

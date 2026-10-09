@@ -2,7 +2,6 @@ import { describe, it, beforeEach, mock } from "node:test";
 import assert from "node:assert/strict";
 import {
   isShow,
-  isRadio,
   getSearchResultSubtitle,
   isAiRadioAvailable,
   _resetAiRadioCache,
@@ -10,6 +9,8 @@ import {
   playAiRadioStation,
   playSearchedMedia,
   searchMedia,
+  renderSearchResultActions,
+  renderSearchResultItem,
 } from "../src/search-sheet.js";
 
 describe("Music Assistant AI Radio Shows Search & Playback", () => {
@@ -285,6 +286,128 @@ describe("Music Assistant AI Radio Shows Search & Playback", () => {
       const show = res.results.find((r) => r.is_ai_radio);
       assert.ok(show);
       assert.strictEqual(show.title, "Music nerd — Favorite Songs");
+    });
+  });
+
+  describe("Search Row Loading Indicator & Actions", () => {
+    function extractTemplateHtml(val) {
+      if (!val) return "";
+      if (typeof val === "string") return val;
+      if (Array.isArray(val)) return val.map(extractTemplateHtml).join("");
+      if (val.strings && Array.isArray(val.values)) {
+        let result = "";
+        val.strings.forEach((str, i) => {
+          result += str;
+          if (i < val.values.length) {
+            result += extractTemplateHtml(val.values[i]);
+          }
+        });
+        return result;
+      }
+      return String(val);
+    }
+
+    const testShowItem = {
+      title: "Music nerd — Favorite Songs",
+      media_content_id: "mass:ai_radio:music_nerd_favorite_songs",
+      media_class: "show",
+      is_ai_radio: true,
+      is_browsable: false,
+    };
+
+    it("renders mdi:loading and spin class on play button when loading", () => {
+      const template = renderSearchResultActions({
+        item: testShowItem,
+        loadingSearchRowMenuId: testShowItem.media_content_id,
+      });
+      const html = extractTemplateHtml(template);
+      assert.ok(html.includes('icon="mdi:loading"'), "should render loading icon");
+      assert.ok(html.includes('class="spin"'), "should include spin class");
+      assert.ok(html.includes("?disabled=true"), "should disable play button while loading");
+    });
+
+    it("renders mdi:play on play button when not loading", () => {
+      const template = renderSearchResultActions({
+        item: testShowItem,
+        loadingSearchRowMenuId: null,
+      });
+      const html = extractTemplateHtml(template);
+      assert.ok(html.includes('icon="mdi:play"'), "should render play icon");
+      assert.ok(!html.includes('icon="mdi:loading"'), "should not render loading icon");
+    });
+
+    it("renders .search-row-loading-overlay in list mode when item is loading", () => {
+      const template = renderSearchResultItem({
+        item: testShowItem,
+        loadingSearchRowMenuId: testShowItem.media_content_id,
+        isGridMode: false,
+        isCard: false,
+      });
+      const html = extractTemplateHtml(template);
+      assert.ok(html.includes("search-row-loading-overlay"), "should include loading overlay");
+      assert.ok(html.includes('icon="mdi:loading"'), "should include loading icon in overlay");
+    });
+
+    it("renders .search-row-loading-overlay in grid mode when item is loading", () => {
+      const template = renderSearchResultItem({
+        item: testShowItem,
+        loadingSearchRowMenuId: testShowItem.media_content_id,
+        isGridMode: true,
+      });
+      const html = extractTemplateHtml(template);
+      assert.ok(
+        html.includes("search-row-loading-overlay"),
+        "should include loading overlay in grid mode"
+      );
+      assert.ok(html.includes('icon="mdi:loading"'), "should include loading icon in grid overlay");
+      assert.ok(html.includes("?disabled=true"), "should disable grid button when loading");
+    });
+
+    it("does not render .search-row-loading-overlay when item is not loading", () => {
+      const template = renderSearchResultItem({
+        item: testShowItem,
+        loadingSearchRowMenuId: null,
+        isGridMode: false,
+        isCard: false,
+      });
+      const html = extractTemplateHtml(template);
+      assert.ok(!html.includes("search-row-loading-overlay"), "should not include loading overlay");
+    });
+
+    it("invokes onPlay when non-browsable item row is clicked in list mode", () => {
+      let playedItem = null;
+      const template = renderSearchResultItem({
+        item: testShowItem,
+        loadingSearchRowMenuId: null,
+        isGridMode: false,
+        isCard: false,
+        onPlay: (item) => {
+          playedItem = item;
+        },
+      });
+
+      const clickHandler = template.values.find((v) => typeof v === "function");
+      assert.ok(clickHandler, "should have a click handler");
+      clickHandler();
+      assert.strictEqual(playedItem, testShowItem, "should invoke onPlay with item");
+    });
+
+    it("does not invoke onPlay when item is already loading", () => {
+      let playedItem = null;
+      const template = renderSearchResultItem({
+        item: testShowItem,
+        loadingSearchRowMenuId: testShowItem.media_content_id,
+        isGridMode: false,
+        isCard: false,
+        onPlay: (item) => {
+          playedItem = item;
+        },
+      });
+
+      const clickHandler = template.values.find((v) => typeof v === "function");
+      assert.ok(clickHandler, "should have a click handler");
+      clickHandler();
+      assert.strictEqual(playedItem, null, "should not invoke onPlay while loading");
     });
   });
 });
