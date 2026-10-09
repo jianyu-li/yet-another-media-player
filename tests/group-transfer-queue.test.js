@@ -1504,4 +1504,147 @@ describe("Group Players Menu - Transfer Queue Button", () => {
       });
     });
   });
+
+  describe("Click Entity Name & Subheader to Make Active", () => {
+    it("renders entity name and subheader with role button, tabindex, and cursor pointer", () => {
+      Object.defineProperty(card, "_isGridMode", { value: false, configurable: true });
+      const template = renderGroupingSheet.call(card);
+      assert.ok(template);
+      const htmlContent = extractTemplateHtml(template);
+
+      assert.ok(
+        htmlContent.includes('role="button"'),
+        "Should have role button on clickable entity rows"
+      );
+      assert.ok(
+        htmlContent.includes("cursor:pointer"),
+        "Should have cursor:pointer for selectable entities"
+      );
+      assert.ok(htmlContent.includes("Living Room"), "Should render Living Room name");
+      assert.ok(htmlContent.includes("Kitchen"), "Should render Kitchen name");
+      assert.ok(htmlContent.includes("Bedroom"), "Should render Bedroom name");
+    });
+
+    it("invokes _onChipClick when clicking on an entity name / subheader row", () => {
+      Object.defineProperty(card, "_isGridMode", { value: false, configurable: true });
+      const clickedIndices = [];
+      card._onChipClick = (idx) => {
+        clickedIndices.push(idx);
+      };
+
+      const template = renderGroupingSheet.call(card);
+      assert.ok(template);
+
+      const fns = [];
+      function collectFns(obj) {
+        if (!obj) return;
+        if (typeof obj === "function") {
+          fns.push(obj);
+        } else if (Array.isArray(obj)) {
+          obj.forEach(collectFns);
+        } else if (typeof obj === "object" && obj.values) {
+          collectFns(obj.values);
+        }
+      }
+      collectFns(template.values);
+
+      // Invoke functions simulating click events
+      for (const fn of fns) {
+        try {
+          fn({ stopPropagation() {} });
+        } catch (err) {
+          // Ignore unrelated template functions
+          void err;
+        }
+      }
+
+      // Should have triggered _onChipClick for living_room (0), kitchen (1), and bedroom (2)
+      assert.ok(clickedIndices.includes(0), "Should be able to select Living Room (idx 0)");
+      assert.ok(clickedIndices.includes(1), "Should be able to select Kitchen (idx 1)");
+      assert.ok(clickedIndices.includes(2), "Should be able to select Bedroom (idx 2)");
+    });
+
+    it("invokes _onChipClick when pressing Enter or Space on an entity name / subheader", () => {
+      Object.defineProperty(card, "_isGridMode", { value: false, configurable: true });
+      const keydownIndices = [];
+      card._onChipClick = (idx) => {
+        keydownIndices.push(idx);
+      };
+
+      const template = renderGroupingSheet.call(card);
+      assert.ok(template);
+
+      const fns = [];
+      function collectFns(obj) {
+        if (!obj) return;
+        if (typeof obj === "function") {
+          fns.push(obj);
+        } else if (Array.isArray(obj)) {
+          obj.forEach(collectFns);
+        } else if (typeof obj === "object" && obj.values) {
+          collectFns(obj.values);
+        }
+      }
+      collectFns(template.values);
+
+      // Test Enter key
+      for (const fn of fns) {
+        try {
+          fn({ key: "Enter", preventDefault() {}, stopPropagation() {} });
+        } catch (err) {
+          // Ignore unrelated template functions
+          void err;
+        }
+      }
+      assert.ok(keydownIndices.includes(1), "Should select Kitchen on Enter key");
+
+      // Test Space key
+      keydownIndices.length = 0;
+      for (const fn of fns) {
+        try {
+          fn({ key: " ", preventDefault() {}, stopPropagation() {} });
+        } catch (err) {
+          // Ignore unrelated template functions
+          void err;
+        }
+      }
+      assert.ok(keydownIndices.includes(2), "Should select Bedroom on Space key");
+    });
+
+    it("invokes _onChipClick when clicking on the group card title", () => {
+      Object.defineProperty(card, "_isGridMode", { value: false, configurable: true });
+      const clickedIndices = [];
+      card._onChipClick = (idx) => {
+        clickedIndices.push(idx);
+      };
+
+      const template = renderGroupingSheet.call(card);
+      assert.ok(template);
+
+      const fns = [];
+      function collectFns(obj) {
+        if (!obj) return;
+        if (typeof obj === "function") {
+          fns.push(obj);
+        } else if (Array.isArray(obj)) {
+          obj.forEach(collectFns);
+        } else if (typeof obj === "object" && obj.values) {
+          collectFns(obj.values);
+        }
+      }
+      collectFns(template.values);
+
+      for (const fn of fns) {
+        try {
+          fn({ stopPropagation() {} });
+        } catch (err) {
+          // Ignore unrelated template functions
+          void err;
+        }
+      }
+
+      // Group master is living_room (index 0)
+      assert.ok(clickedIndices.includes(0), "Should select group master on group card click");
+    });
+  });
 });

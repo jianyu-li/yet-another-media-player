@@ -462,7 +462,29 @@ export function renderGroupingSheet() {
 
     return html`
       <div class="entity-options-item group-player-row">
-        <div style="flex:0.7; min-width:84px;">
+        <div
+          role="button"
+          tabindex=${entityIdx >= 0 ? "0" : "-1"}
+          @click=${(e) => {
+            e?.stopPropagation?.();
+            if (entityIdx >= 0) {
+              this._onChipClick(entityIdx);
+            }
+          }}
+          @keydown=${(e) => {
+            if (entityIdx >= 0 && (e.key === "Enter" || e.key === " ")) {
+              e.preventDefault();
+              e?.stopPropagation?.();
+              this._onChipClick(entityIdx);
+            }
+          }}
+          title=${
+            isCurrent
+              ? localize("card.menu.active_entity") || localize("card.grouping.current") || "Active"
+              : localize("card.menu.set_active_entity") || "Set as active entity"
+          }
+          style="flex:0.7; min-width:84px; cursor:${entityIdx >= 0 ? "pointer" : "default"};"
+        >
           <div style="text-align:left;">${name}</div>
           <div style="font-size:0.8em; opacity:0.7; text-align:left;">${stateLabel}</div>
         </div>
@@ -697,15 +719,41 @@ export function renderGroupingSheet() {
               </div>
             `
           : html`
-              ${groupedCards.map(
-                (group) => html`
+              ${groupedCards.map((group) => {
+                const groupMasterIdx = this.entityIds.indexOf(group.masterId);
+                return html`
                   <div
                     class="${isGridMode ? "grid-group-card" : "grouped-players-card"} ${
                       group.isCurrentGroup ? "is-current-group" : ""
                     }"
                   >
                     <div class="grouped-card-header">
-                      <div class="grouped-card-title">
+                      <div
+                        class="grouped-card-title"
+                        role="button"
+                        tabindex=${groupMasterIdx >= 0 ? "0" : "-1"}
+                        @click=${(e) => {
+                          e?.stopPropagation?.();
+                          if (groupMasterIdx >= 0) {
+                            this._onChipClick(groupMasterIdx);
+                          }
+                        }}
+                        @keydown=${(e) => {
+                          if (groupMasterIdx >= 0 && (e.key === "Enter" || e.key === " ")) {
+                            e.preventDefault();
+                            e?.stopPropagation?.();
+                            this._onChipClick(groupMasterIdx);
+                          }
+                        }}
+                        title=${
+                          group.isCurrentGroup
+                            ? localize("card.menu.active_entity") ||
+                              localize("card.grouping.current") ||
+                              "Active"
+                            : localize("card.menu.set_active_entity") || "Set as active entity"
+                        }
+                        style="cursor:${groupMasterIdx >= 0 ? "pointer" : "default"};"
+                      >
                         <ha-icon icon="mdi:speaker-multiple"></ha-icon>
                         <span>${group.groupLabel}</span>
                       </div>
@@ -751,8 +799,8 @@ export function renderGroupingSheet() {
                         : group.items.map((item) => renderGroupItem(item, true))
                     }
                   </div>
-                `
-              )}
+                `;
+              })}
               ${
                 isGridMode
                   ? standaloneItems.length > 0
