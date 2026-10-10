@@ -677,11 +677,39 @@ describe("Group Players Menu - Transfer Queue Button", () => {
       assert.equal(dedicatedCard._isIdle, false);
     });
 
+    it("locks to grouping menu with template: players", () => {
+      const dedicatedCard = new YetAnotherMediaPlayerCard();
+      dedicatedCard.setConfig({
+        type: "custom:yet-another-media-player",
+        template: "players",
+        entities: ["media_player.kitchen", "media_player.office"],
+      });
+
+      assert.equal(dedicatedCard._cardType, "group_players");
+      assert.equal(dedicatedCard._showEntityOptions, true);
+      assert.equal(dedicatedCard._showGrouping, true);
+      assert.equal(dedicatedCard._isIdle, false);
+    });
+
     it("locks to grouping menu with card_type: speakers_and_groups", () => {
       const dedicatedCard = new YetAnotherMediaPlayerCard();
       dedicatedCard.setConfig({
         type: "custom:yet-another-media-player",
         card_type: "speakers_and_groups",
+        entities: ["media_player.kitchen", "media_player.office"],
+      });
+
+      assert.equal(dedicatedCard._cardType, "group_players");
+      assert.equal(dedicatedCard._showEntityOptions, true);
+      assert.equal(dedicatedCard._showGrouping, true);
+      assert.equal(dedicatedCard._isIdle, false);
+    });
+
+    it("locks to grouping menu with card_type: players", () => {
+      const dedicatedCard = new YetAnotherMediaPlayerCard();
+      dedicatedCard.setConfig({
+        type: "custom:yet-another-media-player",
+        card_type: "players",
         entities: ["media_player.kitchen", "media_player.office"],
       });
 

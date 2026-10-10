@@ -1249,7 +1249,7 @@ export class QueueController {
   }
 
   /**
-   * Opens the transfer queue sheet overlay (routes to consolidated Speakers & Groups sheet).
+   * Opens the transfer queue sheet overlay (routes to consolidated Players sheet).
    */
   openTransferQueue() {
     if (!this.host) return;
@@ -1402,7 +1402,8 @@ export class QueueController {
         (this.showTransferQueue ||
           (this.host._showGrouping &&
             this.host._cardType !== "group_players" &&
-            this.host._cardType !== "speakers_and_groups"))
+            this.host._cardType !== "speakers_and_groups" &&
+            this.host._cardType !== "players"))
       ) {
         this.host._dismissWithAnimation?.();
       } else {

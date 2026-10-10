@@ -860,7 +860,7 @@ export function renderGroupingSheet() {
 }
 
 /**
- * Render the Transfer Queue overlay sheet (consolidated into Speakers & Groups).
+ * Render the Transfer Queue overlay sheet (consolidated into Players).
  * @this {import("../types.d.ts").YetAnotherMediaPlayerCard}
  */
 export function renderTransferQueueSheet() {

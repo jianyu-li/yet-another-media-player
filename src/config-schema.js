@@ -94,6 +94,20 @@ export const TEMPLATE_CONFIGS = Object.freeze({
     hide_menu_player: true,
     show_chip_row: "in_menu",
   },
+  dedicated_players: {
+    match_theme: true,
+    appearance: "automatic",
+    card_type: "group_players",
+    hide_menu_player: true,
+    show_chip_row: "in_menu",
+  },
+  players: {
+    match_theme: true,
+    appearance: "automatic",
+    card_type: "group_players",
+    hide_menu_player: true,
+    show_chip_row: "in_menu",
+  },
   dedicated_speakers_and_groups: {
     match_theme: true,
     appearance: "automatic",
@@ -256,6 +270,9 @@ export function getTemplatePresetDefaults(templateName = "custom") {
   if (
     norm === "speakers_and_groups" ||
     norm === "speakers" ||
+    norm === "players" ||
+    norm === "player" ||
+    norm === "dedicated_players" ||
     norm === "group_players" ||
     norm === "dedicated_grouping" ||
     norm === "dedicated_speakers_and_groups" ||

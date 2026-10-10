@@ -141,7 +141,8 @@ export function renderMainMenu(sourceList, menuOnlyActions, showChipsInMenu) {
 export function renderGroupingMenuOption(isGridMode = false) {
   if (
     this._isMenuOptionHidden?.("speakers_and_groups") ||
-    this._isMenuOptionHidden?.("group_players")
+    this._isMenuOptionHidden?.("group_players") ||
+    this._isMenuOptionHidden?.("players")
   ) {
     return nothing;
   }
@@ -149,9 +150,10 @@ export function renderGroupingMenuOption(isGridMode = false) {
   if (totalEntities <= 1) return nothing;
 
   const label =
+    localize("card.menu.players") ||
     localize("card.menu.speakers_and_groups") ||
     localize("card.menu.group_players") ||
-    "Speakers & Groups";
+    "Players";
 
   if (isGridMode) {
     return html`

@@ -838,6 +838,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
       action.action === "group-players" ||
       action.action === "speakers_and_groups" ||
       action.action === "speakers-and-groups" ||
+      action.action === "players" ||
       action.action === "transfer_queue" ||
       action.action === "transfer-queue"
     ) {
@@ -871,6 +872,8 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     if (
       currentTemplate === "speakers_and_groups" ||
       currentTemplate === "group_players" ||
+      currentTemplate === "players" ||
+      currentTemplate === "dedicated_players" ||
       currentTemplate === "dedicated_speakers_and_groups" ||
       currentTemplate === "transfer_queue" ||
       currentTemplate === "dedicated_transfer_queue"
@@ -900,7 +903,9 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                       (key) =>
                         key !== "dedicated_speakers_and_groups" &&
                         key !== "speakers_and_groups" &&
-                        key !== "group_players"
+                        key !== "group_players" &&
+                        key !== "dedicated_players" &&
+                        key !== "players"
                     )
                     .map((key) => ({
                       value: key,

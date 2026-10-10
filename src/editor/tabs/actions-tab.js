@@ -556,12 +556,14 @@ export function renderActionEditor(action, idx = this._actionEditorIndex, isSear
                           {
                             value: "group-players",
                             label:
+                              localize("card.menu.players") ||
                               localize("card.menu.speakers_and_groups") ||
-                              localize("card.menu.group_players"),
+                              localize("card.menu.group_players") ||
+                              "Players",
                           },
                           {
                             value: "transfer-queue",
-                            label: `${localize("card.menu.speakers_and_groups") || localize("card.menu.group_players")} (${localize("card.menu.transfer_queue")})`,
+                            label: `${localize("card.menu.players") || localize("card.menu.speakers_and_groups") || localize("card.menu.group_players") || "Players"} (${localize("card.menu.transfer_queue")})`,
                           },
                           { value: "main-menu", label: localize("card.menu.main_menu") },
                           { value: "full-screen", label: localize("card.menu.full_screen") },
@@ -571,7 +573,8 @@ export function renderActionEditor(action, idx = this._actionEditorIndex, isSear
                     .value=${
                       action?.menu_item === "speakers-and-groups" ||
                       action?.menu_item === "speakers_and_groups" ||
-                      action?.menu_item === "group_players"
+                      action?.menu_item === "group_players" ||
+                      action?.menu_item === "players"
                         ? "group-players"
                         : (action?.menu_item ?? "")
                     }
