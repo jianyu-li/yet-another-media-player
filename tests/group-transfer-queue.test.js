@@ -1725,6 +1725,210 @@ describe("Group Players Menu - Transfer Queue Button", () => {
           "Top toolbar should display Group All when no entities are grouped"
         );
       });
+
+      it("renders Group All in top action bar when no entities are grouped even if another entity is unavailable", () => {
+        const card = new YetAnotherMediaPlayerCard();
+        card.setConfig({
+          type: "custom:yet-another-media-player",
+          entities: ["media_player.living_room", "media_player.bedroom", "media_player.guest_room"],
+        });
+        card._selectedIndex = 0;
+        card.hass = {
+          states: {
+            "media_player.living_room": {
+              entity_id: "media_player.living_room",
+              state: "idle",
+              attributes: {
+                friendly_name: "Living Room",
+                group_members: ["media_player.living_room"],
+                supported_features: 512,
+              },
+            },
+            "media_player.bedroom": {
+              entity_id: "media_player.bedroom",
+              state: "idle",
+              attributes: {
+                friendly_name: "Bedroom",
+                group_members: ["media_player.bedroom"],
+                supported_features: 512,
+              },
+            },
+            "media_player.guest_room": {
+              entity_id: "media_player.guest_room",
+              state: "unavailable",
+              attributes: {
+                friendly_name: "Guest Room",
+                group_members: [],
+                supported_features: 512,
+              },
+            },
+          },
+          services: {
+            media_player: { unjoin: {}, join: {} },
+          },
+        };
+        card._isGroupCapable = (st) => Boolean(st && st.attributes?.supported_features === 512);
+        card._getGroupingMasterId = () => "media_player.living_room";
+        card._getGroupingEntityId = (idx) => card.entityIds[idx];
+        card._getGroupKey = (id) => id;
+        card.getChipName = (id) => card.hass.states[id]?.attributes?.friendly_name || id;
+        Object.defineProperty(card, "_isGridMode", { value: false, configurable: true });
+
+        const template = renderGroupingSheet.call(card);
+        assert.ok(template);
+        const htmlContent = extractTemplateHtml(template);
+        assert.ok(
+          htmlContent.includes("Group All"),
+          "Top toolbar should display Group All when no entities are grouped despite an unavailable player"
+        );
+        assert.ok(
+          !htmlContent.includes("Ungroup All"),
+          "Top toolbar should NOT display Ungroup All when no entities are grouped"
+        );
+      });
+
+      it("_groupAll joins available group-capable players to active master and skips unavailable entities", async () => {
+        const card = new YetAnotherMediaPlayerCard();
+        card.setConfig({
+          type: "custom:yet-another-media-player",
+          entities: [
+            "media_player.living_room",
+            "media_player.bedroom",
+            "media_player.guest_room",
+            "media_player.playstation",
+          ],
+        });
+        card._selectedIndex = 0;
+        const calls = [];
+        card.hass = {
+          states: {
+            "media_player.living_room": {
+              entity_id: "media_player.living_room",
+              state: "idle",
+              attributes: {
+                group_members: ["media_player.living_room"],
+                supported_features: 512,
+              },
+            },
+            "media_player.bedroom": {
+              entity_id: "media_player.bedroom",
+              state: "idle",
+              attributes: {
+                group_members: ["media_player.bedroom"],
+                supported_features: 512,
+              },
+            },
+            "media_player.guest_room": {
+              entity_id: "media_player.guest_room",
+              state: "unavailable",
+              attributes: {
+                group_members: [],
+                supported_features: 512,
+              },
+            },
+            "media_player.playstation": {
+              entity_id: "media_player.playstation",
+              state: "off",
+              attributes: {
+                supported_features: 0,
+              },
+            },
+          },
+          services: {
+            media_player: { join: {} },
+          },
+          callService: (domain, service, data) => {
+            calls.push({ domain, service, data });
+            return Promise.resolve();
+          },
+        };
+        card._isGroupCapable = (st) =>
+          Boolean(st && (st.attributes?.supported_features & 512) !== 0);
+        card._getGroupingMasterId = () => "media_player.living_room";
+        card._getGroupingEntityId = (idx) => card.entityIds[idx];
+        card._resolveGroupingEntityId = async (obj, id) => id;
+
+        await card._groupAll();
+
+        assert.strictEqual(calls.length, 1, "Should call join service once");
+        assert.strictEqual(calls[0].domain, "media_player");
+        assert.strictEqual(calls[0].service, "join");
+        assert.strictEqual(calls[0].data.entity_id, "media_player.living_room");
+        assert.deepStrictEqual(
+          calls[0].data.group_members,
+          ["media_player.bedroom"],
+          "Should only join available group-capable bedroom, skipping unavailable guest room and non-capable playstation"
+        );
+      });
+
+      it("_groupAll falls back to first available group-capable entity when active player cannot be coordinator", async () => {
+        const card = new YetAnotherMediaPlayerCard();
+        card.setConfig({
+          type: "custom:yet-another-media-player",
+          entities: [
+            "media_player.playstation",
+            "media_player.living_room",
+            "media_player.bedroom",
+          ],
+        });
+        card._selectedIndex = 0; // PlayStation is currently active
+        const calls = [];
+        card.hass = {
+          states: {
+            "media_player.playstation": {
+              entity_id: "media_player.playstation",
+              state: "on",
+              attributes: {
+                supported_features: 0,
+              },
+            },
+            "media_player.living_room": {
+              entity_id: "media_player.living_room",
+              state: "idle",
+              attributes: {
+                group_members: ["media_player.living_room"],
+                supported_features: 512,
+              },
+            },
+            "media_player.bedroom": {
+              entity_id: "media_player.bedroom",
+              state: "idle",
+              attributes: {
+                group_members: ["media_player.bedroom"],
+                supported_features: 512,
+              },
+            },
+          },
+          services: {
+            media_player: { join: {} },
+          },
+          callService: (domain, service, data) => {
+            calls.push({ domain, service, data });
+            return Promise.resolve();
+          },
+        };
+        card._isGroupCapable = (st) =>
+          Boolean(st && (st.attributes?.supported_features & 512) !== 0);
+        card._getGroupingMasterId = () => "media_player.playstation";
+        card._getGroupingEntityId = (idx) => card.entityIds[idx];
+        card._resolveGroupingEntityId = async (obj, id) => id;
+
+        await card._groupAll();
+
+        assert.strictEqual(calls.length, 1, "Should call join service once");
+        assert.strictEqual(calls[0].domain, "media_player");
+        assert.strictEqual(calls[0].service, "join");
+        assert.strictEqual(
+          calls[0].data.entity_id,
+          "media_player.living_room",
+          "Should elect living_room as coordinator"
+        );
+        assert.deepStrictEqual(
+          calls[0].data.group_members,
+          ["media_player.bedroom"],
+          "Should join bedroom to living room coordinator"
+        );
+      });
     });
   });
 

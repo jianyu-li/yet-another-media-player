@@ -40,7 +40,11 @@ export function renderGroupingSheet() {
   const activeIdx = this.entityIds.indexOf(activeId);
   const activeGroupId = activeIdx >= 0 ? this._getGroupingEntityId(activeIdx) : null;
   const activeState = activeGroupId ? this.hass.states[activeGroupId] : null;
-  const activeIsGroupCapable = activeState ? this._isGroupCapable(activeState) : false;
+  const activeMainState = activeId ? this.hass.states[activeId] : null;
+  const activeIsGroupCapable = Boolean(
+    (activeState && this._isGroupCapable(activeState)) ||
+    (activeMainState && this._isGroupCapable(activeMainState))
+  );
 
   // Check if active entity is itself a follower (isBusy)
   const activeGroupKey = this._getGroupKey(activeId);
@@ -102,9 +106,12 @@ export function renderGroupingSheet() {
 
     const playerGroupKey = this._getGroupKey(item.id);
     const playerGroupingState = this.hass?.states?.[item.groupId];
+    const playerMainState = item.id !== item.groupId ? this.hass?.states?.[item.id] : null;
     const playerMembers = Array.isArray(playerGroupingState?.attributes?.group_members)
       ? playerGroupingState.attributes.group_members
-      : [];
+      : Array.isArray(playerMainState?.attributes?.group_members)
+        ? playerMainState.attributes.group_members
+        : [];
     const isMultiSpeaker =
       inActiveGroup ||
       playerMembers.length > 1 ||
@@ -241,11 +248,28 @@ export function renderGroupingSheet() {
   const hasAnyGroups =
     groupedCards.length > 0 ||
     groupedAny ||
+    groupBuckets.size > 0 ||
     groupPlayerIds.some((p) => {
-      if (p.isBusy) return true;
-      const st = this.hass?.states?.[p.groupId];
-      return Array.isArray(st?.attributes?.group_members) && st.attributes.group_members.length > 1;
+      const gState = this.hass?.states?.[p.groupId];
+      const mState = p.id !== p.groupId ? this.hass?.states?.[p.id] : null;
+      const gMembers = Array.isArray(gState?.attributes?.group_members)
+        ? gState.attributes.group_members
+        : [];
+      const mMembers = Array.isArray(mState?.attributes?.group_members)
+        ? mState.attributes.group_members
+        : [];
+      const key = this._getGroupKey(p.id);
+      return gMembers.length > 1 || mMembers.length > 1 || (Boolean(key) && key !== p.id);
     });
+
+  const hasGroupCapablePlayer =
+    activeIsGroupCapable ||
+    (masterState && this._isGroupCapable(masterState)) ||
+    groupPlayerIds.some((p) => {
+      const st = this.hass?.states?.[p.groupId] || this.hass?.states?.[p.id];
+      return st && st.state !== "unavailable" && this._isGroupCapable(st);
+    });
+  const canGroupAll = hasGroupCapablePlayer && !activeIsBusy;
 
   const renderGroupItem = (item, isInsideGroup = false) => {
     const id = item.id;
@@ -671,7 +695,7 @@ export function renderGroupingSheet() {
                 ${localize("card.grouping.ungroup_all") || "Ungroup All"}
               </button>
             `
-          : activeIsGroupCapable && !activeIsBusy
+          : canGroupAll
             ? html`
                 <button
                   class="entity-options-item"

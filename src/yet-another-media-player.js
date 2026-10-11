@@ -10231,15 +10231,29 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
   // Group all supported entities to current master
   async _groupAll() {
-    const masterId = this._getGroupingMasterId();
-    const masterIdx = masterId ? this.entityIds.indexOf(masterId) : -1;
-    const masterObj = masterIdx >= 0 ? this.entityObjs[masterIdx] : null;
-    if (!masterObj) return;
+    let masterId = this._getGroupingMasterId();
+    let masterIdx = masterId ? this.entityIds.indexOf(masterId) : -1;
+    let masterObj = masterIdx >= 0 ? this.entityObjs[masterIdx] : null;
 
-    const masterGroupId = await this._resolveGroupingEntityId(masterObj, masterId);
-    if (!masterGroupId) return;
-    const masterState = this.hass.states[masterGroupId];
-    if (!this._isGroupCapable(masterState)) return;
+    let masterGroupId = masterObj ? await this._resolveGroupingEntityId(masterObj, masterId) : null;
+    let masterState = masterGroupId ? this.hass.states[masterGroupId] : null;
+
+    // If current master is not group capable or unavailable, fallback to first available group-capable player
+    if (!masterState || !this._isGroupCapable(masterState) || masterState.state === "unavailable") {
+      const fallbackIdx = this.entityIds.findIndex((id, idx) => {
+        const gId = this._getGroupingEntityId(idx);
+        const st = this.hass?.states?.[gId] || this.hass?.states?.[id];
+        return st && st.state !== "unavailable" && this._isGroupCapable(st);
+      });
+      if (fallbackIdx >= 0) {
+        masterId = this.entityIds[fallbackIdx];
+        masterObj = this.entityObjs[fallbackIdx];
+        masterGroupId = await this._resolveGroupingEntityId(masterObj, masterId);
+        masterState = masterGroupId ? this.hass.states[masterGroupId] : null;
+      }
+    }
+
+    if (!masterState || !this._isGroupCapable(masterState) || masterState.state === "unavailable") return;
 
     // Get all other entities that support grouping and are not already grouped with master
     const alreadyGrouped = Array.isArray(masterState.attributes?.group_members)
@@ -10258,7 +10272,17 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       if (!resolvedGroupId) continue;
 
       const st = this.hass.states[resolvedGroupId];
-      if (this._isGroupCapable(st) && !alreadyGrouped.includes(resolvedGroupId)) {
+      const mainSt = id !== resolvedGroupId ? this.hass?.states?.[id] : null;
+      const isUnavailable =
+        st?.state === "unavailable" ||
+        (mainSt && mainSt.state === "unavailable");
+
+      if (
+        st &&
+        !isUnavailable &&
+        this._isGroupCapable(st) &&
+        !alreadyGrouped.includes(resolvedGroupId)
+      ) {
         toJoin.push(resolvedGroupId);
       }
     }
@@ -10267,6 +10291,11 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     }
     // After grouping, keep the master set if still valid
     this._lastGroupingMasterId = masterId || this.currentEntityId;
+    if (this.triggerRender) {
+      this.triggerRender();
+    } else {
+      this.requestUpdate?.();
+    }
     // Remain in grouping sheet
   }
 
