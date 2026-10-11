@@ -808,16 +808,11 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     if (
       type === "group_players" ||
       type === "group-players" ||
-      type === "speakers_and_groups" ||
-      type === "speakers-and-groups" ||
-      type === "speakers" ||
       type === "players" ||
       type === "dedicated_players" ||
       type === "dedicated-players" ||
       type === "dedicated_grouping" ||
       type === "dedicated-grouping" ||
-      type === "dedicated_speakers_and_groups" ||
-      type === "dedicated-speakers-and-groups" ||
       type === "transfer_queue" ||
       type === "transfer-queue"
     ) {
@@ -4524,7 +4519,6 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       is_playing: this._isCurrentEntityPlaying(),
       is_search: this._showSearchInSheet,
       is_grouping: this._showGrouping,
-      is_speakers_and_groups: this._showGrouping,
       is_players: this._showGrouping,
       is_group_players: this._showGrouping,
       is_source: this._showSourceList || this._showSourceMenu,
@@ -6556,8 +6550,6 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           break;
         case "group-players":
         case "group_players":
-        case "speakers-and-groups":
-        case "speakers_and_groups":
         case "players":
         case "player":
         case "transfer-queue":
@@ -6644,8 +6636,6 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     if (
       action.action === "group_players" ||
       action.action === "group-players" ||
-      action.action === "speakers_and_groups" ||
-      action.action === "speakers-and-groups" ||
       action.action === "players" ||
       action.action === "player" ||
       action.action === "transfer_queue" ||
@@ -6948,15 +6938,12 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         "search-next-up": localize("search.next_up"),
         "source": localize("card.menu.source"),
         "more-info": localize("card.menu.more_info"),
-        "group-players": localize("card.menu.players") || localize("card.menu.speakers_and_groups") || localize("card.menu.group_players") || "Players",
-        "group_players": localize("card.menu.players") || localize("card.menu.speakers_and_groups") || localize("card.menu.group_players") || "Players",
-        "speakers-and-groups": localize("card.menu.players") || localize("card.menu.speakers_and_groups") || localize("card.menu.group_players") || "Players",
-        "speakers_and_groups": localize("card.menu.players") || localize("card.menu.speakers_and_groups") || localize("card.menu.group_players") || "Players",
-        "speakers": localize("card.menu.players") || localize("card.menu.speakers_and_groups") || localize("card.menu.group_players") || "Players",
-        "players": localize("card.menu.players") || localize("card.menu.speakers_and_groups") || localize("card.menu.group_players") || "Players",
-        "player": localize("card.menu.players") || localize("card.menu.speakers_and_groups") || localize("card.menu.group_players") || "Players",
-        "transfer-queue": localize("card.menu.players") || localize("card.menu.speakers_and_groups") || localize("card.menu.group_players") || "Players",
-        "transfer_queue": localize("card.menu.players") || localize("card.menu.speakers_and_groups") || localize("card.menu.group_players") || "Players",
+        "group-players": localize("card.menu.players") || localize("card.menu.group_players") || "Players",
+        "group_players": localize("card.menu.players") || localize("card.menu.group_players") || "Players",
+        "players": localize("card.menu.players") || localize("card.menu.group_players") || "Players",
+        "player": localize("card.menu.players") || localize("card.menu.group_players") || "Players",
+        "transfer-queue": localize("card.menu.players") || localize("card.menu.group_players") || "Players",
+        "transfer_queue": localize("card.menu.players") || localize("card.menu.group_players") || "Players",
         "main-menu": localize("card.menu.main_menu"),
         "full-screen": localize(this._isFullScreen ? "card.menu.exit_full_screen" : "card.menu.full_screen"),
       };
@@ -6977,8 +6964,6 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     if (
       action.action === "group_players" ||
       action.action === "group-players" ||
-      action.action === "speakers_and_groups" ||
-      action.action === "speakers-and-groups" ||
       action.action === "players" ||
       action.action === "player" ||
       action.action === "transfer_queue" ||
@@ -6987,7 +6972,6 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       return iconOnly
         ? ""
         : localize("card.menu.players") ||
-            localize("card.menu.speakers_and_groups") ||
             localize("card.menu.group_players") ||
             "Players";
     }

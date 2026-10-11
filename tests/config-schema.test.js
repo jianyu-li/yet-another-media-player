@@ -190,16 +190,13 @@ describe("config-schema", () => {
       assert.equal(largeModern.progress_bar_height, 16);
     });
 
-    it("resolves speakers_and_groups, group_players, and dedicated_grouping aliases properly", () => {
+    it("resolves players, group_players, and dedicated_grouping aliases properly", () => {
       const aliases = [
         "dedicated_grouping",
-        "speakers_and_groups",
         "group_players",
         "players",
         "player",
         "dedicated_players",
-        "dedicated_speakers_and_groups",
-        "speakers",
         "transfer_queue",
         "dedicated_transfer_queue",
       ];

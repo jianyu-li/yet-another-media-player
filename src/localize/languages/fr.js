@@ -414,7 +414,6 @@ export default {
     card_type_options: {
       default: "Par défaut",
       search: "Rechercher",
-      speakers_and_groups: "Lecteurs",
       group_players: "Lecteurs",
       players: "Lecteurs",
       up_next: "À suivre",
@@ -488,7 +487,6 @@ export default {
       exit_full_screen: "Quitter le plein écran",
       transfer_queue: "Transférer la file",
       main_menu: "Menu Principal",
-      speakers_and_groups: "Lecteurs",
       group_players: "Lecteurs",
       players: "Lecteurs",
       up_next: "À suivre",

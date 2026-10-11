@@ -422,7 +422,6 @@ export default {
     card_type_options: {
       default: "Standard",
       search: "Suche",
-      speakers_and_groups: "Player",
       group_players: "Player",
       players: "Player",
       up_next: "Als Nächstes",
@@ -496,7 +495,6 @@ export default {
       exit_full_screen: "Vollbild beenden",
       transfer_queue: "Warteschlange übertragen",
       main_menu: "Hauptmenü",
-      speakers_and_groups: "Player",
       group_players: "Player",
       players: "Player",
       up_next: "Als Nächstes",

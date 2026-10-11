@@ -635,11 +635,11 @@ describe("Group Players Menu - Transfer Queue Button", () => {
   });
 
   describe("Dedicated Group Players Mode Locking and Navigation", () => {
-    it("locks to grouping menu with template: speakers_and_groups", () => {
+    it("locks to grouping menu with template: players", () => {
       const dedicatedCard = new YetAnotherMediaPlayerCard();
       dedicatedCard.setConfig({
         type: "custom:yet-another-media-player",
-        template: "speakers_and_groups",
+        template: "players",
         entities: ["media_player.kitchen", "media_player.office"],
       });
 
@@ -677,34 +677,6 @@ describe("Group Players Menu - Transfer Queue Button", () => {
       assert.equal(dedicatedCard._isIdle, false);
     });
 
-    it("locks to grouping menu with template: players", () => {
-      const dedicatedCard = new YetAnotherMediaPlayerCard();
-      dedicatedCard.setConfig({
-        type: "custom:yet-another-media-player",
-        template: "players",
-        entities: ["media_player.kitchen", "media_player.office"],
-      });
-
-      assert.equal(dedicatedCard._cardType, "group_players");
-      assert.equal(dedicatedCard._showEntityOptions, true);
-      assert.equal(dedicatedCard._showGrouping, true);
-      assert.equal(dedicatedCard._isIdle, false);
-    });
-
-    it("locks to grouping menu with card_type: speakers_and_groups", () => {
-      const dedicatedCard = new YetAnotherMediaPlayerCard();
-      dedicatedCard.setConfig({
-        type: "custom:yet-another-media-player",
-        card_type: "speakers_and_groups",
-        entities: ["media_player.kitchen", "media_player.office"],
-      });
-
-      assert.equal(dedicatedCard._cardType, "group_players");
-      assert.equal(dedicatedCard._showEntityOptions, true);
-      assert.equal(dedicatedCard._showGrouping, true);
-      assert.equal(dedicatedCard._isIdle, false);
-    });
-
     it("locks to grouping menu with card_type: players", () => {
       const dedicatedCard = new YetAnotherMediaPlayerCard();
       dedicatedCard.setConfig({
@@ -723,7 +695,7 @@ describe("Group Players Menu - Transfer Queue Button", () => {
       const dedicatedCard = new YetAnotherMediaPlayerCard();
       dedicatedCard.setConfig({
         type: "custom:yet-another-media-player",
-        template: "speakers_and_groups",
+        template: "players",
         entities: ["media_player.kitchen", "media_player.office"],
       });
 
@@ -744,7 +716,7 @@ describe("Group Players Menu - Transfer Queue Button", () => {
       const dedicatedCard = new YetAnotherMediaPlayerCard();
       dedicatedCard.setConfig({
         type: "custom:yet-another-media-player",
-        template: "speakers_and_groups",
+        template: "players",
         entities: ["media_player.kitchen", "media_player.office"],
       });
 

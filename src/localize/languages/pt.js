@@ -408,7 +408,6 @@ export default {
     card_type_options: {
       default: "Padrão",
       search: "Procurar",
-      speakers_and_groups: "Leitores",
       group_players: "Leitores",
       players: "Leitores",
       up_next: "A seguir",
@@ -482,7 +481,6 @@ export default {
       exit_full_screen: "Sair do ecrã inteiro",
       transfer_queue: "Transferir fila",
       main_menu: "Menu Principal",
-      speakers_and_groups: "Leitores",
       group_players: "Leitores",
       players: "Leitores",
       up_next: "A seguir",

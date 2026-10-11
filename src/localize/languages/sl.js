@@ -404,7 +404,6 @@ export default {
     card_type_options: {
       default: "Privzeto",
       search: "Iskanje",
-      speakers_and_groups: "Predvajalniki",
       group_players: "Predvajalniki",
       players: "Predvajalniki",
       up_next: "Sledi",
@@ -478,7 +477,6 @@ export default {
       exit_full_screen: "Izhod iz celozaslonskega načina",
       transfer_queue: "Prenesi čakalno vrsto",
       main_menu: "Glavni meni",
-      speakers_and_groups: "Predvajalniki",
       group_players: "Predvajalniki",
       players: "Predvajalniki",
       up_next: "Sledi",

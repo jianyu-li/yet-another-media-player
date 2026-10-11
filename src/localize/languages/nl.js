@@ -431,7 +431,6 @@ export default {
     card_type_options: {
       default: "Standaard",
       search: "Zoeken",
-      speakers_and_groups: "Spelers",
       group_players: "Spelers",
       players: "Spelers",
       up_next: "Hierna",
@@ -505,7 +504,6 @@ export default {
       exit_full_screen: "Volledig scherm verlaten",
       transfer_queue: "Wachtrij Overdragen",
       main_menu: "Hoofdmenu",
-      speakers_and_groups: "Spelers",
       group_players: "Spelers",
       players: "Spelers",
       up_next: "Hierna",

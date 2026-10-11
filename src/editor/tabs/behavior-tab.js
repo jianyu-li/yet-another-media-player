@@ -21,7 +21,6 @@ export function renderBehaviorTab() {
                   value: "group_players",
                   label:
                     localize("editor.card_type_options.players") ||
-                    localize("editor.card_type_options.speakers_and_groups") ||
                     localize("editor.card_type_options.group_players") ||
                     "Players",
                 },
@@ -35,7 +34,6 @@ export function renderBehaviorTab() {
           }}
           .value=${
             this._config.card_type === "players" ||
-            this._config.card_type === "speakers_and_groups" ||
             this._config.card_type === "transfer_queue" ||
             this._config.card_type === "transfer-queue" ||
             this._config.card_type === "group-players"

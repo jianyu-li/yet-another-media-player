@@ -409,7 +409,6 @@ export default {
     card_type_options: {
       default: "Por defecto",
       search: "Buscar",
-      speakers_and_groups: "Reproductores",
       group_players: "Reproductores",
       players: "Reproductores",
       up_next: "A continuación",
@@ -483,7 +482,6 @@ export default {
       exit_full_screen: "Salir de pantalla completa",
       transfer_queue: "Transferir cola",
       main_menu: "Menú Principal",
-      speakers_and_groups: "Reproductores",
       group_players: "Reproductores",
       players: "Reproductores",
       up_next: "A continuación",

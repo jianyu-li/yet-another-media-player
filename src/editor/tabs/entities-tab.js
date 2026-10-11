@@ -295,10 +295,7 @@ export function renderEntityEditor(entity, idx = this._entityEditorIndex, isSear
             {
               value: "group_players",
               label:
-                localize("card.menu.players") ||
-                localize("card.menu.speakers_and_groups") ||
-                localize("card.menu.group_players") ||
-                "Players",
+                localize("card.menu.players") || localize("card.menu.group_players") || "Players",
             },
             {
               value: "remote_controls",

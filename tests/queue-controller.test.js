@@ -583,11 +583,11 @@ describe("QueueController & Pure Queue Helpers", () => {
       assert.strictEqual(controller.transferQueueStatus, null);
     });
 
-    it("does not dismiss with animation when cardType is speakers_and_groups", async () => {
+    it("does not dismiss with animation when cardType is players", async () => {
       let dismissed = false;
       mockHost._showEntityOptions = true;
       mockHost._showGrouping = true;
-      mockHost._cardType = "speakers_and_groups";
+      mockHost._cardType = "players";
       mockHost._dismissWithAnimation = () => {
         dismissed = true;
       };
@@ -610,7 +610,7 @@ describe("QueueController & Pure Queue Helpers", () => {
         (controller.showTransferQueue ||
           (mockHost._showGrouping &&
             mockHost._cardType !== "group_players" &&
-            mockHost._cardType !== "speakers_and_groups"))
+            mockHost._cardType !== "players"))
       ) {
         mockHost._dismissWithAnimation();
       }

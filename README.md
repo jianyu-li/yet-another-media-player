@@ -50,7 +50,7 @@ Below you will find a list of all configuration options.
 |----------------------------|--------------|--------------|-------------|-------------------------------------------------------------------------------------------------|
 | **Entities**               |              |              |             |                                                                                                 |
 | `type`                     | string       | Yes          | —           | `custom:yet-another-media-player`                                                               |
-| `card_type`               | choice       | No           | `default`   | Card interface mode: `default` for standard player, `search` for search card, `players` (or `group_players` / `speakers_and_groups`) for players management, `up_next` for upcoming queue, or `remote_control` for remote pad |
+| `card_type`               | choice       | No           | `default`   | Card interface mode: `default` for standard player, `search` for search card, `players` (or `group_players`) for players management, `up_next` for upcoming queue, or `remote_control` for remote pad |
 | `entities`                 | string/array | Yes          | —           | List of your media player entities                                                              |
 | `volume_entity`            | string       | No           | —           | Separate entity for volume control ([Supports Templates](#template-support)) |
 | `remote_entity`            | string       | No           | —           | Explicit remote entity for remote controls overlay ([Supports Templates](#template-support)) |
@@ -727,7 +727,7 @@ Set `card_type: search` to turn YAMP into a permanent search interface for your 
 
 ### Dedicated Players Mode
 
-Set `template: players` (or `template: group_players` / `template: speakers_and_groups` / `template: dedicated_grouping`), or `card_type: players` (or `card_type: group_players` / `card_type: speakers_and_groups`) to lock YAMP to the Players menu. 
+Set `template: players` (or `template: group_players` / `template: dedicated_grouping`), or `card_type: players` (or `card_type: group_players`) to lock YAMP to the Players menu. 
 
 **Dedicated Mode Behavior:**
 - **Permanent View**: The Players menu is always visible as the primary view.
@@ -763,7 +763,7 @@ entities:
 - **`minimal_mini`**: A compact mini card with no visible artwork, stepper volume control, and clean text alignment.
 - **`normal_mini`**: The standard compact mini player card with a blurred background artwork effect.
 - **`dedicated_search`**: A standalone search and library browsing card without the main media player interface (forces `card_type: search`).
-- **`dedicated_grouping`** (or **`players`**, **`group_players`**, **`speakers_and_groups`**): A standalone player grouping card (forces `card_type: group_players`).
+- **`dedicated_grouping`** (or **`players`**, **`group_players`**): A standalone player grouping card (forces `card_type: group_players`).
 - **`quick_and_easy`**: Designed for high accessibility and fast control, featuring a persistent entity chip row, volume overlays, and always-active quick grouping mode.
 - **`huge_yamp`**: Maximized controls, large text, and a massive progress bar designed for across-the-room viewing.
 
@@ -823,8 +823,7 @@ All templates have access to standard Home Assistant template functions (`states
 | `is_lyrics` | `boolean` | `true` if the lyrics view is active. |
 | `is_any_menu_open` | `boolean` | `true` if search, grouping, or options menus are open. |
 | `is_grouping` | `boolean` | `true` if the Players menu is open (alias for `is_players`). |
-| `is_players` | `boolean` | `true` if the Players menu is open (`is_group_players` and `is_speakers_and_groups` are also supported as aliases). |
-| `is_speakers_and_groups` | `boolean` | `true` if the Players menu is open (`is_group_players` is also supported as an alias). |
+| `is_players` | `boolean` | `true` if the Players menu is open (`is_group_players` is also supported as an alias). |
 | `is_group_players` | `boolean` | `true` if the Players menu is open (alias for `is_players`). |
 | `is_source` | `boolean` | `true` if the source selection list is open. |
 | `is_options` | `boolean` | `true` if the entity options menu is open. |

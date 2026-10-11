@@ -1402,7 +1402,6 @@ export class QueueController {
         (this.showTransferQueue ||
           (this.host._showGrouping &&
             this.host._cardType !== "group_players" &&
-            this.host._cardType !== "speakers_and_groups" &&
             this.host._cardType !== "players"))
       ) {
         this.host._dismissWithAnimation?.();

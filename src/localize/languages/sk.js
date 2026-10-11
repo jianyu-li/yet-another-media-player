@@ -423,7 +423,6 @@ export default {
     card_type_options: {
       default: "Predvolené",
       search: "Hľadať",
-      speakers_and_groups: "Prehrávače",
       group_players: "Prehrávače",
       players: "Prehrávače",
       up_next: "Nasleduje",
@@ -497,7 +496,6 @@ export default {
       exit_full_screen: "Ukončiť celú obrazovku",
       transfer_queue: "Presunúť frontu",
       main_menu: "Hlavné menu",
-      speakers_and_groups: "Prehrávače",
       group_players: "Prehrávače",
       players: "Prehrávače",
       up_next: "Nasleduje",

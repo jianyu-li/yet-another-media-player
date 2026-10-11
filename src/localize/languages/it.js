@@ -407,7 +407,6 @@ export default {
     card_type_options: {
       default: "Predefinito",
       search: "Cerca",
-      speakers_and_groups: "Lettori",
       group_players: "Lettori",
       players: "Lettori",
       up_next: "In coda",
@@ -481,7 +480,6 @@ export default {
       exit_full_screen: "Esci dallo schermo intero",
       transfer_queue: "Trasferisci coda",
       main_menu: "Menu Principale",
-      speakers_and_groups: "Lettori",
       group_players: "Lettori",
       players: "Lettori",
       up_next: "In coda",
