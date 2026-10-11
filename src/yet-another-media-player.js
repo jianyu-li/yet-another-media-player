@@ -801,8 +801,11 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
   get _cardType() {
     let type = this.config?.card_type;
-    if (!type && this.config?.template) {
-      type = getTemplatePresetDefaults(this.config.template)?.card_type;
+    const templateCardType = this.config?.template
+      ? getTemplatePresetDefaults(this.config.template)?.card_type
+      : null;
+    if ((!type || type === "default" || type === "standard") && templateCardType) {
+      type = templateCardType;
     }
     type = type || "default";
     if (
@@ -4619,6 +4622,14 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const templateName = rawConfig.template || "custom";
     const templateBase = getTemplatePresetDefaults(templateName);
     const config = { ...templateBase, ...rawConfig };
+    if (
+      templateBase.card_type &&
+      (!rawConfig.card_type ||
+        rawConfig.card_type === "default" ||
+        rawConfig.card_type === "standard")
+    ) {
+      config.card_type = templateBase.card_type;
+    }
     if (oldConfig?.lock_screen_controls !== config.lock_screen_controls) {
       this._mediaSessionOverride = null;
     }

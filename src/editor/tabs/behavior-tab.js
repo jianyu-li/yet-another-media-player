@@ -34,9 +34,14 @@ export function renderBehaviorTab() {
           }}
           .value=${
             this._config.card_type === "players" ||
+            this._config.card_type === "group_players" ||
+            this._config.card_type === "group-players" ||
+            this._config.card_type === "dedicated_players" ||
+            this._config.card_type === "dedicated-players" ||
+            this._config.card_type === "dedicated_grouping" ||
+            this._config.card_type === "dedicated-grouping" ||
             this._config.card_type === "transfer_queue" ||
-            this._config.card_type === "transfer-queue" ||
-            this._config.card_type === "group-players"
+            this._config.card_type === "transfer-queue"
               ? "group_players"
               : (this._config.card_type ?? "default")
           }

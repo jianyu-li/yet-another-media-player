@@ -482,6 +482,12 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
       ...config,
       entities: normalizedEntities,
     };
+    if (
+      templateBase.card_type &&
+      (!config.card_type || config.card_type === "default" || config.card_type === "standard")
+    ) {
+      this._config.card_type = templateBase.card_type;
+    }
     if (this._isInternalUpdate) {
       this._isInternalUpdate = false;
     }
@@ -627,6 +633,9 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
       for (const k of Object.keys(templateBase)) {
         delete newYaml[k];
       }
+      if (newYaml.card_type === "default" || newYaml.card_type === "standard") {
+        delete newYaml.card_type;
+      }
       newYaml.template = templateName;
     }
 
@@ -639,6 +648,12 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
       ...newYaml,
       entities: this._config.entities, // preserve normalized entities
     };
+    if (
+      activeTemplateBase.card_type &&
+      (!newYaml.card_type || newYaml.card_type === "default" || newYaml.card_type === "standard")
+    ) {
+      this._config.card_type = activeTemplateBase.card_type;
+    }
 
     this._isInternalUpdate = true;
     this.dispatchEvent(
@@ -871,10 +886,11 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
       currentTemplate === "group_players" ||
       currentTemplate === "players" ||
       currentTemplate === "dedicated_players" ||
+      currentTemplate === "dedicated_grouping" ||
       currentTemplate === "transfer_queue" ||
       currentTemplate === "dedicated_transfer_queue"
     ) {
-      currentTemplate = "dedicated_grouping";
+      currentTemplate = "players";
     }
 
     // When editing an entity/action, keep tabs visible but show editor content
@@ -897,7 +913,9 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                   options: Object.keys(TEMPLATE_CONFIGS)
                     .filter(
                       (key) =>
-                        key !== "group_players" && key !== "dedicated_players" && key !== "players"
+                        key !== "group_players" &&
+                        key !== "dedicated_players" &&
+                        key !== "dedicated_grouping"
                     )
                     .map((key) => ({
                       value: key,

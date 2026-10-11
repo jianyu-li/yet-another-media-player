@@ -278,11 +278,20 @@ export function getTemplatePresetDefaults(templateName = "custom") {
 export function normalizeCardConfig(rawConfig = {}) {
   const templateName = rawConfig.template || "custom";
   const templateBase = getTemplatePresetDefaults(templateName);
-  return {
+  const normalized = {
     ...CARD_CONFIG_DEFAULTS,
     ...templateBase,
     ...rawConfig,
   };
+  if (
+    templateBase.card_type &&
+    (!rawConfig.card_type ||
+      rawConfig.card_type === "default" ||
+      rawConfig.card_type === "standard")
+  ) {
+    normalized.card_type = templateBase.card_type;
+  }
+  return normalized;
 }
 
 /**
