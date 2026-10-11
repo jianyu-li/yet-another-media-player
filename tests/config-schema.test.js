@@ -190,13 +190,13 @@ describe("config-schema", () => {
       assert.equal(largeModern.progress_bar_height, 16);
     });
 
-    it("resolves speakers_and_groups, group_players, and dedicated_grouping aliases properly", () => {
+    it("resolves players, group_players, and dedicated_grouping aliases properly", () => {
       const aliases = [
         "dedicated_grouping",
-        "speakers_and_groups",
         "group_players",
-        "dedicated_speakers_and_groups",
-        "speakers",
+        "players",
+        "player",
+        "dedicated_players",
         "transfer_queue",
         "dedicated_transfer_queue",
       ];
@@ -246,6 +246,22 @@ describe("config-schema", () => {
       // User override taking precedence
       assert.equal(normalized.progress_bar_height, 24);
       assert.equal(normalized.custom_user_key, "preserved");
+    });
+
+    it("applies template preset card_type when rawConfig card_type is default, standard, or omitted", () => {
+      const templates = ["players", "dedicated_grouping", "group_players"];
+      for (const tmpl of templates) {
+        for (const defaultType of ["default", "standard", undefined]) {
+          const raw = { template: tmpl };
+          if (defaultType) raw.card_type = defaultType;
+          const normalized = normalizeCardConfig(raw);
+          assert.equal(
+            normalized.card_type,
+            "group_players",
+            `Expected card_type group_players for template: ${tmpl} and card_type: ${defaultType}`
+          );
+        }
+      }
     });
   });
 

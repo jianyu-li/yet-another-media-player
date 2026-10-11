@@ -139,19 +139,13 @@ export function renderMainMenu(sourceList, menuOnlyActions, showChipsInMenu) {
  * @param {boolean} [isGridMode=false]
  */
 export function renderGroupingMenuOption(isGridMode = false) {
-  if (
-    this._isMenuOptionHidden?.("speakers_and_groups") ||
-    this._isMenuOptionHidden?.("group_players")
-  ) {
+  if (this._isMenuOptionHidden?.("group_players") || this._isMenuOptionHidden?.("players")) {
     return nothing;
   }
   const totalEntities = this.entityIds?.length || 0;
   if (totalEntities <= 1) return nothing;
 
-  const label =
-    localize("card.menu.speakers_and_groups") ||
-    localize("card.menu.group_players") ||
-    "Speakers & Groups";
+  const label = localize("card.menu.players") || localize("card.menu.group_players") || "Players";
 
   if (isGridMode) {
     return html`

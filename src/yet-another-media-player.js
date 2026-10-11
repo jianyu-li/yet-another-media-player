@@ -801,20 +801,21 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
   get _cardType() {
     let type = this.config?.card_type;
-    if (!type && this.config?.template) {
-      type = getTemplatePresetDefaults(this.config.template)?.card_type;
+    const templateCardType = this.config?.template
+      ? getTemplatePresetDefaults(this.config.template)?.card_type
+      : null;
+    if ((!type || type === "default" || type === "standard") && templateCardType) {
+      type = templateCardType;
     }
     type = type || "default";
     if (
       type === "group_players" ||
       type === "group-players" ||
-      type === "speakers_and_groups" ||
-      type === "speakers-and-groups" ||
-      type === "speakers" ||
+      type === "players" ||
+      type === "dedicated_players" ||
+      type === "dedicated-players" ||
       type === "dedicated_grouping" ||
       type === "dedicated-grouping" ||
-      type === "dedicated_speakers_and_groups" ||
-      type === "dedicated-speakers-and-groups" ||
       type === "transfer_queue" ||
       type === "transfer-queue"
     ) {
@@ -4521,7 +4522,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       is_playing: this._isCurrentEntityPlaying(),
       is_search: this._showSearchInSheet,
       is_grouping: this._showGrouping,
-      is_speakers_and_groups: this._showGrouping,
+      is_players: this._showGrouping,
       is_group_players: this._showGrouping,
       is_source: this._showSourceList || this._showSourceMenu,
       is_lyrics: this._lyricsActive,
@@ -4621,6 +4622,14 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const templateName = rawConfig.template || "custom";
     const templateBase = getTemplatePresetDefaults(templateName);
     const config = { ...templateBase, ...rawConfig };
+    if (
+      templateBase.card_type &&
+      (!rawConfig.card_type ||
+        rawConfig.card_type === "default" ||
+        rawConfig.card_type === "standard")
+    ) {
+      config.card_type = templateBase.card_type;
+    }
     if (oldConfig?.lock_screen_controls !== config.lock_screen_controls) {
       this._mediaSessionOverride = null;
     }
@@ -6552,8 +6561,8 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           break;
         case "group-players":
         case "group_players":
-        case "speakers-and-groups":
-        case "speakers_and_groups":
+        case "players":
+        case "player":
         case "transfer-queue":
         case "transfer_queue":
           this._openGrouping();
@@ -6638,8 +6647,8 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     if (
       action.action === "group_players" ||
       action.action === "group-players" ||
-      action.action === "speakers_and_groups" ||
-      action.action === "speakers-and-groups" ||
+      action.action === "players" ||
+      action.action === "player" ||
       action.action === "transfer_queue" ||
       action.action === "transfer-queue"
     ) {
@@ -6940,13 +6949,12 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         "search-next-up": localize("search.next_up"),
         "source": localize("card.menu.source"),
         "more-info": localize("card.menu.more_info"),
-        "group-players": localize("card.menu.speakers_and_groups") || localize("card.menu.group_players"),
-        "group_players": localize("card.menu.speakers_and_groups") || localize("card.menu.group_players"),
-        "speakers-and-groups": localize("card.menu.speakers_and_groups") || localize("card.menu.group_players"),
-        "speakers_and_groups": localize("card.menu.speakers_and_groups") || localize("card.menu.group_players"),
-        "speakers": localize("card.menu.speakers_and_groups") || localize("card.menu.group_players"),
-        "transfer-queue": localize("card.menu.speakers_and_groups") || localize("card.menu.group_players"),
-        "transfer_queue": localize("card.menu.speakers_and_groups") || localize("card.menu.group_players"),
+        "group-players": localize("card.menu.players") || localize("card.menu.group_players") || "Players",
+        "group_players": localize("card.menu.players") || localize("card.menu.group_players") || "Players",
+        "players": localize("card.menu.players") || localize("card.menu.group_players") || "Players",
+        "player": localize("card.menu.players") || localize("card.menu.group_players") || "Players",
+        "transfer-queue": localize("card.menu.players") || localize("card.menu.group_players") || "Players",
+        "transfer_queue": localize("card.menu.players") || localize("card.menu.group_players") || "Players",
         "main-menu": localize("card.menu.main_menu"),
         "full-screen": localize(this._isFullScreen ? "card.menu.exit_full_screen" : "card.menu.full_screen"),
       };
@@ -6967,16 +6975,16 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     if (
       action.action === "group_players" ||
       action.action === "group-players" ||
-      action.action === "speakers_and_groups" ||
-      action.action === "speakers-and-groups" ||
+      action.action === "players" ||
+      action.action === "player" ||
       action.action === "transfer_queue" ||
       action.action === "transfer-queue"
     ) {
       return iconOnly
         ? ""
-        : localize("card.menu.speakers_and_groups") ||
+        : localize("card.menu.players") ||
             localize("card.menu.group_players") ||
-            "Speakers & Groups";
+            "Players";
     }
     if (action.action === "remote_control") {
       return iconOnly ? "" : localize("editor.action_types.remote_control") || "Open Remote Controls Overlay";
@@ -9228,8 +9236,8 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
               { value: "search", label: "Search" },
               { value: "source", label: "Source" },
               { value: "more-info", label: "More Info" },
-              { value: "group-players", label: "Speakers & Groups" },
-              { value: "transfer-queue", label: "Speakers & Groups (Legacy)" }
+              { value: "group-players", label: "Players" },
+              { value: "transfer-queue", label: "Players (Legacy)" }
             ]
           }
         },

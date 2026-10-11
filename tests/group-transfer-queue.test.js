@@ -635,11 +635,11 @@ describe("Group Players Menu - Transfer Queue Button", () => {
   });
 
   describe("Dedicated Group Players Mode Locking and Navigation", () => {
-    it("locks to grouping menu with template: speakers_and_groups", () => {
+    it("locks to grouping menu with template: players", () => {
       const dedicatedCard = new YetAnotherMediaPlayerCard();
       dedicatedCard.setConfig({
         type: "custom:yet-another-media-player",
-        template: "speakers_and_groups",
+        template: "players",
         entities: ["media_player.kitchen", "media_player.office"],
       });
 
@@ -677,11 +677,11 @@ describe("Group Players Menu - Transfer Queue Button", () => {
       assert.equal(dedicatedCard._isIdle, false);
     });
 
-    it("locks to grouping menu with card_type: speakers_and_groups", () => {
+    it("locks to grouping menu with card_type: players", () => {
       const dedicatedCard = new YetAnotherMediaPlayerCard();
       dedicatedCard.setConfig({
         type: "custom:yet-another-media-player",
-        card_type: "speakers_and_groups",
+        card_type: "players",
         entities: ["media_player.kitchen", "media_player.office"],
       });
 
@@ -695,7 +695,7 @@ describe("Group Players Menu - Transfer Queue Button", () => {
       const dedicatedCard = new YetAnotherMediaPlayerCard();
       dedicatedCard.setConfig({
         type: "custom:yet-another-media-player",
-        template: "speakers_and_groups",
+        template: "players",
         entities: ["media_player.kitchen", "media_player.office"],
       });
 
@@ -716,7 +716,7 @@ describe("Group Players Menu - Transfer Queue Button", () => {
       const dedicatedCard = new YetAnotherMediaPlayerCard();
       dedicatedCard.setConfig({
         type: "custom:yet-another-media-player",
-        template: "speakers_and_groups",
+        template: "players",
         entities: ["media_player.kitchen", "media_player.office"],
       });
 
@@ -727,6 +727,30 @@ describe("Group Players Menu - Transfer Queue Button", () => {
       dedicatedCard._handleIdleTimeoutCallback();
       assert.equal(dedicatedCard._isIdle, false);
       assert.equal(dedicatedCard._showGrouping, true);
+    });
+
+    it("activates grouping mode when card_type is default or standard with template: players, dedicated_grouping, or group_players", () => {
+      const templates = ["players", "dedicated_grouping", "group_players"];
+      for (const tmpl of templates) {
+        for (const defaultType of ["default", "standard"]) {
+          const card = new YetAnotherMediaPlayerCard();
+          card.setConfig({
+            type: "custom:yet-another-media-player",
+            card_type: defaultType,
+            template: tmpl,
+            entities: ["media_player.kitchen", "media_player.office"],
+          });
+
+          assert.equal(
+            card._cardType,
+            "group_players",
+            `Expected _cardType to be group_players for template: ${tmpl} and card_type: ${defaultType}`
+          );
+          assert.equal(card._showEntityOptions, true);
+          assert.equal(card._showGrouping, true);
+          assert.equal(card._isIdle, false);
+        }
+      }
     });
   });
 

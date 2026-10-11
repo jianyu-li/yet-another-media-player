@@ -295,9 +295,7 @@ export function renderEntityEditor(entity, idx = this._entityEditorIndex, isSear
             {
               value: "group_players",
               label:
-                localize("card.menu.speakers_and_groups") ||
-                localize("card.menu.group_players") ||
-                "Speakers & Groups",
+                localize("card.menu.players") || localize("card.menu.group_players") || "Players",
             },
             {
               value: "remote_controls",
@@ -363,7 +361,7 @@ export function renderEntityEditor(entity, idx = this._entityEditorIndex, isSear
           return html`
             <div
               class="form-row"
-              data-search-keys="hidden_menu_options hide_menu_options more_info search source transfer_queue group_players remote_controls lyrics full_screen menu options"
+              data-search-keys="hidden_menu_options hide_menu_options more_info search source transfer_queue group_players players remote_controls lyrics full_screen menu options"
             >
               <ha-selector
                 .hass=${this.hass}

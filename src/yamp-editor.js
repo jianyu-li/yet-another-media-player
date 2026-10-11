@@ -482,6 +482,12 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
       ...config,
       entities: normalizedEntities,
     };
+    if (
+      templateBase.card_type &&
+      (!config.card_type || config.card_type === "default" || config.card_type === "standard")
+    ) {
+      this._config.card_type = templateBase.card_type;
+    }
     if (this._isInternalUpdate) {
       this._isInternalUpdate = false;
     }
@@ -627,6 +633,9 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
       for (const k of Object.keys(templateBase)) {
         delete newYaml[k];
       }
+      if (newYaml.card_type === "default" || newYaml.card_type === "standard") {
+        delete newYaml.card_type;
+      }
       newYaml.template = templateName;
     }
 
@@ -639,6 +648,12 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
       ...newYaml,
       entities: this._config.entities, // preserve normalized entities
     };
+    if (
+      activeTemplateBase.card_type &&
+      (!newYaml.card_type || newYaml.card_type === "default" || newYaml.card_type === "standard")
+    ) {
+      this._config.card_type = activeTemplateBase.card_type;
+    }
 
     this._isInternalUpdate = true;
     this.dispatchEvent(
@@ -836,8 +851,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     if (
       action.action === "group_players" ||
       action.action === "group-players" ||
-      action.action === "speakers_and_groups" ||
-      action.action === "speakers-and-groups" ||
+      action.action === "players" ||
       action.action === "transfer_queue" ||
       action.action === "transfer-queue"
     ) {
@@ -869,9 +883,10 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     const rawTemplate = this._yamlConfig.template || "custom";
     let currentTemplate = rawTemplate;
     if (
-      currentTemplate === "speakers_and_groups" ||
       currentTemplate === "group_players" ||
-      currentTemplate === "dedicated_speakers_and_groups" ||
+      currentTemplate === "players" ||
+      currentTemplate === "dedicated_players" ||
+      currentTemplate === "dedicated_grouping" ||
       currentTemplate === "transfer_queue" ||
       currentTemplate === "dedicated_transfer_queue"
     ) {
@@ -898,9 +913,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                   options: Object.keys(TEMPLATE_CONFIGS)
                     .filter(
                       (key) =>
-                        key !== "dedicated_speakers_and_groups" &&
-                        key !== "speakers_and_groups" &&
-                        key !== "group_players"
+                        key !== "group_players" && key !== "dedicated_players" && key !== "players"
                     )
                     .map((key) => ({
                       value: key,

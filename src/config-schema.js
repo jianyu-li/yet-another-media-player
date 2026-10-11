@@ -94,14 +94,14 @@ export const TEMPLATE_CONFIGS = Object.freeze({
     hide_menu_player: true,
     show_chip_row: "in_menu",
   },
-  dedicated_speakers_and_groups: {
+  dedicated_players: {
     match_theme: true,
     appearance: "automatic",
     card_type: "group_players",
     hide_menu_player: true,
     show_chip_row: "in_menu",
   },
-  speakers_and_groups: {
+  players: {
     match_theme: true,
     appearance: "automatic",
     card_type: "group_players",
@@ -254,11 +254,11 @@ export function getTemplatePresetDefaults(templateName = "custom") {
     .trim()
     .replace(/[-\s]+/g, "_");
   if (
-    norm === "speakers_and_groups" ||
-    norm === "speakers" ||
+    norm === "players" ||
+    norm === "player" ||
+    norm === "dedicated_players" ||
     norm === "group_players" ||
     norm === "dedicated_grouping" ||
-    norm === "dedicated_speakers_and_groups" ||
     norm === "transfer_queue" ||
     norm === "dedicated_transfer_queue"
   ) {
@@ -278,11 +278,20 @@ export function getTemplatePresetDefaults(templateName = "custom") {
 export function normalizeCardConfig(rawConfig = {}) {
   const templateName = rawConfig.template || "custom";
   const templateBase = getTemplatePresetDefaults(templateName);
-  return {
+  const normalized = {
     ...CARD_CONFIG_DEFAULTS,
     ...templateBase,
     ...rawConfig,
   };
+  if (
+    templateBase.card_type &&
+    (!rawConfig.card_type ||
+      rawConfig.card_type === "default" ||
+      rawConfig.card_type === "standard")
+  ) {
+    normalized.card_type = templateBase.card_type;
+  }
+  return normalized;
 }
 
 /**

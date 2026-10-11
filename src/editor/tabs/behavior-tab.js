@@ -20,8 +20,9 @@ export function renderBehaviorTab() {
                 {
                   value: "group_players",
                   label:
-                    localize("editor.card_type_options.speakers_and_groups") ||
-                    localize("editor.card_type_options.group_players"),
+                    localize("editor.card_type_options.players") ||
+                    localize("editor.card_type_options.group_players") ||
+                    "Players",
                 },
                 { value: "up_next", label: localize("editor.card_type_options.up_next") },
                 {
@@ -32,10 +33,15 @@ export function renderBehaviorTab() {
             },
           }}
           .value=${
-            this._config.card_type === "speakers_and_groups" ||
+            this._config.card_type === "players" ||
+            this._config.card_type === "group_players" ||
+            this._config.card_type === "group-players" ||
+            this._config.card_type === "dedicated_players" ||
+            this._config.card_type === "dedicated-players" ||
+            this._config.card_type === "dedicated_grouping" ||
+            this._config.card_type === "dedicated-grouping" ||
             this._config.card_type === "transfer_queue" ||
-            this._config.card_type === "transfer-queue" ||
-            this._config.card_type === "group-players"
+            this._config.card_type === "transfer-queue"
               ? "group_players"
               : (this._config.card_type ?? "default")
           }

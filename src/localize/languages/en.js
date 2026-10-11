@@ -69,6 +69,14 @@ export default {
         label: "Group Therapy",
         description: "A standalone player grouping card. Requires multiple entities configured.",
       },
+      players: {
+        label: "Group Therapy",
+        description: "A standalone player grouping card. Requires multiple entities configured.",
+      },
+      group_players: {
+        label: "Group Therapy",
+        description: "A standalone player grouping card. Requires multiple entities configured.",
+      },
       huge_yamp: {
         label: "That's a Huge YAMP!",
         description:
@@ -412,8 +420,8 @@ export default {
     card_type_options: {
       default: "Default",
       search: "Search",
-      speakers_and_groups: "Speakers & Groups",
-      group_players: "Speakers & Groups",
+      group_players: "Players",
+      players: "Players",
       up_next: "Up Next",
       remote_control: "Remote Control",
     },
@@ -489,8 +497,8 @@ export default {
       exit_full_screen: "Exit Full Screen",
       transfer_queue: "Transfer Queue",
       main_menu: "Main Menu",
-      speakers_and_groups: "Speakers & Groups",
-      group_players: "Speakers & Groups",
+      group_players: "Players",
+      players: "Players",
       up_next: "Up Next",
       remote_control: "Remote Control",
       select_entity: "Select Entity for More Info",
@@ -513,7 +521,7 @@ export default {
       power: "Power",
     },
     grouping: {
-      title: "Speakers & Groups",
+      title: "Players",
       sync_volume: "Sync Volume",
       group_all: "Group All",
       ungroup_all: "Ungroup All",
