@@ -890,7 +890,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
       currentTemplate === "transfer_queue" ||
       currentTemplate === "dedicated_transfer_queue"
     ) {
-      currentTemplate = "players";
+      currentTemplate = "dedicated_grouping";
     }
 
     // When editing an entity/action, keep tabs visible but show editor content
@@ -913,9 +913,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                   options: Object.keys(TEMPLATE_CONFIGS)
                     .filter(
                       (key) =>
-                        key !== "group_players" &&
-                        key !== "dedicated_players" &&
-                        key !== "dedicated_grouping"
+                        key !== "group_players" && key !== "dedicated_players" && key !== "players"
                     )
                     .map((key) => ({
                       value: key,

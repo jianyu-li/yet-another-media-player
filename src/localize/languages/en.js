@@ -66,15 +66,15 @@ export default {
         description: "A standalone search card without the main media player.",
       },
       dedicated_grouping: {
-        label: "Players (Group Therapy)",
+        label: "Group Therapy",
         description: "A standalone player grouping card. Requires multiple entities configured.",
       },
       players: {
-        label: "Players",
+        label: "Group Therapy",
         description: "A standalone player grouping card. Requires multiple entities configured.",
       },
       group_players: {
-        label: "Players",
+        label: "Group Therapy",
         description: "A standalone player grouping card. Requires multiple entities configured.",
       },
       huge_yamp: {
