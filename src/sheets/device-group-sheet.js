@@ -220,7 +220,6 @@ export function renderGroupingSheet() {
         isPlaybackConflict
       );
 
-      const activeName = activeId ? this.getChipName(activeId) : "";
       let joinTooltip;
       if (isDeviceUnavailable || activeStateForJoin?.state === "unavailable") {
         joinTooltip = localize("card.grouping.unavailable") || "Player is unavailable";
@@ -323,11 +322,6 @@ export function renderGroupingSheet() {
     const isJustMoved = Boolean(
       this._justSelectedGroupingEntityId && this._justSelectedGroupingEntityId === id
     );
-    const masterName = masterId
-      ? this.getChipName(masterId)
-      : activeId
-        ? this.getChipName(activeId)
-        : "";
 
     // Check if player belongs to any multi-speaker group (its own or the active master's)
     const playerGroupKey = this._getGroupKey(id);
