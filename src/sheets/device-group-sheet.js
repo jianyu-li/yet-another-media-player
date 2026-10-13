@@ -356,7 +356,7 @@ export function renderGroupingSheet() {
       targetMaState?.state === "unavailable";
 
     let stateLabel;
-    if (isDeviceUnavailable) {
+    if (isDeviceUnavailable || isBusy) {
       stateLabel = busyLabel || localize("card.grouping.unavailable") || "Unavailable";
     } else if (isMultiSpeakerGroup) {
       stateLabel = localize("card.grouping.joined");

@@ -5691,16 +5691,60 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       isBusy = true;
       busyLabel = localize('common.unavailable');
     }
-    // Busy if joined to a DIFFERENT group
-    else if (playerGroupKey !== targetId && playerGroupKey !== myGroupKey) {
-      isBusy = true;
-      busyLabel = localize('common.unavailable');
-    }
-    // Or if it IS a master of a different group
-    else if (playerGroupKey === targetId && playerGroupKey !== myGroupKey) {
-      if (st.attributes?.group_members?.length > 1) {
+    // Check if target belongs to a different group (either as a master or follower)
+    else if (playerGroupKey !== myGroupKey) {
+      const targetMasterId = playerGroupKey || targetId;
+      const targetMasterIdx = this.entityIds.indexOf(targetMasterId);
+      const targetMasterGroupId =
+        targetMasterIdx >= 0
+          ? this._getGroupingEntityId(targetMasterIdx)
+          : this._getGroupingEntityIdByEntityId(targetMasterId) || targetMasterId;
+      const targetMasterState = targetMasterGroupId
+        ? this.hass?.states?.[targetMasterGroupId]
+        : null;
+      const targetGroupMembers = Array.isArray(targetMasterState?.attributes?.group_members)
+        ? targetMasterState.attributes.group_members
+        : [];
+      const isTargetInEstablishedGroup =
+        targetGroupMembers.length > 1 || (playerGroupKey && playerGroupKey !== targetId);
+
+      if (targetMasterState?.state === "unavailable") {
         isBusy = true;
         busyLabel = localize('common.unavailable');
+      } else if (isTargetInEstablishedGroup) {
+        const activeIdx = activeId ? this.entityIds.indexOf(activeId) : -1;
+        const activeGroupId = activeIdx >= 0 ? this._getGroupingEntityId(activeIdx) : activeId;
+        const activeEntityState =
+          masterState ||
+          (activeGroupId ? this.hass?.states?.[activeGroupId] : null) ||
+          (activeId ? this.hass?.states?.[activeId] : null);
+
+        const effectiveActiveGroupKey = activeGroupKey || this._getGroupKey(activeId);
+        const activeIsFollower = Boolean(
+          effectiveActiveGroupKey && effectiveActiveGroupKey !== activeId
+        );
+
+        if (activeIsFollower) {
+          isBusy = true;
+          busyLabel = localize('common.unavailable');
+        } else {
+          const isActivePlaying = this._isEntityPlaying(activeEntityState);
+          const isTargetGroupPlaying =
+            this._isEntityPlaying(targetMasterState) ||
+            this._isEntityPlaying(st) ||
+            (Array.isArray(targetGroupMembers) &&
+              targetGroupMembers.some((m) => this._isEntityPlaying(this.hass?.states?.[m])));
+
+          const areBothPlaying = isActivePlaying && isTargetGroupPlaying;
+          if (
+            areBothPlaying &&
+            !this._areEntitiesPlayingSameMedia(activeEntityState, targetMasterState || st)
+          ) {
+            // Playing two different things -> group button is unavailable
+            isBusy = true;
+            busyLabel = localize('common.unavailable');
+          }
+        }
       }
     }
 
@@ -5717,7 +5761,9 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
     const masterName = this.getChipName(activeId);
     let tooltip;
-    if (isSolePlayer) {
+    if (isBusy) {
+      tooltip = localize('card.grouping.unavailable') || localize('common.unavailable') || 'Unavailable';
+    } else if (isSolePlayer) {
       tooltip = localize('card.grouping.current') || 'Current';
     } else if (isGroupActive) {
       if (isPrimary) {
@@ -10206,10 +10252,57 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
     if (grouped) {
       await unjoinPlayer(this.hass, targetGroupId);
+      this._lastGroupingMasterId = masterId || targetId;
     } else {
-      await joinPlayers(this.hass, masterGroupId, [targetGroupId]);
+      const targetGroupKey = this._getGroupKey(targetId);
+      const targetMasterId = targetGroupKey || targetId;
+      const targetMasterIdx = this.entityIds.indexOf(targetMasterId);
+      const targetMasterObj = targetMasterIdx >= 0 ? this.entityObjs[targetMasterIdx] : null;
+      const targetMasterGroupId =
+        (targetMasterObj ? await this._resolveGroupingEntityId(targetMasterObj, targetMasterId) : null) ||
+        this._getGroupingEntityIdByEntityId(targetMasterId) ||
+        targetMasterId;
+      const targetMasterState = targetMasterGroupId ? this.hass?.states?.[targetMasterGroupId] : null;
+      let targetGroupMembers = Array.isArray(targetMasterState?.attributes?.group_members)
+        ? targetMasterState.attributes.group_members
+        : [];
+      if (targetGroupMembers.length === 0 && targetGroupKey !== targetId) {
+        targetGroupMembers = [targetMasterGroupId, targetGroupId];
+      }
+      const isTargetInEstablishedGroup =
+        targetGroupMembers.length > 1 || (targetGroupKey && targetGroupKey !== targetId);
+
+      if (isTargetInEstablishedGroup && !targetGroupMembers.includes(masterGroupId)) {
+        const isActivePlaying = this._isEntityPlaying(masterState);
+        const isTargetGroupPlaying =
+          this._isEntityPlaying(targetMasterState) ||
+          targetGroupMembers.some((m) => this._isEntityPlaying(this.hass?.states?.[m]));
+        const areBothPlaying = isActivePlaying && isTargetGroupPlaying;
+
+        if (areBothPlaying && !this._areEntitiesPlayingSameMedia(masterState, targetMasterState)) {
+          // Playback conflict: both playing different things
+          return;
+        }
+
+        if (isActivePlaying && !isTargetGroupPlaying) {
+          // Active player is playing on its own, target group is not playing.
+          // Start playing what's in active player on the whole group.
+          const toJoin = [...new Set(targetGroupMembers.filter((m) => m && m !== masterGroupId))];
+          if (toJoin.length > 0) {
+            await joinPlayers(this.hass, masterGroupId, toJoin);
+          }
+          this._lastGroupingMasterId = masterId;
+        } else {
+          // Group is playing (or neither is playing, or both playing same media).
+          // Active player starts playing what the group is playing by joining into the group.
+          await joinPlayers(this.hass, targetMasterGroupId, [masterGroupId]);
+          this._lastGroupingMasterId = targetMasterId;
+        }
+      } else {
+        await joinPlayers(this.hass, masterGroupId, [targetGroupId]);
+        this._lastGroupingMasterId = masterId || targetId;
+      }
     }
-    this._lastGroupingMasterId = masterId || targetId;
     if (this.triggerRender) {
       this.triggerRender();
     } else {

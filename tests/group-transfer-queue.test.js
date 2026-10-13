@@ -2182,4 +2182,292 @@ describe("Group Players Menu - Transfer Queue Button", () => {
       );
     });
   });
+
+  describe("Seamless Joining Established Group from Selected Player", () => {
+    /** @type {any} */
+    let card;
+    let servicesCalled;
+
+    beforeEach(() => {
+      card = new YetAnotherMediaPlayerCard();
+      servicesCalled = [];
+      card.setConfig({
+        type: "custom:yet-another-media-player",
+        entities: ["media_player.office", "media_player.kitchen", "media_player.bedroom"],
+      });
+      card.hass = {
+        states: {
+          "media_player.office": {
+            entity_id: "media_player.office",
+            state: "idle",
+            attributes: {
+              friendly_name: "Office",
+              group_members: ["media_player.office", "media_player.kitchen"],
+              supported_features: 512,
+            },
+          },
+          "media_player.kitchen": {
+            entity_id: "media_player.kitchen",
+            state: "idle",
+            attributes: {
+              friendly_name: "Kitchen",
+              group_members: ["media_player.office", "media_player.kitchen"],
+              supported_features: 512,
+            },
+          },
+          "media_player.bedroom": {
+            entity_id: "media_player.bedroom",
+            state: "idle",
+            attributes: {
+              friendly_name: "Bedroom",
+              group_members: ["media_player.bedroom"],
+              supported_features: 512,
+            },
+          },
+        },
+        services: {
+          media_player: {
+            join: {},
+            unjoin: {},
+          },
+        },
+        callService: async (domain, service, data) => {
+          servicesCalled.push({ domain, service, data });
+          return { success: true };
+        },
+      };
+      card._selectedIndex = 2; // Bedroom selected
+      card._isGroupCapable = () => true;
+      card.getChipName = (id) => card.hass.states[id]?.attributes?.friendly_name || id;
+      card._getGroupingEntityId = (idx) => card.entityIds[idx];
+      card._getGroupingEntityIdByEntityId = (id) => id;
+    });
+
+    it("marks group members unavailable in _getGroupPlayerState when bedroom and established group play different media", () => {
+      card.hass.states["media_player.bedroom"].state = "playing";
+      card.hass.states["media_player.bedroom"].attributes.media_title = "Jazz Album";
+      card.hass.states["media_player.office"].state = "playing";
+      card.hass.states["media_player.office"].attributes.media_title = "Rock Station";
+      card.hass.states["media_player.kitchen"].state = "playing";
+      card.hass.states["media_player.kitchen"].attributes.media_title = "Rock Station";
+
+      const masterState = card.hass.states["media_player.bedroom"];
+      const officeState = card._getGroupPlayerState(
+        "media_player.office",
+        "media_player.bedroom",
+        "media_player.bedroom",
+        masterState,
+        "media_player.bedroom"
+      );
+      assert.strictEqual(
+        officeState.isBusy,
+        true,
+        "Office should be busy due to playback conflict"
+      );
+      assert.strictEqual(officeState.disabled, true, "Office action should be disabled");
+      assert.strictEqual(officeState.tooltip, "Player is unavailable");
+
+      const kitchenState = card._getGroupPlayerState(
+        "media_player.kitchen",
+        "media_player.bedroom",
+        "media_player.bedroom",
+        masterState,
+        "media_player.bedroom"
+      );
+      assert.strictEqual(
+        kitchenState.isBusy,
+        true,
+        "Kitchen should be busy due to playback conflict"
+      );
+      assert.strictEqual(kitchenState.disabled, true, "Kitchen action should be disabled");
+      assert.strictEqual(kitchenState.tooltip, "Player is unavailable");
+    });
+
+    it("allows joining in _getGroupPlayerState when bedroom is playing and established group is idle", () => {
+      card.hass.states["media_player.bedroom"].state = "playing";
+      card.hass.states["media_player.bedroom"].attributes.media_title = "Jazz Album";
+      card.hass.states["media_player.office"].state = "idle";
+      card.hass.states["media_player.kitchen"].state = "idle";
+
+      const masterState = card.hass.states["media_player.bedroom"];
+      const officeState = card._getGroupPlayerState(
+        "media_player.office",
+        "media_player.bedroom",
+        "media_player.bedroom",
+        masterState,
+        "media_player.bedroom"
+      );
+      assert.strictEqual(officeState.isBusy, false, "Office should not be busy");
+      assert.strictEqual(officeState.disabled, false, "Office action should be enabled");
+      assert.strictEqual(officeState.tooltip, "Join with Bedroom");
+    });
+
+    it("allows joining in _getGroupPlayerState when established group is playing and bedroom is idle", () => {
+      card.hass.states["media_player.bedroom"].state = "idle";
+      card.hass.states["media_player.office"].state = "playing";
+      card.hass.states["media_player.office"].attributes.media_title = "Rock Station";
+      card.hass.states["media_player.kitchen"].state = "playing";
+      card.hass.states["media_player.kitchen"].attributes.media_title = "Rock Station";
+
+      const masterState = card.hass.states["media_player.bedroom"];
+      const officeState = card._getGroupPlayerState(
+        "media_player.office",
+        "media_player.bedroom",
+        "media_player.bedroom",
+        masterState,
+        "media_player.bedroom"
+      );
+      assert.strictEqual(officeState.isBusy, false, "Office should not be busy");
+      assert.strictEqual(officeState.disabled, false, "Office action should be enabled");
+      assert.strictEqual(officeState.tooltip, "Join with Bedroom");
+    });
+
+    it("allows joining in _getGroupPlayerState when both are playing the same media", () => {
+      card.hass.states["media_player.bedroom"].state = "playing";
+      card.hass.states["media_player.bedroom"].attributes.media_title = "Synced Stream";
+      card.hass.states["media_player.office"].state = "playing";
+      card.hass.states["media_player.office"].attributes.media_title = "Synced Stream";
+
+      const masterState = card.hass.states["media_player.bedroom"];
+      const officeState = card._getGroupPlayerState(
+        "media_player.office",
+        "media_player.bedroom",
+        "media_player.bedroom",
+        masterState,
+        "media_player.bedroom"
+      );
+      assert.strictEqual(
+        officeState.isBusy,
+        false,
+        "Office should not be busy when playing same media"
+      );
+      assert.strictEqual(officeState.disabled, false, "Office action should be enabled");
+    });
+
+    it("prevents join in _toggleGroup if playback conflict exists", async () => {
+      card.hass.states["media_player.bedroom"].state = "playing";
+      card.hass.states["media_player.bedroom"].attributes.media_title = "Song A";
+      card.hass.states["media_player.office"].state = "playing";
+      card.hass.states["media_player.office"].attributes.media_title = "Song B";
+
+      await card._toggleGroup("media_player.office");
+      assert.strictEqual(servicesCalled.length, 0, "No join service should be called on conflict");
+    });
+
+    it("joins established group to bedroom when bedroom is playing and group is idle", async () => {
+      card.hass.states["media_player.bedroom"].state = "playing";
+      card.hass.states["media_player.bedroom"].attributes.media_title = "Bedroom Groove";
+      card.hass.states["media_player.office"].state = "idle";
+      card.hass.states["media_player.kitchen"].state = "idle";
+
+      await card._toggleGroup("media_player.office");
+
+      const joinCalls = servicesCalled.filter(
+        (s) => s.domain === "media_player" && s.service === "join"
+      );
+      assert.strictEqual(joinCalls.length, 1, "Should call media_player.join");
+      assert.strictEqual(
+        joinCalls[0].data.entity_id,
+        "media_player.bedroom",
+        "Bedroom should be coordinator"
+      );
+      assert.deepStrictEqual(
+        joinCalls[0].data.group_members,
+        ["media_player.office", "media_player.kitchen"],
+        "Should join entire office group into bedroom"
+      );
+      assert.strictEqual(card._lastGroupingMasterId, "media_player.bedroom");
+    });
+
+    it("joins bedroom into established group when group is playing and bedroom is idle", async () => {
+      card.hass.states["media_player.bedroom"].state = "idle";
+      card.hass.states["media_player.office"].state = "playing";
+      card.hass.states["media_player.office"].attributes.media_title = "Office Hits";
+      card.hass.states["media_player.kitchen"].state = "playing";
+
+      await card._toggleGroup("media_player.office");
+
+      const joinCalls = servicesCalled.filter(
+        (s) => s.domain === "media_player" && s.service === "join"
+      );
+      assert.strictEqual(joinCalls.length, 1, "Should call media_player.join");
+      assert.strictEqual(
+        joinCalls[0].data.entity_id,
+        "media_player.office",
+        "Office should be coordinator"
+      );
+      assert.deepStrictEqual(
+        joinCalls[0].data.group_members,
+        ["media_player.bedroom"],
+        "Should join bedroom into office group"
+      );
+      assert.strictEqual(card._lastGroupingMasterId, "media_player.office");
+    });
+
+    it("seamlessly joins into established group when clicking a follower player (kitchen)", async () => {
+      card.hass.states["media_player.bedroom"].state = "idle";
+      card.hass.states["media_player.office"].state = "playing";
+      card.hass.states["media_player.kitchen"].state = "playing";
+
+      // Click on Kitchen instead of Office
+      await card._toggleGroup("media_player.kitchen");
+
+      const joinCalls = servicesCalled.filter(
+        (s) => s.domain === "media_player" && s.service === "join"
+      );
+      assert.strictEqual(joinCalls.length, 1, "Should call media_player.join");
+      assert.strictEqual(
+        joinCalls[0].data.entity_id,
+        "media_player.office",
+        "Office should be coordinator"
+      );
+      assert.deepStrictEqual(joinCalls[0].data.group_members, ["media_player.bedroom"]);
+      assert.strictEqual(card._lastGroupingMasterId, "media_player.office");
+    });
+
+    it("joins bedroom into established group when neither is playing", async () => {
+      card.hass.states["media_player.bedroom"].state = "idle";
+      card.hass.states["media_player.office"].state = "idle";
+      card.hass.states["media_player.kitchen"].state = "idle";
+
+      await card._toggleGroup("media_player.office");
+
+      const joinCalls = servicesCalled.filter(
+        (s) => s.domain === "media_player" && s.service === "join"
+      );
+      assert.strictEqual(joinCalls.length, 1, "Should call media_player.join");
+      assert.strictEqual(
+        joinCalls[0].data.entity_id,
+        "media_player.office",
+        "Office should be coordinator"
+      );
+      assert.deepStrictEqual(joinCalls[0].data.group_members, ["media_player.bedroom"]);
+      assert.strictEqual(card._lastGroupingMasterId, "media_player.office");
+    });
+
+    it("renders group-toggle-btn disabled in device-group-sheet when in conflict and enabled when clear", () => {
+      // 1. Conflict case
+      card.hass.states["media_player.bedroom"].state = "playing";
+      card.hass.states["media_player.bedroom"].attributes.media_title = "Song A";
+      card.hass.states["media_player.office"].state = "playing";
+      card.hass.states["media_player.office"].attributes.media_title = "Song B";
+      card.hass.states["media_player.kitchen"].state = "playing";
+
+      let template = renderGroupingSheet.call(card);
+      let htmlContent = extractTemplateHtml(template);
+      assert.ok(
+        htmlContent.includes("Unavailable"),
+        "Should display Unavailable state label in conflict"
+      );
+
+      // 2. Clear case (bedroom playing, group idle)
+      card.hass.states["media_player.office"].state = "idle";
+      card.hass.states["media_player.kitchen"].state = "idle";
+
+      template = renderGroupingSheet.call(card);
+      htmlContent = extractTemplateHtml(template);
+      assert.ok(htmlContent.includes("group-toggle-btn"), "Should render toggle button");
+      assert.ok(htmlContent.includes("Join with Bedroom"), "Should have Join with Bedroom tooltip");
+    });
+  });
 });
