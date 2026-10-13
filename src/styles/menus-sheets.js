@@ -613,7 +613,8 @@ export const menusSheetsStyles = css`
     flex-shrink: 0;
   }
 
-  .grouped-card-transfer-btn {
+  .grouped-card-transfer-btn,
+  .grouped-card-join-btn {
     background: var(--yamp-button-bg, rgba(255, 255, 255, 0.1));
     border: 1px solid var(--yamp-button-border, rgba(255, 255, 255, 0.2));
     border-radius: var(--button-border-radius, 6px);
@@ -631,20 +632,24 @@ export const menusSheetsStyles = css`
     line-height: 1.3;
   }
 
-  .grouped-card-transfer-btn ha-icon {
+  .grouped-card-transfer-btn ha-icon,
+  .grouped-card-join-btn ha-icon {
     --mdc-icon-size: 16px;
     width: 16px;
     height: 16px;
   }
 
   .grouped-card-transfer-btn:disabled,
-  .grouped-card-transfer-btn[disabled] {
+  .grouped-card-transfer-btn[disabled],
+  .grouped-card-join-btn:disabled,
+  .grouped-card-join-btn[disabled] {
     cursor: not-allowed;
     opacity: 0.35;
   }
 
   @media (hover: hover) {
-    .grouped-card-transfer-btn:not([disabled]):hover {
+    .grouped-card-transfer-btn:not([disabled]):hover,
+    .grouped-card-join-btn:not([disabled]):hover {
       background: var(--yamp-hover-bg, rgba(255, 255, 255, 0.2));
       color: var(--custom-accent, var(--primary-color, #ff9800));
       border-color: var(--custom-accent, var(--primary-color, #ff9800));

@@ -2445,7 +2445,7 @@ describe("Group Players Menu - Transfer Queue Button", () => {
       assert.strictEqual(card._lastGroupingMasterId, "media_player.office");
     });
 
-    it("renders group-toggle-btn disabled in device-group-sheet when in conflict and enabled when clear", () => {
+    it("renders grouped-card-join-btn and minus buttons inside group card in device-group-sheet", () => {
       // 1. Conflict case
       card.hass.states["media_player.bedroom"].state = "playing";
       card.hass.states["media_player.bedroom"].attributes.media_title = "Song A";
@@ -2456,8 +2456,16 @@ describe("Group Players Menu - Transfer Queue Button", () => {
       let template = renderGroupingSheet.call(card);
       let htmlContent = extractTemplateHtml(template);
       assert.ok(
-        htmlContent.includes("Unavailable"),
-        "Should display Unavailable state label in conflict"
+        htmlContent.includes("grouped-card-join-btn"),
+        "Should render grouped-card-join-btn in card actions"
+      );
+      assert.ok(
+        htmlContent.includes("Player is unavailable"),
+        "Should display Player is unavailable tooltip when in conflict"
+      );
+      assert.ok(
+        htmlContent.includes("mdi:minus-circle-outline"),
+        "Should render minus buttons inside group card"
       );
 
       // 2. Clear case (bedroom playing, group idle)
@@ -2466,8 +2474,28 @@ describe("Group Players Menu - Transfer Queue Button", () => {
 
       template = renderGroupingSheet.call(card);
       htmlContent = extractTemplateHtml(template);
-      assert.ok(htmlContent.includes("group-toggle-btn"), "Should render toggle button");
-      assert.ok(htmlContent.includes("Join with Bedroom"), "Should have Join with Bedroom tooltip");
+      assert.ok(
+        htmlContent.includes("grouped-card-join-btn"),
+        "Should render grouped-card-join-btn in card actions"
+      );
+      assert.ok(
+        htmlContent.includes("Join with Office"),
+        "Should have Join with Office tooltip on join button when clear"
+      );
+    });
+
+    it("unjoins a follower player from an established group via _unjoinGroupMember", async () => {
+      await card._unjoinGroupMember("media_player.kitchen");
+
+      const unjoinCalls = servicesCalled.filter(
+        (s) => s.domain === "media_player" && s.service === "unjoin"
+      );
+      assert.strictEqual(unjoinCalls.length, 1, "Should call media_player.unjoin");
+      assert.strictEqual(
+        unjoinCalls[0].data.entity_id,
+        "media_player.kitchen",
+        "Should unjoin kitchen"
+      );
     });
   });
 });

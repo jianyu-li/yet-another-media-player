@@ -10310,6 +10310,101 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     }
   }
 
+  // Remove an individual group member from its group, regardless of what entity is active
+  async _unjoinGroupMember(targetId) {
+    const targetObj =
+      this._findEntityObjByAnyId(targetId) || this.entityObjs.find((e) => e.entity_id === targetId);
+    if (!targetObj) return;
+
+    const targetGroupId = await this._resolveGroupingEntityId(targetObj, targetId);
+    if (!targetGroupId) return;
+
+    const targetGroupKey = this._getGroupKey(targetId);
+    const targetMasterId = targetGroupKey || targetId;
+    const isMasterOfGroup = targetId === targetMasterId || targetGroupId === targetMasterId;
+
+    if (isMasterOfGroup) {
+      const targetMasterIdx = this.entityIds.indexOf(targetMasterId);
+      const targetMasterObj = targetMasterIdx >= 0 ? this.entityObjs[targetMasterIdx] : null;
+      const targetMasterGroupId =
+        (targetMasterObj ? await this._resolveGroupingEntityId(targetMasterObj, targetMasterId) : null) ||
+        this._getGroupingEntityIdByEntityId(targetMasterId) ||
+        targetMasterId;
+      const masterState = targetMasterGroupId ? this.hass.states[targetMasterGroupId] : null;
+      const members = Array.isArray(masterState?.attributes?.group_members)
+        ? masterState.attributes.group_members
+        : [];
+      const remainingMembers = members.filter((m) => m !== targetMasterGroupId);
+      const hasMaTransferService = Boolean(this.hass?.services?.music_assistant?.transfer_queue);
+
+      const targetMaId =
+        (targetMasterIdx >= 0 ? this._getActualResolvedMaEntityForState?.(targetMasterIdx) : null) ||
+        targetMasterGroupId;
+      const targetState = this.hass?.states?.[targetMaId] || masterState;
+      const isTargetMa = this._queueController?.isTargetMusicAssistant
+        ? this._queueController.isTargetMusicAssistant({
+            maEntityId: targetMaId,
+            entityId: targetMasterId,
+            mainEntityId: targetMasterId,
+          })
+        : Boolean(
+            (targetState && this._looksLikeMusicAssistantState?.(targetState)) ||
+            isMusicAssistantEntity(targetState)
+          );
+
+      if (remainingMembers.length > 0 && hasMaTransferService && isTargetMa) {
+        const successorGroupId = remainingMembers[0];
+        const successorEntityId =
+          this.entityIds.find((eId) => {
+            const gId = this._getGroupingEntityIdByEntityId(eId);
+            return gId === successorGroupId;
+          }) || successorGroupId;
+        const successorIdx = this.entityIds.indexOf(successorEntityId);
+        const successorMaId =
+          (successorIdx >= 0 ? this._getActualResolvedMaEntityForState?.(successorIdx) : null) ||
+          successorGroupId;
+        const successorName = this.getChipName(successorEntityId);
+        const otherMembers = remainingMembers.slice(1);
+        const hasOtherMembers = otherMembers.length > 0;
+
+        const targetPayload = {
+          index: successorIdx,
+          entityId: successorEntityId,
+          maEntityId: successorMaId,
+          name: successorName,
+          pendingMessage: (
+            localize("card.grouping.transferring_coordinator") ||
+            "Transferring playback to {player}..."
+          ).replace("{player}", successorName),
+          deferSuccess: hasOtherMembers,
+        };
+
+        await this._transferQueueTo(targetPayload);
+
+        if (this._transferQueueStatus?.type !== "error") {
+          if (hasOtherMembers) {
+            try {
+              await joinPlayers(this.hass, successorGroupId, otherMembers);
+            } catch (err) {
+              // Ignore regroup error
+            }
+          }
+          this._lastGroupingMasterId = successorEntityId;
+        }
+      } else {
+        await unjoinPlayer(this.hass, targetGroupId);
+      }
+    } else {
+      await unjoinPlayer(this.hass, targetGroupId);
+    }
+
+    if (this.triggerRender) {
+      this.triggerRender();
+    } else {
+      this.requestUpdate?.();
+    }
+  }
+
 
   // Card editor support 
   static getConfigElement() {
