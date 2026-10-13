@@ -174,3 +174,87 @@ describe("YetAnotherMediaPlayerEditor - Action Navigation and Management", () =>
     assert.equal(editor._actionMode, null);
   });
 });
+
+describe("YetAnotherMediaPlayerEditor - Entity Row Rendering", () => {
+  let editor;
+
+  function flattenTemplate(tpl) {
+    if (!tpl) return "";
+    if (typeof tpl === "string") return tpl;
+    if (Array.isArray(tpl)) return tpl.map(flattenTemplate).join("");
+    if (tpl.strings && Array.isArray(tpl.values)) {
+      let out = "";
+      tpl.strings.forEach((str, i) => {
+        out += str;
+        if (i < tpl.values.length) {
+          out += flattenTemplate(tpl.values[i]);
+        }
+      });
+      return out;
+    }
+    return String(tpl);
+  }
+
+  beforeEach(() => {
+    editor = new YetAnotherMediaPlayerEditor();
+    editor.hass = {
+      states: {
+        "media_player.living_room": {
+          entity_id: "media_player.living_room",
+          attributes: { friendly_name: "Living Room Speaker" },
+        },
+      },
+    };
+  });
+
+  it("renders ha-combo-box-item with headline and supporting-text for modern Home Assistant", () => {
+    const item = {
+      id: "media_player.living_room",
+      primary: "Living Room Speaker",
+      secondary: "media_player.living_room",
+    };
+    const result = editor._entityRowRenderer(item);
+    assert.ok(result);
+    const htmlString = flattenTemplate(result);
+    assert.ok(htmlString.includes("<ha-combo-box-item>"));
+    assert.ok(htmlString.includes('slot="headline"'));
+    assert.ok(htmlString.includes('slot="supporting-text"'));
+    assert.ok(htmlString.includes('slot="start"'));
+  });
+
+  it("renders icon_path on ha-svg-icon for custom items", () => {
+    const item = {
+      id: "media_player.custom",
+      primary: "Add custom item",
+      secondary: "media_player.custom",
+      icon_path: "M19,13H13V19H11V13H5V11H11V5H13V11H19V13Z",
+    };
+    const result = editor._entityRowRenderer(item);
+    assert.ok(result);
+    const htmlString = flattenTemplate(result);
+    assert.ok(htmlString.includes("<ha-svg-icon"));
+    assert.ok(htmlString.includes('slot="start"'));
+  });
+
+  it("falls back to ha-list-item when ha-list-item is defined and ha-combo-box-item is not", () => {
+    const origGet = customElements.get;
+    customElements.get = /** @type {any} */ (
+      (name) => (name === "ha-list-item" ? class MockListItem extends HTMLElement {} : undefined)
+    );
+    try {
+      const item = {
+        id: "media_player.living_room",
+        primary: "Living Room Speaker",
+        secondary: "media_player.living_room",
+      };
+      const result = editor._entityRowRenderer(item);
+      assert.ok(result);
+      const htmlString = flattenTemplate(result);
+      assert.ok(htmlString.includes("<ha-list-item"));
+      assert.ok(htmlString.includes('slot="graphic"'));
+      assert.ok(htmlString.includes('slot="secondary"'));
+    } finally {
+      customElements.get = origGet;
+    }
+  });
+});

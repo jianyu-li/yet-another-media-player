@@ -354,15 +354,46 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
   }
 
   _entityRowRenderer(item) {
+    if (!item) return html``;
+    const stateObj = this.hass?.states?.[item.id];
+    const iconContent = item.icon_path
+      ? html`<ha-svg-icon slot="start" .path=${item.icon_path}></ha-svg-icon>`
+      : item.icon
+        ? html`<ha-icon slot="start" .icon=${item.icon}></ha-icon>`
+        : html`<ha-state-icon
+            slot="start"
+            .hass=${this.hass}
+            .stateObj=${stateObj}
+          ></ha-state-icon>`;
+
+    if (
+      typeof customElements !== "undefined" &&
+      (customElements.get?.("ha-combo-box-item") || !customElements.get?.("ha-list-item"))
+    ) {
+      return html`
+        <ha-combo-box-item>
+          ${iconContent}
+          <span slot="headline">${item.primary}</span>
+          ${item.secondary ? html`<span slot="supporting-text">${item.secondary}</span>` : ""}
+        </ha-combo-box-item>
+      `;
+    }
+
+    const legacyIconContent = item.icon_path
+      ? html`<ha-svg-icon slot="graphic" .path=${item.icon_path}></ha-svg-icon>`
+      : item.icon
+        ? html`<ha-icon slot="graphic" .icon=${item.icon}></ha-icon>`
+        : html`<ha-state-icon
+            slot="graphic"
+            .hass=${this.hass}
+            .stateObj=${stateObj}
+          ></ha-state-icon>`;
+
     return html`
       <ha-list-item twoline graphic="icon">
-        <ha-state-icon
-          slot="graphic"
-          .hass=${this.hass}
-          .stateObj=${this.hass?.states?.[item.id]}
-        ></ha-state-icon>
+        ${legacyIconContent}
         <span>${item.primary}</span>
-        <span slot="secondary">${item.secondary}</span>
+        ${item.secondary ? html`<span slot="secondary">${item.secondary}</span>` : ""}
       </ha-list-item>
     `;
   }
