@@ -2660,4 +2660,140 @@ describe("Group Players Menu - Transfer Queue Button", () => {
       );
     });
   });
+
+  describe("Grouping Entity Lookup Precedence", () => {
+    it("prioritizes exact entity_id match over music_assistant_entity cross-reference in _findEntityObjByAnyId", () => {
+      const testCard = new YetAnotherMediaPlayerCard();
+      testCard.setConfig({
+        type: "custom:yet-another-media-player",
+        entities: [
+          {
+            entity_id: "media_player.living_room_apple_tv",
+            music_assistant_entity: "media_player.kitchen_homepod_2",
+          },
+          {
+            entity_id: "media_player.kitchen_homepod_2",
+          },
+        ],
+      });
+
+      const found = testCard._findEntityObjByAnyId("media_player.kitchen_homepod_2");
+      assert.ok(found, "Should find entity");
+      assert.strictEqual(
+        found.entity_id,
+        "media_player.kitchen_homepod_2",
+        "Should prioritize exact entity_id match over cross-referenced music_assistant_entity"
+      );
+    });
+
+    it("falls back to music_assistant_entity in _findEntityObjByAnyId when no exact entity_id matches", () => {
+      const testCard = new YetAnotherMediaPlayerCard();
+      testCard.setConfig({
+        type: "custom:yet-another-media-player",
+        entities: [
+          {
+            entity_id: "media_player.living_room_apple_tv",
+            music_assistant_entity: "media_player.external_mass",
+          },
+        ],
+      });
+
+      const found = testCard._findEntityObjByAnyId("media_player.external_mass");
+      assert.ok(found, "Should find entity");
+      assert.strictEqual(found.entity_id, "media_player.living_room_apple_tv");
+    });
+
+    it("prioritizes exact entityId match for masterGroupingId in _getGroupKey", () => {
+      const testCard = new YetAnotherMediaPlayerCard();
+      testCard.setConfig({
+        type: "custom:yet-another-media-player",
+        entities: [
+          {
+            entity_id: "media_player.living_room_apple_tv",
+            music_assistant_entity: "media_player.kitchen_homepod_2",
+          },
+          {
+            entity_id: "media_player.bedroom",
+          },
+          {
+            entity_id: "media_player.kitchen_homepod_2",
+          },
+        ],
+      });
+
+      testCard.hass = {
+        states: {
+          "media_player.living_room_apple_tv": {
+            entity_id: "media_player.living_room_apple_tv",
+            state: "idle",
+            attributes: {},
+          },
+          "media_player.kitchen_homepod_2": {
+            entity_id: "media_player.kitchen_homepod_2",
+            state: "playing",
+            attributes: {
+              group_members: ["media_player.kitchen_homepod_2", "media_player.bedroom"],
+              supported_features: 512,
+            },
+          },
+          "media_player.bedroom": {
+            entity_id: "media_player.bedroom",
+            state: "playing",
+            attributes: {
+              group_members: ["media_player.kitchen_homepod_2", "media_player.bedroom"],
+              supported_features: 512,
+            },
+          },
+        },
+      };
+
+      testCard._isGroupCapable = () => true;
+
+      const groupKey = testCard._getGroupKey("media_player.kitchen_homepod_2");
+      assert.strictEqual(
+        groupKey,
+        "media_player.kitchen_homepod_2",
+        "Master entity ID in group key should resolve directly to kitchen_homepod_2"
+      );
+    });
+
+    it("prioritizes exact entityId match for successorGroupId during coordinator handoff", async () => {
+      const testCard = new YetAnotherMediaPlayerCard();
+      testCard.setConfig({
+        type: "custom:yet-another-media-player",
+        entities: [
+          {
+            entity_id: "media_player.living_room_apple_tv",
+            music_assistant_entity: "media_player.kitchen_homepod_2",
+          },
+          {
+            entity_id: "media_player.office",
+          },
+          {
+            entity_id: "media_player.kitchen_homepod_2",
+          },
+        ],
+      });
+
+      let transferredTarget = null;
+      testCard._transferQueueTo = (payload) => {
+        transferredTarget = payload;
+        return Promise.resolve();
+      };
+      testCard._transferQueueStatus = { type: "success", message: "Success" };
+
+      await testCard._handoffCoordinator({
+        remainingMembers: ["media_player.kitchen_homepod_2"],
+        sourceMaId: "media_player.office",
+        preventAutoSelect: false,
+      });
+
+      assert.ok(transferredTarget, "Should transfer queue");
+      assert.strictEqual(
+        transferredTarget.entityId,
+        "media_player.kitchen_homepod_2",
+        "Successor should be kitchen_homepod_2, not living_room_apple_tv"
+      );
+    });
+  });
 });

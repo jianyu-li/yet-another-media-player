@@ -5235,7 +5235,12 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     return this._getGroupingEntityId(idx);
   }
   _findEntityObjByAnyId(anyId) {
-    return this.entityObjs.find(o => o.entity_id === anyId || o.music_assistant_entity === anyId) || null;
+    if (!anyId || !Array.isArray(this.entityObjs)) return null;
+    return (
+      this.entityObjs.find((o) => o.entity_id === anyId) ||
+      this.entityObjs.find((o) => o.music_assistant_entity === anyId) ||
+      null
+    );
   }
 
   // Resolve Jinja template for music_assistant_entity with fallback to main entity
@@ -5290,10 +5295,12 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     }
 
     // Find configured entity corresponding to this master grouping ID
-    const masterEntityId = this.entityIds.find(eId => {
-      const gId = this._getGroupingEntityIdByEntityId(eId);
-      return gId === masterGroupingId;
-    });
+    const masterEntityId =
+      this.entityIds.find((eId) => eId === masterGroupingId) ||
+      this.entityIds.find((eId) => {
+        const gId = this._getGroupingEntityIdByEntityId(eId);
+        return gId === masterGroupingId;
+      });
 
     // If master is not in our config, return the raw grouping ID so we know it's external/different
     return masterEntityId || masterGroupingId;
@@ -10263,10 +10270,12 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     // Elect successor from remaining members
     const successorGroupId = remainingMembers[0];
     const successorEntityId =
+      this.entityIds.find((eId) => eId === successorGroupId) ||
       this.entityIds.find((eId) => {
         const gId = this._getGroupingEntityIdByEntityId(eId);
-        return gId === successorGroupId || eId === successorGroupId;
-      }) || successorGroupId;
+        return gId === successorGroupId;
+      }) ||
+      successorGroupId;
     const successorIdx = this.entityIds.indexOf(successorEntityId);
     const successorMaId =
       (successorIdx >= 0 ? this._getActualResolvedMaEntityForState?.(successorIdx) : null) ||
