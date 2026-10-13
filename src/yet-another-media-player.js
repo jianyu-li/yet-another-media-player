@@ -5766,15 +5766,9 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     } else if (isSolePlayer) {
       tooltip = localize('card.grouping.current') || 'Current';
     } else if (isGroupActive) {
-      if (isPrimary) {
-        tooltip = (localize('card.grouping.unjoin_from') || 'Unjoin from {master}').replace(' {master}', '') || 'Unjoin';
-      } else {
-        tooltip = localize('card.grouping.unjoin_from', '{master}', masterName);
-        if (tooltip === 'card.grouping.unjoin_from') tooltip = `Unjoin from ${masterName}`;
-      }
+      tooltip = localize('card.grouping.unjoin') || 'Unjoin';
     } else {
-      tooltip = localize('card.grouping.join_with', '{master}', masterName);
-      if (tooltip === 'card.grouping.join_with') tooltip = `Join with ${masterName}`;
+      tooltip = localize('card.grouping.join') || 'Join';
     }
 
     return {

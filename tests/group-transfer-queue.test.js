@@ -2299,7 +2299,7 @@ describe("Group Players Menu - Transfer Queue Button", () => {
       );
       assert.strictEqual(officeState.isBusy, false, "Office should not be busy");
       assert.strictEqual(officeState.disabled, false, "Office action should be enabled");
-      assert.strictEqual(officeState.tooltip, "Join with Bedroom");
+      assert.strictEqual(officeState.tooltip, "Join");
     });
 
     it("allows joining in _getGroupPlayerState when established group is playing and bedroom is idle", () => {
@@ -2319,7 +2319,7 @@ describe("Group Players Menu - Transfer Queue Button", () => {
       );
       assert.strictEqual(officeState.isBusy, false, "Office should not be busy");
       assert.strictEqual(officeState.disabled, false, "Office action should be enabled");
-      assert.strictEqual(officeState.tooltip, "Join with Bedroom");
+      assert.strictEqual(officeState.tooltip, "Join");
     });
 
     it("allows joining in _getGroupPlayerState when both are playing the same media", () => {
@@ -2479,8 +2479,8 @@ describe("Group Players Menu - Transfer Queue Button", () => {
         "Should render grouped-card-join-btn in card actions"
       );
       assert.ok(
-        htmlContent.includes("Join with Office"),
-        "Should have Join with Office tooltip on join button when clear"
+        htmlContent.includes("Join With Group"),
+        "Should have Join With Group tooltip on join button when clear"
       );
     });
 
@@ -2507,10 +2507,7 @@ describe("Group Players Menu - Transfer Queue Button", () => {
       const template = renderGroupingSheet.call(card);
       const htmlContent = extractTemplateHtml(template);
 
-      assert.ok(
-        htmlContent.includes("Join with Bedroom"),
-        "Should include Join with Bedroom tooltip"
-      );
+      assert.ok(htmlContent.includes("Join"), "Should include Join tooltip");
 
       function findRow(obj, name) {
         if (!obj) return null;

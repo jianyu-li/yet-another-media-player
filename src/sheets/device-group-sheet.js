@@ -227,8 +227,7 @@ export function renderGroupingSheet() {
       } else if (activeIsBusy || isPlaybackConflict) {
         joinTooltip = localize("card.grouping.unavailable") || "Player is unavailable";
       } else {
-        const joinTemplate = localize("card.grouping.join_with") || "Join with {master}";
-        joinTooltip = joinTemplate.replace("{master}", masterName || activeName);
+        joinTooltip = localize("card.grouping.join_with_group") || "Join With Group";
       }
 
       const targetPayload = {
@@ -453,26 +452,23 @@ export function renderGroupingSheet() {
           isBusy || isDeviceUnavailable || isSolePlayer || isMasterLocked || isTransferInProgress
         );
 
-    const currentGroupName = targetGroupMasterName || masterName;
-    const unjoinTooltip = isRowMaster
-      ? localize("card.grouping.unjoin_from")?.replace(" {master}", "") || "Unjoin"
-      : localize("card.grouping.unjoin_from")?.replace("{master}", currentGroupName) || "Unjoin";
+    const unjoinTooltip = localize("card.grouping.unjoin") || "Unjoin";
 
     const toggleTooltip = isInsideGroup
       ? isDeviceUnavailable
-        ? localize("card.grouping.unavailable")
+        ? localize("card.grouping.unavailable") || "Player is unavailable"
         : isMasterLocked
-          ? localize("card.grouping.unavailable")
+          ? localize("card.grouping.unavailable") || "Player is unavailable"
           : unjoinTooltip
       : isDeviceUnavailable || isBusy
-        ? localize("card.grouping.unavailable")
+        ? localize("card.grouping.unavailable") || "Player is unavailable"
         : isSolePlayer
-          ? localize("card.grouping.current")
+          ? localize("card.grouping.current") || "Current"
           : isGroupActive
             ? isMasterLocked
-              ? localize("card.grouping.unavailable")
+              ? localize("card.grouping.unavailable") || "Player is unavailable"
               : unjoinTooltip
-            : localize("card.grouping.join_with")?.replace("{master}", masterName);
+            : localize("card.grouping.join") || "Join";
 
     const targetPayload = {
       index: targetIdx,
