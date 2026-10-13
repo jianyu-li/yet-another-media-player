@@ -202,6 +202,33 @@ export function renderGroupingSheet() {
         ).replace("{master}", masterName);
       }
 
+      const activeStateForJoin = activeState || activeMainState;
+      const isActivePlaying = this._isEntityPlaying?.(activeStateForJoin);
+      const isTargetGroupPlaying =
+        this._isEntityPlaying?.(targetState) ||
+        items.some((it) => this._isEntityPlaying?.(this.hass?.states?.[it.groupId || it.id]));
+      const areBothPlaying = Boolean(isActivePlaying && isTargetGroupPlaying);
+      const isPlaybackConflict = Boolean(
+        areBothPlaying && !this._areEntitiesPlayingSameMedia?.(activeStateForJoin, targetState)
+      );
+
+      const isJoinDisabled = Boolean(
+        isCurrentGroup ||
+        isDeviceUnavailable ||
+        activeStateForJoin?.state === "unavailable" ||
+        activeIsBusy ||
+        isPlaybackConflict
+      );
+
+      let joinTooltip;
+      if (isDeviceUnavailable || activeStateForJoin?.state === "unavailable") {
+        joinTooltip = localize("card.grouping.unavailable") || "Player is unavailable";
+      } else if (activeIsBusy || isPlaybackConflict) {
+        joinTooltip = localize("card.grouping.unavailable") || "Player is unavailable";
+      } else {
+        joinTooltip = localize("card.grouping.join_with_group") || "Join With Group";
+      }
+
       const targetPayload = {
         index: targetIdx,
         entityId: masterEntityId,
@@ -221,6 +248,8 @@ export function renderGroupingSheet() {
         isCurrentGroup,
         isTransferDisabled,
         transferTooltip,
+        isJoinDisabled,
+        joinTooltip,
         targetPayload,
         items,
       });
@@ -293,11 +322,6 @@ export function renderGroupingSheet() {
     const isJustMoved = Boolean(
       this._justSelectedGroupingEntityId && this._justSelectedGroupingEntityId === id
     );
-    const masterName = masterId
-      ? this.getChipName(masterId)
-      : activeId
-        ? this.getChipName(activeId)
-        : "";
 
     // Check if player belongs to any multi-speaker group (its own or the active master's)
     const playerGroupKey = this._getGroupKey(id);
@@ -356,9 +380,9 @@ export function renderGroupingSheet() {
       targetMaState?.state === "unavailable";
 
     let stateLabel;
-    if (isDeviceUnavailable) {
+    if (isDeviceUnavailable || (!isInsideGroup && isBusy)) {
       stateLabel = busyLabel || localize("card.grouping.unavailable") || "Unavailable";
-    } else if (isMultiSpeakerGroup) {
+    } else if (isMultiSpeakerGroup || isInsideGroup) {
       stateLabel = localize("card.grouping.joined");
     } else if (isCurrent) {
       stateLabel = localize("card.grouping.current");
@@ -404,28 +428,41 @@ export function renderGroupingSheet() {
       ).replace("{player}", name);
     }
 
-    const isGroupActive = isPrimaryRow ? groupedAny || isCurrent : grouped;
-    const isSolePlayer = isGroupActive && !groupedAny;
-    const canUnjoinMaster = hasMaTransferService && targetIsMa && groupedAny;
-    const isMasterLocked = isPrimaryRow && !canUnjoinMaster;
+    const isGroupActive = isInsideGroup || (isPrimaryRow ? groupedAny || isCurrent : grouped);
+    const isSolePlayer = !isInsideGroup && isGroupActive && !groupedAny;
+    const isRowMaster = isInsideGroup
+      ? id === targetGroupMasterId
+      : Boolean(
+          (isMultiSpeakerGroup && id === targetGroupMasterId) || (isPrimaryRow && groupedAny)
+        );
+    const canUnjoinMaster =
+      hasMaTransferService && targetIsMa && (playerMembers.length > 1 || groupedAny);
+    const isMasterLocked = Boolean(isGroupActive && isRowMaster && !canUnjoinMaster);
     const isTransferInProgress = Boolean(this._transferQueuePendingTarget);
 
-    const isToggleDisabled = Boolean(
-      isBusy || isDeviceUnavailable || isSolePlayer || isMasterLocked || isTransferInProgress
-    );
+    const isToggleDisabled = isInsideGroup
+      ? Boolean(isDeviceUnavailable || isMasterLocked || isTransferInProgress)
+      : Boolean(
+          isBusy || isDeviceUnavailable || isSolePlayer || isMasterLocked || isTransferInProgress
+        );
 
-    const unjoinTooltip = isPrimaryRow
-      ? localize("card.grouping.unjoin_from")?.replace(" {master}", "") || "Unjoin"
-      : localize("card.grouping.unjoin_from")?.replace("{master}", masterName) || "Unjoin";
+    const unjoinTooltip = localize("card.grouping.unjoin") || "Unjoin";
 
-    const toggleTooltip =
-      isDeviceUnavailable || isBusy
-        ? localize("card.grouping.unavailable")
+    const toggleTooltip = isInsideGroup
+      ? isDeviceUnavailable
+        ? localize("card.grouping.unavailable") || "Player is unavailable"
+        : isMasterLocked
+          ? localize("card.grouping.unavailable") || "Player is unavailable"
+          : unjoinTooltip
+      : isDeviceUnavailable || isBusy
+        ? localize("card.grouping.unavailable") || "Player is unavailable"
         : isSolePlayer
-          ? localize("card.grouping.current")
+          ? localize("card.grouping.current") || "Current"
           : isGroupActive
-            ? unjoinTooltip
-            : localize("card.grouping.join_with")?.replace("{master}", masterName);
+            ? isMasterLocked
+              ? localize("card.grouping.unavailable") || "Player is unavailable"
+              : unjoinTooltip
+            : localize("card.grouping.join") || "Join";
 
     const targetPayload = {
       index: targetIdx,
@@ -472,14 +509,25 @@ export function renderGroupingSheet() {
             role="button"
             tabindex=${isDisabled ? "-1" : "0"}
             ?disabled=${isDisabled}
-            @click=${() => !isDisabled && this._toggleGroup(id)}
-            @keydown=${(e) => {
-              if (!isDisabled && (e.key === "Enter" || e.key === " ")) {
-                e.preventDefault();
+            @click=${() => {
+              if (isDisabled) return;
+              if (isInsideGroup) {
+                this._unjoinGroupMember?.(id);
+              } else {
                 this._toggleGroup(id);
               }
             }}
-            title=${isBusy ? localize("card.grouping.unavailable") : toggleTooltip}
+            @keydown=${(e) => {
+              if (!isDisabled && (e.key === "Enter" || e.key === " ")) {
+                e.preventDefault();
+                if (isInsideGroup) {
+                  this._unjoinGroupMember?.(id);
+                } else {
+                  this._toggleGroup(id);
+                }
+              }
+            }}
+            title=${toggleTooltip}
             style="display:flex;flex-direction:column;align-items:center;justify-content:center;gap:6px;width:100%;height:100%;cursor:${
               isDisabled ? "default" : "pointer"
             };${isDisabled ? "opacity:0.35;" : ""}"
@@ -628,7 +676,14 @@ export function renderGroupingSheet() {
                 <button
                   class="group-toggle-btn"
                   ?disabled=${isToggleDisabled}
-                  @click=${() => !isToggleDisabled && this._toggleGroup(id)}
+                  @click=${() => {
+                    if (isToggleDisabled) return;
+                    if (isInsideGroup) {
+                      this._unjoinGroupMember?.(id);
+                    } else {
+                      this._toggleGroup(id);
+                    }
+                  }}
                   title=${toggleTooltip}
                   style="margin-left:2px; ${
                     isToggleDisabled ? "cursor: not-allowed; opacity: 0.35;" : ""
@@ -823,6 +878,26 @@ export function renderGroupingSheet() {
                         <span>${group.groupLabel}</span>
                       </div>
                       <div class="grouped-card-actions">
+                        ${
+                          !group.isCurrentGroup
+                            ? html`
+                                <button
+                                  type="button"
+                                  class="grouped-card-join-btn"
+                                  ?disabled=${group.isJoinDisabled}
+                                  @click=${(e) => {
+                                    e?.stopPropagation?.();
+                                    if (!group.isJoinDisabled) {
+                                      this._toggleGroup(group.masterId);
+                                    }
+                                  }}
+                                  title=${group.joinTooltip}
+                                >
+                                  <ha-icon icon="mdi:plus-circle-outline"></ha-icon>
+                                </button>
+                              `
+                            : nothing
+                        }
                         ${
                           !group.isCurrentGroup && hasMaTransferService
                             ? html`

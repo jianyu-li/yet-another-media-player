@@ -5691,16 +5691,60 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       isBusy = true;
       busyLabel = localize('common.unavailable');
     }
-    // Busy if joined to a DIFFERENT group
-    else if (playerGroupKey !== targetId && playerGroupKey !== myGroupKey) {
-      isBusy = true;
-      busyLabel = localize('common.unavailable');
-    }
-    // Or if it IS a master of a different group
-    else if (playerGroupKey === targetId && playerGroupKey !== myGroupKey) {
-      if (st.attributes?.group_members?.length > 1) {
+    // Check if target belongs to a different group (either as a master or follower)
+    else if (playerGroupKey !== myGroupKey) {
+      const targetMasterId = playerGroupKey || targetId;
+      const targetMasterIdx = this.entityIds.indexOf(targetMasterId);
+      const targetMasterGroupId =
+        targetMasterIdx >= 0
+          ? this._getGroupingEntityId(targetMasterIdx)
+          : this._getGroupingEntityIdByEntityId(targetMasterId) || targetMasterId;
+      const targetMasterState = targetMasterGroupId
+        ? this.hass?.states?.[targetMasterGroupId]
+        : null;
+      const targetGroupMembers = Array.isArray(targetMasterState?.attributes?.group_members)
+        ? targetMasterState.attributes.group_members
+        : [];
+      const isTargetInEstablishedGroup =
+        targetGroupMembers.length > 1 || (playerGroupKey && playerGroupKey !== targetId);
+
+      if (targetMasterState?.state === "unavailable") {
         isBusy = true;
         busyLabel = localize('common.unavailable');
+      } else if (isTargetInEstablishedGroup) {
+        const activeIdx = activeId ? this.entityIds.indexOf(activeId) : -1;
+        const activeGroupId = activeIdx >= 0 ? this._getGroupingEntityId(activeIdx) : activeId;
+        const activeEntityState =
+          masterState ||
+          (activeGroupId ? this.hass?.states?.[activeGroupId] : null) ||
+          (activeId ? this.hass?.states?.[activeId] : null);
+
+        const effectiveActiveGroupKey = activeGroupKey || this._getGroupKey(activeId);
+        const activeIsFollower = Boolean(
+          effectiveActiveGroupKey && effectiveActiveGroupKey !== activeId
+        );
+
+        if (activeIsFollower) {
+          isBusy = true;
+          busyLabel = localize('common.unavailable');
+        } else {
+          const isActivePlaying = this._isEntityPlaying(activeEntityState);
+          const isTargetGroupPlaying =
+            this._isEntityPlaying(targetMasterState) ||
+            this._isEntityPlaying(st) ||
+            (Array.isArray(targetGroupMembers) &&
+              targetGroupMembers.some((m) => this._isEntityPlaying(this.hass?.states?.[m])));
+
+          const areBothPlaying = isActivePlaying && isTargetGroupPlaying;
+          if (
+            areBothPlaying &&
+            !this._areEntitiesPlayingSameMedia(activeEntityState, targetMasterState || st)
+          ) {
+            // Playing two different things -> group button is unavailable
+            isBusy = true;
+            busyLabel = localize('common.unavailable');
+          }
+        }
       }
     }
 
@@ -5717,18 +5761,14 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
     const masterName = this.getChipName(activeId);
     let tooltip;
-    if (isSolePlayer) {
+    if (isBusy) {
+      tooltip = localize('card.grouping.unavailable') || localize('common.unavailable') || 'Unavailable';
+    } else if (isSolePlayer) {
       tooltip = localize('card.grouping.current') || 'Current';
     } else if (isGroupActive) {
-      if (isPrimary) {
-        tooltip = (localize('card.grouping.unjoin_from') || 'Unjoin from {master}').replace(' {master}', '') || 'Unjoin';
-      } else {
-        tooltip = localize('card.grouping.unjoin_from', '{master}', masterName);
-        if (tooltip === 'card.grouping.unjoin_from') tooltip = `Unjoin from ${masterName}`;
-      }
+      tooltip = localize('card.grouping.unjoin') || 'Unjoin';
     } else {
-      tooltip = localize('card.grouping.join_with', '{master}', masterName);
-      if (tooltip === 'card.grouping.join_with') tooltip = `Join with ${masterName}`;
+      tooltip = localize('card.grouping.join') || 'Join';
     }
 
     return {
@@ -10105,7 +10145,16 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
     // If unjoining the active master:
     if (targetId === masterId || targetGroupId === masterGroupId) {
-      const remainingMembers = members.filter(m => m !== masterGroupId);
+      const remainingMembers = members.filter(
+        (m) => m !== masterGroupId && m !== masterId && m !== targetId
+      );
+      if (remainingMembers.length === 0) {
+        const groupMembersInConfig = this.entityIds.filter((eId) => {
+          if (eId === targetId || eId === masterId) return false;
+          return this._getGroupKey(eId) === masterId;
+        });
+        remainingMembers.push(...groupMembersInConfig);
+      }
       const hasMaTransferService = Boolean(this.hass?.services?.music_assistant?.transfer_queue);
 
       const activeMaState = this._getMusicAssistantState?.();
@@ -10132,84 +10181,243 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         return;
       }
 
-      // Elect successor from remaining members
-      const successorGroupId = remainingMembers[0];
-      const successorEntityId = this.entityIds.find(eId => {
-        const gId = this._getGroupingEntityIdByEntityId(eId);
-        return gId === successorGroupId;
-      }) || successorGroupId;
-      const successorIdx = this.entityIds.indexOf(successorEntityId);
-      const successorMaId =
-        (successorIdx >= 0 ? this._getActualResolvedMaEntityForState?.(successorIdx) : null) ||
-        successorGroupId;
-      const successorName = this.getChipName(successorEntityId);
-
-      const otherMembers = remainingMembers.slice(1);
-      const hasOtherMembers = otherMembers.length > 0;
-
-      const targetPayload = {
-        index: successorIdx,
-        entityId: successorEntityId,
-        maEntityId: successorMaId,
-        name: successorName,
-        pendingMessage: (
-          localize("card.grouping.transferring_coordinator") ||
-          "Transferring playback to {player}..."
-        ).replace("{player}", successorName),
-        deferSuccess: hasOtherMembers,
-      };
-
-      await this._transferQueueTo(targetPayload);
-
-      // If transfer succeeded, keep other members grouped with the new master
-      if (this._transferQueueStatus?.type !== "error") {
-        if (hasOtherMembers) {
-          this._transferQueueStatus = {
-            type: "pending",
-            message: (
-              localize("card.grouping.regrouping") ||
-              "Regrouping speakers with {player}..."
-            ).replace("{player}", successorName),
-          };
-          if (this.triggerRender) {
-            this.triggerRender();
-          } else {
-            this.requestUpdate?.();
-          }
-          try {
-            await joinPlayers(this.hass, successorGroupId, otherMembers);
-            this._transferQueueStatus = {
-              type: "success",
-              message: (
-                localize("card.grouping.transfer_success") ||
-                "Queue sent to {player}."
-              ).replace("{player}", successorName),
-            };
-            this._queueController?.scheduleTransferQueueAutoClose?.(2000);
-          } catch (err) {
-            this._transferQueueStatus = {
-              type: "error",
-              message: err?.message || "Failed to regroup speakers.",
-            };
-            this._queueController?.scheduleTransferQueueAutoClose?.(4000);
-          }
-        }
-        this._lastGroupingMasterId = successorEntityId;
-        if (this.triggerRender) {
-          this.triggerRender();
-        } else {
-          this.requestUpdate?.();
-        }
-      }
+      await this._handoffCoordinator({
+        remainingMembers,
+        sourceMaId,
+        preventAutoSelect: false,
+      });
       return;
     }
 
     if (grouped) {
       await unjoinPlayer(this.hass, targetGroupId);
+      this._lastGroupingMasterId = masterId || targetId;
     } else {
-      await joinPlayers(this.hass, masterGroupId, [targetGroupId]);
+      const targetGroupKey = this._getGroupKey(targetId);
+      const targetMasterId = targetGroupKey || targetId;
+      const targetMasterIdx = this.entityIds.indexOf(targetMasterId);
+      const targetMasterObj = targetMasterIdx >= 0 ? this.entityObjs[targetMasterIdx] : null;
+      const targetMasterGroupId =
+        (targetMasterObj ? await this._resolveGroupingEntityId(targetMasterObj, targetMasterId) : null) ||
+        this._getGroupingEntityIdByEntityId(targetMasterId) ||
+        targetMasterId;
+      const targetMasterState = targetMasterGroupId ? this.hass?.states?.[targetMasterGroupId] : null;
+      let targetGroupMembers = Array.isArray(targetMasterState?.attributes?.group_members)
+        ? targetMasterState.attributes.group_members
+        : [];
+      if (targetGroupMembers.length === 0 && targetGroupKey !== targetId) {
+        targetGroupMembers = [targetMasterGroupId, targetGroupId];
+      }
+      const isTargetInEstablishedGroup =
+        targetGroupMembers.length > 1 || (targetGroupKey && targetGroupKey !== targetId);
+
+      if (isTargetInEstablishedGroup && !targetGroupMembers.includes(masterGroupId)) {
+        const isActivePlaying = this._isEntityPlaying(masterState);
+        const isTargetGroupPlaying =
+          this._isEntityPlaying(targetMasterState) ||
+          targetGroupMembers.some((m) => this._isEntityPlaying(this.hass?.states?.[m]));
+        const areBothPlaying = isActivePlaying && isTargetGroupPlaying;
+
+        if (areBothPlaying && !this._areEntitiesPlayingSameMedia(masterState, targetMasterState)) {
+          // Playback conflict: both playing different things
+          return;
+        }
+
+        if (isActivePlaying && !isTargetGroupPlaying) {
+          // Active player is playing on its own, target group is not playing.
+          // Start playing what's in active player on the whole group.
+          const toJoin = [...new Set(targetGroupMembers.filter((m) => m && m !== masterGroupId))];
+          if (toJoin.length > 0) {
+            await joinPlayers(this.hass, masterGroupId, toJoin);
+          }
+          this._lastGroupingMasterId = masterId;
+        } else {
+          // Group is playing (or neither is playing, or both playing same media).
+          // Active player starts playing what the group is playing by joining into the group.
+          await joinPlayers(this.hass, targetMasterGroupId, [masterGroupId]);
+          this._lastGroupingMasterId = targetMasterId;
+        }
+      } else {
+        await joinPlayers(this.hass, masterGroupId, [targetGroupId]);
+        this._lastGroupingMasterId = masterId || targetId;
+      }
     }
-    this._lastGroupingMasterId = masterId || targetId;
+    if (this.triggerRender) {
+      this.triggerRender();
+    } else {
+      this.requestUpdate?.();
+    }
+  }
+
+  /**
+   * Performs coordinator handoff and regroups followers when unjoining a master player.
+   * @param {Object} options
+   * @param {string[]} options.remainingMembers
+   * @param {string} options.sourceMaId
+   * @param {boolean} [options.preventAutoSelect=false]
+   * @returns {Promise<void>}
+   */
+  async _handoffCoordinator({ remainingMembers, sourceMaId, preventAutoSelect = false }) {
+    if (!remainingMembers || remainingMembers.length === 0) return;
+
+    // Elect successor from remaining members
+    const successorGroupId = remainingMembers[0];
+    const successorEntityId =
+      this.entityIds.find((eId) => {
+        const gId = this._getGroupingEntityIdByEntityId(eId);
+        return gId === successorGroupId || eId === successorGroupId;
+      }) || successorGroupId;
+    const successorIdx = this.entityIds.indexOf(successorEntityId);
+    const successorMaId =
+      (successorIdx >= 0 ? this._getActualResolvedMaEntityForState?.(successorIdx) : null) ||
+      successorGroupId;
+    const successorName =
+      (successorEntityId && this.getChipName(successorEntityId)) ||
+      (successorGroupId && this.getChipName(successorGroupId)) ||
+      getEntityName(this.hass, successorEntityId || successorGroupId) ||
+      successorEntityId ||
+      successorGroupId ||
+      "player";
+
+    const otherMembers = remainingMembers.slice(1);
+    const hasOtherMembers = otherMembers.length > 0;
+
+    const pendingTemplate =
+      localize("card.grouping.transferring_coordinator") ||
+      "Transferring playback to {player}...";
+    const pendingMessage = pendingTemplate.includes("{player}")
+      ? pendingTemplate.replace("{player}", successorName)
+      : `${pendingTemplate} ${successorName}`;
+    const successTemplate =
+      localize("card.grouping.transfer_success") || "Queue sent to {player}.";
+    const successMessage = successTemplate.includes("{player}")
+      ? successTemplate.replace("{player}", successorName)
+      : `${successTemplate} ${successorName}`;
+
+    const targetPayload = {
+      index: successorIdx,
+      entityId: successorEntityId,
+      maEntityId: successorMaId,
+      sourceMaId,
+      name: successorName,
+      preventAutoSelect,
+      pendingMessage,
+      deferSuccess: hasOtherMembers,
+    };
+
+    await this._transferQueueTo(targetPayload);
+
+    // If transfer succeeded, keep other members grouped with the new master
+    if (this._transferQueueStatus?.type !== "error") {
+      if (hasOtherMembers) {
+        this._transferQueueStatus = {
+          type: "pending",
+          message: (
+            localize("card.grouping.regrouping") ||
+            "Regrouping speakers with {player}..."
+          ).replace("{player}", successorName),
+        };
+        if (this.triggerRender) {
+          this.triggerRender();
+        } else {
+          this.requestUpdate?.();
+        }
+        try {
+          await joinPlayers(this.hass, successorGroupId, otherMembers);
+          this._transferQueueStatus = {
+            type: "success",
+            message: successMessage,
+          };
+          this._queueController?.scheduleTransferQueueAutoClose?.(2000);
+        } catch (err) {
+          this._transferQueueStatus = {
+            type: "error",
+            message: err?.message || "Failed to regroup speakers.",
+          };
+          this._queueController?.scheduleTransferQueueAutoClose?.(4000);
+        }
+      } else {
+        this._transferQueueStatus = {
+          type: "success",
+          message: successMessage,
+        };
+        this._queueController?.scheduleTransferQueueAutoClose?.(2000);
+      }
+      this._lastGroupingMasterId = successorEntityId;
+      if (this.triggerRender) {
+        this.triggerRender();
+      } else {
+        this.requestUpdate?.();
+      }
+    }
+  }
+
+  // Remove an individual group member from its group, regardless of what entity is active
+  async _unjoinGroupMember(targetId) {
+    const targetObj =
+      this._findEntityObjByAnyId(targetId) || this.entityObjs.find((e) => e.entity_id === targetId);
+    if (!targetObj) return;
+
+    const targetGroupId = await this._resolveGroupingEntityId(targetObj, targetId);
+    if (!targetGroupId) return;
+
+    const targetGroupKey = this._getGroupKey(targetId);
+    const targetMasterId = targetGroupKey || targetId;
+    const isMasterOfGroup = targetId === targetMasterId || targetGroupId === targetMasterId;
+
+    if (isMasterOfGroup) {
+      const targetMasterIdx = this.entityIds.indexOf(targetMasterId);
+      const targetMasterObj = targetMasterIdx >= 0 ? this.entityObjs[targetMasterIdx] : null;
+      const targetMasterGroupId =
+        (targetMasterObj ? await this._resolveGroupingEntityId(targetMasterObj, targetMasterId) : null) ||
+        this._getGroupingEntityIdByEntityId(targetMasterId) ||
+        targetMasterId;
+      const masterState =
+        (targetMasterGroupId ? this.hass?.states?.[targetMasterGroupId] : null) ||
+        (targetMasterId ? this.hass?.states?.[targetMasterId] : null);
+      const members = Array.isArray(masterState?.attributes?.group_members)
+        ? masterState.attributes.group_members
+        : [];
+      const remainingMembers = members.filter(
+        (m) => m !== targetMasterGroupId && m !== targetMasterId && m !== targetId
+      );
+      if (remainingMembers.length === 0) {
+        const groupMembersInConfig = this.entityIds.filter((eId) => {
+          if (eId === targetId || eId === targetMasterId) return false;
+          return this._getGroupKey(eId) === targetMasterId;
+        });
+        remainingMembers.push(...groupMembersInConfig);
+      }
+      const hasMaTransferService = Boolean(this.hass?.services?.music_assistant?.transfer_queue);
+
+      const targetMaId =
+        (targetMasterIdx >= 0 ? this._getActualResolvedMaEntityForState?.(targetMasterIdx) : null) ||
+        targetMasterGroupId;
+      const targetState = this.hass?.states?.[targetMaId] || masterState;
+      const isTargetMa = this._queueController?.isTargetMusicAssistant
+        ? this._queueController.isTargetMusicAssistant({
+            maEntityId: targetMaId,
+            entityId: targetMasterId,
+            mainEntityId: targetMasterId,
+          })
+        : Boolean(
+            (targetState && this._looksLikeMusicAssistantState?.(targetState)) ||
+            isMusicAssistantEntity(targetState)
+          );
+
+      if (remainingMembers.length > 0 && hasMaTransferService && isTargetMa) {
+        await this._handoffCoordinator({
+          remainingMembers,
+          sourceMaId: targetMaId,
+          preventAutoSelect: targetId !== this.currentEntityId,
+        });
+      } else {
+        await unjoinPlayer(this.hass, targetGroupId);
+      }
+    } else {
+      await unjoinPlayer(this.hass, targetGroupId);
+    }
+
     if (this.triggerRender) {
       this.triggerRender();
     } else {
