@@ -2498,6 +2498,125 @@ describe("Group Players Menu - Transfer Queue Button", () => {
       );
     });
 
+    it("transfers playback to successor and regroups remaining followers with auto-close when unjoining master", async () => {
+      card.setConfig({
+        type: "custom:yet-another-media-player",
+        entities: [
+          "media_player.office",
+          "media_player.kitchen",
+          "media_player.bedroom",
+          "media_player.patio",
+        ],
+      });
+      card.hass.states["media_player.patio"] = {
+        entity_id: "media_player.patio",
+        state: "playing",
+        attributes: {
+          friendly_name: "Patio",
+          group_members: ["media_player.office", "media_player.kitchen", "media_player.patio"],
+          supported_features: 512,
+          app_id: "music_assistant",
+        },
+      };
+      card.hass.states["media_player.office"].attributes.group_members = [
+        "media_player.office",
+        "media_player.kitchen",
+        "media_player.patio",
+      ];
+      card.hass.states["media_player.kitchen"].attributes.group_members = [
+        "media_player.office",
+        "media_player.kitchen",
+        "media_player.patio",
+      ];
+      card.hass.states["media_player.office"].attributes.app_id = "music_assistant";
+      card.hass.states["media_player.kitchen"].attributes.app_id = "music_assistant";
+      card.hass.services.music_assistant = {
+        transfer_queue: {},
+      };
+      card._selectedIndex = 2; // Bedroom selected
+
+      await card._unjoinGroupMember("media_player.office");
+
+      const transferCalls = servicesCalled.filter(
+        (s) => s.domain === "music_assistant" && s.service === "transfer_queue"
+      );
+      assert.strictEqual(transferCalls.length, 1, "Should call music_assistant.transfer_queue");
+      assert.strictEqual(
+        transferCalls[0].data.source_player || transferCalls[0].data.queue_id,
+        "media_player.office"
+      );
+      assert.strictEqual(
+        transferCalls[0].data.entity_id || transferCalls[0].data.target_player,
+        "media_player.kitchen"
+      );
+
+      const joinCalls = servicesCalled.filter(
+        (s) => s.domain === "media_player" && s.service === "join"
+      );
+      assert.strictEqual(joinCalls.length, 1, "Should regroup remaining members");
+      assert.strictEqual(joinCalls[0].data.entity_id, "media_player.kitchen");
+      assert.deepStrictEqual(joinCalls[0].data.group_members, ["media_player.patio"]);
+
+      // Verify status message is success and not blank
+      assert.strictEqual(card._transferQueueStatus?.type, "success");
+      assert.ok(
+        card._transferQueueStatus?.message?.includes("Kitchen"),
+        `Status message should include successor name 'Kitchen', got: ${card._transferQueueStatus?.message}`
+      );
+      assert.strictEqual(
+        card._transferQueueStatus?.message?.includes("undefined") ||
+          card._transferQueueStatus?.message?.endsWith("to "),
+        false,
+        "Status message must not contain undefined or blank player"
+      );
+
+      // Verify auto-close timer was scheduled
+      assert.ok(
+        card._queueController.transferQueueAutoCloseTimer,
+        "Auto-close timer should be scheduled"
+      );
+
+      // Verify selected index was not hijacked to kitchen (preventAutoSelect)
+      assert.strictEqual(card._selectedIndex, 2, "Bedroom should remain selected player");
+    });
+
+    it("transfers playback to sole follower with auto-close when unjoining master", async () => {
+      card.hass.states["media_player.office"].attributes.group_members = [
+        "media_player.office",
+        "media_player.kitchen",
+      ];
+      card.hass.states["media_player.kitchen"].attributes.group_members = [
+        "media_player.office",
+        "media_player.kitchen",
+      ];
+      card.hass.states["media_player.office"].attributes.app_id = "music_assistant";
+      card.hass.states["media_player.kitchen"].attributes.app_id = "music_assistant";
+      card.hass.services.music_assistant = {
+        transfer_queue: {},
+      };
+      card._selectedIndex = 2; // Bedroom selected
+
+      await card._unjoinGroupMember("media_player.office");
+
+      const transferCalls = servicesCalled.filter(
+        (s) => s.domain === "music_assistant" && s.service === "transfer_queue"
+      );
+      assert.strictEqual(transferCalls.length, 1, "Should call music_assistant.transfer_queue");
+
+      // Verify status message is success and not blank
+      assert.strictEqual(card._transferQueueStatus?.type, "success");
+      assert.ok(
+        card._transferQueueStatus?.message?.includes("Kitchen"),
+        `Status message should include successor name 'Kitchen', got: ${card._transferQueueStatus?.message}`
+      );
+
+      // Verify auto-close timer was scheduled
+      assert.ok(
+        card._queueController.transferQueueAutoCloseTimer,
+        "Auto-close timer should be scheduled"
+      );
+    });
+
     it("renders ungrouped standalone players with enabled join button when available", () => {
       // Bedroom active, Office is ungrouped standalone, Kitchen is ungrouped standalone
       card.hass.states["media_player.bedroom"].attributes.group_members = ["media_player.bedroom"];

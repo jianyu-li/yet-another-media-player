@@ -1296,6 +1296,7 @@ export class QueueController {
 
     const activeMaState = this.host._getMusicAssistantState?.();
     const sourceMaId =
+      target.sourceMaId ||
       (activeMaState &&
         this.host._looksLikeMusicAssistantState?.(activeMaState) &&
         activeMaState.entity_id) ||
@@ -1309,6 +1310,7 @@ export class QueueController {
         message: localize("card.grouping.transfer_not_ma") || "Music Assistant player required",
       };
       this.host.triggerRender?.() || this.host.requestUpdate?.();
+      this.scheduleTransferQueueAutoClose(4000);
       return;
     }
 
@@ -1345,7 +1347,12 @@ export class QueueController {
         typeof target.index === "number"
           ? target.index
           : this.host.entityIds?.indexOf(target.entityId);
-      if (targetIdx !== undefined && targetIdx !== null && targetIdx >= 0) {
+      if (
+        !target.preventAutoSelect &&
+        targetIdx !== undefined &&
+        targetIdx !== null &&
+        targetIdx >= 0
+      ) {
         const pinnedIdx = this.host._pinnedIndex;
         if (pinnedIdx === null || pinnedIdx === targetIdx) {
           this.host._selectedIndex = targetIdx;

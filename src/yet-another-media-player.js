@@ -10174,28 +10174,45 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
       // Elect successor from remaining members
       const successorGroupId = remainingMembers[0];
-      const successorEntityId = this.entityIds.find(eId => {
-        const gId = this._getGroupingEntityIdByEntityId(eId);
-        return gId === successorGroupId;
-      }) || successorGroupId;
+      const successorEntityId =
+        this.entityIds.find((eId) => {
+          const gId = this._getGroupingEntityIdByEntityId(eId);
+          return gId === successorGroupId || eId === successorGroupId;
+        }) || successorGroupId;
       const successorIdx = this.entityIds.indexOf(successorEntityId);
       const successorMaId =
         (successorIdx >= 0 ? this._getActualResolvedMaEntityForState?.(successorIdx) : null) ||
         successorGroupId;
-      const successorName = this.getChipName(successorEntityId);
+      const successorName =
+        (successorEntityId && this.getChipName(successorEntityId)) ||
+        (successorGroupId && this.getChipName(successorGroupId)) ||
+        getEntityName(this.hass, successorEntityId || successorGroupId) ||
+        successorEntityId ||
+        successorGroupId ||
+        "player";
 
       const otherMembers = remainingMembers.slice(1);
       const hasOtherMembers = otherMembers.length > 0;
+
+      const pendingTemplate =
+        localize("card.grouping.transferring_coordinator") ||
+        "Transferring playback to {player}...";
+      const pendingMessage = pendingTemplate.includes("{player}")
+        ? pendingTemplate.replace("{player}", successorName)
+        : `${pendingTemplate} ${successorName}`;
+      const successTemplate =
+        localize("card.grouping.transfer_success") || "Queue sent to {player}.";
+      const successMessage = successTemplate.includes("{player}")
+        ? successTemplate.replace("{player}", successorName)
+        : `${successTemplate} ${successorName}`;
 
       const targetPayload = {
         index: successorIdx,
         entityId: successorEntityId,
         maEntityId: successorMaId,
+        sourceMaId: sourceMaId,
         name: successorName,
-        pendingMessage: (
-          localize("card.grouping.transferring_coordinator") ||
-          "Transferring playback to {player}..."
-        ).replace("{player}", successorName),
+        pendingMessage,
         deferSuccess: hasOtherMembers,
       };
 
@@ -10220,10 +10237,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
             await joinPlayers(this.hass, successorGroupId, otherMembers);
             this._transferQueueStatus = {
               type: "success",
-              message: (
-                localize("card.grouping.transfer_success") ||
-                "Queue sent to {player}."
-              ).replace("{player}", successorName),
+              message: successMessage,
             };
             this._queueController?.scheduleTransferQueueAutoClose?.(2000);
           } catch (err) {
@@ -10233,6 +10247,12 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
             };
             this._queueController?.scheduleTransferQueueAutoClose?.(4000);
           }
+        } else {
+          this._transferQueueStatus = {
+            type: "success",
+            message: successMessage,
+          };
+          this._queueController?.scheduleTransferQueueAutoClose?.(2000);
         }
         this._lastGroupingMasterId = successorEntityId;
         if (this.triggerRender) {
@@ -10324,11 +10344,22 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         (targetMasterObj ? await this._resolveGroupingEntityId(targetMasterObj, targetMasterId) : null) ||
         this._getGroupingEntityIdByEntityId(targetMasterId) ||
         targetMasterId;
-      const masterState = targetMasterGroupId ? this.hass.states[targetMasterGroupId] : null;
+      const masterState =
+        (targetMasterGroupId ? this.hass?.states?.[targetMasterGroupId] : null) ||
+        (targetMasterId ? this.hass?.states?.[targetMasterId] : null);
       const members = Array.isArray(masterState?.attributes?.group_members)
         ? masterState.attributes.group_members
         : [];
-      const remainingMembers = members.filter((m) => m !== targetMasterGroupId);
+      const remainingMembers = members.filter(
+        (m) => m !== targetMasterGroupId && m !== targetMasterId && m !== targetId
+      );
+      if (remainingMembers.length === 0) {
+        const groupMembersInConfig = this.entityIds.filter((eId) => {
+          if (eId === targetId || eId === targetMasterId) return false;
+          return this._getGroupKey(eId) === targetMasterId;
+        });
+        remainingMembers.push(...groupMembersInConfig);
+      }
       const hasMaTransferService = Boolean(this.hass?.services?.music_assistant?.transfer_queue);
 
       const targetMaId =
@@ -10351,25 +10382,42 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         const successorEntityId =
           this.entityIds.find((eId) => {
             const gId = this._getGroupingEntityIdByEntityId(eId);
-            return gId === successorGroupId;
+            return gId === successorGroupId || eId === successorGroupId;
           }) || successorGroupId;
         const successorIdx = this.entityIds.indexOf(successorEntityId);
         const successorMaId =
           (successorIdx >= 0 ? this._getActualResolvedMaEntityForState?.(successorIdx) : null) ||
           successorGroupId;
-        const successorName = this.getChipName(successorEntityId);
+        const successorName =
+          (successorEntityId && this.getChipName(successorEntityId)) ||
+          (successorGroupId && this.getChipName(successorGroupId)) ||
+          getEntityName(this.hass, successorEntityId || successorGroupId) ||
+          successorEntityId ||
+          successorGroupId ||
+          "player";
         const otherMembers = remainingMembers.slice(1);
         const hasOtherMembers = otherMembers.length > 0;
+
+        const pendingTemplate =
+          localize("card.grouping.transferring_coordinator") ||
+          "Transferring playback to {player}...";
+        const pendingMessage = pendingTemplate.includes("{player}")
+          ? pendingTemplate.replace("{player}", successorName)
+          : `${pendingTemplate} ${successorName}`;
+        const successTemplate =
+          localize("card.grouping.transfer_success") || "Queue sent to {player}.";
+        const successMessage = successTemplate.includes("{player}")
+          ? successTemplate.replace("{player}", successorName)
+          : `${successTemplate} ${successorName}`;
 
         const targetPayload = {
           index: successorIdx,
           entityId: successorEntityId,
           maEntityId: successorMaId,
+          sourceMaId: targetMaId,
           name: successorName,
-          pendingMessage: (
-            localize("card.grouping.transferring_coordinator") ||
-            "Transferring playback to {player}..."
-          ).replace("{player}", successorName),
+          preventAutoSelect: targetId !== this.currentEntityId,
+          pendingMessage,
           deferSuccess: hasOtherMembers,
         };
 
@@ -10377,11 +10425,38 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
         if (this._transferQueueStatus?.type !== "error") {
           if (hasOtherMembers) {
+            this._transferQueueStatus = {
+              type: "pending",
+              message: (
+                localize("card.grouping.regrouping") ||
+                "Regrouping speakers with {player}..."
+              ).replace("{player}", successorName),
+            };
+            if (this.triggerRender) {
+              this.triggerRender();
+            } else {
+              this.requestUpdate?.();
+            }
             try {
               await joinPlayers(this.hass, successorGroupId, otherMembers);
+              this._transferQueueStatus = {
+                type: "success",
+                message: successMessage,
+              };
+              this._queueController?.scheduleTransferQueueAutoClose?.(2000);
             } catch (err) {
-              // Ignore regroup error
+              this._transferQueueStatus = {
+                type: "error",
+                message: err?.message || "Failed to regroup speakers.",
+              };
+              this._queueController?.scheduleTransferQueueAutoClose?.(4000);
             }
+          } else {
+            this._transferQueueStatus = {
+              type: "success",
+              message: successMessage,
+            };
+            this._queueController?.scheduleTransferQueueAutoClose?.(2000);
           }
           this._lastGroupingMasterId = successorEntityId;
         }
