@@ -325,7 +325,8 @@ export const menusSheetsStyles = css`
     margin-bottom: 16px;
   }
 
-  .in-menu-active-label {
+  .in-menu-active-label,
+  .bottom-dynamic-label {
     position: absolute !important;
     left: 50%;
     bottom: 6px;
@@ -339,6 +340,11 @@ export const menusSheetsStyles = css`
     );
     opacity: 0.85;
     pointer-events: none !important;
+    white-space: nowrap;
+    max-width: 80%;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    z-index: ${Z_LAYERS.FLOATING_CONTROLS};
   }
 
   /* When always collapsed is enabled, keep menu at top */

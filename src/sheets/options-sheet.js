@@ -302,32 +302,35 @@ export function renderOptionsOverlay(props) {
                   >
                     <ha-icon icon="mdi:skip-next"></ha-icon>
                   </button>
-                  ${
-                    !this.config.hide_reorder_progress &&
-                    !this.config.hide_menu_player &&
-                    this._queueOpsTotal > 0
-                      ? html`
-                          <div
-                            class="queue-ops-progress"
-                            style="position: absolute !important; bottom: -20px !important; left: 50% !important; transform: translate(-50%, 0) !important; z-index: 1000 !important; width: max-content !important; pointer-events: none !important; color: var(--search-text-secondary) !important;"
-                          >
-                            Re-ordering ${this._queueOpsCompleted} / ${this._queueOpsTotal}
-                          </div>
-                        `
-                      : nothing
-                  }
-                  ${
-                    this._lyricsActive && !this._isIdle && this._fetchingLyrics
-                      ? html`
-                          <div
-                            class="queue-ops-progress"
-                            style="position: absolute !important; bottom: -20px !important; left: 50% !important; transform: translate(-50%, 0) !important; z-index: 1000 !important; width: max-content !important; pointer-events: none !important; color: var(--search-text-secondary) !important;"
-                          >
-                            ${localize("lyrics.finding")}
-                          </div>
-                        `
-                      : nothing
-                  }
+                  ${(() => {
+                    const showQueueOps =
+                      !this.config.hide_reorder_progress &&
+                      !this.config.hide_menu_player &&
+                      this._queueOpsTotal > 0;
+                    if (showQueueOps) {
+                      return html`
+                        <div
+                          class="queue-ops-progress"
+                          style="position: absolute !important; bottom: -20px !important; left: 50% !important; transform: translate(-50%, 0) !important; z-index: 1000 !important; width: max-content !important; pointer-events: none !important; color: var(--search-text-secondary) !important;"
+                        >
+                          Re-ordering ${this._queueOpsCompleted} / ${this._queueOpsTotal}
+                        </div>
+                      `;
+                    }
+                    const showLyricsFinding =
+                      this._lyricsActive && !this._isIdle && this._fetchingLyrics;
+                    if (showLyricsFinding) {
+                      return html`
+                        <div
+                          class="queue-ops-progress"
+                          style="position: absolute !important; bottom: -20px !important; left: 50% !important; transform: translate(-50%, 0) !important; z-index: 1000 !important; width: max-content !important; pointer-events: none !important; color: var(--search-text-secondary) !important;"
+                        >
+                          ${localize("lyrics.finding")}
+                        </div>
+                      `;
+                    }
+                    return nothing;
+                  })()}
                 </div>
                 ${(() => {
                   const idx = this._selectedIndex;

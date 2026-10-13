@@ -743,13 +743,14 @@ export const baseCardStyles = css`
 
   .yamp-card-inner[data-lyrics-active="true"]
     .card-lower-content
-    > :not(.card-artwork-spacer):not(.in-menu-active-label):not(.more-info-menu):not(
-      .collapsed-artwork-container
-    ):not(.collapsed-progress-bar) {
+    > :not(.card-artwork-spacer):not(.in-menu-active-label):not(.bottom-dynamic-label):not(
+      .more-info-menu
+    ):not(.collapsed-artwork-container):not(.collapsed-progress-bar) {
     position: relative;
   }
 
   .yamp-card-inner[data-lyrics-active="true"] .in-menu-active-label,
+  .yamp-card-inner[data-lyrics-active="true"] .bottom-dynamic-label,
   .yamp-card-inner[data-lyrics-active="true"] .more-info-menu.volume-collapsed,
   .yamp-card-inner[data-lyrics-active="true"] .collapsed-artwork-container,
   .yamp-card-inner[data-lyrics-active="true"] .collapsed-progress-bar {
@@ -758,6 +759,7 @@ export const baseCardStyles = css`
   }
 
   .yamp-card-inner[data-lyrics-active="true"] .in-menu-active-label,
+  .yamp-card-inner[data-lyrics-active="true"] .bottom-dynamic-label,
   .yamp-card-inner[data-lyrics-active="true"] .collapsed-progress-bar {
     pointer-events: none !important;
   }

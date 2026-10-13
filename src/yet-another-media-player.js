@@ -8711,9 +8711,10 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
                 </button>
               </div>
             ` : nothing}
-            ${showChipsInMenu && !this._hideActiveEntityLabel && !(this._hideActiveEntityLabelOnIdle && this._isIdle) ? html`
-              <div class="in-menu-active-label" style="${this._showEntityOptions ? 'visibility:hidden; opacity:0; pointer-events:none;' : ''}">${activeChipName}</div>
-            ` : nothing}
+            ${this._renderBottomDynamicLabel({
+              showChipsInMenu,
+              activeChipName,
+            })}
           </div>
         </div>
 
@@ -8741,19 +8742,90 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         massQueueAvailable: this._massQueueAvailable
       }) : nothing
       }
-          ${!shouldShowPersistentControls && !this.config.hide_reorder_progress && !this.config.hide_menu_player && this._queueOpsTotal > 0 ? html`
-            <div class="queue-ops-progress" style="position: absolute !important; bottom: 12px !important; left: 50% !important; transform: translate(-50%, 0) !important; z-index: 1000 !important; width: max-content !important; pointer-events: none !important; color: var(--search-text-secondary) !important;">
-              Re-ordering ${this._queueOpsCompleted} / ${this._queueOpsTotal}
-            </div>
-          ` : ""}
-          ${(!this._showEntityOptions || !shouldShowPersistentControls) && this._lyricsActive && !this._isIdle && this._fetchingLyrics ? html`
-            <div class="queue-ops-progress" style="position: absolute !important; bottom: 2px !important; left: 50% !important; transform: translate(-50%, 0) !important; z-index: 1000 !important; width: max-content !important; pointer-events: none !important; color: var(--search-text-secondary) !important;">
-              ${localize("lyrics.finding")}
-            </div>
-          ` : ""}
           </div>
     </ha-card>
   `;
+  }
+
+  /**
+   * Determine the content and type of the consolidated bottom dynamic label.
+   * Priority:
+   * 1. Queue re-ordering progress (transient operational progress)
+   * 2. Finding lyrics status (transient fetch status)
+   * 3. Active entity label (default persistent label when chips are in menu)
+   *
+   * @param {Object} options
+   * @param {boolean} options.showChipsInMenu
+   * @param {string} [options.activeChipName]
+   * @returns {{ text: string, type: string } | null}
+   */
+  _getBottomDynamicLabel({ showChipsInMenu, activeChipName }) {
+    if (this._showEntityOptions) {
+      return null;
+    }
+
+    const showQueueOps =
+      !this.config.hide_reorder_progress &&
+      !this.config.hide_menu_player &&
+      this._queueOpsTotal > 0;
+
+    if (showQueueOps) {
+      return {
+        text: `Re-ordering ${this._queueOpsCompleted} / ${this._queueOpsTotal}`,
+        type: "queue-progress",
+      };
+    }
+
+    const showLyricsFinding =
+      this._lyricsActive &&
+      !this._isIdle &&
+      this._fetchingLyrics;
+
+    if (showLyricsFinding) {
+      return {
+        text: localize("lyrics.finding") || "Finding Lyrics...",
+        type: "lyrics-finding",
+      };
+    }
+
+    const showEntityLabel =
+      showChipsInMenu &&
+      !this._hideActiveEntityLabel &&
+      !(this._hideActiveEntityLabelOnIdle && this._isIdle) &&
+      Boolean(activeChipName);
+
+    if (showEntityLabel) {
+      return {
+        text: activeChipName,
+        type: "entity",
+      };
+    }
+
+    return null;
+  }
+
+  /**
+   * Render the consolidated bottom dynamic label.
+   *
+   * @param {Object} options
+   * @param {boolean} options.showChipsInMenu
+   * @param {string} [options.activeChipName]
+   * @returns {import("lit").TemplateResult | typeof nothing}
+   */
+  _renderBottomDynamicLabel(options) {
+    const labelInfo = this._getBottomDynamicLabel(options);
+    if (!labelInfo) {
+      return nothing;
+    }
+
+    return html`
+      <div
+        class="in-menu-active-label bottom-dynamic-label"
+        data-label-type="${labelInfo.type}"
+      >
+        ${labelInfo.text}
+      </div>
+    `;
   }
 
   _getCardHeightMetrics(config) {
