@@ -2497,5 +2497,51 @@ describe("Group Players Menu - Transfer Queue Button", () => {
         "Should unjoin kitchen"
       );
     });
+
+    it("renders ungrouped standalone players with enabled join button when available", () => {
+      // Bedroom active, Office is ungrouped standalone, Kitchen is ungrouped standalone
+      card.hass.states["media_player.bedroom"].attributes.group_members = ["media_player.bedroom"];
+      card.hass.states["media_player.office"].attributes.group_members = ["media_player.office"];
+      card.hass.states["media_player.kitchen"].attributes.group_members = ["media_player.kitchen"];
+
+      const template = renderGroupingSheet.call(card);
+      const htmlContent = extractTemplateHtml(template);
+
+      assert.ok(
+        htmlContent.includes("Join with Bedroom"),
+        "Should include Join with Bedroom tooltip"
+      );
+
+      function findRow(obj, name) {
+        if (!obj) return null;
+        if (typeof obj === "object" && obj.strings && Array.isArray(obj.values)) {
+          if (obj.values.some((v) => typeof v === "string" && v.includes(name))) {
+            return obj;
+          }
+        }
+        if (Array.isArray(obj)) {
+          for (const item of obj) {
+            const res = findRow(item, name);
+            if (res) return res;
+          }
+        } else if (typeof obj === "object" && obj.values) {
+          return findRow(obj.values, name);
+        }
+        return null;
+      }
+
+      const officeRow = findRow(template.values, "Office");
+      assert.ok(officeRow, "Office row should be found in template");
+      const officeHtml = extractTemplateHtml(officeRow);
+      assert.ok(
+        officeHtml.includes("group-toggle-btn"),
+        "Office row should render group-toggle-btn"
+      );
+      assert.strictEqual(
+        officeHtml.includes('disabled=""') || officeHtml.includes("disabled "),
+        false,
+        "Office toggle button should not be disabled"
+      );
+    });
   });
 });

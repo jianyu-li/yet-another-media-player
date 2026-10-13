@@ -437,10 +437,14 @@ export function renderGroupingSheet() {
 
     const isGroupActive = isInsideGroup || (isPrimaryRow ? groupedAny || isCurrent : grouped);
     const isSolePlayer = !isInsideGroup && isGroupActive && !groupedAny;
-    const isRowMaster = id === targetGroupMasterId || (isInsideGroup && isPrimaryRow);
+    const isRowMaster = isInsideGroup
+      ? id === targetGroupMasterId
+      : Boolean(
+          (isMultiSpeakerGroup && id === targetGroupMasterId) || (isPrimaryRow && groupedAny)
+        );
     const canUnjoinMaster =
       hasMaTransferService && targetIsMa && (playerMembers.length > 1 || groupedAny);
-    const isMasterLocked = isRowMaster && !canUnjoinMaster;
+    const isMasterLocked = Boolean(isGroupActive && isRowMaster && !canUnjoinMaster);
     const isTransferInProgress = Boolean(this._transferQueuePendingTarget);
 
     const isToggleDisabled = isInsideGroup
@@ -465,7 +469,9 @@ export function renderGroupingSheet() {
         : isSolePlayer
           ? localize("card.grouping.current")
           : isGroupActive
-            ? unjoinTooltip
+            ? isMasterLocked
+              ? localize("card.grouping.unavailable")
+              : unjoinTooltip
             : localize("card.grouping.join_with")?.replace("{master}", masterName);
 
     const targetPayload = {
