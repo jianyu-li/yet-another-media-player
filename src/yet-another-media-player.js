@@ -5780,7 +5780,6 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const isMasterLocked = isPrimary && (!hasMaTransfer || !groupedAny);
     const isActionDisabled = Boolean(isBusy || isSolePlayer || isMasterLocked);
 
-    const masterName = this.getChipName(activeId);
     let tooltip;
     if (isBusy) {
       tooltip = localize('card.grouping.unavailable') || localize('common.unavailable') || 'Unavailable';
