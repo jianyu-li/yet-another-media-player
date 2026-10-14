@@ -7,6 +7,8 @@ import nl from "./languages/nl.js";
 import pt from "./languages/pt.js";
 import sk from "./languages/sk.js";
 import sl from "./languages/sl.js";
+import sr from "./languages/sr.js";
+import sr_Latn from "./languages/sr-Latn.js";
 
 const languages = {
   en,
@@ -18,6 +20,9 @@ const languages = {
   pt,
   sk,
   sl,
+  sr,
+  sr_Latn,
+  sr_latn: sr_Latn,
 };
 
 let activeHassLanguage = null;
