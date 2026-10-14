@@ -49,6 +49,7 @@ import { TemplateController } from "./controllers/template-controller.js";
 import { LyricsController, cleanTrackMetadata } from "./controllers/lyrics-controller.js";
 import { ArtworkController } from "./controllers/artwork-controller.js";
 import { QueueController } from "./controllers/queue-controller.js";
+import { VolumeHoldController, getVolumeIconForPercent } from "./controllers/volume-hold-controller.js";
 import {
   mediaPlay,
   mediaPause,
@@ -87,6 +88,7 @@ import { localize, setHassLanguage } from "./localize/localize.js";
 
 
 import {
+  SUPPORT_VOLUME_SET,
   SUPPORT_VOLUME_MUTE,
   SUPPORT_TURN_ON,
   SUPPORT_TURN_OFF,
@@ -1190,6 +1192,8 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     // Initialize TemplateController for Jinja WS subscriptions and JS template evaluation
     /** @type {TemplateController} */
     this._templateController = new TemplateController(this);
+    /** @type {VolumeHoldController} */
+    this._volumeHoldController = new VolumeHoldController(this);
     this._templateSubscriptions = this._templateController.templateSubscriptions;
     this._activeSubscriptionTokens = this._templateController.activeSubscriptionTokens;
     this._maTemplateValues = this._templateController.maTemplateValues;
@@ -5032,6 +5036,15 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     return obj?.entity_volume_mode || this._volumeMode;
   }
 
+  // Whether the stepper press-and-hold volume overlay is available for the active entity
+  _canUseVolumeHold() {
+    if (this._getEffectiveVolumeMode() !== "stepper") return false;
+    const entity = this._getVolumeEntity(this._selectedIndex);
+    if (!entity || (typeof entity === "string" && entity.startsWith("remote."))) return false;
+    const stateObj = this.currentVolumeStateObj;
+    return !!stateObj && this._supportsFeature(stateObj, SUPPORT_VOLUME_SET);
+  }
+
   // Returns the effective volume step for the active entity, preferring per-entity override
   _getEffectiveVolumeStep() {
     const obj = this.entityObjs?.[this._selectedIndex];
@@ -6525,6 +6538,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     }
 
     // Select the tapped chip immediately
+    this._volumeHoldController?.cancel();
     this._selectedIndex = idx;
 
     // Wake from idle if the selected entity is actually playing
@@ -7238,11 +7252,19 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
    * With group_volume: true/undefined, applies group logic.
    */
   _onVolumeChange(e) {
+    this._applyVolumeLevel(Number(e.target.value));
+  }
+
+  /**
+   * Applies an absolute volume level to the active entity, honoring group_volume logic.
+   * Shared by the slider and the stepper press-and-hold overlay.
+   * @param {number} newVol 0..1
+   */
+  _applyVolumeLevel(newVol) {
     this._suppressVolumeOverlay();
     const idx = this._selectedIndex;
     const groupingEntity = this._getGroupingEntityId(idx) || this.currentEntityId;
     const state = this.hass.states[groupingEntity];
-    const newVol = Number(e.target.value);
     const obj = this.entityObjs[idx];
 
     // Always use group_volume directly from obj
@@ -7493,10 +7515,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _getVolumeOverlayIcon() {
-    if (this._volumeOverlayMuted || this._volumeOverlayValue === 0) return "mdi:volume-off";
-    if (this._volumeOverlayValue < 20) return "mdi:volume-low";
-    if (this._volumeOverlayValue < 50) return "mdi:volume-medium";
-    return "mdi:volume-high";
+    return getVolumeIconForPercent(this._volumeOverlayValue, this._volumeOverlayMuted);
   }
 
   _dismissVolumeOverlay() {
@@ -8444,6 +8463,19 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
                 <span class="volume-overlay-text">${this._volumeOverlayValue}%</span>
               </div>
             ` : nothing}
+            ${(this._volumeHoldController?.active || this._volumeHoldController?.releasing) ? (() => {
+              const pct = Math.round(this._volumeHoldController.value * 100);
+              const muted = this.currentVolumeStateObj?.attributes?.is_volume_muted === true;
+              return html`
+                <div
+                  class="volume-overlay volume-hold-overlay ${this._volumeHoldController.releasing ? "releasing" : ""}"
+                  style="--yamp-volume-hold-level: ${pct}%"
+                >
+                  <div class="volume-hold-fill"></div>
+                  <ha-icon icon=${getVolumeIconForPercent(pct, muted)}></ha-icon>
+                  <span class="volume-overlay-text">${pct}%</span>
+                </div>`;
+            })() : nothing}
             <div class="card-lower-content-container" style="${idleMinHeight ? `min-height:${idleMinHeight}px;` : ''}">
               <div class="card-lower-content-bg"
                 style="${(() => {
@@ -8678,9 +8710,10 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
                 ${renderVolumeRow({
         isRemoteVolumeEntity,
         showSlider,
-        vol,
+        vol: this._volumeHoldController?.active ? this._volumeHoldController.value : vol,
         isDragging: this._volumeDraggingEntity === 'main',
         dragVol: this._dragVolume,
+        holdHandlers: this._canUseVolumeHold() ? this._volumeHoldController : null,
         isMuted: this.currentVolumeStateObj?.attributes?.is_volume_muted ?? false,
         supportsMute: this.currentVolumeStateObj ? this._supportsFeature(this.currentVolumeStateObj, SUPPORT_VOLUME_MUTE) : false,
         onVolumeDragStart: (e) => this._onVolumeDragStart(e),

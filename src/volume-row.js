@@ -25,6 +25,7 @@ import { localize } from "./localize/localize.js";
  * @param {boolean} [options.collapseRow]
  * @param {boolean} [options.isDragging]
  * @param {number} [options.dragVol]
+ * @param {any} [options.holdHandlers]
  */
 export function renderVolumeRow({
   isRemoteVolumeEntity,
@@ -48,6 +49,7 @@ export function renderVolumeRow({
   collapseRow = undefined,
   isDragging = false,
   dragVol = 0,
+  holdHandlers = null,
 }) {
   const hasLeadingControl =
     leadingControlTemplate !== nothing &&
@@ -163,7 +165,16 @@ export function renderVolumeRow({
                 `
               : html`
                   <div class="vol-stepper-container">
-                    <div class="vol-stepper">
+                    <div
+                      class="vol-stepper ${holdHandlers ? "vol-stepper-holdable" : ""}"
+                      @pointerdown=${holdHandlers?.onPointerDown}
+                      @pointermove=${holdHandlers?.onPointerMove}
+                      @pointerup=${holdHandlers?.onPointerUp}
+                      @pointercancel=${holdHandlers?.onPointerCancel}
+                      @lostpointercapture=${holdHandlers?.onLostPointerCapture}
+                      @contextmenu=${holdHandlers?.onContextMenu}
+                      @click=${holdHandlers?.clickCapture}
+                    >
                       <button
                         class="button"
                         @click=${() => onVolumeStep(-1)}
