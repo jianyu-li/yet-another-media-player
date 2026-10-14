@@ -816,6 +816,7 @@ export const baseCardStyles = css`
   .artist,
   .controls-row,
   .button,
+  .vol-stepper,
   .vol-stepper span,
   .vol-label {
     color: #fff;
@@ -830,6 +831,7 @@ export const baseCardStyles = css`
   .yamp-card-inner[data-has-font-color="true"] .controls-row,
   .yamp-card-inner[data-has-font-color="true"] .button,
   .yamp-card-inner[data-has-font-color="true"] .modern-button,
+  .yamp-card-inner[data-has-font-color="true"] .vol-stepper,
   .yamp-card-inner[data-has-font-color="true"] .vol-stepper span,
   .yamp-card-inner[data-has-font-color="true"] .vol-label,
   .yamp-card-inner[data-has-font-color="true"] .more-info-btn ha-icon,
@@ -846,6 +848,7 @@ export const baseCardStyles = css`
   .yamp-card-inner[data-lyrics-active="true"] .controls-row,
   .yamp-card-inner[data-lyrics-active="true"] .button,
   .yamp-card-inner[data-lyrics-active="true"] .modern-button,
+  .yamp-card-inner[data-lyrics-active="true"] .vol-stepper,
   .yamp-card-inner[data-lyrics-active="true"] .vol-stepper span,
   .yamp-card-inner[data-lyrics-active="true"] .vol-label,
   .yamp-card-inner[data-lyrics-active="true"] .more-info-btn ha-icon,
@@ -862,6 +865,7 @@ export const baseCardStyles = css`
   .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .controls-row,
   .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .button,
   .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .modern-button,
+  .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .vol-stepper,
   .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .vol-stepper span,
   .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .vol-label,
   .yamp-card-inner[data-artwork-fit="scaled-contain-alternate"] .more-info-btn ha-icon,
