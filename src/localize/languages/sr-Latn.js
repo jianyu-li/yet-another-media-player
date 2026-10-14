@@ -67,7 +67,8 @@ export default {
       },
       dedicated_grouping: {
         label: "Grupna terapija",
-        description: "Samostalna kartica za grupisanje plejera. Zahteva konfiguraciju više entiteta.",
+        description:
+          "Samostalna kartica za grupisanje plejera. Zahteva konfiguraciju više entiteta.",
       },
       huge_yamp: {
         label: "To je ogroman YAMP!",
@@ -86,8 +87,7 @@ export default {
         },
         background: {
           title: "Pozadinska slika",
-          description:
-            "Konfiguriši trajnu pozadinsku sliku za karticu iza sadržaja reprodukcije.",
+          description: "Konfiguriši trajnu pozadinsku sliku za karticu iza sadržaja reprodukcije.",
         },
         idle: {
           title: "Omot u mirovanju",
@@ -110,7 +110,8 @@ export default {
         },
         interactions_search: {
           title: "Interakcije i pretraga",
-          description: "Precizno podesi kako se entiteti kače i koliko se rezultata prikazuje odjednom.",
+          description:
+            "Precizno podesi kako se entiteti kače i koliko se rezultata prikazuje odjednom.",
         },
         lyrics: {
           title: "Tekst pesme",
@@ -141,7 +142,7 @@ export default {
       idle_timeout:
         "Vreme u milisekundama pre nego što kartica pređe u režim mirovanja. Postavi na 0 da onemogućiš mirovanje.",
       show_chip_row:
-        "\"Auto\" sakriva red čipova kada je konfigurisan samo jedan entitet. \"U meniju\" premešta čipove u meni. \"U meniju pri mirovanju\" prikazuje čipove dok je aktivno, ali ih premešta u meni kada je u mirovanju.",
+        '"Auto" sakriva red čipova kada je konfigurisan samo jedan entitet. "U meniju" premešta čipove u meni. "U meniju pri mirovanju" prikazuje čipove dok je aktivno, ali ih premešta u meni kada je u mirovanju.',
       dim_chips:
         "Kada kartica pređe u mirovanje sa slikom, zatamni entitete i akcione čipove radi čistijeg izgleda.",
       hold_to_pin:
@@ -160,12 +161,11 @@ export default {
       show_album: "Prikaži naziv albuma pored izvođača u detaljima plejera.",
       lock_screen_controls:
         "Zadrži kontrole i metapodatke pesme aktivne na zaključanom ekranu uređaja (iOS / Android / macOS) kada je aplikacija u pozadini. Napomena: funkcija je eksperimentalna.",
-      toggle_media_session: "Napomena: kontrole zaključanog ekrana i medija sesije su eksperimentalne.",
+      toggle_media_session:
+        "Napomena: kontrole zaključanog ekrana i medija sesije su eksperimentalne.",
       adaptive_controls: "Dozvoli da se dugmad za reprodukciju prilagode dostupnom prostoru.",
-      hide_menu_player:
-        "Kada čipovi žive u meniju, sakrij oznaku entiteta na dnu kartice.",
-      hide_reorder_progress:
-        "Sakrij plutajući indikator napretka pri promeni redosleda reda.",
+      hide_menu_player: "Kada čipovi žive u meniju, sakrij oznaku entiteta na dnu kartice.",
+      hide_reorder_progress: "Sakrij plutajući indikator napretka pri promeni redosleda reda.",
       adaptive_text:
         "Izaberi koje grupe teksta treba da se skaliraju sa dostupnim prostorom (ostavi prazno da onemogućiš adaptivni tekst).",
       collapse_expand:
