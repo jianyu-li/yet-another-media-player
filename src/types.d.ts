@@ -459,6 +459,23 @@ export declare function getActiveLyricIndex(
   mode?: string
 ): number;
 
+export declare class VolumeHoldController {
+  constructor(host: any);
+  host: any;
+  active: boolean;
+  releasing: boolean;
+  value: number;
+  cancel(): void;
+  onPointerDown(e: PointerEvent): void;
+  onPointerMove(e: PointerEvent): void;
+  onPointerUp(e: PointerEvent): void;
+  onPointerCancel(e: PointerEvent): void;
+  onLostPointerCapture(e: PointerEvent): void;
+  onContextMenu(e: Event): void;
+  clickCapture: { capture: boolean; handleEvent(e: Event): void };
+  hostDisconnected(): void;
+}
+
 export declare class LyricsController {
   constructor(host: any);
   host: any;
@@ -718,6 +735,9 @@ export interface YetAnotherMediaPlayerCard {
   _artworkController?: ArtworkController;
   queueController?: QueueController;
   _queueController?: QueueController;
+  _volumeHoldController?: VolumeHoldController;
+  _canUseVolumeHold?: (allowMenuMode?: boolean) => boolean;
+  _applyVolumeLevel?: (newVol: number) => void;
   _aiRadioShowsAvailable?: boolean;
   _isFullScreen?: boolean;
   _fullScreenOverride?: boolean | null;

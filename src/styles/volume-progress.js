@@ -458,4 +458,48 @@ export const volumeProgressStyles = css`
   .collapsed .volume-overlay-text {
     font-size: clamp(1.6rem, 8cqw, 2.5rem);
   }
+
+  /* Stepper press-and-hold volume overlay */
+  .vol-stepper-holdable {
+    touch-action: none;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+  }
+
+  .volume-hold-overlay {
+    pointer-events: none;
+    overflow: hidden;
+  }
+
+  .volume-hold-overlay > ha-icon,
+  .volume-hold-overlay > .volume-overlay-text {
+    position: relative;
+    z-index: 1;
+  }
+
+  .volume-hold-fill {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: var(--yamp-volume-hold-level, 0%);
+    background: var(--custom-accent, var(--accent-color, #ff9800));
+    opacity: 0.35;
+    transition: height 60ms linear;
+    pointer-events: none;
+  }
+
+  .volume-hold-overlay.releasing {
+    animation: volume-overlay-out 0.25s ease 0.3s forwards;
+  }
+
+  @keyframes volume-overlay-out {
+    from {
+      opacity: 1;
+    }
+    to {
+      opacity: 0;
+    }
+  }
 `;

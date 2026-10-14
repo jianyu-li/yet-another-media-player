@@ -272,7 +272,7 @@ entities:
 
 You can override the global `volume_mode` and `volume_step` settings for specific entities using `entity_volume_mode` and `entity_volume_step`.
 
-- `entity_volume_mode`: Can be set to `slider`, `stepper`, or `hidden`. If omitted, it falls back to the global `volume_mode`.
+- `entity_volume_mode`: Can be set to `slider`, `stepper`, or `hidden`. If omitted, it falls back to the global `volume_mode`. In `stepper` mode, press and hold the stepper to open a full-card volume overlay, then drag up or down to adjust the volume.
 - `entity_volume_step`: The step size for the stepper (e.g., `0.05`). This is only applicable when the entity's effective volume mode is `stepper`. If omitted, it falls back to the global `volume_step`.
 
 ```yaml
