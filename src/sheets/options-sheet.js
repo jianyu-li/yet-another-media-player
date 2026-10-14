@@ -340,14 +340,30 @@ export function renderOptionsOverlay(props) {
                   const isRemote = volumeEntity.startsWith && volumeEntity.startsWith("remote.");
                   const volumeState = this.currentVolumeStateObj;
                   const volumeLevel = Number(volumeState?.attributes?.volume_level ?? 0);
+                  const isHoldActive = this._volumeHoldController?.active;
+                  const effectiveVol = isHoldActive
+                    ? this._volumeHoldController.value
+                    : volumeLevel;
                   const percentLabel = !isRemote
-                    ? `${Math.round((volumeLevel || 0) * 100)}%`
+                    ? `${Math.round((effectiveVol || 0) * 100)}%`
                     : null;
 
                   if (this._getEffectiveVolumeMode() === "hidden") return nothing;
 
+                  const canHold = this._canUseVolumeHold?.(true);
+                  const holdHandlers = canHold ? this._volumeHoldController : null;
+
                   return html`
-                    <div class="persistent-volume-stepper">
+                    <div
+                      class="persistent-volume-stepper ${holdHandlers ? "vol-stepper-holdable" : ""}"
+                      @pointerdown=${holdHandlers?.onPointerDown}
+                      @pointermove=${holdHandlers?.onPointerMove}
+                      @pointerup=${holdHandlers?.onPointerUp}
+                      @pointercancel=${holdHandlers?.onPointerCancel}
+                      @lostpointercapture=${holdHandlers?.onLostPointerCapture}
+                      @contextmenu=${holdHandlers?.onContextMenu}
+                      @click=${holdHandlers?.clickCapture}
+                    >
                       <button
                         class="stepper-btn"
                         @click=${() => this._onVolumeStep(-1)}

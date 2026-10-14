@@ -736,7 +736,7 @@ export interface YetAnotherMediaPlayerCard {
   queueController?: QueueController;
   _queueController?: QueueController;
   _volumeHoldController?: VolumeHoldController;
-  _canUseVolumeHold?: () => boolean;
+  _canUseVolumeHold?: (allowMenuMode?: boolean) => boolean;
   _applyVolumeLevel?: (newVol: number) => void;
   _aiRadioShowsAvailable?: boolean;
   _isFullScreen?: boolean;

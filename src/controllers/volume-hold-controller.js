@@ -92,7 +92,13 @@ export class VolumeHoldController {
       if (!e.isPrimary) return;
       if (e.pointerType === "mouse" && e.button !== 0) return;
       if (this._pointerId !== null) return;
-      if (!this.host?._canUseVolumeHold?.()) return;
+      const isMenu = !!(
+        this.host?._showEntityOptions ||
+        /** @type {HTMLElement} */ (e.currentTarget)?.classList?.contains(
+          "persistent-volume-stepper"
+        )
+      );
+      if (!this.host?._canUseVolumeHold?.(isMenu)) return;
 
       this._clearSuppressClick();
       if (this.releasing) {
@@ -198,7 +204,11 @@ export class VolumeHoldController {
 
   _activate() {
     this._holdTimer = null;
-    if (!this.host?._canUseVolumeHold?.()) {
+    const isMenu = !!(
+      this.host?._showEntityOptions ||
+      this._element?.classList?.contains("persistent-volume-stepper")
+    );
+    if (!this.host?._canUseVolumeHold?.(isMenu)) {
       this._reset();
       return;
     }

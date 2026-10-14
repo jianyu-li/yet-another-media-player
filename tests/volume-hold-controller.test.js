@@ -351,5 +351,33 @@ describe("VolumeHoldController & Helpers", () => {
 
       assert.strictEqual(ctrl._pointerId, null);
     });
+
+    it("activates for persistent menu stepper even when global volume_mode is not stepper", () => {
+      mock.timers.enable();
+      try {
+        targetEl.classList = {
+          contains(name) {
+            return name === "persistent-volume-stepper";
+          },
+        };
+
+        ctrl.onPointerDown({
+          isPrimary: true,
+          pointerType: "touch",
+          pointerId: 1,
+          clientX: 50,
+          clientY: 100,
+          currentTarget: targetEl,
+        });
+
+        assert.strictEqual(host._canUseVolumeHold.mock.calls.length, 1);
+        assert.strictEqual(host._canUseVolumeHold.mock.calls[0].arguments[0], true);
+
+        mock.timers.tick(HOLD_DELAY_MS);
+        assert.strictEqual(ctrl.active, true);
+      } finally {
+        mock.timers.reset();
+      }
+    });
   });
 });

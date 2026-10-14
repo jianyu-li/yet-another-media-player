@@ -5037,8 +5037,9 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   // Whether the stepper press-and-hold volume overlay is available for the active entity
-  _canUseVolumeHold() {
-    if (this._getEffectiveVolumeMode() !== "stepper") return false;
+  _canUseVolumeHold(allowMenuMode = false) {
+    if (!allowMenuMode && this._getEffectiveVolumeMode() !== "stepper") return false;
+    if (this._getEffectiveVolumeMode() === "hidden") return false;
     const entity = this._getVolumeEntity(this._selectedIndex);
     if (!entity || (typeof entity === "string" && entity.startsWith("remote."))) return false;
     const stateObj = this.currentVolumeStateObj;
