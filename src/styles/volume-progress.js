@@ -336,6 +336,7 @@ export const volumeProgressStyles = css`
     display: flex;
     align-items: center;
     gap: 12px;
+    color: #fff;
   }
 
   .vol-stepper .button {
@@ -346,6 +347,13 @@ export const volumeProgressStyles = css`
     display: flex;
     align-items: center;
     justify-content: center;
+    color: inherit;
+  }
+
+  @media (hover: hover) {
+    .vol-stepper .button:hover {
+      color: var(--custom-accent);
+    }
   }
 
   .vol-value {
