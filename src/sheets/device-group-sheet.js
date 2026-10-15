@@ -50,31 +50,37 @@ export function renderGroupingSheet() {
   const activeGroupKey = this._getGroupKey(activeId);
   const activeIsBusy = activeGroupKey !== activeId;
 
-  const renderPlayerSearch = () => {
+  const renderPlayerSearchRow = () => {
     if (!this.config?.show_player_search) return nothing;
     const query = this._playerSearchQuery || "";
-    const covered =
-      typeof this._getCoveredEntityIds === "function"
-        ? this._getCoveredEntityIds()
-        : new Set(this.entityIds || []);
-    const exclude = this.config?.auto_add_exclude || [];
-    const searchResults = query.trim()
-      ? searchMediaPlayers(this.hass?.states, query, covered, exclude)
-      : [];
 
     return html`
-      <div class="entity-options-search-row" style="margin-bottom: 12px;">
-        <div
-          class="search-input-wrapper"
-          style="position: relative; display: flex; align-items: center; width: 100%;"
-        >
+      <div class="entity-options-search-row">
+        <div class="search-input-wrapper">
           <input
             type="text"
+            id="player-search-input-box"
+            ?autofocus=${!this._disableSearchAutofocus}
             class="entity-options-search-input"
             .value=${query}
             @input=${(e) => {
               this._playerSearchQuery = e.target.value;
               this.requestUpdate();
+            }}
+            @keydown=${(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+              } else if (e.key === "Escape") {
+                e.preventDefault();
+                if (this._playerSearchQuery) {
+                  this._playerSearchQuery = "";
+                  this.requestUpdate();
+                } else if (this._quickMenuInvoke) {
+                  this._dismissWithAnimation();
+                } else {
+                  this._closeGrouping();
+                }
+              }
             }}
             placeholder="${localize("card.grouping.search_players") || "Search players to add..."}"
           />
@@ -82,99 +88,42 @@ export function renderGroupingSheet() {
             query
               ? html`
                   <button
-                    type="button"
-                    style="position: absolute; right: 8px; background: none; border: none; cursor: pointer; color: inherit; opacity: 0.6; display: flex; align-items: center; padding: 2px;"
+                    class="search-input-clear"
                     @click=${() => {
                       this._playerSearchQuery = "";
                       this.requestUpdate();
                     }}
+                    title="${localize("common.clear")}"
                   >
-                    <ha-icon
-                      icon="mdi:close"
-                      style="--mdc-icon-size: 18px; width: 18px; height: 18px;"
-                    ></ha-icon>
+                    <ha-icon icon="mdi:close"></ha-icon>
                   </button>
                 `
               : nothing
           }
         </div>
-      </div>
-      ${
-        query.trim()
-          ? html`
-              <div style="margin-bottom: 12px; display: flex; flex-direction: column; gap: 4px;">
-                ${
-                  searchResults.length === 0
-                    ? html`
-                        <div
-                          class="entity-options-item"
-                          style="padding: 10px; opacity: 0.6; text-align: center;"
-                        >
-                          ${localize("card.grouping.no_search_results") || "No matching players found"}
-                        </div>
-                      `
-                    : searchResults.map(
-                        (res) => html`
-                          <div
-                            class="entity-options-item"
-                            style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px;"
-                          >
-                            <div
-                              style="display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1;"
-                            >
-                              <ha-icon
-                                .icon=${res.icon}
-                                style="--mdc-icon-size: 20px; width: 20px; height: 20px; opacity: 0.8;"
-                              ></ha-icon>
-                              <div
-                                style="display: flex; flex-direction: column; min-width: 0; overflow: hidden;"
-                              >
-                                <span
-                                  style="font-weight: 500; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;"
-                                  >${res.name}</span
-                                >
-                                <span
-                                  style="font-size: 11px; opacity: 0.6; text-transform: capitalize;"
-                                  >${res.state}</span
-                                >
-                              </div>
-                            </div>
-                            <button
-                              type="button"
-                              class="entity-options-item"
-                              style="padding: 4px 10px; font-size: 12px; display: flex; align-items: center; gap: 4px; border-radius: 6px; cursor: pointer;"
-                              @click=${() => {
-                                this._addSessionEntity?.(res.id);
-                                this._playerSearchQuery = "";
-                                this.requestUpdate();
-                              }}
-                              title="${localize("card.grouping.add_player") || "Add to session"}"
-                            >
-                              <ha-icon
-                                icon="mdi:plus"
-                                style="--mdc-icon-size: 16px; width: 16px; height: 16px;"
-                              ></ha-icon>
-                              <span>${localize("card.grouping.add") || "Add"}</span>
-                            </button>
-                          </div>
-                        `
-                      )
-                }
-              </div>
-            `
-          : nothing
-      }
-    `;
-  };
-
-  if (groupPlayerIds.length === 0) {
-    return html`
-      <div class="entity-options-header">
+        <button
+          class="entity-options-item icon-only"
+          style="min-width:48px; padding: 0;"
+          @click=${() => {
+            const input = this.shadowRoot?.getElementById("player-search-input-box");
+            if (input) input.focus();
+            this.requestUpdate();
+          }}
+          title="${localize("common.search")}"
+          aria-label="${localize("common.search")}"
+        >
+          <ha-icon icon="mdi:magnify"></ha-icon>
+        </button>
         ${
-          this._cardType !== "group_players" && this._cardType !== "remote_control"
+          this._cardType !== "group_players" &&
+          this._cardType !== "players" &&
+          this._cardType !== "remote_control"
             ? html`
                 <button
-                  class="entity-options-item close-item"
+                  class="entity-options-item icon-only"
+                  style="min-width:48px; padding: 0;"
+                  title="${localize("common.cancel")}"
+                  aria-label="${localize("common.cancel")}"
                   @click=${() => {
                     if (this._quickMenuInvoke) {
                       this._dismissWithAnimation();
@@ -183,14 +132,126 @@ export function renderGroupingSheet() {
                     }
                   }}
                 >
-                  ${localize("common.back")}
+                  <ha-icon icon="mdi:close"></ha-icon>
                 </button>
               `
             : nothing
         }
-        <div class="entity-options-divider"></div>
       </div>
-      ${renderPlayerSearch()}
+    `;
+  };
+
+  const renderPlayerSearchResults = () => {
+    if (!this.config?.show_player_search) return nothing;
+    const query = this._playerSearchQuery || "";
+    if (!query.trim()) return nothing;
+
+    const covered =
+      typeof this._getCoveredEntityIds === "function"
+        ? this._getCoveredEntityIds()
+        : new Set(this.entityIds || []);
+    const exclude = this.config?.auto_add_exclude || [];
+    const searchResults = searchMediaPlayers(this.hass?.states, query, covered, exclude);
+
+    return html`
+      <div style="margin-bottom: 12px; display: flex; flex-direction: column; gap: 4px;">
+        ${
+          searchResults.length === 0
+            ? html`
+                <div
+                  class="entity-options-item"
+                  style="padding: 10px; opacity: 0.6; text-align: center;"
+                >
+                  ${localize("card.grouping.no_search_results") || "No matching players found"}
+                </div>
+              `
+            : searchResults.map(
+                (res) => html`
+                  <div
+                    class="entity-options-item"
+                    style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px;"
+                  >
+                    <div
+                      style="display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1;"
+                    >
+                      <ha-icon
+                        .icon=${res.icon}
+                        style="--mdc-icon-size: 20px; width: 20px; height: 20px; opacity: 0.8;"
+                      ></ha-icon>
+                      <div
+                        style="display: flex; flex-direction: column; min-width: 0; overflow: hidden;"
+                      >
+                        <span
+                          style="font-weight: 500; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;"
+                          >${res.name}</span
+                        >
+                        <span style="font-size: 11px; opacity: 0.6; text-transform: capitalize;"
+                          >${res.state}</span
+                        >
+                      </div>
+                    </div>
+                    <button
+                      type="button"
+                      class="entity-options-item"
+                      style="padding: 4px 10px; font-size: 12px; display: flex; align-items: center; gap: 4px; border-radius: 6px; cursor: pointer;"
+                      @click=${() => {
+                        this._addSessionEntity?.(res.id);
+                        this._playerSearchQuery = "";
+                        this.requestUpdate();
+                      }}
+                      title="${localize("card.grouping.add_player") || "Add to session"}"
+                    >
+                      <ha-icon
+                        icon="mdi:plus"
+                        style="--mdc-icon-size: 16px; width: 16px; height: 16px;"
+                      ></ha-icon>
+                      <span>${localize("card.grouping.add") || "Add"}</span>
+                    </button>
+                  </div>
+                `
+              )
+        }
+      </div>
+    `;
+  };
+
+  if (groupPlayerIds.length === 0) {
+    return html`
+      ${
+        this.config?.show_player_search
+          ? html`
+              <div
+                class="entity-options-header grouping-header group-list-header"
+                style="padding-bottom: 12px;"
+              >
+                ${renderPlayerSearchRow()}
+              </div>
+              ${renderPlayerSearchResults()}
+            `
+          : html`
+              <div class="entity-options-header">
+                ${
+                  this._cardType !== "group_players" && this._cardType !== "remote_control"
+                    ? html`
+                        <button
+                          class="entity-options-item close-item"
+                          @click=${() => {
+                            if (this._quickMenuInvoke) {
+                              this._dismissWithAnimation();
+                            } else {
+                              this._closeGrouping();
+                            }
+                          }}
+                        >
+                          ${localize("common.back")}
+                        </button>
+                      `
+                    : nothing
+                }
+                <div class="entity-options-divider"></div>
+              </div>
+            `
+      }
       <div class="entity-options-item" style="padding:12px; opacity:0.75; text-align:center;">
         ${localize("card.grouping.no_players")}
       </div>
@@ -892,28 +953,41 @@ export function renderGroupingSheet() {
   };
 
   return html`
-    <div class="entity-options-header grouping-header group-list-header">
-      ${
-        this._cardType !== "group_players" && this._cardType !== "remote_control"
-          ? html`
-              <button
-                class="entity-options-item close-item"
-                @click=${() => {
-                  if (this._quickMenuInvoke) {
-                    this._dismissWithAnimation();
-                  } else {
-                    this._closeGrouping();
-                  }
-                }}
-              >
-                ${localize("common.back")}
-              </button>
-            `
-          : nothing
-      }
-      <div class="entity-options-divider"></div>
-    </div>
-    ${renderPlayerSearch()}
+    ${
+      this.config?.show_player_search
+        ? html`
+            <div
+              class="entity-options-header grouping-header group-list-header"
+              style="padding-bottom: 12px;"
+            >
+              ${renderPlayerSearchRow()}
+            </div>
+            ${renderPlayerSearchResults()}
+          `
+        : html`
+            <div class="entity-options-header grouping-header group-list-header">
+              ${
+                this._cardType !== "group_players" && this._cardType !== "remote_control"
+                  ? html`
+                      <button
+                        class="entity-options-item close-item"
+                        @click=${() => {
+                          if (this._quickMenuInvoke) {
+                            this._dismissWithAnimation();
+                          } else {
+                            this._closeGrouping();
+                          }
+                        }}
+                      >
+                        ${localize("common.back")}
+                      </button>
+                    `
+                  : nothing
+              }
+              <div class="entity-options-divider"></div>
+            </div>
+          `
+    }
     <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
       ${
         groupedAny
