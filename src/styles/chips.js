@@ -392,6 +392,23 @@ export const chipStyles = css`
     height: 1px;
   }
 
+  .chip-transient-marker {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-left: 6px;
+    opacity: 0.6;
+    pointer-events: none;
+  }
+
+  .chip-transient-marker ha-icon {
+    --mdc-icon-size: 13px;
+    width: 13px;
+    height: 13px;
+    font-size: 13px;
+    margin: 0;
+  }
+
   /* Group icon */
   .chip-icon.group-icon {
     background: var(--custom-accent);

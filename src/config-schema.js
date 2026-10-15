@@ -192,6 +192,9 @@ export const CARD_CONFIG_DEFAULTS = Object.freeze({
   lyrics_background_fade: DEFAULT_LYRICS_BACKGROUND_FADE,
   lock_screen_controls: false,
   full_screen: false,
+  show_player_search: false,
+  auto_add_playing_entities: false,
+  auto_add_exclude: [],
 });
 
 /**

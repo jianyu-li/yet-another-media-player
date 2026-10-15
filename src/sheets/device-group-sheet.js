@@ -1,6 +1,6 @@
 import { html, nothing } from "lit";
 import { localize } from "../localize/localize.js";
-import { getEntityName } from "../yamp-utils.js";
+import { getEntityName, searchMediaPlayers } from "../yamp-utils.js";
 
 /**
  * Render the Speaker Grouping / Multi-room sheet.
@@ -50,6 +50,123 @@ export function renderGroupingSheet() {
   const activeGroupKey = this._getGroupKey(activeId);
   const activeIsBusy = activeGroupKey !== activeId;
 
+  const renderPlayerSearch = () => {
+    if (!this.config?.show_player_search) return nothing;
+    const query = this._playerSearchQuery || "";
+    const covered =
+      typeof this._getCoveredEntityIds === "function"
+        ? this._getCoveredEntityIds()
+        : new Set(this.entityIds || []);
+    const exclude = this.config?.auto_add_exclude || [];
+    const searchResults = query.trim()
+      ? searchMediaPlayers(this.hass?.states, query, covered, exclude)
+      : [];
+
+    return html`
+      <div class="entity-options-search-row" style="margin-bottom: 12px;">
+        <div
+          class="search-input-wrapper"
+          style="position: relative; display: flex; align-items: center; width: 100%;"
+        >
+          <input
+            type="text"
+            class="entity-options-search-input"
+            .value=${query}
+            @input=${(e) => {
+              this._playerSearchQuery = e.target.value;
+              this.requestUpdate();
+            }}
+            placeholder="${localize("card.grouping.search_players") || "Search players to add..."}"
+          />
+          ${
+            query
+              ? html`
+                  <button
+                    type="button"
+                    style="position: absolute; right: 8px; background: none; border: none; cursor: pointer; color: inherit; opacity: 0.6; display: flex; align-items: center; padding: 2px;"
+                    @click=${() => {
+                      this._playerSearchQuery = "";
+                      this.requestUpdate();
+                    }}
+                  >
+                    <ha-icon
+                      icon="mdi:close"
+                      style="--mdc-icon-size: 18px; width: 18px; height: 18px;"
+                    ></ha-icon>
+                  </button>
+                `
+              : nothing
+          }
+        </div>
+      </div>
+      ${
+        query.trim()
+          ? html`
+              <div style="margin-bottom: 12px; display: flex; flex-direction: column; gap: 4px;">
+                ${
+                  searchResults.length === 0
+                    ? html`
+                        <div
+                          class="entity-options-item"
+                          style="padding: 10px; opacity: 0.6; text-align: center;"
+                        >
+                          ${localize("card.grouping.no_search_results") || "No matching players found"}
+                        </div>
+                      `
+                    : searchResults.map(
+                        (res) => html`
+                          <div
+                            class="entity-options-item"
+                            style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px;"
+                          >
+                            <div
+                              style="display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1;"
+                            >
+                              <ha-icon
+                                .icon=${res.icon}
+                                style="--mdc-icon-size: 20px; width: 20px; height: 20px; opacity: 0.8;"
+                              ></ha-icon>
+                              <div
+                                style="display: flex; flex-direction: column; min-width: 0; overflow: hidden;"
+                              >
+                                <span
+                                  style="font-weight: 500; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;"
+                                  >${res.name}</span
+                                >
+                                <span
+                                  style="font-size: 11px; opacity: 0.6; text-transform: capitalize;"
+                                  >${res.state}</span
+                                >
+                              </div>
+                            </div>
+                            <button
+                              type="button"
+                              class="entity-options-item"
+                              style="padding: 4px 10px; font-size: 12px; display: flex; align-items: center; gap: 4px; border-radius: 6px; cursor: pointer;"
+                              @click=${() => {
+                                this._addSessionEntity?.(res.id);
+                                this._playerSearchQuery = "";
+                                this.requestUpdate();
+                              }}
+                              title="${localize("card.grouping.add_player") || "Add to session"}"
+                            >
+                              <ha-icon
+                                icon="mdi:plus"
+                                style="--mdc-icon-size: 16px; width: 16px; height: 16px;"
+                              ></ha-icon>
+                              <span>${localize("card.grouping.add") || "Add"}</span>
+                            </button>
+                          </div>
+                        `
+                      )
+                }
+              </div>
+            `
+          : nothing
+      }
+    `;
+  };
+
   if (groupPlayerIds.length === 0) {
     return html`
       <div class="entity-options-header">
@@ -73,7 +190,7 @@ export function renderGroupingSheet() {
         }
         <div class="entity-options-divider"></div>
       </div>
-      ${nothing}
+      ${renderPlayerSearch()}
       <div class="entity-options-item" style="padding:12px; opacity:0.75; text-align:center;">
         ${localize("card.grouping.no_players")}
       </div>
@@ -474,6 +591,9 @@ export function renderGroupingSheet() {
       icon: isMultiSpeakerGroup ? "mdi:speaker-multiple" : "mdi:music",
     };
 
+    const entityObj = entityIdx >= 0 ? this.entityObjs?.[entityIdx] : null;
+    const transient = entityObj?.transient;
+
     if (isGridMode) {
       const isDisabled = isToggleDisabled;
 
@@ -484,6 +604,39 @@ export function renderGroupingSheet() {
           }"
           style="position: relative;"
         >
+          ${
+            transient === "session"
+              ? html`
+                  <button
+                    type="button"
+                    class="grid-menu-transfer-btn"
+                    style="left: 6px; right: auto;"
+                    @click=${(e) => {
+                      e.stopPropagation();
+                      this._removeSessionEntity?.(id);
+                    }}
+                    title="${localize("card.grouping.remove_player") || "Remove from session"}"
+                  >
+                    <ha-icon icon="mdi:close"></ha-icon>
+                  </button>
+                `
+              : transient === "auto"
+                ? html`
+                    <button
+                      type="button"
+                      class="grid-menu-transfer-btn"
+                      style="left: 6px; right: auto;"
+                      @click=${(e) => {
+                        e.stopPropagation();
+                        this._promoteAutoToSession?.(id);
+                      }}
+                      title="${localize("card.grouping.keep_player") || "Keep in session"}"
+                    >
+                      <ha-icon icon="mdi:pin-outline"></ha-icon>
+                    </button>
+                  `
+                : nothing
+          }
           ${
             hasMaTransferService && !isInsideGroup
               ? html`
@@ -536,7 +689,29 @@ export function renderGroupingSheet() {
               class="menu-action-icon"
               icon=${isGroupActive && groupedAny ? "mdi:speaker-multiple" : "mdi:speaker"}
             ></ha-icon>
-            <span class="menu-action-label">${name}</span>
+            <span
+              class="menu-action-label"
+              style="display:inline-flex;align-items:center;justify-content:center;gap:4px;"
+            >
+              <span>${name}</span>
+              ${
+                transient
+                  ? html`<ha-icon
+                      icon=${
+                        transient === "session"
+                          ? "mdi:magnify-plus-outline"
+                          : "mdi:play-circle-outline"
+                      }
+                      style="--mdc-icon-size: 13px; width: 13px; height: 13px; opacity: 0.6;"
+                      title="${
+                        transient === "session"
+                          ? localize("card.grouping.transient_session") || "Session Player"
+                          : localize("card.grouping.transient_auto") || "Playing Player"
+                      }"
+                    ></ha-icon>`
+                  : nothing
+              }
+            </span>
           </div>
         </div>
       `;
@@ -579,7 +754,26 @@ export function renderGroupingSheet() {
           }
           style="flex:0.7; min-width:84px; cursor:${entityIdx >= 0 ? "pointer" : "default"};"
         >
-          <div style="text-align:left;">${name}</div>
+          <div style="text-align:left;display:flex;align-items:center;gap:4px;">
+            <span>${name}</span>
+            ${
+              transient
+                ? html`<ha-icon
+                    icon=${
+                      transient === "session"
+                        ? "mdi:magnify-plus-outline"
+                        : "mdi:play-circle-outline"
+                    }
+                    style="--mdc-icon-size: 13px; width: 13px; height: 13px; opacity: 0.6;"
+                    title="${
+                      transient === "session"
+                        ? localize("card.grouping.transient_session") || "Session Player"
+                        : localize("card.grouping.transient_auto") || "Playing Player"
+                    }"
+                  ></ha-icon>`
+                : nothing
+            }
+          </div>
           <div style="font-size:0.8em; opacity:0.7; text-align:left;">${stateLabel}</div>
         </div>
         <div
@@ -698,6 +892,31 @@ export function renderGroupingSheet() {
                 style="margin-left:2px;margin-right:10px;width:32px;display:inline-block;"
               ></span>`
         }
+        ${
+          transient === "session"
+            ? html`
+                <button
+                  class="group-toggle-btn"
+                  @click=${() => this._removeSessionEntity?.(id)}
+                  title="${localize("card.grouping.remove_player") || "Remove from session"}"
+                  style="margin-left:2px;opacity:0.7;"
+                >
+                  <ha-icon icon="mdi:close"></ha-icon>
+                </button>
+              `
+            : transient === "auto"
+              ? html`
+                  <button
+                    class="group-toggle-btn"
+                    @click=${() => this._promoteAutoToSession?.(id)}
+                    title="${localize("card.grouping.keep_player") || "Keep in session"}"
+                    style="margin-left:2px;opacity:0.7;"
+                  >
+                    <ha-icon icon="mdi:pin-outline"></ha-icon>
+                  </button>
+                `
+              : nothing
+        }
       </div>
     `;
   };
@@ -724,7 +943,7 @@ export function renderGroupingSheet() {
       }
       <div class="entity-options-divider"></div>
     </div>
-    ${nothing}
+    ${renderPlayerSearch()}
     <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
       ${
         groupedAny

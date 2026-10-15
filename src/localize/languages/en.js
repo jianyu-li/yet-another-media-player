@@ -111,6 +111,10 @@ export default {
         description:
           "Add the media players you want to control. Drag entities to reorder the chip row.",
       },
+      transient_players: {
+        title: "Dynamic & Session Players",
+        description: "Options for searching and dynamically including media players at runtime.",
+      },
       behavior: {
         idle_chips: {
           title: "Idle & Chips",
@@ -158,6 +162,12 @@ export default {
         "Quick grouping controls (+/-/star) will be visible by default on page load. You can still toggle it manually via double-tap.",
       disable_autofocus:
         "Keep the search box from stealing focus so on-screen keyboards stay hidden.",
+      show_player_search:
+        "Allow searching and adding unconfigured media players to the card for the session.",
+      auto_add_playing_entities:
+        "Display unconfigured players when they begin playing, and remove them once the card goes idle.",
+      auto_add_exclude:
+        "Comma-separated entity IDs or glob patterns (e.g. media_player.*_tv) to exclude from search and auto-add.",
       search_within_filter:
         "Enable this to search within the current active filter (Favorites, Recently Played, etc) instead of clearing it.",
       close_search_on_play: "Automatically close the search screen when a track is played.",
@@ -266,6 +276,9 @@ export default {
       hold_to_pin: "Hold to Pin",
       always_show_group: "Quick Group by Default",
       disable_autofocus: "Disable Search Autofocus",
+      show_player_search: "Show search in Players menu",
+      auto_add_playing_entities: "Auto-add playing players until idle",
+      auto_add_exclude: "Exclude from search and auto-add",
       keep_filters: "Keep Filters on Search",
       dismiss_on_play: "Dismiss search on play",
       pin_headers: "Pin search headers",
@@ -547,6 +560,14 @@ export default {
       regrouping: "Regrouping speakers with {player}...",
       transfer_success: "Queue sent to {player}.",
       standalone: "Standalone",
+      search_players: "Search players to add...",
+      add_player: "Add to session",
+      add: "Add",
+      remove_player: "Remove from session",
+      keep_player: "Keep in session",
+      no_search_results: "No matching players found",
+      transient_session: "Session Player",
+      transient_auto: "Playing Player",
     },
   },
   search: {

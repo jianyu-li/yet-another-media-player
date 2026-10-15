@@ -252,6 +252,7 @@ export interface YampEntityConfig {
   hide_remote_buttons?: string[] | string;
   hidden_menu_options?: string[] | string;
   hide_menu_options?: string[] | string;
+  transient?: "session" | "auto";
 }
 
 export type YampEntityEntry = string | YampEntityConfig;
@@ -320,6 +321,9 @@ export interface YampCardConfig {
   lyrics_background_fade?: number | string;
   lock_screen_controls?: boolean | string;
   full_screen?: boolean | string;
+  show_player_search?: boolean;
+  auto_add_playing_entities?: boolean;
+  auto_add_exclude?: string[];
   [key: string]: any;
 }
 
@@ -746,6 +750,13 @@ export interface YetAnotherMediaPlayerCard {
   _exitFullScreen?: () => void;
   _cachedEntityIds?: string[] | null;
   _cachedEntityObjs?: any[] | null;
+  _sessionEntities?: string[];
+  _autoEntities?: string[];
+  _playerSearchQuery?: string;
+  _setTransientEntities?: (options?: { session?: string[]; auto?: string[] }) => void;
+  _addSessionEntity?: (id: string) => void;
+  _removeSessionEntity?: (id: string) => void;
+  _promoteAutoToSession?: (id: string) => void;
   _actionHelperEntities?: string[] | null;
   _jsTemplateEntities?: string[] | null;
   _handleVisibilityChangeBound?: () => void;

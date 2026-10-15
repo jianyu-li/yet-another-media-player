@@ -82,7 +82,8 @@ import {
   isValidArtworkUrl,
   getEntityName,
   areEntitiesPlayingSameMedia,
-  isPlaceholderMediaTitle
+  isPlaceholderMediaTitle,
+  findPlayingUnconfiguredPlayers
 } from "./yamp-utils.js";
 import { localize, setHassLanguage } from "./localize/localize.js";
 
@@ -457,8 +458,8 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     return minWide || controls <= 5;
   }
   _isAutoSelectDisabled(idx) {
-    const conf = this.config.entities[idx];
-    return typeof conf === "string" ? false : !!conf.disable_auto_select;
+    const conf = this._effectiveEntities[idx];
+    return typeof conf === "string" ? false : !!conf?.disable_auto_select;
   }
 
   get sortedEntityIds() {
@@ -555,6 +556,9 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     _dragVolume: { state: true },
     _mediaSessionOverride: { state: true },
     _fullScreenOverride: { state: true },
+    _sessionEntities: { state: true },
+    _autoEntities: { state: true },
+    _playerSearchQuery: { state: true },
     _renderTick: { state: true }
   };
 
@@ -700,6 +704,13 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         if (currentStates[id] !== oldStates[id]) {
           return true;
         }
+      }
+    }
+
+    // Check auto-added playing entities if feature is enabled
+    if (this.config?.auto_add_playing_entities && !this._isEditorPreview) {
+      if (this._discoverAutoEntities(oldHass)) {
+        return true;
       }
     }
 
@@ -907,10 +918,18 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._fullScreenOverride = null;
     this._handleKeyDownBound = this._handleKeyDown.bind(this);
     this._handleVisibilityChangeBound = this._handleVisibilityChange.bind(this);
+    /** @type {any[] | null} */
+    this._cachedEffectiveEntities = null;
     /** @type {string[] | null} */
     this._cachedEntityIds = null;
     /** @type {any[] | null} */
     this._cachedEntityObjs = null;
+    /** @type {string[]} */
+    this._sessionEntities = [];
+    /** @type {string[]} */
+    this._autoEntities = [];
+    /** @type {string} */
+    this._playerSearchQuery = "";
     /** @type {string[] | null} */
     this._actionHelperEntities = null;
     /** @type {string[] | null} */
@@ -4658,6 +4677,26 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       this._setIdleState(false);
       this._showRemoteControl = true;
     }
+    const configuredSet = new Set(
+      (config.entities || []).map((e) =>
+        typeof e === "string" ? e : e?.entity_id
+      )
+    );
+    if (this._sessionEntities?.length) {
+      this._sessionEntities = this._sessionEntities.filter(
+        (id) => !configuredSet.has(id)
+      );
+    }
+    if (this._autoEntities?.length) {
+      if (!config.auto_add_playing_entities) {
+        this._autoEntities = [];
+      } else {
+        this._autoEntities = this._autoEntities.filter(
+          (id) => !configuredSet.has(id)
+        );
+      }
+    }
+    this._cachedEffectiveEntities = null;
     this._cachedEntityIds = null;
     this._cachedEntityObjs = null;
 
@@ -4826,7 +4865,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     if (this._cachedEntityObjs) {
       return this._cachedEntityObjs;
     }
-    const entities = this.config?.entities || [];
+    const entities = this._effectiveEntities;
     const configEntityIds = this.entityIds;
     this._cachedEntityObjs = entities.map((e, index) => {
       const entity_id = typeof e === "string" ? e : e.entity_id;
@@ -4837,6 +4876,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       const sync_power = typeof e === "string" ? false : !!e.sync_power;
       const follow_active_volume = typeof e === "string" ? false : !!e.follow_active_volume;
       const hidden_controls = typeof e === "string" ? undefined : e.hidden_controls;
+      const transient = typeof e === "string" ? undefined : e.transient;
       let group_volume;
 
       if (typeof e === "object" && typeof e.group_volume !== "undefined") {
@@ -4870,6 +4910,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         hide_menu_options: typeof e === "string" ? undefined : (e.hidden_menu_options ?? e.hide_menu_options),
         disable_auto_select: this._isAutoSelectDisabled(index),
         prefer_ma_metadata: typeof e === "string" ? false : !!e.prefer_ma_metadata,
+        ...(transient ? { transient } : {}),
         ...(typeof group_volume !== "undefined" ? { group_volume } : {}),
         ...(entity_volume_mode ? { entity_volume_mode } : {}),
         ...(typeof entity_volume_step === "number" ? { entity_volume_step } : {})
@@ -5320,9 +5361,190 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     return masterEntityId || masterGroupingId;
   }
 
+  _getCoveredEntityIds() {
+    const covered = new Set();
+    const configured = this.config?.entities || [];
+    for (const e of configured) {
+      const id = typeof e === "string" ? e : e?.entity_id;
+      if (id) covered.add(id);
+    }
+    for (const id of this._sessionEntities || []) {
+      covered.add(id);
+    }
+    for (const id of Array.from(covered)) {
+      const st = this.hass?.states?.[id];
+      if (st?.attributes?.group_members && Array.isArray(st.attributes.group_members)) {
+        for (const m of st.attributes.group_members) {
+          covered.add(m);
+        }
+      }
+    }
+    if (this._cachedEntityObjs) {
+      for (const obj of this._cachedEntityObjs) {
+        if (obj?.music_assistant_entity) covered.add(obj.music_assistant_entity);
+        if (obj?.volume_entity) covered.add(obj.volume_entity);
+      }
+    }
+    return covered;
+  }
+
+  /**
+   * @param {{ session?: string[], auto?: string[] }} [options]
+   */
+  _setTransientEntities({ session = undefined, auto = undefined } = {}) {
+    const prevSelectedId = this.currentEntityId;
+    const prevPinnedId =
+      this._pinnedIndex !== null ? this.entityIds[this._pinnedIndex] : null;
+
+    if (session !== undefined) this._sessionEntities = session;
+    if (auto !== undefined) this._autoEntities = auto;
+
+    this._cachedEffectiveEntities = null;
+    this._cachedEntityIds = null;
+    this._cachedEntityObjs = null;
+
+    this._pruneTransientIndexState();
+
+    const newIds = this.entityIds;
+    if (prevSelectedId && newIds.includes(prevSelectedId)) {
+      this._selectedIndex = newIds.indexOf(prevSelectedId);
+    } else if (this._selectedIndex >= newIds.length) {
+      this._selectedIndex = 0;
+    }
+
+    if (prevPinnedId && newIds.includes(prevPinnedId)) {
+      this._pinnedIndex = newIds.indexOf(prevPinnedId);
+    } else if (this._pinnedIndex !== null && !newIds.includes(prevPinnedId)) {
+      this._pinnedIndex = null;
+    }
+
+    this.requestUpdate();
+  }
+
+  _pruneTransientIndexState() {
+    const maxLen = this.entityIds.length;
+    const pruneObj = (obj) => {
+      if (!obj || typeof obj !== "object") return;
+      for (const k of Object.keys(obj)) {
+        const idx = Number(k);
+        if (!isNaN(idx) && idx >= maxLen) {
+          delete obj[k];
+        }
+      }
+    };
+    pruneObj(this._playbackLingerByIdx);
+    pruneObj(this._lastActiveEntityIdByChip);
+    pruneObj(this._manualActiveEntityByChip);
+    pruneObj(this._lastResolvedEntityIdByChip);
+    pruneObj(this._lastPlayingEntityIdByChip);
+  }
+
+  _addSessionEntity(id) {
+    if (!id || typeof id !== "string") return;
+    const currentSession = this._sessionEntities || [];
+    if (currentSession.includes(id)) return;
+    const currentAuto = (this._autoEntities || []).filter((aId) => aId !== id);
+    this._setTransientEntities({
+      session: [...currentSession, id],
+      auto: currentAuto,
+    });
+  }
+
+  _removeSessionEntity(id) {
+    if (!id || typeof id !== "string") return;
+    const currentSession = (this._sessionEntities || []).filter((sId) => sId !== id);
+    const currentAuto = (this._autoEntities || []).filter((aId) => aId !== id);
+    this._setTransientEntities({
+      session: currentSession,
+      auto: currentAuto,
+    });
+  }
+
+  _promoteAutoToSession(id) {
+    if (!id || typeof id !== "string") return;
+    this._addSessionEntity(id);
+  }
+
+  _discoverAutoEntities(oldHass) {
+    if (!this.hass?.states) return false;
+    const currentStates = this.hass.states;
+    const oldStates = oldHass?.states;
+
+    if (oldStates) {
+      let anyChanged = false;
+      for (const id in currentStates) {
+        if (id.startsWith("media_player.") && currentStates[id] !== oldStates[id]) {
+          anyChanged = true;
+          break;
+        }
+      }
+      if (!anyChanged) {
+        for (const autoId of this._autoEntities || []) {
+          if (!currentStates[autoId]) {
+            anyChanged = true;
+            break;
+          }
+        }
+      }
+      if (!anyChanged) return false;
+    }
+
+    const covered = this._getCoveredEntityIds();
+    const excludePatterns = this.config?.auto_add_exclude || [];
+    const playingNew = findPlayingUnconfiguredPlayers(currentStates, covered, excludePatterns);
+
+    let changed = false;
+    const currentAuto = [...(this._autoEntities || [])];
+    const validAuto = currentAuto.filter((id) => {
+      const st = currentStates[id];
+      return st && st.state !== "unavailable" && st.state !== "unknown";
+    });
+    if (validAuto.length !== currentAuto.length) {
+      changed = true;
+    }
+
+    const autoSet = new Set(validAuto);
+    for (const id of playingNew) {
+      if (!autoSet.has(id)) {
+        validAuto.push(id);
+        autoSet.add(id);
+        changed = true;
+      }
+    }
+
+    if (changed) {
+      this._setTransientEntities({ auto: validAuto });
+      return true;
+    }
+    return false;
+  }
+
+  get _effectiveEntities() {
+    if (!this._cachedEffectiveEntities) {
+      const configured = this.config?.entities || [];
+      const seen = new Set(
+        configured.map((e) => (typeof e === "string" ? e : e?.entity_id))
+      );
+      const extras = [];
+      for (const [list, kind] of [
+        [this._sessionEntities, "session"],
+        [this._autoEntities, "auto"],
+      ]) {
+        for (const id of list || []) {
+          if (id && !seen.has(id)) {
+            seen.add(id);
+            extras.push({ entity_id: id, transient: kind });
+          }
+        }
+      }
+      this._cachedEffectiveEntities = [...configured, ...extras];
+    }
+    return this._cachedEffectiveEntities;
+  }
+
   get entityIds() {
     if (!this._cachedEntityIds) {
-      this._cachedEntityIds = (this.config?.entities || []).map(e =>
+      this._cachedEntityIds = this._effectiveEntities.map((e) =>
         typeof e === "string" ? e : e.entity_id
       );
     }
@@ -5590,6 +5812,9 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         const playbackState = this.hass?.states?.[playbackEntityId];
         return playbackEntityId === this._resolveEntity(entityObj.music_assistant_entity, entityObj.entity_id, idx) &&
           this._isEntityPlaying(playbackState);
+      },
+      getChipTransient: (id) => {
+        return this.entityObjs.find((e) => e.entity_id === id)?.transient;
       },
       isIdle: this._isIdle,
       hass: this.hass,
@@ -7989,7 +8214,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       delete this._playbackLingerByIdx[idx];
     }
     // Only clear linger if main entity is playing AND MA entity is not the last controlled entity
-    const maEntityId = this.config.entities[idx]?.music_assistant_entity;
+    const maEntityId = this._effectiveEntities[idx]?.music_assistant_entity;
     const currentResolvedMaId = this._getEntityForPurpose(idx, 'ma_resolve');
     const lastControlled = this._lastPlayingEntityIdByChip?.[idx];
     const cachedResolvedMaId = this._maResolveCache?.[idx]?.id;
@@ -9323,6 +9548,9 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       return;
     }
 
+    if (this._autoEntities?.length) {
+      this._setTransientEntities({ auto: [] });
+    }
     this._setIdleState(true);
     this._idleScreenApplied = false;
     this._applyIdleScreen();
@@ -10181,6 +10409,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   _closeGrouping() {
     if (this._cardType === "group_players") return;
     this._showGrouping = false;
+    this._playerSearchQuery = "";
     this._transferQueuePendingTarget = null;
     this._transferQueueStatus = null;
     this._justSelectedGroupingEntityId = null;

@@ -21,9 +21,10 @@ This document provides a comprehensive structural mapping of subsystems, state l
 | **Sheets & Overlays** | [`src/sheets/`](../src/sheets/) | `renderMainMenu`, `renderOptionsOverlay`, `renderGroupingSheet`, `renderTransferQueueSheet`, `renderResolvedEntitiesSheet`, `renderSearchInOptions`, `renderSourceListSheet`, `renderRemoteControlSheet` | Modular sheet and overlay renderers for options menu, source selector, speaker grouping/transfer, options search, and remote control. |
 | **Queue & Drag-and-Drop** | [`src/controllers/queue-controller.js`](../src/controllers/queue-controller.js), [`src/yamp-queue-drag.js`](../src/yamp-queue-drag.js), [`src/yamp-sortable.js`](../src/yamp-sortable.js) | `QueueController`, `QueueDragMixin`, `initSortable` | Reactive Lit controller managing Music Assistant queue operations, optimistic reordering, drag-and-drop planning, transfer queue overlays, and virtualized queue list. |
 | **Lock Screen & Media Session** | [`src/yamp-media-session.js`](../src/yamp-media-session.js) | `YampMediaSessionManager`, `updateMetadata`, `updatePlaybackState`, `destroy` | Web Media Session API integration and audio loop for OS lock screen and control center integration. |
+| **Dynamic & Session Players** | [`src/yet-another-media-player.js`](../src/yet-another-media-player.js), [`src/sheets/device-group-sheet.js`](../src/sheets/device-group-sheet.js), [`src/yamp-utils.js`](../src/yamp-utils.js) | `_effectiveEntities`, `_sessionEntities`, `_autoEntities`, `findPlayingUnconfiguredPlayers`, `searchMediaPlayers` | Session-based ad-hoc player injection from the grouping menu search, dynamic auto-adding of playing players with Music Assistant deduplication, idle cleanup, and transient chip indicators. |
 | **Card Editor** | [`src/yamp-editor.js`](../src/yamp-editor.js), [`src/editor/`](../src/editor/) | `render`, `renderEntitiesTab`, `renderArtworkTab`, `renderBehaviorTab`, `renderVisualTab`, `renderActionsTab` | Visual configuration editor with tabbed settings, searchable options, and modular tab renderers (`src/editor/tabs/`). |
 | **Styles** | [`src/styles/`](../src/styles/), [`src/yamp-card-styles.js`](../src/yamp-card-styles.js) | `yampCardStyles`, `baseCardStyles`, `chipStyles`, `controlsStyles`, `volumeProgressStyles`, `menusSheetsStyles`, `searchSheetStyles`, `lyricsStyles`, `editorStyles` | Modular CSS stylesheets for card container, chips, controls, volume/progress, menus/sheets, search sheets, lyrics, and editor. |
-| **Automated Unit Testing** | [`tests/`](../tests/) | `node:test`, `node:assert/strict` | Pure logic testing suite covering lyrics parser, config schema, yamp-utils, template engine sandbox, and multi-entity artwork fallback. |
+| **Automated Unit Testing** | [`tests/`](../tests/) | `node:test`, `node:assert/strict` | Pure logic testing suite covering lyrics parser, config schema, yamp-utils, template engine sandbox, multi-entity artwork fallback, and transient entities logic. |
 
 ---
 
@@ -56,6 +57,16 @@ flowchart TD
    When falling back from a preferred metadata source to the physical playback entity, `media_title` MUST match. If titles differ, fallback is blocked to prevent stale artwork leaks.
 3. **Idle Artwork:**
    If `show_idle_artwork_when_not_playing` is true, the card presents the configured idle artwork on a per-chip basis when that entity is not playing.
+
+### 2.4 Dynamic & Session Players Lifecycle
+1. **Effective Entities Resolution:**
+   The card exposes `_effectiveEntities = [...configured, ...session, ...auto]`. Getters `entityIds` and `entityObjs` wrap `_effectiveEntities`, cleanly extending grouping, playback controls, volume, and chip rows to runtime players without mutating the persisted configuration.
+2. **Session Players:**
+   Users can search all Home Assistant `media_player` entities from the Grouping sheet and temporarily add them to the card session. Session players persist in memory until page reload, tab closure, or explicit removal via the `mdi:close` action in the Grouping sheet.
+3. **Auto-Added Playing Players:**
+   When `auto_add_playing_entities` is enabled, newly playing media players not in the card (and not matched by `auto_add_exclude`) are automatically surfaced as temporary players. Physical players are deduplicated if their Music Assistant twin is already active or covered. When the card reaches its idle timeout callback, auto-added entities are automatically pruned. Users can promote an auto-added player to a session entity via the "Keep" (`mdi:pin-outline`) action.
+4. **Transient Chip & Row Badging:**
+   Dynamic players display subtle indicators in the pin spacer slot: `mdi:magnify-plus-outline` for session entities and `mdi:play-circle-outline` for auto-discovered entities.
 
 ---
 

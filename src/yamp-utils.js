@@ -1020,3 +1020,188 @@ export function resolveSelectedArtwork({
 
   return selectedArt || (metadataArtwork?.url ? metadataArtwork : null);
 }
+
+/**
+ * Test whether an entity ID matches any pattern in a list of glob patterns or exact IDs.
+ * Supports '*' wildcard, case-insensitive.
+ * @param {string} entityId
+ * @param {string[] | string} [patterns]
+ * @returns {boolean}
+ */
+export function matchesEntityPattern(entityId, patterns) {
+  if (!entityId || !patterns) return false;
+  const list = Array.isArray(patterns)
+    ? patterns
+    : typeof patterns === "string"
+      ? patterns.split(",").map((s) => s.trim())
+      : [];
+  if (list.length === 0) return false;
+
+  const target = entityId.trim().toLowerCase();
+  for (const raw of list) {
+    if (!raw || typeof raw !== "string") continue;
+    const p = raw.trim().toLowerCase();
+    if (!p) continue;
+    if (p === target) return true;
+    if (p.includes("*")) {
+      const regexStr =
+        "^" +
+        p
+          .split("*")
+          .map((s) => s.replace(/[-[\]{}()+?.,\\^$|#\s]/g, "\\$&"))
+          .join(".*") +
+        "$";
+      try {
+        const re = new RegExp(regexStr);
+        if (re.test(target)) return true;
+      } catch {
+        // Ignore invalid pattern
+      }
+    }
+  }
+  return false;
+}
+
+/**
+ * Find playing media_player entities that are not covered on the card and not excluded.
+ * Implements MA duplicate deduplication: if an MA player and its physical counterpart
+ * are playing the exact same track title + artist, only the MA entity is returned.
+ * @param {Record<string, any>} states - hass.states object
+ * @param {Set<string> | string[]} coveredIds - IDs already configured, resolved, or grouped
+ * @param {string[] | string} [excludePatterns] - IDs or wildcard patterns to exclude
+ * @returns {string[]} Array of playing entity IDs
+ */
+export function findPlayingUnconfiguredPlayers(states, coveredIds, excludePatterns) {
+  if (!states || typeof states !== "object") return [];
+  const coveredSet = coveredIds instanceof Set ? coveredIds : new Set(coveredIds || []);
+
+  const candidates = [];
+  for (const [id, st] of Object.entries(states)) {
+    if (!id.startsWith("media_player.")) continue;
+    if (coveredSet.has(id)) continue;
+    if (!st || st.state !== "playing") continue;
+    if (matchesEntityPattern(id, excludePatterns)) continue;
+    candidates.push({ id, st });
+  }
+
+  if (candidates.length === 0) return [];
+
+  // Check if any candidate duplicates an already covered playing entity
+  const coveredPlayingTracks = [];
+  for (const id of coveredSet) {
+    const st = states[id];
+    if (st && st.state === "playing") {
+      const title = (st.attributes?.media_title || "").trim().toLowerCase();
+      const artist = (st.attributes?.media_artist || "").trim().toLowerCase();
+      if (title && artist) {
+        coveredPlayingTracks.push({
+          id,
+          title,
+          artist,
+          isMa: isMusicAssistantEntity(st),
+        });
+      }
+    }
+  }
+
+  const filtered = [];
+  for (const c of candidates) {
+    const title = (c.st.attributes?.media_title || "").trim().toLowerCase();
+    const artist = (c.st.attributes?.media_artist || "").trim().toLowerCase();
+
+    if (title && artist && coveredPlayingTracks.length > 0) {
+      const match = coveredPlayingTracks.find((cp) => cp.title === title && cp.artist === artist);
+      if (match) {
+        continue;
+      }
+    }
+    filtered.push(c);
+  }
+
+  // Deduplicate between candidates themselves by title + artist
+  const groups = new Map();
+  const result = [];
+
+  for (const c of filtered) {
+    const title = (c.st.attributes?.media_title || "").trim().toLowerCase();
+    const artist = (c.st.attributes?.media_artist || "").trim().toLowerCase();
+    if (!title || !artist) {
+      result.push(c.id);
+      continue;
+    }
+    const key = `${title}:::${artist}`;
+    if (!groups.has(key)) {
+      groups.set(key, []);
+    }
+    groups.get(key).push(c);
+  }
+
+  for (const [, group] of groups.entries()) {
+    if (group.length === 1) {
+      result.push(group[0].id);
+      continue;
+    }
+    const maItem = group.find((c) => isMusicAssistantEntity(c.st));
+    const nonMaItem = group.find((c) => !isMusicAssistantEntity(c.st));
+    if (maItem && nonMaItem) {
+      result.push(maItem.id);
+      for (const item of group) {
+        if (item !== maItem && item !== nonMaItem && isMusicAssistantEntity(item.st)) {
+          result.push(item.id);
+        }
+      }
+    } else {
+      for (const item of group) {
+        result.push(item.id);
+      }
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Search media_player entities across Home Assistant states.
+ * @param {Record<string, any>} states
+ * @param {string} query
+ * @param {Set<string> | string[]} coveredIds
+ * @param {string[] | string} [excludePatterns]
+ * @param {number} [limit=8]
+ * @returns {Array<{ id: string, name: string, state: string, icon: string, isPlaying: boolean }>}
+ */
+export function searchMediaPlayers(states, query, coveredIds, excludePatterns, limit = 8) {
+  if (!states || typeof states !== "object") return [];
+  const coveredSet = coveredIds instanceof Set ? coveredIds : new Set(coveredIds || []);
+  const q = (query || "").trim().toLowerCase();
+
+  const results = [];
+  for (const [id, st] of Object.entries(states)) {
+    if (!id.startsWith("media_player.")) continue;
+    if (coveredSet.has(id)) continue;
+    if (!st || st.state === "unavailable" || st.state === "unknown") continue;
+    if (matchesEntityPattern(id, excludePatterns)) continue;
+
+    const friendlyName = st.attributes?.friendly_name || id;
+    const nameLower = friendlyName.toLowerCase();
+    const idLower = id.toLowerCase();
+
+    if (q) {
+      if (!nameLower.includes(q) && !idLower.includes(q)) continue;
+    }
+
+    results.push({
+      id,
+      name: friendlyName,
+      state: st.state,
+      icon: st.attributes?.icon || "mdi:cast",
+      isPlaying: st.state === "playing",
+    });
+  }
+
+  results.sort((a, b) => {
+    if (a.isPlaying !== b.isPlaying) return a.isPlaying ? -1 : 1;
+    return a.name.localeCompare(b.name);
+  });
+
+  return results.slice(0, limit);
+}
