@@ -1021,6 +1021,24 @@ export function resolveSelectedArtwork({
   return selectedArt || (metadataArtwork?.url ? metadataArtwork : null);
 }
 
+const _globRegexCache = new Map();
+
+function getCachedGlobRegex(globStr) {
+  let re = _globRegexCache.get(globStr);
+  if (!re) {
+    const escaped = globStr
+      .split("*")
+      .map((s) => s.replace(/[-[\]{}()+?.,\\^$|#\s]/g, "\\$&"))
+      .join(".*");
+    re = new RegExp("^" + escaped + "$");
+    if (_globRegexCache.size > 200) {
+      _globRegexCache.clear();
+    }
+    _globRegexCache.set(globStr, re);
+  }
+  return re;
+}
+
 /**
  * Test whether an entity ID or its friendly name matches any pattern in a list of glob patterns or exact IDs.
  * Supports '*' wildcard, case-insensitive, and matches against entityId and friendlyName.
@@ -1055,22 +1073,15 @@ export function matchesEntityPattern(entityId, patterns, friendlyName = "") {
 
     // 2. Wildcard glob matching
     if (p.includes("*")) {
-      const globToRegex = (globStr) => {
-        const escaped = globStr
-          .split("*")
-          .map((s) => s.replace(/[-[\]{}()+?.,\\^$|#\s]/g, "\\$&"))
-          .join(".*");
-        return new RegExp("^" + escaped + "$");
-      };
-
       try {
+        const re = getCachedGlobRegex(p);
         // Test entity ID
-        if (globToRegex(p).test(targetId)) return true;
+        if (re.test(targetId)) return true;
 
         // Test friendly name
         if (targetName) {
-          if (globToRegex(p).test(targetName)) return true;
-          if (pNoDomain && globToRegex(pNoDomain).test(targetName)) return true;
+          if (re.test(targetName)) return true;
+          if (pNoDomain && getCachedGlobRegex(pNoDomain).test(targetName)) return true;
           // If the pattern has a wildcard (e.g. media_player.*frame or *frame*),
           // also match if the friendly name contains the token (e.g. "Bedroom Frame TV" contains "frame")
           if (pNoDomain && pNoDomain.includes("*")) {

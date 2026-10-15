@@ -104,6 +104,11 @@ export default {
         description:
           "Dodajte predvajalnike, ki jih želite upravljati. Povlecite entitete za spremembo vrstnega reda.",
       },
+      transient_players: {
+        title: "Dinamični in sejni predvajalniki",
+        description:
+          "Možnosti za iskanje in dinamično vključevanje predstavnostnih predvajalnikov med sejo.",
+      },
       behavior: {
         idle_chips: {
           title: "Mirovanje in čipi",
@@ -148,6 +153,12 @@ export default {
       always_show_group:
         "Kontrolni elementi za hitro združevanje (+/-/zvezda) bodo privzeto vidni ob nalaganju strani. Še vedno jih lahko ročno preklopite z dvojnim tapom.",
       disable_autofocus: "Prepreči samodejni fokus iskalnega polja.",
+      show_player_search:
+        "Dovoli iskanje in dodajanje nenastavljenih predvajalnikov na kartico za trenutno sejo.",
+      auto_add_playing_entities:
+        "Prikaži nenastavljene predvajalnike, ko začnejo predvajati, in jih odstrani, ko kartica preide v mirovanje.",
+      auto_add_exclude:
+        "Z vejico ločeni ID-ji entitet ali vzorci z nadomestnimi znaki (npr. media_player.*_tv) za izključitev iz iskanja in samodejnega dodajanja.",
       search_within_filter: "Išči znotraj trenutnega filtra.",
       close_search_on_play: "Samodejno zapri iskanje ob predvajanju.",
       pin_search_headers: "Pripni iskalno polje in filtre na vrh.",
@@ -245,6 +256,9 @@ export default {
       hold_to_pin: "Drži za pripenjanje",
       always_show_group: "Hitro združevanje kot privzeto",
       disable_autofocus: "Onemogoči samodejni fokus",
+      show_player_search: "Prikaži iskanje v meniju Predvajalniki",
+      auto_add_playing_entities: "Samodejno dodaj predvajajoče predvajalnike do mirovanja",
+      auto_add_exclude: "Izključi iz iskanja in samodejnega dodajanja",
       keep_filters: "Ohrani filtre",
       dismiss_on_play: "Zapri iskanje ob predvajanju",
       pin_headers: "Pripni glave iskanja",
@@ -527,6 +541,14 @@ export default {
       regrouping: "Združevanje zvočnikov z {player}...",
       transfer_success: "Čakalna vrsta poslana v {player}.",
       standalone: "Samostojen",
+      search_players: "Poišči predvajalnike za dodajanje...",
+      add_player: "Dodaj v sejo",
+      add: "Dodaj",
+      remove_player: "Odstrani iz seje",
+      keep_player: "Obdrži v seji",
+      no_search_results: "Ni ujemajočih se predvajalnikov",
+      transient_session: "Sejni predvajalnik",
+      transient_auto: "Predvajajoči predvajalnik",
     },
   },
   search: {

@@ -104,6 +104,11 @@ export default {
         title: "Entità*",
         description: "Aggiungi i lettori da controllare.",
       },
+      transient_players: {
+        title: "Riproduttori dinamici e di sessione",
+        description:
+          "Opzioni per cercare e includere dinamicamente riproduttori multimediali durante la sessione.",
+      },
       behavior: {
         idle_chips: {
           title: "Riposo e chip",
@@ -146,6 +151,12 @@ export default {
       always_show_group:
         "I controlli di raggruppamento rapido (+/-/stella) saranno visibili per impostazione predefinita al caricamento della pagina. Puoi comunque attivarli manualmente tramite doppio tocco.",
       disable_autofocus: "Evita che la ricerca prenda il focus automaticamente.",
+      show_player_search:
+        "Consenti la ricerca e l'aggiunta alla scheda di riproduttori non configurati per la sessione.",
+      auto_add_playing_entities:
+        "Mostra i riproduttori non configurati quando avviano la riproduzione e rimuovili quando la scheda diventa inattiva.",
+      auto_add_exclude:
+        "ID entità separati da virgola o pattern jolly (es. media_player.*_tv) da escludere dalla ricerca e dall'aggiunta automatica.",
       search_within_filter: "Cerca nel filtro attivo (Preferiti, ecc.).",
       close_search_on_play: "Chiudi ricerca alla riproduzione.",
       pin_search_headers: "Fissa le intestazioni di ricerca durante lo scorrimento.",
@@ -248,6 +259,9 @@ export default {
       hold_to_pin: "Tieni premuto per fissare",
       always_show_group: "Gruppo rapido predefinito",
       disable_autofocus: "Disabilita autofocus",
+      show_player_search: "Mostra ricerca nel menu Riproduttori",
+      auto_add_playing_entities: "Aggiungi automaticamente i riproduttori attivi fino a inattività",
+      auto_add_exclude: "Escludi da ricerca e aggiunta automatica",
       keep_filters: "Mantieni filtri",
       dismiss_on_play: "Chiudi alla riproduzione",
       pin_headers: "Fissa intestazioni",
@@ -530,6 +544,14 @@ export default {
       regrouping: "Raggruppamento altoparlanti con {player} in corso...",
       transfer_success: "Coda inviata a {player}.",
       standalone: "Autonomo",
+      search_players: "Cerca riproduttori da aggiungere...",
+      add_player: "Aggiungi alla sessione",
+      add: "Aggiungi",
+      remove_player: "Rimuovi dalla sessione",
+      keep_player: "Mantieni nella sessione",
+      no_search_results: "Nessun riproduttore corrispondente trovato",
+      transient_session: "Riproduttore di sessione",
+      transient_auto: "Riproduttore in riproduzione",
     },
   },
   search: {

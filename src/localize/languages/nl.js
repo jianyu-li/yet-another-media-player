@@ -106,6 +106,11 @@ export default {
         description:
           "Voeg de mediaspelers toe die je wilt bedienen. Sleep entiteiten om de volgorde te wijzigen.",
       },
+      transient_players: {
+        title: "Dynamische & sessiespelers",
+        description:
+          "Opties voor het zoeken en dynamisch toevoegen van mediaspelers tijdens de sessie.",
+      },
       behavior: {
         idle_chips: {
           title: "Inactiviteit & Chips",
@@ -155,6 +160,12 @@ export default {
         "Snelgroeperingsknoppen (+/-/ster) zijn standaard zichtbaar bij het laden van de pagina. Je kunt ze nog steeds handmatig in- of uitschakelen via dubbeltikken.",
       disable_autofocus:
         "Voorkom dat het zoekveld de focus steelt, zodat onscreen toetsenborden verborgen blijven.",
+      show_player_search:
+        "Zoeken en toevoegen van niet-geconfigureerde mediaspelers aan de kaart voor de sessie toestaan.",
+      auto_add_playing_entities:
+        "Geef niet-geconfigureerde spelers weer wanneer ze beginnen met afspelen en verwijder ze zodra de kaart inactief wordt.",
+      auto_add_exclude:
+        "Kommagescheiden entiteits-ID's of wildcardpatronen (bijv. media_player.*_tv) om uit te sluiten van zoeken en automatisch toevoegen.",
       search_within_filter:
         "Schakel dit in om te zoeken binnen het huidige actieve filter (Favorieten, Recent Afgespeeld, etc) in plaats van dit te wissen.",
       close_search_on_play: "Sluit het zoekscherm automatisch wanneer een nummer wordt afgespeeld.",
@@ -273,6 +284,9 @@ export default {
       hold_to_pin: "Ingedrukt houden om vast te zetten",
       always_show_group: "Snelgroepering standaard aan",
       disable_autofocus: "Zoek-autofocus uitschakelen",
+      show_player_search: "Zoeken weergeven in Spelers-menu",
+      auto_add_playing_entities: "Spelende spelers automatisch toevoegen tot inactiviteit",
+      auto_add_exclude: "Uitsluiten van zoeken en automatisch toevoegen",
       keep_filters: "Filters behouden bij zoeken",
       dismiss_on_play: "Zoeken sluiten bij afspelen",
       pin_headers: "Zoekkoppen vastzetten",
@@ -554,6 +568,14 @@ export default {
       regrouping: "Luidsprekers opnieuw groeperen met {player}...",
       transfer_success: "Wachtrij verzonden naar {player}.",
       standalone: "Vrijstaand",
+      search_players: "Zoek spelers om toe te voegen...",
+      add_player: "Toevoegen aan sessie",
+      add: "Toevoegen",
+      remove_player: "Verwijderen uit sessie",
+      keep_player: "Behouden in sessie",
+      no_search_results: "Geen overeenkomende spelers gevonden",
+      transient_session: "Sessiespeler",
+      transient_auto: "Afspelende speler",
     },
   },
   search: {

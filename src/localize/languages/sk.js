@@ -103,6 +103,11 @@ export default {
         description:
           "Pridajte prehrávače médií, ktoré chcete ovládať. Potiahnutím entít zmeníte poradie v riadku čipov.",
       },
+      transient_players: {
+        title: "Dynamické a relačné prehrávače",
+        description:
+          "Možnosti vyhľadávania a dynamického zahrnutia prehrávačov médií počas relácie.",
+      },
       behavior: {
         idle_chips: {
           title: "Nečinnosť a čipy",
@@ -151,6 +156,12 @@ export default {
         "Ovládacie prvky rýchleho zoskupovania (+/-/hviezdička) budú predvolene viditeľné pri načítaní stránky. Stále ich môžete manuálne prepínať dvojitým klepnutím.",
       disable_autofocus:
         "Zabráni vyhľadávaciemu poľu prebrať zameranie, aby zostali klávesnice na obrazovke skryté.",
+      show_player_search:
+        "Povoliť vyhľadávanie a pridávanie nenakonfigurovaných prehrávačov na kartu pre reláciu.",
+      auto_add_playing_entities:
+        "Zobraziť nenakonfigurované prehrávače, keď začnú hrať, a odstrániť ich, keď karta prejde do nečinnosti.",
+      auto_add_exclude:
+        "Čiarkami oddelené ID entít alebo vzory so zástupnými znakmi (napr. media_player.*_tv) na vylúčenie z vyhľadávania a automatického pridávania.",
       search_within_filter:
         "Povoliť vyhľadávanie v rámci aktuálneho aktívneho filtra (Obľúbené, Nedávno prehrávané atď.) namiesto jeho vymazania.",
       close_search_on_play: "Automaticky zatvoriť obrazovku vyhľadávania po spustení skladby.",
@@ -264,6 +275,9 @@ export default {
       hold_to_pin: "Podržať pre pripnutie",
       always_show_group: "Rýchle zoskupovanie ako predvolené",
       disable_autofocus: "Vypnúť automatické zameranie hľadania",
+      show_player_search: "Zobraziť vyhľadávanie v ponuke Prehrávače",
+      auto_add_playing_entities: "Automaticky pridať hrajúce prehrávače do nečinnosti",
+      auto_add_exclude: "Vylúčiť z vyhľadávania a automatického pridávania",
       keep_filters: "Zachovať filtre pri hľadaní",
       dismiss_on_play: "Zavrieť hľadanie po spustení",
       pin_headers: "Pripnúť hlavičky hľadania",
@@ -546,6 +560,14 @@ export default {
       regrouping: "Preoskupujú sa reproduktory s {player}...",
       transfer_success: "Rad bol odoslaný do {player}.",
       standalone: "Samostatný",
+      search_players: "Hľadať prehrávače na pridanie...",
+      add_player: "Pridať do relácie",
+      add: "Pridať",
+      remove_player: "Odstrániť z relácie",
+      keep_player: "Ponechať v relácii",
+      no_search_results: "Nenašli sa žiadne zhodné prehrávače",
+      transient_session: "Relačný prehrávač",
+      transient_auto: "Hrajúci prehrávač",
     },
   },
   search: {

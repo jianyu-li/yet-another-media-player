@@ -113,6 +113,10 @@ export default {
         description:
           "Dodaj medija plejere koje želiš da kontrolišeš. Prevuci entitete za promenu redosleda čipova.",
       },
+      transient_players: {
+        title: "Dinamički i sesijski plejeri",
+        description: "Opcije za pretragu i dinamičko uključivanje medijskih plejera tokom sesije.",
+      },
       behavior: {
         idle_chips: {
           title: "Mirovanje i čipovi",
@@ -161,6 +165,12 @@ export default {
         "Brze kontrole grupisanja (+/-/zvezda) biće vidljive podrazumevano pri učitavanju stranice. I dalje ih možeš ručno uključiti dvostrukim dodirom.",
       disable_autofocus:
         "Spreči da polje za pretragu automatski preuzima fokus kako bi tastatura na ekranu ostala sakrivena.",
+      show_player_search:
+        "Dozvoli pretragu i dodavanje nekonfigurisanih medijskih plejera na karticu za trenutnu sesiju.",
+      auto_add_playing_entities:
+        "Prikaži nekonfigurisane plejere kada počnu reprodukciju i ukloni ih čim kartica postane neaktivna.",
+      auto_add_exclude:
+        "Zarezom odvojeni ID-jevi entiteta ili džoker obrasci (npr. media_player.*_tv) za isključivanje iz pretrage i automatskog dodavanja.",
       search_within_filter:
         "Omogući pretragu unutar trenutno aktivnog filtera (Omiljeno, Nedavno puštano itd.) umesto da ga resetuješ.",
       close_search_on_play: "Automatski zatvori ekran pretrage kada se pesma pusti.",
@@ -268,6 +278,9 @@ export default {
       hold_to_pin: "Zadrži za kačenje",
       always_show_group: "Brzo grupisanje podrazumevano",
       disable_autofocus: "Onemogući automatski fokus pretrage",
+      show_player_search: "Prikaži pretragu u meniju Plejeri",
+      auto_add_playing_entities: "Automatski dodaj aktivne plejere do neaktivnosti",
+      auto_add_exclude: "Isključi iz pretrage i automatskog dodavanja",
       keep_filters: "Zadrži filtere pri pretrazi",
       dismiss_on_play: "Zatvori pretragu pri puštanju",
       pin_headers: "Zakači zaglavlja pretrage",
@@ -549,6 +562,14 @@ export default {
       regrouping: "Pregrupisavanje zvučnika sa {player}...",
       transfer_success: "Red je poslat na {player}.",
       standalone: "Samostalni",
+      search_players: "Pretraži plejere za dodavanje...",
+      add_player: "Dodaj u sesiju",
+      add: "Dodaj",
+      remove_player: "Ukloni iz sesije",
+      keep_player: "Zadrži u sesiji",
+      no_search_results: "Nema pronađenih plejera",
+      transient_session: "Sesijski plejer",
+      transient_auto: "Aktivni plejer",
     },
   },
   search: {

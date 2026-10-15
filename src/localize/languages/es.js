@@ -104,6 +104,11 @@ export default {
         title: "Entidades*",
         description: "Añada los reproductores multimedia. Arrastre para reordenar.",
       },
+      transient_players: {
+        title: "Reproductores dinámicos y de sesión",
+        description:
+          "Opciones para buscar e incluir reproductores dinámicamente durante la sesión.",
+      },
       behavior: {
         idle_chips: {
           title: "Reposo y chips",
@@ -147,6 +152,12 @@ export default {
       always_show_group:
         "Los controles de agrupación rápida (+/-/estrella) estarán visibles por defecto al cargar la página. Todavía puedes cambiarlos manualmente mediante doble pulsación.",
       disable_autofocus: "Evitar que la búsqueda tome el foco automáticamente.",
+      show_player_search:
+        "Permite buscar y añadir reproductores no configurados a la tarjeta para la sesión actual.",
+      auto_add_playing_entities:
+        "Muestra reproductores no configurados cuando empiezan a reproducir y los elimina cuando la tarjeta pasa a inactiva.",
+      auto_add_exclude:
+        "IDs de entidad separados por comas o patrones comodín (ej. media_player.*_tv) para excluir de la búsqueda y auto-añadido.",
       search_within_filter: "Buscar dentro del filtro activo (Favoritos, etc.).",
       close_search_on_play: "Cerrar búsqueda al reproducir.",
       pin_search_headers: "Fijar encabezados de búsqueda al hacer scroll.",
@@ -250,6 +261,9 @@ export default {
       hold_to_pin: "Mantener para fijar",
       always_show_group: "Grupo rápido por defecto",
       disable_autofocus: "Desactivar autofoco",
+      show_player_search: "Mostrar búsqueda en el menú de reproductores",
+      auto_add_playing_entities: "Añadir reproductores en reproducción hasta inactividad",
+      auto_add_exclude: "Excluir de búsqueda y auto-añadido",
       keep_filters: "Mantener filtros",
       dismiss_on_play: "Cerrar al reproducir",
       pin_headers: "Fijar encabezados",
@@ -532,6 +546,14 @@ export default {
       regrouping: "Reagrupando altavoces con {player}...",
       transfer_success: "Cola enviada a {player}.",
       standalone: "Independiente",
+      search_players: "Buscar reproductores para añadir...",
+      add_player: "Añadir a la sesión",
+      add: "Añadir",
+      remove_player: "Eliminar de la sesión",
+      keep_player: "Mantener en la sesión",
+      no_search_results: "No se encontraron reproductores coincidentes",
+      transient_session: "Reproductor de sesión",
+      transient_auto: "Reproductor en reproducción",
     },
   },
   search: {

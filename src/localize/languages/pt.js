@@ -104,6 +104,11 @@ export default {
         title: "Entidades*",
         description: "Adicione os leitores a controlar.",
       },
+      transient_players: {
+        title: "Reprodutores dinâmicos e de sessão",
+        description:
+          "Opções para pesquisar e incluir dinamicamente reprodutores multimédia durante a sessão.",
+      },
       behavior: {
         idle_chips: {
           title: "Repouso e chips",
@@ -146,6 +151,12 @@ export default {
       always_show_group:
         "Os controles de agrupamento rápido (+/-/estrela) estarão visíveis por padrão ao carregar a página. Você ainda pode alterná-los manualmente através de um toque duplo.",
       disable_autofocus: "Evitar que a procura tome o foco automaticamente.",
+      show_player_search:
+        "Permitir pesquisar e adicionar reprodutores não configurados ao cartão para a sessão.",
+      auto_add_playing_entities:
+        "Mostrar reprodutores não configurados quando começam a reproduzir e removê-los assim que o cartão fica inativo.",
+      auto_add_exclude:
+        "IDs de entidade separados por vírgula ou padrões glob (ex. media_player.*_tv) para excluir da pesquisa e adição automática.",
       search_within_filter: "Procurar no filtro ativo (Favoritos, etc.).",
       close_search_on_play: "Fechar procura ao reproduzir.",
       pin_search_headers: "Fixar cabeçalhos de procura ao fazer scroll.",
@@ -249,6 +260,9 @@ export default {
       hold_to_pin: "Manter para fixar",
       always_show_group: "Grupo rápido por padrão",
       disable_autofocus: "Desativar autofoco",
+      show_player_search: "Mostrar pesquisa no menu de reprodutores",
+      auto_add_playing_entities: "Auto-adicionar reprodutores em reprodução até inatividade",
+      auto_add_exclude: "Excluir da pesquisa e adição automática",
       keep_filters: "Manter filtros",
       dismiss_on_play: "Fechar ao reproduzir",
       pin_headers: "Fixar cabeçalhos",
@@ -531,6 +545,14 @@ export default {
       regrouping: "Reagrupando alto-falantes com {player}...",
       transfer_success: "Fila enviada para {player}.",
       standalone: "Independente",
+      search_players: "Pesquisar reprodutores para adicionar...",
+      add_player: "Adicionar à sessão",
+      add: "Adicionar",
+      remove_player: "Remover da sessão",
+      keep_player: "Manter na sessão",
+      no_search_results: "Nenhum reprodutor correspondente encontrado",
+      transient_session: "Reprodutor de sessão",
+      transient_auto: "Reprodutor em reprodução",
     },
   },
   search: {
