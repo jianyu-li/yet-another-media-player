@@ -222,7 +222,7 @@ export function renderGroupingSheet() {
           ? html`
               <div
                 class="entity-options-header grouping-header group-list-header"
-                style="padding-bottom: 12px;"
+                style="padding-top: 6px; padding-bottom: 4px;"
               >
                 ${renderPlayerSearchRow()}
               </div>
@@ -958,7 +958,7 @@ export function renderGroupingSheet() {
         ? html`
             <div
               class="entity-options-header grouping-header group-list-header"
-              style="padding-bottom: 12px;"
+              style="padding-top: 6px; padding-bottom: 4px;"
             >
               ${renderPlayerSearchRow()}
             </div>
@@ -988,44 +988,52 @@ export function renderGroupingSheet() {
             </div>
           `
     }
-    <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
-      ${
-        groupedAny
-          ? html`
-              <button
-                class="entity-options-item"
-                @click=${() => this._syncGroupVolume()}
-                style="flex:0 0 auto; min-width:140px; text-align:center;"
-              >
-                ${localize("card.grouping.sync_volume")}
-              </button>
-            `
-          : nothing
-      }
-      ${
-        hasAnyGroups
-          ? html`
-              <button
-                class="entity-options-item"
-                @click=${() => this._ungroupAll()}
-                style="flex:0 0 auto; min-width:140px; text-align:center; margin-left:auto;"
-              >
-                ${localize("card.grouping.ungroup_all") || "Ungroup All"}
-              </button>
-            `
-          : canGroupAll
-            ? html`
-                <button
-                  class="entity-options-item"
-                  @click=${() => this._groupAll()}
-                  style="flex:0 0 auto; min-width:140px; text-align:center; margin-left:auto;"
-                >
-                  ${localize("card.grouping.group_all") || "Group All"}
-                </button>
-              `
-            : nothing
-      }
-    </div>
+    ${
+      groupedAny || hasAnyGroups || canGroupAll
+        ? html`
+            <div
+              style="display:flex; align-items:center; gap:8px; margin-top:4px; margin-bottom:6px;"
+            >
+              ${
+                groupedAny
+                  ? html`
+                      <button
+                        class="entity-options-item"
+                        @click=${() => this._syncGroupVolume()}
+                        style="flex:0 0 auto; min-width:120px; text-align:center; margin:0; padding:4px 8px; font-size:0.95em; min-height:28px;"
+                      >
+                        ${localize("card.grouping.sync_volume")}
+                      </button>
+                    `
+                  : nothing
+              }
+              ${
+                hasAnyGroups
+                  ? html`
+                      <button
+                        class="entity-options-item"
+                        @click=${() => this._ungroupAll()}
+                        style="flex:0 0 auto; min-width:120px; text-align:center; margin:0 0 0 auto; padding:4px 8px; font-size:0.95em; min-height:28px;"
+                      >
+                        ${localize("card.grouping.ungroup_all") || "Ungroup All"}
+                      </button>
+                    `
+                  : canGroupAll
+                    ? html`
+                        <button
+                          class="entity-options-item"
+                          @click=${() => this._groupAll()}
+                          style="flex:0 0 auto; min-width:120px; text-align:center; margin:0 0 0 auto; padding:4px 8px; font-size:0.95em; min-height:28px;"
+                        >
+                          ${localize("card.grouping.group_all") || "Group All"}
+                        </button>
+                      `
+                    : nothing
+              }
+            </div>
+          `
+        : nothing
+    }
     ${
       this._transferQueueStatus
         ? html`
