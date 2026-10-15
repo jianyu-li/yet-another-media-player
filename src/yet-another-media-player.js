@@ -100,6 +100,8 @@ import {
   GROUP_SELECTION_FEEDBACK_DURATION_MS,
   getTemplatePresetDefaults,
   CANONICAL_MENU_OPTION_MAP,
+  SESSION_STORAGE_PREFIX,
+  SESSION_STORAGE_TTL_MS,
 } from "./constants.js";
 
 const PLAYLIST_FETCH_LIMIT = 500;
@@ -412,6 +414,26 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     super.connectedCallback();
     this._isEditorPreviewCached = undefined;
     this._initialAutoDiscoveryDone = false;
+    if (this.config) {
+      const stored = this._loadStoredSessionEntities();
+      if (stored.length > 0) {
+        const configuredSet = new Set(
+          (this.config.entities || []).map((e) =>
+            typeof e === "string" ? e : e?.entity_id
+          )
+        );
+        const currentSession = this._sessionEntities || [];
+        const merged = Array.from(new Set([...stored, ...currentSession])).filter(
+          (id) => !configuredSet.has(id)
+        );
+        if (merged.length !== this._sessionEntities?.length) {
+          this._sessionEntities = merged;
+          this._cachedEffectiveEntities = null;
+          this._cachedEntityIds = null;
+          this._cachedEntityObjs = null;
+        }
+      }
+    }
     window.addEventListener("scroll", this._handleGlobalScroll, { passive: true });
     window.addEventListener("resize", this._handleViewportResize, { passive: true });
     if (this._handleKeyDownBound) {
@@ -729,6 +751,9 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
   willUpdate(changedProps) {
     super.willUpdate?.(changedProps);
+    if (this._sessionEntities?.length) {
+      this._pruneMissingSessionEntities();
+    }
     if (this.config?.auto_add_playing_entities && !this._isEditorPreview) {
       if (!this._initialAutoDiscoveryDone && this.hass?.states) {
         this._initialAutoDiscoveryDone = true;
@@ -4677,8 +4702,18 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     if (oldConfig?.lock_screen_controls !== config.lock_screen_controls) {
       this._mediaSessionOverride = null;
     }
-    if (oldConfig?.full_screen !== config.full_screen) {
-      this._fullScreenOverride = null;
+    if (oldConfig) {
+      const oldConfigKey = this._getSessionStorageKey(oldConfig);
+      const newConfigKey = this._getSessionStorageKey(config);
+      if (oldConfigKey && oldConfigKey !== newConfigKey) {
+        try {
+          if (typeof localStorage !== "undefined") {
+            localStorage.removeItem(oldConfigKey);
+          }
+        } catch {
+          // Ignore storage errors safely
+        }
+      }
     }
     this.config = config;
     if (this._cardType === "group_players") {
@@ -4703,11 +4738,13 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         typeof e === "string" ? e : e?.entity_id
       )
     );
-    if (this._sessionEntities?.length) {
-      this._sessionEntities = this._sessionEntities.filter(
-        (id) => !configuredSet.has(id)
-      );
-    }
+    const storedSession = this._loadStoredSessionEntities();
+    const currentSession = this._sessionEntities || [];
+    const mergedSession = Array.from(new Set([...storedSession, ...currentSession])).filter(
+      (id) => !configuredSet.has(id)
+    );
+    this._sessionEntities = mergedSession;
+    this._saveStoredSessionEntities(mergedSession);
     if (this._autoEntities?.length) {
       if (!config.auto_add_playing_entities) {
         this._autoEntities = [];
@@ -5412,6 +5449,116 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     return covered;
   }
 
+  _getSessionStorageKey(cfg = this.config) {
+    const configured = (cfg?.entities || [])
+      .map((e) => (typeof e === "string" ? e : e?.entity_id))
+      .filter(Boolean)
+      .sort()
+      .join(",");
+    return `${SESSION_STORAGE_PREFIX}${configured || "default"}`;
+  }
+
+  _loadStoredSessionEntities() {
+    if (typeof window === "undefined" || typeof localStorage === "undefined") {
+      return [];
+    }
+    this._pruneOrphanStorageKeys();
+    try {
+      const key = this._getSessionStorageKey();
+      const raw = localStorage.getItem(key);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      const entities = Array.isArray(parsed) ? parsed : parsed?.entities;
+      if (!Array.isArray(entities)) {
+        localStorage.removeItem(key);
+        return [];
+      }
+      const configuredSet = new Set(
+        (this.config?.entities || []).map((e) =>
+          typeof e === "string" ? e : e?.entity_id
+        )
+      );
+      const filtered = entities.filter((id) => typeof id === "string" && !configuredSet.has(id));
+      if (filtered.length === 0) {
+        localStorage.removeItem(key);
+      } else {
+        this._saveStoredSessionEntities(filtered);
+      }
+      return filtered;
+    } catch {
+      return [];
+    }
+  }
+
+  _saveStoredSessionEntities(entities) {
+    if (typeof window === "undefined" || typeof localStorage === "undefined") {
+      return;
+    }
+    try {
+      const key = this._getSessionStorageKey();
+      if (!entities || entities.length === 0) {
+        localStorage.removeItem(key);
+      } else {
+        const payload = {
+          entities,
+          updatedAt: Date.now(),
+        };
+        localStorage.setItem(key, JSON.stringify(payload));
+      }
+    } catch {
+      // Safe containment for private mode/quota exceptions
+    }
+  }
+
+  _pruneOrphanStorageKeys() {
+    if (typeof window === "undefined" || typeof localStorage === "undefined") {
+      return;
+    }
+    try {
+      const now = Date.now();
+      const keysToRemove = [];
+      const totalKeys = localStorage.length || 0;
+      for (let i = 0; i < totalKeys; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith(SESSION_STORAGE_PREFIX)) {
+          const raw = localStorage.getItem(key);
+          if (!raw) {
+            keysToRemove.push(key);
+            continue;
+          }
+          try {
+            const data = JSON.parse(raw);
+            const entities = Array.isArray(data) ? data : data?.entities;
+            const updatedAt = typeof data?.updatedAt === "number" ? data.updatedAt : 0;
+            if (
+              !Array.isArray(entities) ||
+              entities.length === 0 ||
+              (updatedAt > 0 && now - updatedAt > SESSION_STORAGE_TTL_MS)
+            ) {
+              keysToRemove.push(key);
+            }
+          } catch {
+            keysToRemove.push(key);
+          }
+        }
+      }
+      for (let i = 0; i < keysToRemove.length; i++) {
+        localStorage.removeItem(keysToRemove[i]);
+      }
+    } catch {
+      // Safe containment
+    }
+  }
+
+  _pruneMissingSessionEntities() {
+    if (!this.hass?.states || !this._sessionEntities?.length) return;
+    const currentStates = this.hass.states;
+    const valid = this._sessionEntities.filter((id) => !!currentStates[id]);
+    if (valid.length !== this._sessionEntities.length) {
+      this._setTransientEntities({ session: valid });
+    }
+  }
+
   /**
    * @param {{ session?: string[], auto?: string[] }} [options]
    */
@@ -5420,7 +5567,10 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const prevPinnedId =
       this._pinnedIndex !== null ? this.entityIds[this._pinnedIndex] : null;
 
-    if (session !== undefined) this._sessionEntities = session;
+    if (session !== undefined) {
+      this._sessionEntities = session;
+      this._saveStoredSessionEntities(session);
+    }
     if (auto !== undefined) this._autoEntities = auto;
 
     this._cachedEffectiveEntities = null;
@@ -6846,6 +6996,11 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     clearTimeout(this._manualSelectTimeout);
     // Clear the manual‑select snapshot; a long‑press establishes a pin.
     this._manualSelectPlayingSet = null;
+
+    const id = this.entityIds[idx];
+    if (id && this._autoEntities?.includes(id)) {
+      this._promoteAutoToSession(id);
+    }
 
     this._pinnedIndex = idx;
     this._manualSelect = true;

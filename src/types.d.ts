@@ -774,7 +774,11 @@ export interface YetAnotherMediaPlayerCard {
   _setTransientEntities?: (options?: { session?: string[]; auto?: string[] }) => void;
   _addSessionEntity?: (id: string) => void;
   _removeSessionEntity?: (id: string) => void;
-  _promoteAutoToSession?: (id: string) => void;
+  _getSessionStorageKey?: (cfg?: any) => string;
+  _loadStoredSessionEntities?: () => string[];
+  _saveStoredSessionEntities?: (entities?: string[]) => void;
+  _pruneOrphanStorageKeys?: () => void;
+  _pruneMissingSessionEntities?: () => void;
   _actionHelperEntities?: string[] | null;
   _jsTemplateEntities?: string[] | null;
   _handleVisibilityChangeBound?: () => void;

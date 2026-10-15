@@ -311,4 +311,195 @@ describe("Low-End Device Reactivity & shouldUpdate Optimizations", () => {
       delete globalThis.document;
     });
   });
+
+  describe("Session & Pinned Entities Persistence (localStorage)", () => {
+    let mockStore;
+
+    beforeEach(() => {
+      mockStore = new Map();
+      globalThis.localStorage = /** @type {any} */ ({
+        getItem: (key) => mockStore.get(key) || null,
+        setItem: (key, val) => mockStore.set(key, String(val)),
+        removeItem: (key) => mockStore.delete(key),
+        clear: () => mockStore.clear(),
+        get length() {
+          return mockStore.size;
+        },
+        key: (i) => Array.from(mockStore.keys())[i] || null,
+      });
+    });
+
+    it("persists promoted session entity to localStorage and restores it after page reload even when paused", () => {
+      const cardA = new YetAnotherMediaPlayerCard();
+      cardA.setConfig({
+        entities: ["media_player.main_speaker"],
+      });
+      cardA.hass = {
+        states: {
+          "media_player.main_speaker": {
+            entity_id: "media_player.main_speaker",
+            state: "idle",
+            attributes: {},
+          },
+          "media_player.bedroom_tv": {
+            entity_id: "media_player.bedroom_tv",
+            state: "playing",
+            attributes: { friendly_name: "Bedroom TV" },
+          },
+        },
+      };
+
+      // Auto-entity is discovered or added, then user pins it in the players menu
+      cardA._promoteAutoToSession("media_player.bedroom_tv");
+      assert.ok(cardA._sessionEntities.includes("media_player.bedroom_tv"));
+
+      const key = cardA._getSessionStorageKey();
+      assert.ok(mockStore.has(key));
+      const parsed = JSON.parse(mockStore.get(key));
+      assert.deepStrictEqual(parsed.entities, ["media_player.bedroom_tv"]);
+
+      // Now user pauses playback and refreshes browser (fresh card instance constructed)
+      const reloadedCard = new YetAnotherMediaPlayerCard();
+      reloadedCard.setConfig({
+        entities: ["media_player.main_speaker"],
+      });
+      reloadedCard.hass = {
+        states: {
+          "media_player.main_speaker": {
+            entity_id: "media_player.main_speaker",
+            state: "idle",
+            attributes: {},
+          },
+          "media_player.bedroom_tv": {
+            entity_id: "media_player.bedroom_tv",
+            state: "paused", // PAUSED playback
+            attributes: { friendly_name: "Bedroom TV" },
+          },
+        },
+      };
+
+      // Restored from localStorage on setConfig
+      assert.ok(reloadedCard._sessionEntities.includes("media_player.bedroom_tv"));
+      assert.ok(reloadedCard.entityIds.includes("media_player.bedroom_tv"));
+
+      const bedroomObj = reloadedCard.entityObjs.find(
+        (e) => e.entity_id === "media_player.bedroom_tv"
+      );
+      assert.strictEqual(bedroomObj?.transient, "session");
+    });
+
+    it("removes entity from localStorage when dismissed via _removeSessionEntity", () => {
+      const cardA = new YetAnotherMediaPlayerCard();
+      cardA.setConfig({
+        entities: ["media_player.main_speaker"],
+      });
+      cardA._addSessionEntity("media_player.bedroom_tv");
+      assert.ok(cardA._sessionEntities.includes("media_player.bedroom_tv"));
+
+      // User dismisses entity via close button
+      cardA._removeSessionEntity("media_player.bedroom_tv");
+      assert.strictEqual(cardA._sessionEntities.length, 0);
+
+      const key = cardA._getSessionStorageKey();
+      assert.strictEqual(mockStore.get(key), undefined);
+    });
+
+    it("promotes auto entity to session and persists to localStorage on chip long-press pin", () => {
+      const cardA = new YetAnotherMediaPlayerCard();
+      cardA.setConfig({
+        entities: ["media_player.main_speaker"],
+        hold_to_pin: true,
+      });
+      cardA.hass = {
+        states: {
+          "media_player.main_speaker": {
+            entity_id: "media_player.main_speaker",
+            state: "idle",
+            attributes: {},
+          },
+          "media_player.living_room": {
+            entity_id: "media_player.living_room",
+            state: "playing",
+            attributes: {},
+          },
+        },
+      };
+
+      cardA._setTransientEntities({ auto: ["media_player.living_room"] });
+      const idx = cardA.entityIds.indexOf("media_player.living_room");
+      assert.ok(idx >= 0);
+
+      cardA._pinChip(idx);
+      assert.ok(cardA._sessionEntities.includes("media_player.living_room"));
+      assert.strictEqual(cardA._pinnedIndex, idx);
+
+      const key = cardA._getSessionStorageKey();
+      assert.ok(mockStore.has(key));
+    });
+
+    it("prunes orphaned or expired storage keys older than 7 days", () => {
+      const cardA = new YetAnotherMediaPlayerCard();
+      cardA.setConfig({ entities: ["media_player.active_card"] });
+
+      // Simulate an old orphaned key from a removed card (8 days old)
+      const oldKey = "yamp_session_players_media_player.deleted_card";
+      mockStore.set(
+        oldKey,
+        JSON.stringify({
+          entities: ["media_player.some_player"],
+          updatedAt: Date.now() - 8 * 24 * 60 * 60 * 1000,
+        })
+      );
+
+      // Simulate an active recent key (1 hour old)
+      const activeKey = "yamp_session_players_media_player.recent_card";
+      mockStore.set(
+        activeKey,
+        JSON.stringify({
+          entities: ["media_player.other_player"],
+          updatedAt: Date.now() - 3600 * 1000,
+        })
+      );
+
+      cardA._pruneOrphanStorageKeys();
+
+      assert.strictEqual(mockStore.has(oldKey), false, "Old orphaned card key should be pruned");
+      assert.strictEqual(mockStore.has(activeKey), true, "Recent key should be retained");
+    });
+
+    it("removes old storage key when card entities change in setConfig", () => {
+      const card = new YetAnotherMediaPlayerCard();
+      card.setConfig({ entities: ["media_player.kitchen"] });
+      card._addSessionEntity("media_player.patio");
+
+      const oldKey = "yamp_session_players_media_player.kitchen";
+      assert.ok(mockStore.has(oldKey));
+
+      // User reconfigures card with different entities
+      card.setConfig({ entities: ["media_player.bedroom"] });
+      assert.strictEqual(
+        mockStore.has(oldKey),
+        false,
+        "Old key should be deleted upon reconfiguration"
+      );
+    });
+
+    it("prunes session entities that no longer exist in hass.states", () => {
+      const card = new YetAnotherMediaPlayerCard();
+      card.setConfig({ entities: ["media_player.kitchen"] });
+      card._setTransientEntities({
+        session: ["media_player.deleted_entity", "media_player.existing_entity"],
+      });
+
+      card.hass = {
+        states: {
+          "media_player.kitchen": { state: "idle" },
+          "media_player.existing_entity": { state: "playing" },
+        },
+      };
+
+      card._pruneMissingSessionEntities();
+      assert.deepStrictEqual(card._sessionEntities, ["media_player.existing_entity"]);
+    });
+  });
 });
