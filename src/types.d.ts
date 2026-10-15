@@ -258,6 +258,7 @@ export interface YampEntityConfig {
 export type YampEntityEntry = string | YampEntityConfig;
 
 export interface YampCardConfig {
+  card_id?: string;
   type: "custom:yet-another-media-player";
   hidden_menu_options?: string[] | string;
   hide_menu_options?: string[] | string;
@@ -775,7 +776,7 @@ export interface YetAnotherMediaPlayerCard {
   _addSessionEntity?: (id: string) => void;
   _removeSessionEntity?: (id: string) => void;
   _getSessionStorageKey?: (cfg?: any) => string;
-  _loadStoredSessionEntities?: () => string[];
+  _loadStoredSessionEntities?: (customKey?: string | null) => string[];
   _saveStoredSessionEntities?: (entities?: string[]) => void;
   _pruneOrphanStorageKeys?: () => void;
   _pruneMissingSessionEntities?: () => void;

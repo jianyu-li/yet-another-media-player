@@ -467,25 +467,148 @@ describe("Low-End Device Reactivity & shouldUpdate Optimizations", () => {
       assert.strictEqual(mockStore.has(activeKey), true, "Recent key should be retained");
     });
 
-    it("migrates session entities and removes old storage key when card entities change in setConfig", () => {
+    it("retains session entities when card is reconfigured with additional entities in setConfig", () => {
       const card = new YetAnotherMediaPlayerCard();
       card.setConfig({ entities: ["media_player.kitchen"] });
       card._addSessionEntity("media_player.patio");
 
-      const oldKey = "yamp_session_players_media_player.kitchen";
-      assert.ok(mockStore.has(oldKey));
+      const key = card._getSessionStorageKey();
+      assert.strictEqual(key, "yamp_session_players_media_player.kitchen");
+      assert.ok(mockStore.has(key));
 
-      // User reconfigures card with different entities
-      card.setConfig({ entities: ["media_player.bedroom"] });
+      // User reconfigures card by adding a secondary entity in the editor
+      card.setConfig({
+        entities: [{ entity: "media_player.kitchen" }, { entity: "media_player.bedroom" }],
+      });
+      // Storage key must remain stable based on primary entity!
+      assert.strictEqual(card._getSessionStorageKey(), key);
+      // patio must be preserved in sessionEntities and storage!
+      assert.ok(card._sessionEntities.includes("media_player.patio"));
+      const parsed = JSON.parse(mockStore.get(key));
+      assert.deepStrictEqual(parsed.entities, ["media_player.patio"]);
+    });
+
+    it("isolates storage between multiple cards on the same dashboard", () => {
+      const cardKitchen = new YetAnotherMediaPlayerCard();
+      cardKitchen.setConfig({ entities: ["media_player.kitchen"] });
+      cardKitchen._addSessionEntity("media_player.patio");
+
+      const cardLivingRoom = new YetAnotherMediaPlayerCard();
+      cardLivingRoom.setConfig({ entities: ["media_player.living_room"] });
+
+      // Each card has its own isolated key
       assert.strictEqual(
-        mockStore.has(oldKey),
-        false,
-        "Old key should be deleted upon reconfiguration"
+        cardKitchen._getSessionStorageKey(),
+        "yamp_session_players_media_player.kitchen"
+      );
+      assert.strictEqual(
+        cardLivingRoom._getSessionStorageKey(),
+        "yamp_session_players_media_player.living_room"
       );
 
-      const newKey = "yamp_session_players_media_player.bedroom";
-      assert.ok(mockStore.has(newKey), "New key should be created with migrated session entities");
-      assert.deepStrictEqual(card._sessionEntities, ["media_player.patio"]);
+      // Living room card mounting or reconfiguring does not wipe kitchen card's session entity
+      cardLivingRoom.setConfig({ entities: ["media_player.living_room", "media_player.den"] });
+      assert.ok(mockStore.has("yamp_session_players_media_player.kitchen"));
+      const kitchenData = JSON.parse(mockStore.get("yamp_session_players_media_player.kitchen"));
+      assert.deepStrictEqual(kitchenData.entities, ["media_player.patio"]);
+    });
+
+    it("migrates session data when primary entity is reordered on the card", () => {
+      const card = new YetAnotherMediaPlayerCard();
+      card.setConfig({ entities: ["media_player.kitchen", "media_player.patio"] });
+      card._addSessionEntity("media_player.den");
+      assert.ok(mockStore.has("yamp_session_players_media_player.kitchen"));
+
+      // User reorders entities so patio is first
+      card.setConfig({ entities: ["media_player.patio", "media_player.kitchen"] });
+      assert.strictEqual(card._getSessionStorageKey(), "yamp_session_players_media_player.patio");
+      assert.ok(mockStore.has("yamp_session_players_media_player.patio"));
+      assert.strictEqual(mockStore.has("yamp_session_players_media_player.kitchen"), false);
+      assert.ok(card._sessionEntities.includes("media_player.den"));
+    });
+
+    it("graduates session entity to permanent configured entity when added to config.entities", () => {
+      const card = new YetAnotherMediaPlayerCard();
+      card.setConfig({ entities: ["media_player.kitchen"] });
+      card._addSessionEntity("media_player.patio");
+      assert.ok(card._sessionEntities.includes("media_player.patio"));
+
+      // User permanently adds patio to card config
+      card.setConfig({
+        entities: ["media_player.kitchen", "media_player.patio"],
+      });
+      // patio is now a permanent configured entity, so it graduates out of sessionEntities
+      assert.strictEqual(card._sessionEntities.includes("media_player.patio"), false);
+      const key = card._getSessionStorageKey();
+      assert.strictEqual(mockStore.get(key), undefined);
+    });
+
+    it("migrates legacy default session storage key to the primary entity key", () => {
+      // Simulate an existing legacy key from a previous session
+      const legacyKey = "yamp_session_players_default";
+      mockStore.set(
+        legacyKey,
+        JSON.stringify({
+          entities: ["media_player.patio"],
+          updatedAt: Date.now(),
+        })
+      );
+
+      const card = new YetAnotherMediaPlayerCard();
+      card.setConfig({ entities: ["media_player.kitchen"] });
+
+      const stableKey = card._getSessionStorageKey();
+      assert.strictEqual(stableKey, "yamp_session_players_media_player.kitchen");
+      assert.ok(card._sessionEntities.includes("media_player.patio"));
+      assert.ok(mockStore.has(stableKey));
+      assert.strictEqual(
+        mockStore.has(legacyKey),
+        false,
+        "Legacy key should be migrated and removed"
+      );
+    });
+
+    it("does not mutate or delete localStorage when running as editor preview", () => {
+      const stableKey = "yamp_session_players_media_player.kitchen";
+      mockStore.set(
+        stableKey,
+        JSON.stringify({
+          entities: ["media_player.patio"],
+          updatedAt: Date.now(),
+        })
+      );
+
+      const previewCard = new YetAnotherMediaPlayerCard();
+      previewCard.preview = true; // Editor preview flag
+      assert.strictEqual(previewCard._isEditorPreview, true);
+
+      // setConfig on preview card should NOT delete or overwrite existing storage
+      previewCard.setConfig({
+        entities: ["media_player.kitchen"],
+      });
+      assert.ok(mockStore.has(stableKey));
+
+      // _saveStoredSessionEntities should be a no-op in preview
+      previewCard._saveStoredSessionEntities([]);
+      assert.ok(mockStore.has(stableKey), "Storage should not be cleared by preview");
+    });
+
+    it("uses isolated storage keys when card_id is configured", () => {
+      const cardA = new YetAnotherMediaPlayerCard();
+      cardA.setConfig({
+        card_id: "living_room_card",
+        entities: ["media_player.living_room"],
+      });
+      assert.strictEqual(cardA._getSessionStorageKey(), "yamp_session_players_living_room_card");
+
+      const cardB = new YetAnotherMediaPlayerCard();
+      cardB.setConfig({
+        entities: ["media_player.kitchen"],
+      });
+      assert.strictEqual(
+        cardB._getSessionStorageKey(),
+        "yamp_session_players_media_player.kitchen"
+      );
     });
 
     it("prunes session entities that no longer exist in hass.states", () => {

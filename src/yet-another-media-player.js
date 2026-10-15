@@ -418,9 +418,9 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       const stored = this._loadStoredSessionEntities();
       if (stored.length > 0) {
         const configuredSet = new Set(
-          (this.config.entities || []).map((e) =>
-            typeof e === "string" ? e : e?.entity_id
-          )
+          (this.config.entities || [])
+            .map((e) => (typeof e === "string" ? e : e?.entity_id || e?.entity))
+            .filter(Boolean)
         );
         const currentSession = this._sessionEntities || [];
         const merged = Array.from(new Set([...stored, ...currentSession])).filter(
@@ -892,20 +892,32 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     if (this._isEditorPreviewCached !== undefined) {
       return this._isEditorPreviewCached;
     }
-    if (this.preview === true) {
+    if (this.preview === true || (this.hasAttribute && this.hasAttribute("preview"))) {
       return (this._isEditorPreviewCached = true);
     }
-    if (!this.isConnected) {
-      return false;
+    // Traverse upwards across all shadow DOM and light DOM boundaries
+    let node = this;
+    while (node) {
+      if (
+        node.preview === true ||
+        (node.hasAttribute && node.hasAttribute("preview")) ||
+        (node.tagName && (
+          node.tagName.toLowerCase() === "hui-card-preview" ||
+          node.tagName.toLowerCase() === "hui-dialog-edit-card" ||
+          node.tagName.toLowerCase() === "hui-card-element-editor" ||
+          node.tagName.toLowerCase() === "ha-dialog" ||
+          node.tagName.toLowerCase().includes("editor") ||
+          node.tagName.toLowerCase().includes("preview")
+        ))
+      ) {
+        return (this._isEditorPreviewCached = true);
+      }
+      node = node.parentElement || node.parentNode || (node.getRootNode && node.getRootNode()?.host);
     }
-    const isPreview = Boolean(
-      (typeof this.closest === "function" && this.closest("hui-card-preview")) ||
-      (this.parentElement && this.parentElement.tagName && this.parentElement.tagName.toLowerCase() === "hui-card-preview") ||
-      (this.getRootNode && this.getRootNode()?.host?.closest?.("hui-card-preview")) ||
-      (this.getRootNode && this.getRootNode()?.host?.parentElement?.tagName?.toLowerCase() === "hui-card-preview")
-    );
-    this._isEditorPreviewCached = isPreview;
-    return isPreview;
+    if (this.isConnected) {
+      this._isEditorPreviewCached = false;
+    }
+    return false;
   }
 
   get _lockScreenControls() {
@@ -4684,6 +4696,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   setConfig(rawConfig) {
+    this._isEditorPreviewCached = undefined;
     if (!rawConfig.entities || !Array.isArray(rawConfig.entities) || rawConfig.entities.length === 0) {
       throw new Error("You must define at least one media_player entity.");
     }
@@ -4701,21 +4714,6 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     }
     if (oldConfig?.lock_screen_controls !== config.lock_screen_controls) {
       this._mediaSessionOverride = null;
-    }
-    let previousStored = [];
-    if (oldConfig) {
-      const oldConfigKey = this._getSessionStorageKey(oldConfig);
-      const newConfigKey = this._getSessionStorageKey(config);
-      if (oldConfigKey && oldConfigKey !== newConfigKey) {
-        previousStored = this._loadStoredSessionEntities(oldConfigKey);
-        try {
-          if (typeof localStorage !== "undefined") {
-            localStorage.removeItem(oldConfigKey);
-          }
-        } catch {
-          // Ignore storage errors safely
-        }
-      }
     }
     this.config = config;
     if (this._cardType === "group_players") {
@@ -4736,17 +4734,19 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       this._showRemoteControl = true;
     }
     const configuredSet = new Set(
-      (config.entities || []).map((e) =>
-        typeof e === "string" ? e : e?.entity_id
-      )
+      (config.entities || [])
+        .map((e) => (typeof e === "string" ? e : e?.entity_id || e?.entity))
+        .filter(Boolean)
     );
     const storedSession = this._loadStoredSessionEntities();
     const currentSession = this._sessionEntities || [];
     const mergedSession = Array.from(
-      new Set([...previousStored, ...storedSession, ...currentSession])
+      new Set([...storedSession, ...currentSession])
     ).filter((id) => !configuredSet.has(id));
     this._sessionEntities = mergedSession;
-    this._saveStoredSessionEntities(mergedSession);
+    if (this.isConnected !== false && !this._isEditorPreview) {
+      this._saveStoredSessionEntities(mergedSession);
+    }
     if (this._autoEntities?.length) {
       if (!config.auto_add_playing_entities) {
         this._autoEntities = [];
@@ -4931,7 +4931,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const entities = this._effectiveEntities;
     const configEntityIds = this.entityIds;
     this._cachedEntityObjs = entities.map((e, index) => {
-      const entity_id = typeof e === "string" ? e : e.entity_id;
+      const entity_id = typeof e === "string" ? e : e.entity_id || e.entity;
       const name = typeof e === "string" ? "" : (e.name || "");
       const volume_entity = typeof e === "string" ? undefined : e.volume_entity;
       const remote_entity = typeof e === "string" ? undefined : e.remote_entity;
@@ -5428,7 +5428,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const covered = new Set();
     const configured = this.config?.entities || [];
     for (const e of configured) {
-      const id = typeof e === "string" ? e : e?.entity_id;
+      const id = typeof e === "string" ? e : e?.entity_id || e?.entity;
       if (id) covered.add(id);
     }
     for (const id of this._sessionEntities || []) {
@@ -5452,38 +5452,117 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _getSessionStorageKey(cfg = this.config) {
-    const configured = (cfg?.entities || [])
-      .map((e) => (typeof e === "string" ? e : e?.entity_id))
-      .filter(Boolean)
-      .sort()
-      .join(",");
-    return `${SESSION_STORAGE_PREFIX}${configured || "default"}`;
+    const cardId = cfg?.card_id || cfg?.id;
+    if (cardId) {
+      return `${SESSION_STORAGE_PREFIX}${cardId}`;
+    }
+    const entities = cfg?.entities || [];
+    const firstEntity = entities[0];
+    const primaryId =
+      typeof firstEntity === "string"
+        ? firstEntity
+        : firstEntity?.entity_id || firstEntity?.entity;
+    if (primaryId) {
+      return `${SESSION_STORAGE_PREFIX}${primaryId}`;
+    }
+    return `${SESSION_STORAGE_PREFIX}default`;
   }
 
   _loadStoredSessionEntities(customKey = null) {
     if (typeof window === "undefined" || typeof localStorage === "undefined") {
       return [];
     }
-    this._pruneOrphanStorageKeys();
+    const canMutateStorage = this.isConnected !== false && !this._isEditorPreview;
+    if (canMutateStorage) {
+      this._pruneOrphanStorageKeys();
+    }
     try {
       const key = customKey || this._getSessionStorageKey();
-      const raw = localStorage.getItem(key);
+      let raw = localStorage.getItem(key);
+
+      // Legacy migration: If no data under stable key and not using a custom key,
+      // check other configured entities of this card (e.g. if re-ordered) or default key
+      if (!raw && !customKey) {
+        const otherEntities = (this.config?.entities || []).slice(1);
+        for (const e of otherEntities) {
+          const id = typeof e === "string" ? e : e?.entity_id || e?.entity;
+          if (id) {
+            const altKey = `${SESSION_STORAGE_PREFIX}${id}`;
+            const candidateRaw = localStorage.getItem(altKey);
+            if (candidateRaw) {
+              try {
+                const candData = JSON.parse(candidateRaw);
+                const candEntities = Array.isArray(candData) ? candData : candData?.entities;
+                if (Array.isArray(candEntities) && candEntities.length > 0) {
+                  raw = candidateRaw;
+                  if (canMutateStorage) {
+                    localStorage.setItem(key, candidateRaw);
+                    localStorage.removeItem(altKey);
+                  }
+                  break;
+                }
+              } catch {
+                // Ignore parse errors safely
+              }
+            }
+          }
+        }
+      }
+
+      if (!raw && !customKey) {
+        const defaultKey = `${SESSION_STORAGE_PREFIX}default`;
+        if (defaultKey !== key) {
+          const defaultRaw = localStorage.getItem(defaultKey);
+          if (defaultRaw) {
+            try {
+              const defaultData = JSON.parse(defaultRaw);
+              const defaultEntities = Array.isArray(defaultData)
+                ? defaultData
+                : defaultData?.entities;
+              if (Array.isArray(defaultEntities)) {
+                const configuredSet = new Set(
+                  (this.config?.entities || [])
+                    .map((e) => (typeof e === "string" ? e : e?.entity_id || e?.entity))
+                    .filter(Boolean)
+                );
+                const applicable = defaultEntities.filter(
+                  (id) => typeof id === "string" && !configuredSet.has(id)
+                );
+                if (applicable.length > 0) {
+                  raw = defaultRaw;
+                  if (canMutateStorage) {
+                    localStorage.setItem(key, defaultRaw);
+                    localStorage.removeItem(defaultKey);
+                  }
+                }
+              }
+            } catch {
+              // Ignore parse errors safely
+            }
+          }
+        }
+      }
+
       if (!raw) return [];
       const parsed = JSON.parse(raw);
       const entities = Array.isArray(parsed) ? parsed : parsed?.entities;
       if (!Array.isArray(entities)) {
-        localStorage.removeItem(key);
+        if (canMutateStorage) {
+          localStorage.removeItem(key);
+        }
         return [];
       }
       const configuredSet = new Set(
-        (this.config?.entities || []).map((e) =>
-          typeof e === "string" ? e : e?.entity_id
-        )
+        (this.config?.entities || [])
+          .map((e) => (typeof e === "string" ? e : e?.entity_id || e?.entity))
+          .filter(Boolean)
       );
       const filtered = entities.filter((id) => typeof id === "string" && !configuredSet.has(id));
       if (filtered.length === 0) {
-        localStorage.removeItem(key);
-      } else if (!customKey) {
+        if (canMutateStorage) {
+          localStorage.removeItem(key);
+        }
+      } else if (!customKey && canMutateStorage) {
         this._saveStoredSessionEntities(filtered);
       }
       return filtered;
@@ -5493,7 +5572,12 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _saveStoredSessionEntities(entities) {
-    if (typeof window === "undefined" || typeof localStorage === "undefined") {
+    if (
+      this.isConnected === false ||
+      this._isEditorPreview ||
+      typeof window === "undefined" ||
+      typeof localStorage === "undefined"
+    ) {
       return;
     }
     try {
@@ -5513,7 +5597,12 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _pruneOrphanStorageKeys() {
-    if (typeof window === "undefined" || typeof localStorage === "undefined") {
+    if (
+      this.isConnected === false ||
+      this._isEditorPreview ||
+      typeof window === "undefined" ||
+      typeof localStorage === "undefined"
+    ) {
       return;
     }
     try {
@@ -5553,7 +5642,14 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _pruneMissingSessionEntities() {
-    if (!this.hass?.states || !this._sessionEntities?.length) return;
+    if (
+      this.isConnected === false ||
+      this._isEditorPreview ||
+      !this.hass?.states ||
+      !this._sessionEntities?.length
+    ) {
+      return;
+    }
     const currentStates = this.hass.states;
     const valid = this._sessionEntities.filter((id) => !!currentStates[id]);
     if (valid.length !== this._sessionEntities.length) {
@@ -5699,7 +5795,9 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     if (!this._cachedEffectiveEntities) {
       const configured = this.config?.entities || [];
       const seen = new Set(
-        configured.map((e) => (typeof e === "string" ? e : e?.entity_id))
+        configured
+          .map((e) => (typeof e === "string" ? e : e?.entity_id || e?.entity))
+          .filter(Boolean)
       );
       const extras = [];
       for (const [list, kind] of [
@@ -5721,7 +5819,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   get entityIds() {
     if (!this._cachedEntityIds) {
       this._cachedEntityIds = this._effectiveEntities.map((e) =>
-        typeof e === "string" ? e : e.entity_id
+        typeof e === "string" ? e : e.entity_id || e.entity
       );
     }
     return this._cachedEntityIds;

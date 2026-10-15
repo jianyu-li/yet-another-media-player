@@ -145,6 +145,7 @@ export const TEMPLATE_CONFIGS = Object.freeze({
  * Card-level default values
  */
 export const CARD_CONFIG_DEFAULTS = Object.freeze({
+  card_id: "",
   template: "custom",
   appearance: "automatic",
   card_type: "standard",
