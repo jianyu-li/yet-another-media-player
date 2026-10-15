@@ -722,22 +722,6 @@ export const menusSheetsStyles = css`
     margin: 2px;
   }
 
-  .player-transient-tag {
-    display: inline-flex;
-    align-items: center;
-    font-size: 0.65em;
-    font-weight: 600;
-    line-height: 1;
-    padding: 2px 4px;
-    border-radius: 4px;
-    border: 1px dashed
-      var(--yamp-chip-transient-border, var(--custom-accent, var(--accent-color, #1976d2)));
-    color: var(--custom-accent, var(--primary-text));
-    opacity: 0.9;
-    letter-spacing: 0.3px;
-    text-transform: uppercase;
-  }
-
   .grouped-players-card .group-player-row {
     padding: 10px 7px 8px 7px;
     margin: 0;

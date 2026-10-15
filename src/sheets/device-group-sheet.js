@@ -691,27 +691,9 @@ export function renderGroupingSheet() {
             ></ha-icon>
             <span
               class="menu-action-label"
-              style="display:inline-flex;align-items:center;justify-content:center;gap:4px;flex-wrap:wrap;"
+              style="display:inline-flex;align-items:center;justify-content:center;gap:4px;"
             >
               <span>${name}</span>
-              ${
-                transient
-                  ? html`<span
-                      class="player-transient-tag"
-                      title="${
-                        transient === "session"
-                          ? localize("card.grouping.transient_session") || "Session Player"
-                          : localize("card.grouping.transient_auto") || "Playing Player"
-                      }"
-                    >
-                      ${
-                        transient === "session"
-                          ? localize("card.grouping.transient_session") || "Session"
-                          : localize("card.grouping.transient_auto") || "Playing"
-                      }
-                    </span>`
-                  : nothing
-              }
             </span>
           </div>
         </div>
@@ -759,26 +741,8 @@ export function renderGroupingSheet() {
           }
           style="flex:0.7; min-width:84px; cursor:${entityIdx >= 0 ? "pointer" : "default"};"
         >
-          <div style="text-align:left;display:flex;align-items:center;gap:4px;flex-wrap:wrap;">
+          <div style="text-align:left;display:flex;align-items:center;gap:4px;">
             <span>${name}</span>
-            ${
-              transient
-                ? html`<span
-                    class="player-transient-tag"
-                    title="${
-                      transient === "session"
-                        ? localize("card.grouping.transient_session") || "Session Player"
-                        : localize("card.grouping.transient_auto") || "Playing Player"
-                    }"
-                  >
-                    ${
-                      transient === "session"
-                        ? localize("card.grouping.transient_session") || "Session"
-                        : localize("card.grouping.transient_auto") || "Playing"
-                    }
-                  </span>`
-                : nothing
-            }
           </div>
           <div style="font-size:0.8em; opacity:0.7; text-align:left;">${stateLabel}</div>
         </div>
