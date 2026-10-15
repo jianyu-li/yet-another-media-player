@@ -992,7 +992,7 @@ export function renderGroupingSheet() {
       groupedAny || hasAnyGroups || canGroupAll
         ? html`
             <div
-              style="display:flex; align-items:center; gap:8px; margin-top:4px; margin-bottom:6px;"
+              style="display:flex; align-items:center; gap:8px; margin-top:4px; margin-bottom:0px;"
             >
               ${
                 groupedAny
@@ -1000,7 +1000,7 @@ export function renderGroupingSheet() {
                       <button
                         class="entity-options-item"
                         @click=${() => this._syncGroupVolume()}
-                        style="flex:0 0 auto; min-width:120px; text-align:center; margin:0; padding:4px 8px; font-size:0.95em; min-height:28px;"
+                        style="flex:0 0 auto; min-width:120px; text-align:center; margin:0; padding:2px 8px; min-height:28px;"
                       >
                         ${localize("card.grouping.sync_volume")}
                       </button>
@@ -1013,7 +1013,7 @@ export function renderGroupingSheet() {
                       <button
                         class="entity-options-item"
                         @click=${() => this._ungroupAll()}
-                        style="flex:0 0 auto; min-width:120px; text-align:center; margin:0 0 0 auto; padding:4px 8px; font-size:0.95em; min-height:28px;"
+                        style="flex:0 0 auto; min-width:120px; text-align:center; margin:0 0 0 auto; padding:2px 8px; min-height:28px;"
                       >
                         ${localize("card.grouping.ungroup_all") || "Ungroup All"}
                       </button>
@@ -1023,7 +1023,7 @@ export function renderGroupingSheet() {
                         <button
                           class="entity-options-item"
                           @click=${() => this._groupAll()}
-                          style="flex:0 0 auto; min-width:120px; text-align:center; margin:0 0 0 auto; padding:4px 8px; font-size:0.95em; min-height:28px;"
+                          style="flex:0 0 auto; min-width:120px; text-align:center; margin:0 0 0 auto; padding:2px 8px; min-height:28px;"
                         >
                           ${localize("card.grouping.group_all") || "Group All"}
                         </button>
