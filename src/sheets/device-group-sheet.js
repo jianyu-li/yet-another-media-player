@@ -176,19 +176,12 @@ export function renderGroupingSheet() {
                     >
                       <ha-icon
                         .icon=${res.icon}
-                        style="--mdc-icon-size: 20px; width: 20px; height: 20px; opacity: 0.8;"
+                        style="--mdc-icon-size: 20px; width: 20px; height: 20px; opacity: 0.8; flex-shrink: 0;"
                       ></ha-icon>
-                      <div
-                        style="display: flex; flex-direction: column; min-width: 0; overflow: hidden;"
+                      <span
+                        style="font-weight: 500; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; min-width: 0;"
+                        >${res.name}</span
                       >
-                        <span
-                          style="font-weight: 500; text-overflow: ellipsis; overflow: hidden; white-space: nowrap;"
-                          >${res.name}</span
-                        >
-                        <span style="font-size: 11px; opacity: 0.6; text-transform: capitalize;"
-                          >${res.state}</span
-                        >
-                      </div>
                     </div>
                     <button
                       type="button"
