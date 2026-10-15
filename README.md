@@ -10,6 +10,7 @@ YAMP is a full-featured Home Assistant media card for controlling multiple entit
 ## Features
 
 - **Multi-Player Control** — Switch between media players in a single card with chip-based selection. Control volume individually or as a group
+- **Dynamic & Session Players** — Automatically surface unconfigured players while they're actively playing, search and add players to your active session on the fly, and pin them to persist across page refreshes
 - **Lock Screen Controls (Experimental)** — Pause, skip tracks, scrub through songs, and see live album artwork right from your phone's lock screen, notification shade, or desktop media keys.
 - **Quick Grouping Mode** — Double-click any player chip to enter quick grouping mode, allowing you to quickly join or unjoin entities from the active group without opening menus.
 - **Gesture Controls** — Tap, double-tap, hold, or swipe the artwork to trigger any action. Skip tracks, play/pause, adjust volume, or launch custom scripts
@@ -64,6 +65,9 @@ Below you will find a list of all configuration options.
 | `hidden_menu_options`      | array        | No           | `[]`        | Array of options sheet menu items to hide (can be set at card level or per-entity) |
 | `hidden_filter_chips`      | array        | No           | `[]`        | Hide specific search filter chips for this entity (UI only; does not change search results) |
 | `disable_auto_select`      | boolean      | No           | `false`     | Prevents the card from automatically switching to this entity when playback starts, even if it is a group master |
+| `show_player_search`       | boolean      | No           | `false`     | Allow searching and adding unconfigured media players to the card for the session in the Players menu (see [Dynamic & Session Players](#dynamic--session-players)) |
+| `auto_add_playing_entities`| boolean      | No           | `false`     | Automatically display unconfigured media players while they are actively playing, and remove them once playback goes idle |
+| `auto_add_exclude`         | array/string | No           | `[]`        | Comma-separated list or array of entity IDs, friendly names, or wildcard glob patterns (e.g. `media_player.*frame`, `*tv*`) to exclude from search and auto-discovery |
 | `entity_volume_mode`       | choice       | No           | —           | Override global `volume_mode` for this entity (`slider`, `stepper`, `hidden`) |
 | `entity_volume_step`       | number       | No           | —           | Override global `volume_step` for this entity when its volume mode is `stepper` |
 |                                                                                                 |
@@ -311,6 +315,46 @@ You can use **Quick Grouping Mode** to manage your group directly from the chip 
 ### Transfer Queue
 
 The card can surface a **Transfer Queue** menu option for Music Assistant players. When the active entity supports queue transfers, selecting *Transfer Queue* opens a list of compatible targets and the queue moves instantly to the chosen player. The option only appears when a Music Assistant entity with a queue is selected.
+
+### Dynamic & Session Players
+
+YAMP can dynamically discover unconfigured media players and allow you to search and temporarily add players to your card without permanently editing your card configuration.
+
+#### Auto-Add Playing Entities (`auto_add_playing_entities`)
+When `auto_add_playing_entities: true` is enabled, any media player in Home Assistant that begins playing will automatically appear on your card with a dashed chip border. Once playback stops and the player goes idle, it will automatically disappear from the card.
+- **Twin Player Deduplication**: If an entity is playing via Music Assistant, YAMP automatically prevents duplicate chips for the underlying physical device.
+- **Initial Discovery**: When the page loads or when returning to the browser tab, any currently playing players across your home are surfaced immediately.
+
+#### Search & Add Players for the Session (`show_player_search`)
+When `show_player_search: true` is enabled, opening the **Players** sheet menu displays a real-time search box at the top.
+- **Search Any Player**: Filter through all available `media_player` entities in Home Assistant by name or entity ID.
+- **Add to Session**: Tap the plus (`+`) button or "Add to session" on any search result to immediately insert it into the card's chip row.
+- **Dashed Border Indicator**: Transient session players are visually distinguished by a dashed chip border.
+
+#### Pinning & Session Persistence
+- **Hold to Pin / Keep in Session**: If you want a temporary or auto-discovered player to stick around even after playback pauses or you refresh your browser, tap "Keep in session" in the Players menu or hold the chip.
+- **Zero-Setup Persistence**: Pinned players are automatically remembered in your browser's local storage and persist across page refreshes, tab switching, and card reconfigurations without requiring any manual setup.
+- **Remove from Session**: Tap the remove button in the Players menu to dismiss a temporary player at any time.
+
+#### Exclude Patterns (`auto_add_exclude`)
+Use `auto_add_exclude` to specify devices that should never appear in player search or auto-discovery (such as TVs, cast dongles, or background devices):
+- Supports exact entity IDs (e.g. `media_player.living_room_tv`), friendly names (e.g. `Office Frame`), or wildcard glob patterns (e.g. `media_player.*frame`, `*tv*`).
+
+#### Example Configuration
+```yaml
+type: custom:yet-another-media-player
+entities:
+  - entity_id: media_player.living_room_speaker
+    name: Living Room
+  - entity_id: media_player.kitchen_speaker
+    name: Kitchen
+show_player_search: true
+auto_add_playing_entities: true
+auto_add_exclude:
+  - media_player.*_tv
+  - media_player.bedroom_frame
+  - "*soundbar*"
+```
 
 ### Volume Entity Configuration
 
@@ -732,6 +776,7 @@ Set `template: players` (or `template: group_players` / `template: dedicated_gro
 **Dedicated Mode Behavior:**
 - **Permanent View**: The Players menu is always visible as the primary view.
 - **Auto-Sync**: Quickly join or unjoin players, transfer queues, and adjust individual volumes from a single, persistent screen.
+- **Live Search**: When `show_player_search: true` is enabled, the dedicated players view includes the search bar at the top to find and add unconfigured players on the fly.
 
 ### Dedicated Up Next Mode
 
