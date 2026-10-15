@@ -769,6 +769,7 @@ export interface YetAnotherMediaPlayerCard {
   _cachedEntityObjs?: any[] | null;
   _sessionEntities?: string[];
   _autoEntities?: string[];
+  _initialAutoDiscoveryDone?: boolean;
   _playerSearchQuery?: string;
   _setTransientEntities?: (options?: { session?: string[]; auto?: string[] }) => void;
   _addSessionEntity?: (id: string) => void;

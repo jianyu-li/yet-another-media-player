@@ -255,4 +255,60 @@ describe("Low-End Device Reactivity & shouldUpdate Optimizations", () => {
       assert.deepStrictEqual(newIds, ["media_player.new_entity"]);
     });
   });
+
+  describe("Page Load & Visibility Auto-Discovery", () => {
+    it("discovers already playing entities on initial update (page load)", () => {
+      const loadCard = new YetAnotherMediaPlayerCard();
+      loadCard.setConfig({
+        entities: ["media_player.configured_one"],
+        auto_add_playing_entities: true,
+      });
+      loadCard.hass = {
+        states: {
+          "media_player.configured_one": {
+            entity_id: "media_player.configured_one",
+            state: "idle",
+            attributes: {},
+          },
+          "media_player.already_playing": {
+            entity_id: "media_player.already_playing",
+            state: "playing",
+            attributes: { friendly_name: "Kitchen Sonos", media_title: "Track 1" },
+          },
+        },
+      };
+
+      // Initial update cycle before render
+      loadCard.willUpdate(new Map([["hass", undefined]]));
+      assert.ok(loadCard._autoEntities.includes("media_player.already_playing"));
+      assert.ok(loadCard.entityIds.includes("media_player.already_playing"));
+    });
+
+    it("runs discovery when tab visibility returns from hidden", () => {
+      const visCard = new YetAnotherMediaPlayerCard();
+      visCard.setConfig({
+        entities: ["media_player.configured_one"],
+        auto_add_playing_entities: true,
+      });
+      visCard.hass = {
+        states: {
+          "media_player.configured_one": {
+            entity_id: "media_player.configured_one",
+            state: "idle",
+            attributes: {},
+          },
+          "media_player.background_playing": {
+            entity_id: "media_player.background_playing",
+            state: "playing",
+            attributes: { friendly_name: "Patio Speaker" },
+          },
+        },
+      };
+
+      globalThis.document = /** @type {any} */ ({ hidden: false });
+      visCard._handleVisibilityChange();
+      assert.ok(visCard._autoEntities.includes("media_player.background_playing"));
+      delete globalThis.document;
+    });
+  });
 });

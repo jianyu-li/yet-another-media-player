@@ -411,6 +411,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   connectedCallback() {
     super.connectedCallback();
     this._isEditorPreviewCached = undefined;
+    this._initialAutoDiscoveryDone = false;
     window.addEventListener("scroll", this._handleGlobalScroll, { passive: true });
     window.addEventListener("resize", this._handleViewportResize, { passive: true });
     if (this._handleKeyDownBound) {
@@ -574,6 +575,9 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         this._progressTimer = null;
       }
     } else {
+      if (this.config?.auto_add_playing_entities && !this._isEditorPreview) {
+        this._discoverAutoEntities(null);
+      }
       this.requestUpdate();
     }
   }
@@ -709,13 +713,28 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
     // Check auto-added playing entities if feature is enabled
     if (this.config?.auto_add_playing_entities && !this._isEditorPreview) {
-      if (this._discoverAutoEntities(oldHass)) {
+      if (!this._initialAutoDiscoveryDone && this.hass?.states) {
+        this._initialAutoDiscoveryDone = true;
+        if (this._discoverAutoEntities(null)) {
+          return true;
+        }
+      } else if (this._discoverAutoEntities(oldHass)) {
         return true;
       }
     }
 
     // No relevant entities or settings changed - skip re-render!
     return false;
+  }
+
+  willUpdate(changedProps) {
+    super.willUpdate?.(changedProps);
+    if (this.config?.auto_add_playing_entities && !this._isEditorPreview) {
+      if (!this._initialAutoDiscoveryDone && this.hass?.states) {
+        this._initialAutoDiscoveryDone = true;
+        this._discoverAutoEntities(null);
+      }
+    }
   }
 
   get _controlLayout() {
@@ -928,6 +947,8 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._sessionEntities = [];
     /** @type {string[]} */
     this._autoEntities = [];
+    /** @type {boolean} */
+    this._initialAutoDiscoveryDone = false;
     /** @type {string} */
     this._playerSearchQuery = "";
     /** @type {string[] | null} */
@@ -4695,6 +4716,9 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           (id) => !configuredSet.has(id)
         );
       }
+    }
+    if (oldConfig?.auto_add_playing_entities !== config.auto_add_playing_entities) {
+      this._initialAutoDiscoveryDone = false;
     }
     this._cachedEffectiveEntities = null;
     this._cachedEntityIds = null;
