@@ -715,6 +715,23 @@ export function joinPlayers(
   groupMembers?: string | string[]
 ): Promise<any>;
 export function unjoinPlayer(hass?: HomeAssistant, entityId?: string): Promise<any>;
+export function matchesEntityPattern(
+  entityId: string,
+  patterns?: string[] | string | null,
+  friendlyName?: string
+): boolean;
+export function findPlayingUnconfiguredPlayers(
+  states?: Record<string, any>,
+  coveredIds?: Set<string> | string[],
+  excludePatterns?: string[] | string | null
+): string[];
+export function searchMediaPlayers(
+  states?: Record<string, any>,
+  query?: string,
+  coveredIds?: Set<string> | string[],
+  excludePatterns?: string[] | string | null,
+  limit?: number
+): Array<{ id: string; name: string; state: string; icon: string; isPlaying: boolean }>;
 
 export interface GroupPlayerState {
   isGroupable: boolean;

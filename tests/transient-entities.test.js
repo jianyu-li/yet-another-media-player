@@ -47,6 +47,40 @@ describe("Transient Entities Logic", () => {
       assert.strictEqual(matchesEntityPattern("media_player.tv", []), false);
       assert.strictEqual(matchesEntityPattern("media_player.tv", null), false);
     });
+
+    it("handles friendly_name matching with wildcards and domains", () => {
+      // User case: media_player.*frame excluding Bedroom Frame TV and Guest Room Frame
+      assert.strictEqual(
+        matchesEntityPattern(
+          "media_player.bedroom_tv",
+          ["media_player.*frame"],
+          "Bedroom Frame TV"
+        ),
+        true
+      );
+      assert.strictEqual(
+        matchesEntityPattern(
+          "media_player.guest_room_tv_2",
+          ["media_player.*frame"],
+          "Guest Room Frame"
+        ),
+        true
+      );
+      // Keyword matching
+      assert.strictEqual(
+        matchesEntityPattern("media_player.bedroom_tv", ["frame"], "Bedroom Frame TV"),
+        true
+      );
+      // Non-matching
+      assert.strictEqual(
+        matchesEntityPattern(
+          "media_player.kitchen_speaker",
+          ["media_player.*frame"],
+          "Kitchen Sonos"
+        ),
+        false
+      );
+    });
   });
 
   describe("findPlayingUnconfiguredPlayers", () => {
@@ -162,6 +196,31 @@ describe("Transient Entities Logic", () => {
       // Office TV is playing so it comes before Living Room TV which is off
       assert.strictEqual(results[0].id, "media_player.office_excluded");
       assert.strictEqual(results[1].id, "media_player.living_room_tv");
+    });
+
+    it("excludes entities whose friendly_name matches wildcard patterns like media_player.*frame", () => {
+      const frameStates = {
+        "media_player.bedroom_tv": {
+          state: "on",
+          attributes: { friendly_name: "Bedroom Frame TV" },
+        },
+        "media_player.guest_room_tv_2": {
+          state: "on",
+          attributes: { friendly_name: "Guest Room Frame" },
+        },
+        "media_player.living_room_tv": {
+          state: "on",
+          attributes: { friendly_name: "Living Room TV" },
+        },
+      };
+
+      const results = searchMediaPlayers(frameStates, "frame", [], ["media_player.*frame"]);
+      // Both Frame TVs should be excluded by the pattern media_player.*frame
+      assert.strictEqual(results.length, 0);
+
+      // Without exclusion, searching "frame" returns both
+      const unfiltered = searchMediaPlayers(frameStates, "frame", [], []);
+      assert.strictEqual(unfiltered.length, 2);
     });
   });
 });

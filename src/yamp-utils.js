@@ -1022,13 +1022,14 @@ export function resolveSelectedArtwork({
 }
 
 /**
- * Test whether an entity ID matches any pattern in a list of glob patterns or exact IDs.
- * Supports '*' wildcard, case-insensitive.
+ * Test whether an entity ID or its friendly name matches any pattern in a list of glob patterns or exact IDs.
+ * Supports '*' wildcard, case-insensitive, and matches against entityId and friendlyName.
  * @param {string} entityId
  * @param {string[] | string} [patterns]
+ * @param {string} [friendlyName=""]
  * @returns {boolean}
  */
-export function matchesEntityPattern(entityId, patterns) {
+export function matchesEntityPattern(entityId, patterns, friendlyName = "") {
   if (!entityId || !patterns) return false;
   const list = Array.isArray(patterns)
     ? patterns
@@ -1037,25 +1038,54 @@ export function matchesEntityPattern(entityId, patterns) {
       : [];
   if (list.length === 0) return false;
 
-  const target = entityId.trim().toLowerCase();
+  const targetId = entityId.trim().toLowerCase();
+  const targetName = (friendlyName || "").trim().toLowerCase();
+
   for (const raw of list) {
     if (!raw || typeof raw !== "string") continue;
     const p = raw.trim().toLowerCase();
     if (!p) continue;
-    if (p === target) return true;
+
+    // 1. Direct equality against entity ID or friendly name
+    if (p === targetId || (targetName && p === targetName)) return true;
+
+    const pNoDomain = p.startsWith("media_player.") ? p.slice("media_player.".length) : p;
+
+    if (targetName && pNoDomain && pNoDomain === targetName) return true;
+
+    // 2. Wildcard glob matching
     if (p.includes("*")) {
-      const regexStr =
-        "^" +
-        p
+      const globToRegex = (globStr) => {
+        const escaped = globStr
           .split("*")
           .map((s) => s.replace(/[-[\]{}()+?.,\\^$|#\s]/g, "\\$&"))
-          .join(".*") +
-        "$";
+          .join(".*");
+        return new RegExp("^" + escaped + "$");
+      };
+
       try {
-        const re = new RegExp(regexStr);
-        if (re.test(target)) return true;
+        // Test entity ID
+        if (globToRegex(p).test(targetId)) return true;
+
+        // Test friendly name
+        if (targetName) {
+          if (globToRegex(p).test(targetName)) return true;
+          if (pNoDomain && globToRegex(pNoDomain).test(targetName)) return true;
+          // If the pattern has a wildcard (e.g. media_player.*frame or *frame*),
+          // also match if the friendly name contains the token (e.g. "Bedroom Frame TV" contains "frame")
+          if (pNoDomain && pNoDomain.includes("*")) {
+            const token = pNoDomain.replace(/\*/g, "").trim();
+            if (token && targetName.includes(token)) return true;
+          }
+        }
       } catch {
-        // Ignore invalid pattern
+        // Ignore invalid regex
+      }
+    } else {
+      // 3. Keyword / substring match when pattern has no domain or wildcards (e.g. "frame")
+      if (!p.includes(".")) {
+        if (targetId.includes(p)) return true;
+        if (targetName && targetName.includes(p)) return true;
       }
     }
   }
@@ -1080,7 +1110,7 @@ export function findPlayingUnconfiguredPlayers(states, coveredIds, excludePatter
     if (!id.startsWith("media_player.")) continue;
     if (coveredSet.has(id)) continue;
     if (!st || st.state !== "playing") continue;
-    if (matchesEntityPattern(id, excludePatterns)) continue;
+    if (matchesEntityPattern(id, excludePatterns, st.attributes?.friendly_name)) continue;
     candidates.push({ id, st });
   }
 
@@ -1179,9 +1209,9 @@ export function searchMediaPlayers(states, query, coveredIds, excludePatterns, l
     if (!id.startsWith("media_player.")) continue;
     if (coveredSet.has(id)) continue;
     if (!st || st.state === "unavailable" || st.state === "unknown") continue;
-    if (matchesEntityPattern(id, excludePatterns)) continue;
 
     const friendlyName = st.attributes?.friendly_name || id;
+    if (matchesEntityPattern(id, excludePatterns, friendlyName)) continue;
     const nameLower = friendlyName.toLowerCase();
     const idLower = id.toLowerCase();
 
