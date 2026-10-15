@@ -5658,10 +5658,10 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   /**
-   * @param {{ session?: string[], auto?: string[] }} [options]
+   * @param {{ session?: string[], auto?: string[], selectedId?: string }} [options]
    */
-  _setTransientEntities({ session = undefined, auto = undefined } = {}) {
-    const prevSelectedId = this.currentEntityId;
+  _setTransientEntities({ session = undefined, auto = undefined, selectedId = undefined } = {}) {
+    const targetSelectedId = selectedId || this.currentEntityId;
     const prevPinnedId =
       this._pinnedIndex !== null ? this.entityIds[this._pinnedIndex] : null;
 
@@ -5678,8 +5678,8 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._pruneTransientIndexState();
 
     const newIds = this.entityIds;
-    if (prevSelectedId && newIds.includes(prevSelectedId)) {
-      this._selectedIndex = newIds.indexOf(prevSelectedId);
+    if (targetSelectedId && newIds.includes(targetSelectedId)) {
+      this._selectedIndex = newIds.indexOf(targetSelectedId);
     } else if (this._selectedIndex >= newIds.length) {
       this._selectedIndex = 0;
     }
@@ -5711,15 +5711,26 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     pruneObj(this._lastPlayingEntityIdByChip);
   }
 
-  _addSessionEntity(id) {
+  _addSessionEntity(id, makeActive = true) {
     if (!id || typeof id !== "string") return;
     const currentSession = this._sessionEntities || [];
-    if (currentSession.includes(id)) return;
     const currentAuto = (this._autoEntities || []).filter((aId) => aId !== id);
+    const newSession = currentSession.includes(id) ? currentSession : [...currentSession, id];
     this._setTransientEntities({
-      session: [...currentSession, id],
+      session: newSession,
       auto: currentAuto,
+      selectedId: makeActive ? id : undefined,
     });
+    if (makeActive) {
+      const idx = this.entityIds.indexOf(id);
+      if (idx >= 0) {
+        if (typeof this._selectEntityFromGrouping === "function") {
+          this._selectEntityFromGrouping(idx);
+        } else {
+          this._onChipClick(idx);
+        }
+      }
+    }
   }
 
   _removeSessionEntity(id) {
@@ -5734,7 +5745,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
   _promoteAutoToSession(id) {
     if (!id || typeof id !== "string") return;
-    this._addSessionEntity(id);
+    this._addSessionEntity(id, false);
   }
 
   _discoverAutoEntities(oldHass) {

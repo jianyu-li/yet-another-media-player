@@ -772,8 +772,12 @@ export interface YetAnotherMediaPlayerCard {
   _autoEntities?: string[];
   _initialAutoDiscoveryDone?: boolean;
   _playerSearchQuery?: string;
-  _setTransientEntities?: (options?: { session?: string[]; auto?: string[] }) => void;
-  _addSessionEntity?: (id: string) => void;
+  _setTransientEntities?: (options?: {
+    session?: string[];
+    auto?: string[];
+    selectedId?: string;
+  }) => void;
+  _addSessionEntity?: (id: string, makeActive?: boolean) => void;
   _removeSessionEntity?: (id: string) => void;
   _getSessionStorageKey?: (cfg?: any) => string;
   _loadStoredSessionEntities?: (customKey?: string | null) => string[];

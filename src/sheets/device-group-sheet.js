@@ -188,8 +188,10 @@ export function renderGroupingSheet() {
                       class="entity-options-item"
                       style="padding: 4px 10px; font-size: 12px; display: flex; align-items: center; gap: 4px; border-radius: 6px; cursor: pointer;"
                       @click=${() => {
-                        this._addSessionEntity?.(res.id);
+                        this._addSessionEntity?.(res.id, true);
                         this._playerSearchQuery = "";
+                        const input = this.renderRoot?.querySelector?.("#player-search-input-box");
+                        input?.blur?.();
                         this.requestUpdate();
                       }}
                       title="${localize("card.grouping.add_player") || "Add to session"}"

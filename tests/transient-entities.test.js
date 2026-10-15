@@ -223,4 +223,76 @@ describe("Transient Entities Logic", () => {
       assert.strictEqual(unfiltered.length, 2);
     });
   });
+
+  describe("Session Entity Active Selection", async () => {
+    // Setup mock browser globals if needed
+    const g = /** @type {any} */ (globalThis);
+    if (!g.window) g.window = globalThis;
+    if (!g.customElements) g.customElements = { define() {} };
+    if (!g.HTMLElement) {
+      class MockHTMLElement {
+        attachShadow() {
+          return {};
+        }
+      }
+      g.HTMLElement = MockHTMLElement;
+    }
+    if (!g.__VERSION__) g.__VERSION__ = "1.0.0-test";
+
+    const { YetAnotherMediaPlayerCard } = await import("../src/yet-another-media-player.js");
+
+    it("makes the added session player the active entity by default and triggers selection feedback", () => {
+      const card = new YetAnotherMediaPlayerCard();
+      card.setConfig({
+        type: "custom:yet-another-media-player",
+        entities: ["media_player.living_room", "media_player.kitchen"],
+      });
+      card.hass = {
+        states: {
+          "media_player.living_room": { entity_id: "media_player.living_room", state: "idle" },
+          "media_player.kitchen": { entity_id: "media_player.kitchen", state: "idle" },
+          "media_player.office": { entity_id: "media_player.office", state: "playing" },
+        },
+      };
+
+      assert.strictEqual(card.currentEntityId, "media_player.living_room");
+      assert.strictEqual(card._selectedIndex, 0);
+
+      // Add unconfigured player to session
+      card._addSessionEntity("media_player.office");
+
+      // Newly added player must now be the active entity
+      assert.strictEqual(card.currentEntityId, "media_player.office");
+      assert.strictEqual(card._selectedIndex, 2);
+      assert.strictEqual(card._justSelectedGroupingEntityId, "media_player.office");
+    });
+
+    it("does not change active entity when makeActive is explicitly false or when promoting auto player", () => {
+      const card = new YetAnotherMediaPlayerCard();
+      card.setConfig({
+        type: "custom:yet-another-media-player",
+        entities: ["media_player.living_room"],
+      });
+      card.hass = {
+        states: {
+          "media_player.living_room": { entity_id: "media_player.living_room", state: "idle" },
+          "media_player.patio": { entity_id: "media_player.patio", state: "idle" },
+          "media_player.garage": { entity_id: "media_player.garage", state: "idle" },
+        },
+      };
+
+      // Add patio with makeActive = false
+      card._addSessionEntity("media_player.patio", false);
+      assert.strictEqual(card.currentEntityId, "media_player.living_room");
+      assert.strictEqual(card._selectedIndex, 0);
+
+      // Auto-add garage and promote
+      card._setTransientEntities({ auto: ["media_player.garage"] });
+      assert.strictEqual(card.currentEntityId, "media_player.living_room");
+
+      card._promoteAutoToSession("media_player.garage");
+      assert.strictEqual(card.currentEntityId, "media_player.living_room");
+      assert.strictEqual(card._selectedIndex, 0);
+    });
+  });
 });
