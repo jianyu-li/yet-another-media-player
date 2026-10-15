@@ -4702,10 +4702,12 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     if (oldConfig?.lock_screen_controls !== config.lock_screen_controls) {
       this._mediaSessionOverride = null;
     }
+    let previousStored = [];
     if (oldConfig) {
       const oldConfigKey = this._getSessionStorageKey(oldConfig);
       const newConfigKey = this._getSessionStorageKey(config);
       if (oldConfigKey && oldConfigKey !== newConfigKey) {
+        previousStored = this._loadStoredSessionEntities(oldConfigKey);
         try {
           if (typeof localStorage !== "undefined") {
             localStorage.removeItem(oldConfigKey);
@@ -4740,9 +4742,9 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     );
     const storedSession = this._loadStoredSessionEntities();
     const currentSession = this._sessionEntities || [];
-    const mergedSession = Array.from(new Set([...storedSession, ...currentSession])).filter(
-      (id) => !configuredSet.has(id)
-    );
+    const mergedSession = Array.from(
+      new Set([...previousStored, ...storedSession, ...currentSession])
+    ).filter((id) => !configuredSet.has(id));
     this._sessionEntities = mergedSession;
     this._saveStoredSessionEntities(mergedSession);
     if (this._autoEntities?.length) {
@@ -5458,13 +5460,13 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     return `${SESSION_STORAGE_PREFIX}${configured || "default"}`;
   }
 
-  _loadStoredSessionEntities() {
+  _loadStoredSessionEntities(customKey = null) {
     if (typeof window === "undefined" || typeof localStorage === "undefined") {
       return [];
     }
     this._pruneOrphanStorageKeys();
     try {
-      const key = this._getSessionStorageKey();
+      const key = customKey || this._getSessionStorageKey();
       const raw = localStorage.getItem(key);
       if (!raw) return [];
       const parsed = JSON.parse(raw);
@@ -5481,7 +5483,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       const filtered = entities.filter((id) => typeof id === "string" && !configuredSet.has(id));
       if (filtered.length === 0) {
         localStorage.removeItem(key);
-      } else {
+      } else if (!customKey) {
         this._saveStoredSessionEntities(filtered);
       }
       return filtered;

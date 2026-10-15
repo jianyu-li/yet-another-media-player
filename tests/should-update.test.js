@@ -467,7 +467,7 @@ describe("Low-End Device Reactivity & shouldUpdate Optimizations", () => {
       assert.strictEqual(mockStore.has(activeKey), true, "Recent key should be retained");
     });
 
-    it("removes old storage key when card entities change in setConfig", () => {
+    it("migrates session entities and removes old storage key when card entities change in setConfig", () => {
       const card = new YetAnotherMediaPlayerCard();
       card.setConfig({ entities: ["media_player.kitchen"] });
       card._addSessionEntity("media_player.patio");
@@ -482,6 +482,10 @@ describe("Low-End Device Reactivity & shouldUpdate Optimizations", () => {
         false,
         "Old key should be deleted upon reconfiguration"
       );
+
+      const newKey = "yamp_session_players_media_player.bedroom";
+      assert.ok(mockStore.has(newKey), "New key should be created with migrated session entities");
+      assert.deepStrictEqual(card._sessionEntities, ["media_player.patio"]);
     });
 
     it("prunes session entities that no longer exist in hass.states", () => {
