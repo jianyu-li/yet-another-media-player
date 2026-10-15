@@ -1070,6 +1070,10 @@ export const menusSheetsStyles = css`
     color: var(--yamp-overlay-text);
   }
 
+  .group-player-row .group-toggle-btn:not(:last-child) {
+    margin-right: 0;
+  }
+
   .group-toggle-btn ha-icon {
     width: 22px;
     height: 22px;

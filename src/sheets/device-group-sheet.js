@@ -903,7 +903,7 @@ export function renderGroupingSheet() {
                     }
                   }}
                   title=${toggleTooltip}
-                  style="margin-left:2px; ${
+                  style="margin-left:2px; ${transient ? "margin-right:0px;" : ""} ${
                     isToggleDisabled ? "cursor: not-allowed; opacity: 0.35;" : ""
                   }"
                 >
@@ -913,7 +913,9 @@ export function renderGroupingSheet() {
                 </button>
               `
             : html`<span
-                style="margin-left:2px;margin-right:10px;width:32px;display:inline-block;"
+                style="margin-left:2px; ${
+                  transient ? "margin-right:0px;" : "margin-right:10px;"
+                } width:32px;display:inline-block;"
               ></span>`
         }
         ${
