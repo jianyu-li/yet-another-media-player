@@ -326,7 +326,8 @@ export function renderChipRow({
 
         const icon = state?.attributes?.icon || "mdi:cast";
         const isMaActive = typeof getIsMaActive === "function" ? getIsMaActive(id) : false;
-        const transient = typeof getChipTransient === "function" ? getChipTransient(id) : undefined;
+        const transient =
+          typeof getChipTransient === "function" ? getChipTransient(id, idx) : undefined;
         return renderGroupChip({
           idx,
           selected: selectedEntityId === id,
@@ -376,7 +377,8 @@ export function renderChipRow({
         const art = selectedEntityId === id ? !isIdle && artSource : isChipPlaying && artSource;
         const icon = state?.attributes?.icon || "mdi:cast";
         const isMaActive = typeof getIsMaActive === "function" ? getIsMaActive(id) : false;
-        const transient = typeof getChipTransient === "function" ? getChipTransient(id) : undefined;
+        const transient =
+          typeof getChipTransient === "function" ? getChipTransient(id, idx) : undefined;
         return renderChip({
           idx,
           selected: selectedEntityId === id,

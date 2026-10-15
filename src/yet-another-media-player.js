@@ -6087,8 +6087,11 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         return playbackEntityId === this._resolveEntity(entityObj.music_assistant_entity, entityObj.entity_id, idx) &&
           this._isEntityPlaying(playbackState);
       },
-      getChipTransient: (id) => {
-        return this.entityObjs.find((e) => e.entity_id === id)?.transient;
+      getChipTransient: (id, idx) => {
+        return (
+          (idx !== undefined && idx >= 0 ? this.entityObjs[idx]?.transient : undefined) ??
+          this.entityObjs.find((e) => e.entity_id === id)?.transient
+        );
       },
       isIdle: this._isIdle,
       hass: this.hass,
