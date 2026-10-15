@@ -495,7 +495,7 @@ export default {
       search: "Rechercher",
       source: "Source",
       remote_controls: "Télécommande",
-      show_lyrics: "Afficher les paroles",
+      show_lyrics: "Paroles",
       hide_lyrics: "Masquer les paroles",
       full_screen: "Plein écran",
       exit_full_screen: "Quitter le plein écran",

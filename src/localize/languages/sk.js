@@ -504,7 +504,7 @@ export default {
       search: "Hľadať",
       source: "Zdroj",
       remote_controls: "Diaľkové ovládanie",
-      show_lyrics: "Zobraziť text piesne",
+      show_lyrics: "Texty piesní",
       hide_lyrics: "Skryť text piesne",
       full_screen: "Celá obrazovka",
       exit_full_screen: "Ukončiť celú obrazovku",

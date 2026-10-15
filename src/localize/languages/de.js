@@ -503,7 +503,7 @@ export default {
       search: "Suche",
       source: "Quelle",
       remote_controls: "Fernbedienung",
-      show_lyrics: "Songtext anzeigen",
+      show_lyrics: "Songtext",
       hide_lyrics: "Songtext ausblenden",
       full_screen: "Vollbild",
       exit_full_screen: "Vollbild beenden",

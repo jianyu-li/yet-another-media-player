@@ -358,7 +358,7 @@ export function renderEntityEditor(entity, idx = this._entityEditorIndex, isSear
             },
             {
               value: "remote_controls",
-              label: localize("card.menu.remote_controls") || "Remote Control",
+              label: localize("card.menu.remote_controls") || "Remote",
             },
             { value: "lyrics", label: localize("card.sections.lyrics") || "Lyrics" },
             {

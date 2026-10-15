@@ -488,7 +488,7 @@ export default {
       search: "Cerca",
       source: "Sorgente",
       remote_controls: "Telecomando",
-      show_lyrics: "Mostra testi",
+      show_lyrics: "Testi",
       hide_lyrics: "Nascondi testi",
       full_screen: "Schermo intero",
       exit_full_screen: "Esci dallo schermo intero",

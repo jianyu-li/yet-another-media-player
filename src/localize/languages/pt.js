@@ -489,7 +489,7 @@ export default {
       search: "Procurar",
       source: "Fonte",
       remote_controls: "Controlo remoto",
-      show_lyrics: "Mostrar letras",
+      show_lyrics: "Letras",
       hide_lyrics: "Ocultar letras",
       full_screen: "Ecrã inteiro",
       exit_full_screen: "Sair do ecrã inteiro",

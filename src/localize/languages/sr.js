@@ -506,7 +506,7 @@ export default {
       search: "Претрага",
       source: "Извор",
       remote_controls: "Даљинска контрола",
-      show_lyrics: "Прикажи текст песме",
+      show_lyrics: "Текст песме",
       hide_lyrics: "Сакриј текст песме",
       full_screen: "Цео екран",
       exit_full_screen: "Напусти цео екран",

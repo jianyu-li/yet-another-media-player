@@ -506,7 +506,7 @@ export default {
       search: "Pretraga",
       source: "Izvor",
       remote_controls: "Daljinska kontrola",
-      show_lyrics: "Prikaži tekst pesme",
+      show_lyrics: "Tekst pesme",
       hide_lyrics: "Sakrij tekst pesme",
       full_screen: "Ceo ekran",
       exit_full_screen: "Napusti ceo ekran",

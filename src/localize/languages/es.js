@@ -490,7 +490,7 @@ export default {
       search: "Buscar",
       source: "Fuente",
       remote_controls: "Mando a distancia",
-      show_lyrics: "Mostrar letra",
+      show_lyrics: "Letra",
       hide_lyrics: "Ocultar letra",
       full_screen: "Pantalla completa",
       exit_full_screen: "Salir de pantalla completa",

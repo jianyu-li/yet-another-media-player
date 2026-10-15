@@ -512,7 +512,7 @@ export default {
       search: "Zoeken",
       source: "Bron",
       remote_controls: "Afstandsbediening",
-      show_lyrics: "Songtekst weergeven",
+      show_lyrics: "Songtekst",
       hide_lyrics: "Songtekst verbergen",
       full_screen: "Volledig scherm",
       exit_full_screen: "Volledig scherm verlaten",

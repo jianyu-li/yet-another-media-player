@@ -485,7 +485,7 @@ export default {
       search: "Išči",
       source: "Vir",
       remote_controls: "Daljinski upravljalnik",
-      show_lyrics: "Pokaži besedilo",
+      show_lyrics: "Besedilo",
       hide_lyrics: "Skrij besedilo",
       full_screen: "Celozaslonski način",
       exit_full_screen: "Izhod iz celozaslonskega načina",
