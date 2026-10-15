@@ -143,7 +143,8 @@ export function renderGroupingMenuOption(isGridMode = false) {
     return nothing;
   }
   const totalEntities = this.entityIds?.length || 0;
-  if (totalEntities <= 1) return nothing;
+  const canSearchPlayers = this.config?.show_player_search !== false;
+  if (totalEntities < 1 || (totalEntities <= 1 && !canSearchPlayers)) return nothing;
 
   const label = localize("card.menu.players") || localize("card.menu.group_players") || "Players";
 

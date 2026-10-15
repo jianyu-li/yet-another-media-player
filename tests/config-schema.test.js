@@ -42,6 +42,7 @@ describe("config-schema", () => {
       assert.equal(CARD_CONFIG_DEFAULTS.match_theme, false);
       assert.equal(CARD_CONFIG_DEFAULTS.show_album, true);
       assert.equal(CARD_CONFIG_DEFAULTS.full_screen, false);
+      assert.equal(CARD_CONFIG_DEFAULTS.show_player_search, true);
     });
   });
 

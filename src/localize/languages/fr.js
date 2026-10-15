@@ -105,6 +105,11 @@ export default {
         description:
           "Ajoutez les lecteurs multimédias que vous souhaitez contrôler. Glissez pour réordonner.",
       },
+      transient_players: {
+        title: "Lecteurs dynamiques et de session",
+        description:
+          "Options pour rechercher et inclure dynamiquement des lecteurs multimédias pendant la session.",
+      },
       behavior: {
         idle_chips: {
           title: "Veille & Jetons",
@@ -152,6 +157,12 @@ export default {
       always_show_group:
         "Les contrôles de groupement rapide (+/-/étoile) seront visibles par défaut au chargement de la page. Vous pouvez toujours les basculer manuellement via un double appui.",
       disable_autofocus: "Empêcher la recherche de prendre le focus automatiquement.",
+      show_player_search:
+        "Permettre la recherche et l'ajout de lecteurs non configurés à la carte pour la session.",
+      auto_add_playing_entities:
+        "Afficher les lecteurs non configurés dès qu'ils commencent à jouer, et les retirer dès que la carte devient inactive.",
+      auto_add_exclude:
+        "IDs d'entités séparés par des virgules ou motifs génériques (ex. media_player.*_tv) à exclure de la recherche et de l'ajout automatique.",
       search_within_filter: "Rechercher dans le filtre actif actuel (Favoris, etc.).",
       close_search_on_play: "Fermer automatiquement la recherche à la lecture.",
       pin_search_headers: "Garder la recherche et les filtres fixes en haut.",
@@ -255,6 +266,9 @@ export default {
       hold_to_pin: "Maintenir pour épingler",
       always_show_group: "Groupe rapide par défaut",
       disable_autofocus: "Désactiver l'autofocus",
+      show_player_search: "Afficher la recherche dans le menu des lecteurs",
+      auto_add_playing_entities: "Ajouter auto. les lecteurs en lecture jusqu'à inactivité",
+      auto_add_exclude: "Exclure de la recherche et de l'ajout automatique",
       keep_filters: "Garder les filtres",
       dismiss_on_play: "Fermer en lecture",
       pin_headers: "Épingler les en-têtes",
@@ -537,6 +551,14 @@ export default {
       regrouping: "Regroupement des enceintes avec {player}...",
       transfer_success: "File d'attente envoyée à {player}.",
       standalone: "Autonome",
+      search_players: "Rechercher des lecteurs à ajouter...",
+      add_player: "Ajouter à la session",
+      add: "Ajouter",
+      remove_player: "Retirer de la session",
+      keep_player: "Garder dans la session",
+      no_search_results: "Aucun lecteur correspondant trouvé",
+      transient_session: "Lecteur de session",
+      transient_auto: "Lecteur en lecture",
     },
   },
   search: {

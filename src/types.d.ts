@@ -252,11 +252,13 @@ export interface YampEntityConfig {
   hide_remote_buttons?: string[] | string;
   hidden_menu_options?: string[] | string;
   hide_menu_options?: string[] | string;
+  transient?: "session" | "auto";
 }
 
 export type YampEntityEntry = string | YampEntityConfig;
 
 export interface YampCardConfig {
+  card_id?: string;
   type: "custom:yet-another-media-player";
   hidden_menu_options?: string[] | string;
   hide_menu_options?: string[] | string;
@@ -320,6 +322,9 @@ export interface YampCardConfig {
   lyrics_background_fade?: number | string;
   lock_screen_controls?: boolean | string;
   full_screen?: boolean | string;
+  show_player_search?: boolean;
+  auto_add_playing_entities?: boolean;
+  auto_add_exclude?: string[];
   [key: string]: any;
 }
 
@@ -711,6 +716,23 @@ export function joinPlayers(
   groupMembers?: string | string[]
 ): Promise<any>;
 export function unjoinPlayer(hass?: HomeAssistant, entityId?: string): Promise<any>;
+export function matchesEntityPattern(
+  entityId: string,
+  patterns?: string[] | string | null,
+  friendlyName?: string
+): boolean;
+export function findPlayingUnconfiguredPlayers(
+  states?: Record<string, any>,
+  coveredIds?: Set<string> | string[],
+  excludePatterns?: string[] | string | null
+): string[];
+export function searchMediaPlayers(
+  states?: Record<string, any>,
+  query?: string,
+  coveredIds?: Set<string> | string[],
+  excludePatterns?: string[] | string | null,
+  limit?: number
+): Array<{ id: string; name: string; state: string; icon: string; isPlaying: boolean }>;
 
 export interface GroupPlayerState {
   isGroupable: boolean;
@@ -746,6 +768,22 @@ export interface YetAnotherMediaPlayerCard {
   _exitFullScreen?: () => void;
   _cachedEntityIds?: string[] | null;
   _cachedEntityObjs?: any[] | null;
+  _sessionEntities?: string[];
+  _autoEntities?: string[];
+  _initialAutoDiscoveryDone?: boolean;
+  _playerSearchQuery?: string;
+  _setTransientEntities?: (options?: {
+    session?: string[];
+    auto?: string[];
+    selectedId?: string;
+  }) => void;
+  _addSessionEntity?: (id: string, makeActive?: boolean) => void;
+  _removeSessionEntity?: (id: string) => void;
+  _getSessionStorageKey?: (cfg?: any) => string;
+  _loadStoredSessionEntities?: (customKey?: string | null) => string[];
+  _saveStoredSessionEntities?: (entities?: string[]) => void;
+  _pruneOrphanStorageKeys?: () => void;
+  _pruneMissingSessionEntities?: () => void;
   _actionHelperEntities?: string[] | null;
   _jsTemplateEntities?: string[] | null;
   _handleVisibilityChangeBound?: () => void;

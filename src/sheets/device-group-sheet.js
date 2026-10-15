@@ -1,6 +1,6 @@
 import { html, nothing } from "lit";
 import { localize } from "../localize/localize.js";
-import { getEntityName } from "../yamp-utils.js";
+import { getEntityName, searchMediaPlayers } from "../yamp-utils.js";
 
 /**
  * Render the Speaker Grouping / Multi-room sheet.
@@ -50,14 +50,80 @@ export function renderGroupingSheet() {
   const activeGroupKey = this._getGroupKey(activeId);
   const activeIsBusy = activeGroupKey !== activeId;
 
-  if (groupPlayerIds.length === 0) {
+  const renderPlayerSearchRow = () => {
+    if (this.config?.show_player_search === false) return nothing;
+    const query = this._playerSearchQuery || "";
+
     return html`
-      <div class="entity-options-header">
+      <div class="entity-options-search-row">
+        <div class="search-input-wrapper">
+          <input
+            type="text"
+            id="player-search-input-box"
+            ?autofocus=${!this._disableSearchAutofocus}
+            class="entity-options-search-input"
+            .value=${query}
+            @input=${(e) => {
+              this._playerSearchQuery = e.target.value;
+              this.requestUpdate();
+            }}
+            @keydown=${(e) => {
+              if (e.key === "Enter") {
+                e.preventDefault();
+              } else if (e.key === "Escape") {
+                e.preventDefault();
+                if (this._playerSearchQuery) {
+                  this._playerSearchQuery = "";
+                  this.requestUpdate();
+                } else if (this._quickMenuInvoke) {
+                  this._dismissWithAnimation();
+                } else {
+                  this._closeGrouping();
+                }
+              }
+            }}
+            placeholder="${localize("card.grouping.search_players") || "Search players to add..."}"
+          />
+          ${
+            query
+              ? html`
+                  <button
+                    class="search-input-clear"
+                    @click=${() => {
+                      this._playerSearchQuery = "";
+                      this.requestUpdate();
+                    }}
+                    title="${localize("common.clear")}"
+                  >
+                    <ha-icon icon="mdi:close"></ha-icon>
+                  </button>
+                `
+              : nothing
+          }
+        </div>
+        <button
+          class="entity-options-item icon-only"
+          style="min-width:48px; padding: 0;"
+          @click=${() => {
+            const input = this.shadowRoot?.getElementById("player-search-input-box");
+            if (input) input.focus();
+            this.requestUpdate();
+          }}
+          title="${localize("common.search")}"
+          aria-label="${localize("common.search")}"
+        >
+          <ha-icon icon="mdi:magnify"></ha-icon>
+        </button>
         ${
-          this._cardType !== "group_players" && this._cardType !== "remote_control"
+          this._cardType !== "group_players" &&
+          this._cardType !== "players" &&
+          this._cardType !== "remote_control"
             ? html`
                 <button
-                  class="entity-options-item close-item"
+                  class="entity-options-item icon-only"
+                  style="min-width:48px; padding: 0;"
+                  title="${localize("common.cancel")}"
+                  aria-label="${localize("common.cancel")}"
                   @click=${() => {
                     if (this._quickMenuInvoke) {
                       this._dismissWithAnimation();
@@ -66,14 +132,121 @@ export function renderGroupingSheet() {
                     }
                   }}
                 >
-                  ${localize("common.back")}
+                  <ha-icon icon="mdi:close"></ha-icon>
                 </button>
               `
             : nothing
         }
-        <div class="entity-options-divider"></div>
       </div>
-      ${nothing}
+    `;
+  };
+
+  const renderPlayerSearchResults = () => {
+    if (this.config?.show_player_search === false) return nothing;
+    const query = this._playerSearchQuery || "";
+    if (!query.trim()) return nothing;
+
+    const covered =
+      typeof this._getCoveredEntityIds === "function"
+        ? this._getCoveredEntityIds()
+        : new Set(this.entityIds || []);
+    const exclude = this.config?.auto_add_exclude || [];
+    const searchResults = searchMediaPlayers(this.hass?.states, query, covered, exclude);
+
+    return html`
+      <div style="margin-bottom: 12px; display: flex; flex-direction: column; gap: 4px;">
+        ${
+          searchResults.length === 0
+            ? html`
+                <div
+                  class="entity-options-item"
+                  style="padding: 10px; opacity: 0.6; text-align: center;"
+                >
+                  ${localize("card.grouping.no_search_results") || "No matching players found"}
+                </div>
+              `
+            : searchResults.map(
+                (res) => html`
+                  <div
+                    class="entity-options-item"
+                    style="display: flex; align-items: center; justify-content: space-between; padding: 8px 12px;"
+                  >
+                    <div
+                      style="display: flex; align-items: center; gap: 10px; min-width: 0; flex: 1;"
+                    >
+                      <ha-icon
+                        .icon=${res.icon}
+                        style="--mdc-icon-size: 20px; width: 20px; height: 20px; opacity: 0.8; flex-shrink: 0;"
+                      ></ha-icon>
+                      <span
+                        style="font-weight: 500; text-overflow: ellipsis; overflow: hidden; white-space: nowrap; min-width: 0;"
+                        >${res.name}</span
+                      >
+                    </div>
+                    <button
+                      type="button"
+                      class="entity-options-item"
+                      style="padding: 4px 10px; font-size: 12px; display: flex; align-items: center; gap: 4px; border-radius: 6px; cursor: pointer;"
+                      @click=${() => {
+                        this._addSessionEntity?.(res.id, true);
+                        this._playerSearchQuery = "";
+                        const input = this.renderRoot?.querySelector?.("#player-search-input-box");
+                        input?.blur?.();
+                        this.requestUpdate();
+                      }}
+                      title="${localize("card.grouping.add_player") || "Add to session"}"
+                    >
+                      <ha-icon
+                        icon="mdi:plus"
+                        style="--mdc-icon-size: 16px; width: 16px; height: 16px;"
+                      ></ha-icon>
+                      <span>${localize("card.grouping.add") || "Add"}</span>
+                    </button>
+                  </div>
+                `
+              )
+        }
+      </div>
+    `;
+  };
+
+  if (groupPlayerIds.length === 0) {
+    return html`
+      ${
+        this.config?.show_player_search !== false
+          ? html`
+              <div
+                class="entity-options-header grouping-header group-list-header"
+                style="padding-top: 6px; padding-bottom: 4px;"
+              >
+                ${renderPlayerSearchRow()}
+              </div>
+              ${renderPlayerSearchResults()}
+            `
+          : html`
+              <div class="entity-options-header">
+                ${
+                  this._cardType !== "group_players" && this._cardType !== "remote_control"
+                    ? html`
+                        <button
+                          class="entity-options-item close-item"
+                          @click=${() => {
+                            if (this._quickMenuInvoke) {
+                              this._dismissWithAnimation();
+                            } else {
+                              this._closeGrouping();
+                            }
+                          }}
+                        >
+                          ${localize("common.back")}
+                        </button>
+                      `
+                    : nothing
+                }
+                <div class="entity-options-divider"></div>
+              </div>
+            `
+      }
       <div class="entity-options-item" style="padding:12px; opacity:0.75; text-align:center;">
         ${localize("card.grouping.no_players")}
       </div>
@@ -474,6 +647,9 @@ export function renderGroupingSheet() {
       icon: isMultiSpeakerGroup ? "mdi:speaker-multiple" : "mdi:music",
     };
 
+    const entityObj = entityIdx >= 0 ? this.entityObjs?.[entityIdx] : null;
+    const transient = entityObj?.transient;
+
     if (isGridMode) {
       const isDisabled = isToggleDisabled;
 
@@ -481,9 +657,42 @@ export function renderGroupingSheet() {
         <div
           class="entity-options-item menu-action-item ${isGroupActive ? "grid-active" : ""} ${
             isJustMoved ? "just-moved" : ""
-          }"
+          } ${transient ? "transient-player-item" : ""}"
           style="position: relative;"
         >
+          ${
+            transient === "session"
+              ? html`
+                  <button
+                    type="button"
+                    class="grid-menu-transfer-btn"
+                    style="left: 6px; right: auto;"
+                    @click=${(e) => {
+                      e.stopPropagation();
+                      this._removeSessionEntity?.(id);
+                    }}
+                    title="${localize("card.grouping.remove_player") || "Remove from session"}"
+                  >
+                    <ha-icon icon="mdi:close"></ha-icon>
+                  </button>
+                `
+              : transient === "auto"
+                ? html`
+                    <button
+                      type="button"
+                      class="grid-menu-transfer-btn"
+                      style="left: 6px; right: auto;"
+                      @click=${(e) => {
+                        e.stopPropagation();
+                        this._promoteAutoToSession?.(id);
+                      }}
+                      title="${localize("card.grouping.keep_player") || "Keep in session"}"
+                    >
+                      <ha-icon icon="mdi:pin-outline"></ha-icon>
+                    </button>
+                  `
+                : nothing
+          }
           ${
             hasMaTransferService && !isInsideGroup
               ? html`
@@ -536,7 +745,12 @@ export function renderGroupingSheet() {
               class="menu-action-icon"
               icon=${isGroupActive && groupedAny ? "mdi:speaker-multiple" : "mdi:speaker"}
             ></ha-icon>
-            <span class="menu-action-label">${name}</span>
+            <span
+              class="menu-action-label"
+              style="display:inline-flex;align-items:center;justify-content:center;gap:4px;"
+            >
+              <span>${name}</span>
+            </span>
           </div>
         </div>
       `;
@@ -547,7 +761,11 @@ export function renderGroupingSheet() {
     };${isDeviceUnavailable ? "opacity:0.35;" : ""}`;
 
     return html`
-      <div class="entity-options-item group-player-row ${isJustMoved ? "just-moved" : ""}">
+      <div
+        class="entity-options-item group-player-row ${isJustMoved ? "just-moved" : ""} ${
+          transient ? "transient-player-row" : ""
+        }"
+      >
         <div
           role="button"
           tabindex=${entityIdx >= 0 ? "0" : "-1"}
@@ -579,7 +797,9 @@ export function renderGroupingSheet() {
           }
           style="flex:0.7; min-width:84px; cursor:${entityIdx >= 0 ? "pointer" : "default"};"
         >
-          <div style="text-align:left;">${name}</div>
+          <div style="text-align:left;display:flex;align-items:center;gap:4px;">
+            <span>${name}</span>
+          </div>
           <div style="font-size:0.8em; opacity:0.7; text-align:left;">${stateLabel}</div>
         </div>
         <div
@@ -685,7 +905,7 @@ export function renderGroupingSheet() {
                     }
                   }}
                   title=${toggleTooltip}
-                  style="margin-left:2px; ${
+                  style="margin-left:2px; ${transient ? "margin-right:0px;" : ""} ${
                     isToggleDisabled ? "cursor: not-allowed; opacity: 0.35;" : ""
                   }"
                 >
@@ -695,74 +915,122 @@ export function renderGroupingSheet() {
                 </button>
               `
             : html`<span
-                style="margin-left:2px;margin-right:10px;width:32px;display:inline-block;"
+                style="margin-left:2px; ${
+                  transient ? "margin-right:0px;" : "margin-right:10px;"
+                } width:32px;display:inline-block;"
               ></span>`
+        }
+        ${
+          transient === "session"
+            ? html`
+                <button
+                  class="group-toggle-btn"
+                  @click=${() => this._removeSessionEntity?.(id)}
+                  title="${localize("card.grouping.remove_player") || "Remove from session"}"
+                  style="margin-left:2px;opacity:0.7;"
+                >
+                  <ha-icon icon="mdi:close"></ha-icon>
+                </button>
+              `
+            : transient === "auto"
+              ? html`
+                  <button
+                    class="group-toggle-btn"
+                    @click=${() => this._promoteAutoToSession?.(id)}
+                    title="${localize("card.grouping.keep_player") || "Keep in session"}"
+                    style="margin-left:2px;opacity:0.7;"
+                  >
+                    <ha-icon icon="mdi:pin-outline"></ha-icon>
+                  </button>
+                `
+              : nothing
         }
       </div>
     `;
   };
 
   return html`
-    <div class="entity-options-header grouping-header group-list-header">
-      ${
-        this._cardType !== "group_players" && this._cardType !== "remote_control"
-          ? html`
-              <button
-                class="entity-options-item close-item"
-                @click=${() => {
-                  if (this._quickMenuInvoke) {
-                    this._dismissWithAnimation();
-                  } else {
-                    this._closeGrouping();
-                  }
-                }}
-              >
-                ${localize("common.back")}
-              </button>
-            `
-          : nothing
-      }
-      <div class="entity-options-divider"></div>
-    </div>
-    ${nothing}
-    <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
-      ${
-        groupedAny
-          ? html`
-              <button
-                class="entity-options-item"
-                @click=${() => this._syncGroupVolume()}
-                style="flex:0 0 auto; min-width:140px; text-align:center;"
-              >
-                ${localize("card.grouping.sync_volume")}
-              </button>
-            `
-          : nothing
-      }
-      ${
-        hasAnyGroups
-          ? html`
-              <button
-                class="entity-options-item"
-                @click=${() => this._ungroupAll()}
-                style="flex:0 0 auto; min-width:140px; text-align:center; margin-left:auto;"
-              >
-                ${localize("card.grouping.ungroup_all") || "Ungroup All"}
-              </button>
-            `
-          : canGroupAll
-            ? html`
-                <button
-                  class="entity-options-item"
-                  @click=${() => this._groupAll()}
-                  style="flex:0 0 auto; min-width:140px; text-align:center; margin-left:auto;"
-                >
-                  ${localize("card.grouping.group_all") || "Group All"}
-                </button>
-              `
-            : nothing
-      }
-    </div>
+    ${
+      this.config?.show_player_search !== false
+        ? html`
+            <div
+              class="entity-options-header grouping-header group-list-header"
+              style="padding-top: 6px; padding-bottom: 4px;"
+            >
+              ${renderPlayerSearchRow()}
+            </div>
+            ${renderPlayerSearchResults()}
+          `
+        : html`
+            <div class="entity-options-header grouping-header group-list-header">
+              ${
+                this._cardType !== "group_players" && this._cardType !== "remote_control"
+                  ? html`
+                      <button
+                        class="entity-options-item close-item"
+                        @click=${() => {
+                          if (this._quickMenuInvoke) {
+                            this._dismissWithAnimation();
+                          } else {
+                            this._closeGrouping();
+                          }
+                        }}
+                      >
+                        ${localize("common.back")}
+                      </button>
+                    `
+                  : nothing
+              }
+              <div class="entity-options-divider"></div>
+            </div>
+          `
+    }
+    ${
+      groupedAny || hasAnyGroups || canGroupAll
+        ? html`
+            <div
+              style="display:flex; align-items:center; gap:8px; margin-top:4px; margin-bottom:0px;"
+            >
+              ${
+                groupedAny
+                  ? html`
+                      <button
+                        class="entity-options-item"
+                        @click=${() => this._syncGroupVolume()}
+                        style="flex:0 0 auto; min-width:120px; text-align:center; margin:0; padding:2px 8px; min-height:28px;"
+                      >
+                        ${localize("card.grouping.sync_volume")}
+                      </button>
+                    `
+                  : nothing
+              }
+              ${
+                hasAnyGroups
+                  ? html`
+                      <button
+                        class="entity-options-item"
+                        @click=${() => this._ungroupAll()}
+                        style="flex:0 0 auto; min-width:120px; text-align:center; margin:0 0 0 auto; padding:2px 8px; min-height:28px;"
+                      >
+                        ${localize("card.grouping.ungroup_all") || "Ungroup All"}
+                      </button>
+                    `
+                  : canGroupAll
+                    ? html`
+                        <button
+                          class="entity-options-item"
+                          @click=${() => this._groupAll()}
+                          style="flex:0 0 auto; min-width:120px; text-align:center; margin:0 0 0 auto; padding:2px 8px; min-height:28px;"
+                        >
+                          ${localize("card.grouping.group_all") || "Group All"}
+                        </button>
+                      `
+                    : nothing
+              }
+            </div>
+          `
+        : nothing
+    }
     ${
       this._transferQueueStatus
         ? html`

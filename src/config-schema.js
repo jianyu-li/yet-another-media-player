@@ -145,6 +145,7 @@ export const TEMPLATE_CONFIGS = Object.freeze({
  * Card-level default values
  */
 export const CARD_CONFIG_DEFAULTS = Object.freeze({
+  card_id: "",
   template: "custom",
   appearance: "automatic",
   card_type: "standard",
@@ -192,6 +193,9 @@ export const CARD_CONFIG_DEFAULTS = Object.freeze({
   lyrics_background_fade: DEFAULT_LYRICS_BACKGROUND_FADE,
   lock_screen_controls: false,
   full_screen: false,
+  show_player_search: true,
+  auto_add_playing_entities: false,
+  auto_add_exclude: [],
 });
 
 /**

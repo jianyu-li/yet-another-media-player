@@ -706,6 +706,22 @@ export const menusSheetsStyles = css`
     border-radius: 6px;
   }
 
+  /* Transient player row in players menu */
+  .group-player-row.transient-player-row {
+    border: 1.5px dashed
+      var(--yamp-chip-transient-border, var(--custom-accent, var(--accent-color, #1976d2)));
+    border-radius: 8px;
+    padding: 8px 8px 6px 8px;
+    margin: 4px 0;
+  }
+
+  .grid-menu .entity-options-item.transient-player-item {
+    border: 1.5px dashed
+      var(--yamp-chip-transient-border, var(--custom-accent, var(--accent-color, #1976d2))) !important;
+    border-radius: 8px;
+    margin: 2px;
+  }
+
   .grouped-players-card .group-player-row {
     padding: 10px 7px 8px 7px;
     margin: 0;
@@ -1052,6 +1068,10 @@ export const menusSheetsStyles = css`
     cursor: pointer;
     transition: background 0.15s ease;
     color: var(--yamp-overlay-text);
+  }
+
+  .group-player-row .group-toggle-btn:not(:last-child) {
+    margin-right: 0;
   }
 
   .group-toggle-btn ha-icon {

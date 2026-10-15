@@ -67,6 +67,65 @@ export function renderEntitiesTab() {
           </div>
         </yamp-sortable>
       </div>
+
+      <div class="entity-group-header section-header" style="margin-top: 24px;">
+        <div class="entity-group-title section-title">
+          ${localize("editor.sections.transient_players.title") || "Dynamic & Session Players"}
+        </div>
+        <div class="section-description">
+          ${localize("editor.sections.transient_players.description") || "Options for searching and dynamically including media players at runtime."}
+        </div>
+      </div>
+
+      <div class="form-row">
+        <ha-switch
+          id="show-player-search-toggle"
+          .checked=${this._config.show_player_search ?? true}
+          @change=${(e) => this._updateConfig("show_player_search", e.target.checked)}
+        ></ha-switch>
+        <label for="show-player-search-toggle">
+          ${localize("editor.labels.show_player_search") || "Show search in Players menu"}
+        </label>
+        <div class="config-subtitle">
+          ${localize("editor.subtitles.show_player_search") || "Allow searching and adding unconfigured media players to the card for the session."}
+        </div>
+      </div>
+
+      <div class="form-row">
+        <ha-switch
+          id="auto-add-playing-entities-toggle"
+          .checked=${this._config.auto_add_playing_entities ?? false}
+          @change=${(e) => this._updateConfig("auto_add_playing_entities", e.target.checked)}
+        ></ha-switch>
+        <label for="auto-add-playing-entities-toggle">
+          ${localize("editor.labels.auto_add_playing_entities") || "Auto-add playing players until idle"}
+        </label>
+        <div class="config-subtitle">
+          ${localize("editor.subtitles.auto_add_playing_entities") || "Display unconfigured players when they begin playing, and remove them once the card goes idle."}
+        </div>
+      </div>
+
+      <div class="form-row">
+        <ha-selector
+          .hass=${this.hass}
+          .selector=${{ text: {} }}
+          .value=${Array.isArray(this._config.auto_add_exclude) ? this._config.auto_add_exclude.join(", ") : this._config.auto_add_exclude || ""}
+          .disabled=${(this._config.show_player_search ?? true) === false && !this._config.auto_add_playing_entities}
+          label="${localize("editor.labels.auto_add_exclude") || "Exclude from search and auto-add"}"
+          helper="${localize("editor.subtitles.auto_add_exclude") || "Comma-separated entity IDs or glob patterns (e.g. media_player.*_tv)"}"
+          @value-changed=${(e) => {
+            const val = e.detail.value;
+            const arr =
+              typeof val === "string"
+                ? val
+                    .split(",")
+                    .map((s) => s.trim())
+                    .filter(Boolean)
+                : [];
+            this._updateConfig("auto_add_exclude", arr);
+          }}
+        ></ha-selector>
+      </div>
     </div>
   `;
 }

@@ -106,6 +106,11 @@ export default {
         description:
           "Fügen Sie die zu steuernden Mediaplayer hinzu. Entitäten ziehen, um sie neu anzuordnen.",
       },
+      transient_players: {
+        title: "Dynamische & Sitzungs-Player",
+        description:
+          "Optionen für die Suche und dynamische Einbindung von Mediaplayern zur Laufzeit.",
+      },
       behavior: {
         idle_chips: {
           title: "Leerlauf & Chips",
@@ -155,6 +160,12 @@ export default {
         "Schnellgruppierungs-Steuerelemente (+/-/Stern) sind standardmäßig beim Laden der Seite sichtbar. Sie können sie weiterhin manuell per Doppeltipp umschalten.",
       disable_autofocus:
         "Suchfeld-Autofokus deaktivieren, damit Bildschirmtastaturen ausgeblendet bleiben.",
+      show_player_search:
+        "Suche und Hinzufügen nicht konfigurierter Mediaplayer zur Karte für die Sitzung erlauben.",
+      auto_add_playing_entities:
+        "Nicht konfigurierte Player anzeigen, wenn sie die Wiedergabe starten, und entfernen, sobald die Karte in den Leerlauf wechselt.",
+      auto_add_exclude:
+        "Kommagetrennte Entitäts-IDs oder Glob-Muster (z. B. media_player.*_tv), die von Suche und automatischem Hinzufügen ausgeschlossen werden sollen.",
       search_within_filter:
         "Innerhalb des aktiven Filters suchen (Favoriten, etc.), anstatt ihn zu löschen.",
       close_search_on_play: "Suchbildschirm beim Abspielen automatisch schließen.",
@@ -264,6 +275,9 @@ export default {
       hold_to_pin: "Gedrückt halten zum Anpinnen",
       always_show_group: "Schnellgruppierung standardmäßig aktivieren",
       disable_autofocus: "Such-Autofocus deaktivieren",
+      show_player_search: "Suche im Spieler-Menü anzeigen",
+      auto_add_playing_entities: "Wiedergebende Player automatisch hinzufügen bis Leerlauf",
+      auto_add_exclude: "Von Suche und automatischem Hinzufügen ausschließen",
       keep_filters: "Filter bei Suche beibehalten",
       dismiss_on_play: "Suche beim Abspielen beenden",
       pin_headers: "Such-Header fixieren",
@@ -545,6 +559,14 @@ export default {
       regrouping: "Lautsprecher werden mit {player} gruppiert...",
       transfer_success: "Warteschlange an {player} gesendet.",
       standalone: "Eigenständig",
+      search_players: "Player zum Hinzufügen suchen...",
+      add_player: "Zur Sitzung hinzufügen",
+      add: "Hinzufügen",
+      remove_player: "Aus Sitzung entfernen",
+      keep_player: "In Sitzung behalten",
+      no_search_results: "Keine passenden Player gefunden",
+      transient_session: "Sitzungs-Player",
+      transient_auto: "Wiedergebender Player",
     },
   },
   search: {

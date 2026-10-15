@@ -392,6 +392,27 @@ export const chipStyles = css`
     height: 1px;
   }
 
+  /* Transient (session or auto-discovered) chips */
+  .chip[transient] {
+    border-style: dashed;
+    border-width: 1.5px;
+    border-color: var(
+      --yamp-chip-transient-border,
+      var(--custom-accent, var(--accent-color, #1976d2))
+    );
+  }
+
+  .chip[transient][selected] {
+    border-color: var(--yamp-chip-selected-text, #fff);
+  }
+
+  @media (hover: hover) {
+    .chip-row .chip[transient]:hover,
+    .action-chip-row .chip[transient]:hover {
+      border-color: var(--yamp-chip-selected-text, #fff);
+    }
+  }
+
   /* Group icon */
   .chip-icon.group-icon {
     background: var(--custom-accent);
