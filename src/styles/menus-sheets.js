@@ -706,6 +706,38 @@ export const menusSheetsStyles = css`
     border-radius: 6px;
   }
 
+  /* Transient player row in players menu */
+  .group-player-row.transient-player-row {
+    border: 1.5px dashed
+      var(--yamp-chip-transient-border, var(--custom-accent, var(--accent-color, #1976d2)));
+    border-radius: 8px;
+    padding: 8px 8px 6px 8px;
+    margin: 4px 0;
+  }
+
+  .grid-menu .entity-options-item.transient-player-item {
+    border: 1.5px dashed
+      var(--yamp-chip-transient-border, var(--custom-accent, var(--accent-color, #1976d2))) !important;
+    border-radius: 8px;
+    margin: 2px;
+  }
+
+  .player-transient-tag {
+    display: inline-flex;
+    align-items: center;
+    font-size: 0.65em;
+    font-weight: 600;
+    line-height: 1;
+    padding: 2px 4px;
+    border-radius: 4px;
+    border: 1px dashed
+      var(--yamp-chip-transient-border, var(--custom-accent, var(--accent-color, #1976d2)));
+    color: var(--custom-accent, var(--primary-text));
+    opacity: 0.9;
+    letter-spacing: 0.3px;
+    text-transform: uppercase;
+  }
+
   .grouped-players-card .group-player-row {
     padding: 10px 7px 8px 7px;
     margin: 0;

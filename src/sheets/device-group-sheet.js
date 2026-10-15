@@ -601,7 +601,7 @@ export function renderGroupingSheet() {
         <div
           class="entity-options-item menu-action-item ${isGroupActive ? "grid-active" : ""} ${
             isJustMoved ? "just-moved" : ""
-          }"
+          } ${transient ? "transient-player-item" : ""}"
           style="position: relative;"
         >
           ${
@@ -691,24 +691,25 @@ export function renderGroupingSheet() {
             ></ha-icon>
             <span
               class="menu-action-label"
-              style="display:inline-flex;align-items:center;justify-content:center;gap:4px;"
+              style="display:inline-flex;align-items:center;justify-content:center;gap:4px;flex-wrap:wrap;"
             >
               <span>${name}</span>
               ${
                 transient
-                  ? html`<ha-icon
-                      icon=${
-                        transient === "session"
-                          ? "mdi:magnify-plus-outline"
-                          : "mdi:play-circle-outline"
-                      }
-                      style="--mdc-icon-size: 13px; width: 13px; height: 13px; opacity: 0.6;"
+                  ? html`<span
+                      class="player-transient-tag"
                       title="${
                         transient === "session"
                           ? localize("card.grouping.transient_session") || "Session Player"
                           : localize("card.grouping.transient_auto") || "Playing Player"
                       }"
-                    ></ha-icon>`
+                    >
+                      ${
+                        transient === "session"
+                          ? localize("card.grouping.transient_session") || "Session"
+                          : localize("card.grouping.transient_auto") || "Playing"
+                      }
+                    </span>`
                   : nothing
               }
             </span>
@@ -722,7 +723,11 @@ export function renderGroupingSheet() {
     };${isDeviceUnavailable ? "opacity:0.35;" : ""}`;
 
     return html`
-      <div class="entity-options-item group-player-row ${isJustMoved ? "just-moved" : ""}">
+      <div
+        class="entity-options-item group-player-row ${isJustMoved ? "just-moved" : ""} ${
+          transient ? "transient-player-row" : ""
+        }"
+      >
         <div
           role="button"
           tabindex=${entityIdx >= 0 ? "0" : "-1"}
@@ -754,23 +759,24 @@ export function renderGroupingSheet() {
           }
           style="flex:0.7; min-width:84px; cursor:${entityIdx >= 0 ? "pointer" : "default"};"
         >
-          <div style="text-align:left;display:flex;align-items:center;gap:4px;">
+          <div style="text-align:left;display:flex;align-items:center;gap:4px;flex-wrap:wrap;">
             <span>${name}</span>
             ${
               transient
-                ? html`<ha-icon
-                    icon=${
-                      transient === "session"
-                        ? "mdi:magnify-plus-outline"
-                        : "mdi:play-circle-outline"
-                    }
-                    style="--mdc-icon-size: 13px; width: 13px; height: 13px; opacity: 0.6;"
+                ? html`<span
+                    class="player-transient-tag"
                     title="${
                       transient === "session"
                         ? localize("card.grouping.transient_session") || "Session Player"
                         : localize("card.grouping.transient_auto") || "Playing Player"
                     }"
-                  ></ha-icon>`
+                  >
+                    ${
+                      transient === "session"
+                        ? localize("card.grouping.transient_session") || "Session"
+                        : localize("card.grouping.transient_auto") || "Playing"
+                    }
+                  </span>`
                 : nothing
             }
           </div>
