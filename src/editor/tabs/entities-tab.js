@@ -80,7 +80,7 @@ export function renderEntitiesTab() {
       <div class="form-row">
         <ha-switch
           id="show-player-search-toggle"
-          .checked=${this._config.show_player_search ?? false}
+          .checked=${this._config.show_player_search ?? true}
           @change=${(e) => this._updateConfig("show_player_search", e.target.checked)}
         ></ha-switch>
         <label for="show-player-search-toggle">
@@ -110,7 +110,7 @@ export function renderEntitiesTab() {
           .hass=${this.hass}
           .selector=${{ text: {} }}
           .value=${Array.isArray(this._config.auto_add_exclude) ? this._config.auto_add_exclude.join(", ") : this._config.auto_add_exclude || ""}
-          .disabled=${!this._config.show_player_search && !this._config.auto_add_playing_entities}
+          .disabled=${(this._config.show_player_search ?? true) === false && !this._config.auto_add_playing_entities}
           label="${localize("editor.labels.auto_add_exclude") || "Exclude from search and auto-add"}"
           helper="${localize("editor.subtitles.auto_add_exclude") || "Comma-separated entity IDs or glob patterns (e.g. media_player.*_tv)"}"
           @value-changed=${(e) => {

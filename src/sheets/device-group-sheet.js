@@ -51,7 +51,7 @@ export function renderGroupingSheet() {
   const activeIsBusy = activeGroupKey !== activeId;
 
   const renderPlayerSearchRow = () => {
-    if (!this.config?.show_player_search) return nothing;
+    if (this.config?.show_player_search === false) return nothing;
     const query = this._playerSearchQuery || "";
 
     return html`
@@ -142,7 +142,7 @@ export function renderGroupingSheet() {
   };
 
   const renderPlayerSearchResults = () => {
-    if (!this.config?.show_player_search) return nothing;
+    if (this.config?.show_player_search === false) return nothing;
     const query = this._playerSearchQuery || "";
     if (!query.trim()) return nothing;
 
@@ -211,7 +211,7 @@ export function renderGroupingSheet() {
   if (groupPlayerIds.length === 0) {
     return html`
       ${
-        this.config?.show_player_search
+        this.config?.show_player_search !== false
           ? html`
               <div
                 class="entity-options-header grouping-header group-list-header"
@@ -949,7 +949,7 @@ export function renderGroupingSheet() {
 
   return html`
     ${
-      this.config?.show_player_search
+      this.config?.show_player_search !== false
         ? html`
             <div
               class="entity-options-header grouping-header group-list-header"

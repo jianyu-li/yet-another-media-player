@@ -65,7 +65,7 @@ Below you will find a list of all configuration options.
 | `hidden_menu_options`      | array        | No           | `[]`        | Array of options sheet menu items to hide (can be set at card level or per-entity) |
 | `hidden_filter_chips`      | array        | No           | `[]`        | Hide specific search filter chips for this entity (UI only; does not change search results) |
 | `disable_auto_select`      | boolean      | No           | `false`     | Prevents the card from automatically switching to this entity when playback starts, even if it is a group master |
-| `show_player_search`       | boolean      | No           | `false`     | Allow searching and adding unconfigured media players to the card for the session in the Players menu (see [Dynamic & Session Players](#dynamic--session-players)) |
+| `show_player_search`       | boolean      | No           | `true`      | Allow searching and adding unconfigured media players to the card for the session in the Players menu (see [Dynamic & Session Players](#dynamic--session-players)) |
 | `auto_add_playing_entities`| boolean      | No           | `false`     | Automatically display unconfigured media players while they are actively playing, and remove them once playback goes idle |
 | `auto_add_exclude`         | array/string | No           | `[]`        | Comma-separated list or array of entity IDs, friendly names, or wildcard glob patterns (e.g. `media_player.*frame`, `*tv*`) to exclude from search and auto-discovery |
 | `entity_volume_mode`       | choice       | No           | —           | Override global `volume_mode` for this entity (`slider`, `stepper`, `hidden`) |
@@ -326,7 +326,7 @@ When `auto_add_playing_entities: true` is enabled, any media player in Home Assi
 - **Initial Discovery**: When the page loads or when returning to the browser tab, any currently playing players across your home are surfaced immediately.
 
 #### Search & Add Players for the Session (`show_player_search`)
-When `show_player_search: true` is enabled, opening the **Players** sheet menu displays a real-time search box at the top.
+By default (`show_player_search: true`), opening the **Players** sheet menu displays a real-time search box at the top (set to `false` to hide the search bar).
 - **Search Any Player**: Filter through all available `media_player` entities in Home Assistant by name or entity ID.
 - **Add to Session**: Tap the plus (`+`) button or "Add to session" on any search result to immediately insert it into the card's chip row.
 - **Dashed Border Indicator**: Transient session players are visually distinguished by a dashed chip border.
@@ -776,7 +776,7 @@ Set `template: players` (or `template: group_players` / `template: dedicated_gro
 **Dedicated Mode Behavior:**
 - **Permanent View**: The Players menu is always visible as the primary view.
 - **Auto-Sync**: Quickly join or unjoin players, transfer queues, and adjust individual volumes from a single, persistent screen.
-- **Live Search**: When `show_player_search: true` is enabled, the dedicated players view includes the search bar at the top to find and add unconfigured players on the fly.
+- **Live Search**: By default, the dedicated players view includes the search bar at the top to find and add unconfigured players on the fly (set `show_player_search: false` to disable).
 
 ### Dedicated Up Next Mode
 

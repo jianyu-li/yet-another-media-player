@@ -288,6 +288,17 @@ describe("Entity-Specific Hidden Menu Options", () => {
       assert.notEqual(typeof res, "symbol");
       assert.ok(res !== null && typeof res === "object");
     });
+
+    it("renders grouping button when only 1 entity is configured and show_player_search is omitted (defaults to true)", () => {
+      card.setConfig({
+        type: "custom:yet-another-media-player",
+        entities: ["media_player.living_room"],
+      });
+      card._selectedIndex = 0;
+      const res = renderGroupingMenuOption.call(card, false);
+      assert.notEqual(typeof res, "symbol");
+      assert.ok(res !== null && typeof res === "object");
+    });
   });
 
   describe("renderMainMenu with hidden_menu_options", () => {
