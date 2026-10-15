@@ -392,21 +392,25 @@ export const chipStyles = css`
     height: 1px;
   }
 
-  .chip-transient-marker {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin-left: 6px;
-    opacity: 0.6;
-    pointer-events: none;
+  /* Transient (session or auto-discovered) chips */
+  .chip[transient] {
+    border-style: dashed;
+    border-width: 1.5px;
+    border-color: var(
+      --yamp-chip-transient-border,
+      var(--custom-accent, var(--accent-color, #1976d2))
+    );
   }
 
-  .chip-transient-marker ha-icon {
-    --mdc-icon-size: 13px;
-    width: 13px;
-    height: 13px;
-    font-size: 13px;
-    margin: 0;
+  .chip[transient][selected] {
+    border-color: var(--yamp-chip-selected-text, #fff);
+  }
+
+  @media (hover: hover) {
+    .chip-row .chip[transient]:hover,
+    .action-chip-row .chip[transient]:hover {
+      border-color: var(--yamp-chip-selected-text, #fff);
+    }
   }
 
   /* Group icon */

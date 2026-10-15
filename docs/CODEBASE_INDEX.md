@@ -65,8 +65,10 @@ flowchart TD
    Users can search all Home Assistant `media_player` entities from the Grouping sheet and temporarily add them to the card session. Session players persist in memory until page reload, tab closure, or explicit removal via the `mdi:close` action in the Grouping sheet.
 3. **Auto-Added Playing Players:**
    When `auto_add_playing_entities` is enabled, newly playing media players not in the card (and not matched by `auto_add_exclude`) are automatically surfaced as temporary players. Physical players are deduplicated if their Music Assistant twin is already active or covered. When the card reaches its idle timeout callback, auto-added entities are automatically pruned. Users can promote an auto-added player to a session entity via the "Keep" (`mdi:pin-outline`) action.
-4. **Transient Chip & Row Badging:**
-   Dynamic players display subtle indicators in the pin spacer slot: `mdi:magnify-plus-outline` for session entities and `mdi:play-circle-outline` for auto-discovered entities.
+4. **Transient Chip Styling & Row Badging:**
+   Dynamic players display a dashed border outline on their player chips to visually signal their temporary, in-memory nature. In the Grouping sheet, transient rows feature badging alongside removal (`mdi:close`) and retention (`mdi:pin-outline`) buttons.
+5. **Menu Availability:**
+   When `show_player_search` is enabled, the "Players" grouping menu option remains accessible even if only a single entity is configured, enabling discovery and on-demand grouping.
 
 ---
 

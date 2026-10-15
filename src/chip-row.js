@@ -33,6 +33,7 @@ export function renderChip({
       ?playing=${playing}
       ?ma-active=${maActive}
       ?transient=${!!transient}
+      title="${transient ? (transient === "session" ? localize("card.grouping.transient_session") || "Session Player" : localize("card.grouping.transient_auto") || "Playing Player") : ""}"
       @dblclick=${onDoubleClick}
       @click=${() => onChipClick(idx)}
       @pointerdown=${onPointerDown}
@@ -84,22 +85,7 @@ export function renderChip({
                 <ha-icon .icon=${"mdi:pin"}></ha-icon>
               </span>
             `
-          : transient
-            ? html`<span
-                class="chip-transient-marker"
-                title="${
-                  transient === "session"
-                    ? localize("card.grouping.transient_session") || "Session Player"
-                    : localize("card.grouping.transient_auto") || "Playing Player"
-                }"
-              >
-                <ha-icon
-                  .icon=${
-                    transient === "session" ? "mdi:magnify-plus-outline" : "mdi:play-circle-outline"
-                  }
-                ></ha-icon>
-              </span>`
-            : html`<span class="chip-pin-spacer"></span>`
+          : html`<span class="chip-pin-spacer"></span>`
       }
       ${renderQuickGroupIcon({ idx, quickGroupingState, onQuickGroupClick })}
     </button>
@@ -136,6 +122,7 @@ export function renderGroupChip({
       ?selected=${selected}
       ?ma-active=${maActive}
       ?transient=${!!transient}
+      title="${transient ? (transient === "session" ? localize("card.grouping.transient_session") || "Session Player" : localize("card.grouping.transient_auto") || "Playing Player") : ""}"
       @dblclick=${onDoubleClick}
       @click=${() => onChipClick(idx)}
       @pointerdown=${onPointerDown}
@@ -211,22 +198,7 @@ export function renderGroupChip({
                 <ha-icon .icon=${"mdi:pin"}></ha-icon>
               </span>
             `
-          : transient
-            ? html`<span
-                class="chip-transient-marker"
-                title="${
-                  transient === "session"
-                    ? localize("card.grouping.transient_session") || "Session Player"
-                    : localize("card.grouping.transient_auto") || "Playing Player"
-                }"
-              >
-                <ha-icon
-                  .icon=${
-                    transient === "session" ? "mdi:magnify-plus-outline" : "mdi:play-circle-outline"
-                  }
-                ></ha-icon>
-              </span>`
-            : html`<span class="chip-pin-spacer"></span>`
+          : html`<span class="chip-pin-spacer"></span>`
       }
       ${renderQuickGroupIcon({ idx, quickGroupingState, onQuickGroupClick })}
     </button>
