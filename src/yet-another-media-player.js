@@ -7433,16 +7433,16 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         collapseRow: volumeRowWillCollapse,
         moreInfoMenu: (!this._showEntityOptions && !volumeRowWillCollapse) ? html`
           <div class="more-info-menu">
-            <button class="more-info-btn" @click=${async () => await this._openEntityOptions()}>
-              <span class="more-info-icon" style="${menuIconStyle}">&#9776;</span>
+            <button class="volume-icon-btn more-info-btn" @click=${async () => await this._openEntityOptions()}>
+              <ha-icon class="more-info-icon" style="${menuIconStyle}" .icon=${"mdi:menu"}></ha-icon>
             </button>
           </div>
         ` : nothing,
       })}
             ${(volumeRowWillCollapse && !this._showEntityOptions) ? html`
               <div class="more-info-menu volume-collapsed">
-                <button class="more-info-btn" @click=${async () => await this._openEntityOptions()}>
-                  <span class="more-info-icon" style="${menuIconStyle}">&#9776;</span>
+                <button class="volume-icon-btn more-info-btn" @click=${async () => await this._openEntityOptions()}>
+                  <ha-icon class="more-info-icon" style="${menuIconStyle}" .icon=${"mdi:menu"}></ha-icon>
                 </button>
               </div>
             ` : nothing}

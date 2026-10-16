@@ -6,8 +6,7 @@ export const menusSheetsStyles = css`
   .more-info-menu {
     display: flex;
     align-items: center;
-    margin-right: -4px;
-    margin-top: -5px;
+    margin: 0;
     z-index: ${Z_LAYERS.FLOATING_CONTROLS};
   }
 
@@ -24,8 +23,10 @@ export const menusSheetsStyles = css`
     display: flex;
     align-items: center;
     justify-content: center;
-    height: 36px;
-    width: 36px;
+    height: var(--yamp-computed-bottom-btn-size, var(--yamp-bottom-button-size, 36px));
+    width: var(--yamp-computed-bottom-btn-size, var(--yamp-bottom-button-size, 36px));
+    min-width: var(--yamp-computed-bottom-btn-size, var(--yamp-bottom-button-size, 36px));
+    min-height: var(--yamp-computed-bottom-btn-size, var(--yamp-bottom-button-size, 36px));
     padding: 0;
     margin: 0;
     background: none;
@@ -34,45 +35,53 @@ export const menusSheetsStyles = css`
     font: inherit;
     cursor: pointer;
     outline: none;
+    border-radius: 50%;
   }
 
-  .more-info-btn ha-icon {
+  .more-info-btn ha-icon,
+  .more-info-icon {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: 1.5em;
-    width: 28px;
-    height: 28px;
+    font-size: var(
+      --yamp-computed-more-info-icon-size,
+      var(--yamp-computed-bottom-icon-size, var(--yamp-bottom-icon-size, 22px))
+    );
+    --mdc-icon-size: var(
+      --yamp-computed-more-info-icon-size,
+      var(--yamp-computed-bottom-icon-size, var(--yamp-bottom-icon-size, 22px))
+    );
+    --ha-icon-size: var(
+      --yamp-computed-more-info-icon-size,
+      var(--yamp-computed-bottom-icon-size, var(--yamp-bottom-icon-size, 22px))
+    );
+    width: var(
+      --yamp-computed-more-info-icon-size,
+      var(--yamp-computed-bottom-icon-size, var(--yamp-bottom-icon-size, 22px))
+    );
+    height: var(
+      --yamp-computed-more-info-icon-size,
+      var(--yamp-computed-bottom-icon-size, var(--yamp-bottom-icon-size, 22px))
+    );
     line-height: 1;
     vertical-align: middle;
     position: relative;
-    margin: 0 0 2px 0;
+    margin: 0;
     color: var(--yamp-icon-color, #fff);
     transition: color var(--transition-normal, 0.2s);
   }
 
-  .dim-idle .more-info-btn ha-icon {
-    color: #fff;
-  }
-
-  .more-info-icon {
-    font-size: 2em;
-    line-height: 1;
-    color: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: color var(--transition-normal, 0.2s);
-  }
-
+  .dim-idle .more-info-btn ha-icon,
   .dim-idle .more-info-icon {
     color: #fff;
   }
 
+  :host([data-disable-artwork-gradient="true"]) .more-info-btn ha-icon,
   :host([data-disable-artwork-gradient="true"]) .more-info-icon {
     color: var(--yamp-icon-color, var(--primary-text, #444));
   }
 
+  :host([data-disable-artwork-gradient="true"]) .dim-idle .more-info-btn ha-icon,
   :host([data-disable-artwork-gradient="true"]) .dim-idle .more-info-icon {
     color: var(--secondary-text, #9ea2a8);
   }
