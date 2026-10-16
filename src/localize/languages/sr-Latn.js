@@ -263,6 +263,8 @@ export default {
         "Uvek koristi upareni Music Assistant entitet za naslov pesme, izvođača i omot, čak i kada primarni entitet svira.",
       show_volume_overlay:
         "Kratko prikaži veliki indikator jačine zvuka preko omota kada se nivo zvuka promeni.",
+      hold_title_for_volume:
+        "Pritisnite i držite naziv numere da biste otvorili indikator jačine zvuka i prilagodili jačinu zvuka.",
       font_color_helper:
         "Prilagodi boje teksta i ikona. Prihvata hex, CSS nazive, rgba ili šablone (podrazumevano: boja teme).",
     },
@@ -323,6 +325,7 @@ export default {
       show_idle_artwork_when_not_playing: "Prikaži sliku mirovanja kada ne svira",
       prefer_ma_metadata: "Preferiraj Music Assistant metapodatke",
       show_volume_overlay: "Prikaži indikator jačine zvuka",
+      hold_title_for_volume: "Držite naziv numere za jačinu zvuka",
     },
     fields: {
       artwork_fit: "Uklapanje omota",

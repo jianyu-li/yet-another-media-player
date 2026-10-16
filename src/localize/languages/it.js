@@ -242,6 +242,8 @@ export default {
         "Utilizza sempre l'entità Music Assistant associata per il titolo del brano, l'artista e l'artwork, anche se l'entità principale è in riproduzione.",
       show_volume_overlay:
         "Visualizza brevemente un grande indicatore del volume sopra la copertina quando il livello del volume cambia.",
+      hold_title_for_volume:
+        "Tieni premuto il titolo del brano per aprire l'overlay del volume e regolarlo.",
       font_color_helper:
         "Personalizza i colori di testo e icone. Accetta esadecimale, nomi CSS, rgba o modelli (predefinito: colore del tema).",
       queue_controls_style:
@@ -304,6 +306,7 @@ export default {
       show_idle_artwork_when_not_playing: "Mostra immagine inattiva quando non in riproduzione",
       prefer_ma_metadata: "Preferisci i metadati di Music Assistant",
       show_volume_overlay: "Mostra overlay volume",
+      hold_title_for_volume: "Tieni premuto il titolo per il volume",
     },
     fields: {
       artwork_fit: "Adattamento",

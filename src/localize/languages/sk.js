@@ -258,6 +258,8 @@ export default {
         "Vždy používajte spárovanú entitu Music Assistant pre názov skladby, interpreta a grafiku, aj keď sa prehráva primárna entita.",
       show_volume_overlay:
         "Pri zmene úrovne hlasitosti nakrátko zobrazí veľký ukazovateľ hlasitosti cez grafiku albumu.",
+      hold_title_for_volume:
+        "Podržaním názvu skladby otvoríte prekrytie hlasitosti a upravíte hlasitosť.",
       font_color_helper:
         "Prispôsobte farby textu a ikon. Prijíma hex, názvy CSS, rgba alebo šablóny (predvolené: farba motívu).",
       queue_controls_style:
@@ -320,6 +322,7 @@ export default {
       show_idle_artwork_when_not_playing: "Zobraziť obrázok nečinnosti, keď sa neprehráva",
       prefer_ma_metadata: "Uprednostniť metadáta z Music Assistant",
       show_volume_overlay: "Zobraziť prekrytie hlasitosti",
+      hold_title_for_volume: "Podržať názov skladby pre hlasitosť",
     },
     fields: {
       artwork_fit: "Prispôsobenie grafiky",

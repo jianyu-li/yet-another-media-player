@@ -249,6 +249,8 @@ export default {
         "Toujours utiliser l'entité Music Assistant associée pour le titre de la piste, l'artiste et l'image, même si l'entité principale est en cours de lecture.",
       show_volume_overlay:
         "Affiche brièvement un grand indicateur de volume sur l'illustration lorsque le niveau de volume change.",
+      hold_title_for_volume:
+        "Appuyez longuement sur le titre de la piste pour ouvrir la superposition du volume et régler le volume.",
       font_color_helper:
         "Personnalisez les couleurs du texte et des icônes. Accepte l'hexadécimal, les noms CSS, rgba ou les modèles (par défaut: couleur du thème).",
       queue_controls_style:
@@ -311,6 +313,7 @@ export default {
       show_idle_artwork_when_not_playing: "Afficher l'image d'inactivité si pas de lecture",
       prefer_ma_metadata: "Préférer les métadonnées Music Assistant",
       show_volume_overlay: "Afficher la superposition de volume",
+      hold_title_for_volume: "Maintenir le titre pour le volume",
     },
     fields: {
       artwork_fit: "Ajustement",
