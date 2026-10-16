@@ -142,6 +142,12 @@ export function _resolveIntegrationId(hass, targetEntityId, platforms) {
   return resolvedId;
 }
 
+/**
+ * Resolves the Music Assistant config entry ID for a target entity or globally.
+ * @param {any} hass
+ * @param {string | null} [targetEntityId]
+ * @returns {Promise<string | null>}
+ */
 export async function getMusicAssistantConfigEntryId(hass, targetEntityId = null) {
   if (!hass) return null;
   const now = Date.now();
@@ -1124,7 +1130,16 @@ export function renderSearchOptionsOverlay({
   `;
 }
 
-// Service helpers to keep search-related logic colocated with the search UI module
+/**
+ * Searches media across Music Assistant or Home Assistant entities.
+ * @param {any} hass
+ * @param {string | null} entityId
+ * @param {string} query
+ * @param {string | null} [mediaType]
+ * @param {Record<string, any>} [searchParams]
+ * @param {number} [searchResultsLimit]
+ * @returns {Promise<{ results: any[]; usedMusicAssistant: boolean }>}
+ */
 export async function searchMedia(
   hass,
   entityId,
@@ -1325,7 +1340,15 @@ export async function searchMedia(
   return { results: fallbackResults, usedMusicAssistant: false };
 }
 
-// Get favorites from Music Assistant
+/**
+ * Retrieves recently played items from Music Assistant.
+ * @param {any} hass
+ * @param {string | null} entityId
+ * @param {string | null} [mediaType]
+ * @param {number} [searchResultsLimit]
+ * @param {Record<string, any>} [options]
+ * @returns {Promise<{ results: any[]; usedMusicAssistant: boolean }>}
+ */
 export async function getRecentlyPlayed(
   hass,
   entityId,
@@ -1387,6 +1410,15 @@ export async function getRecentlyPlayed(
   }
 }
 
+/**
+ * Retrieves favorites from Music Assistant.
+ * @param {any} hass
+ * @param {string | null} entityId
+ * @param {string | null} [mediaType]
+ * @param {number} [searchResultsLimit]
+ * @param {Record<string, any>} [options]
+ * @returns {Promise<{ results: any[]; usedMusicAssistant: boolean }>}
+ */
 export async function getFavorites(
   hass,
   entityId,

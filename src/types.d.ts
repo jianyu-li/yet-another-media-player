@@ -650,26 +650,64 @@ export function buildTransferQueuePayload(
 ): Record<string, string>;
 export function hasQueueInState(maState: any, cachedUpcoming?: any[] | null): boolean;
 
+export function getMusicAssistantConfigEntryId(
+  hass?: any,
+  targetEntityId?: string | null
+): Promise<string | null>;
+export function getMassQueueConfigEntryId(
+  hass?: any,
+  targetEntityId?: string | null
+): Promise<string | null>;
+export function searchMedia(
+  hass?: any,
+  entityId?: string | null,
+  query?: string,
+  mediaType?: string | null,
+  searchParams?: any,
+  searchResultsLimit?: number
+): Promise<{ results: any[]; usedMusicAssistant: boolean }>;
+export function getRecentlyPlayed(
+  hass?: any,
+  entityId?: string | null,
+  mediaType?: string | null,
+  limit?: number,
+  options?: any
+): Promise<{ results: any[]; usedMusicAssistant: boolean }>;
+export function getFavorites(
+  hass?: any,
+  entityId?: string | null,
+  mediaType?: string | null,
+  limit?: number,
+  options?: any
+): Promise<{ results: any[]; usedMusicAssistant: boolean }>;
+
 export function mapLegacySortOption(sort?: string | null): string;
 export function isSortableSearchMode(mode?: string | null): boolean;
 export function getOppositeSearchSortMode(mode?: string | null): string | null;
-export function sortSearchResultsList(results: any[], sortMode?: string, skipSort?: boolean): any[];
+export function sortSearchResultsList(
+  results?: any[] | null,
+  sortMode?: string,
+  skipSort?: boolean
+): any[];
 export function filterHierarchySearchResults(
-  results: any[],
+  results?: any[] | null,
   hierarchy?: Array<{ type?: string; name?: string }> | null,
   query?: string
 ): any[];
 export function matchResolvedMediaUri(
-  items: any[],
-  mediaType: string,
-  name: string,
+  items?: any[] | null,
+  mediaType?: string,
+  name?: string,
   artist?: string
 ): string | null;
-export function snapshotPlaybackStateMap(states: any, entityIds: string[]): Record<string, any>;
+export function snapshotPlaybackStateMap(
+  states?: any,
+  entityIds?: string[] | null
+): Record<string, any>;
 export function hasPlaybackStateChanged(
   snapshot: Record<string, any>,
-  states: any,
-  entityIds: string[],
+  states?: any,
+  entityIds?: string[] | null,
   isEntityPlayingFn?: (stateObj: any) => boolean,
   options?: { requireMediaChange?: boolean }
 ): boolean;

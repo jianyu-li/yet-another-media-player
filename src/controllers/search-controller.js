@@ -66,7 +66,7 @@ export function isSortableSearchMode(mode) {
  * @returns {string | null}
  */
 export function getOppositeSearchSortMode(mode) {
-  if (!isSortableSearchMode(mode)) return null;
+  if (!mode || !isSortableSearchMode(mode)) return null;
   if (mode.endsWith("_desc")) {
     return mode.replace(/_desc$/, "");
   }
@@ -75,7 +75,7 @@ export function getOppositeSearchSortMode(mode) {
 
 /**
  * Sorts or shuffles search results based on the requested sort mode.
- * @param {any[]} results
+ * @param {any[] | null | undefined} results
  * @param {string} [sortMode]
  * @param {boolean} [skipSort]
  * @returns {any[]}
@@ -97,12 +97,12 @@ export function sortSearchResultsList(results, sortMode = "default", skipSort = 
 
 /**
  * Filters search results in real time when navigating within a hierarchy level.
- * @param {any[]} results
- * @param {Array<{ type?: string, name?: string }>} hierarchy
- * @param {string} query
+ * @param {any[] | null | undefined} results
+ * @param {Array<{ type?: string, name?: string }> | null | undefined} [hierarchy]
+ * @param {string} [query]
  * @returns {any[]}
  */
-export function filterHierarchySearchResults(results, hierarchy, query) {
+export function filterHierarchySearchResults(results, hierarchy = null, query = "") {
   const list = Array.isArray(results) ? results : [];
   const isInHierarchy =
     Array.isArray(hierarchy) &&
@@ -120,7 +120,7 @@ export function filterHierarchySearchResults(results, hierarchy, query) {
 
 /**
  * Matches a target name/artist against Music Assistant search result items to find the best URI.
- * @param {any[]} items
+ * @param {any[] | null | undefined} items
  * @param {string} mediaType
  * @param {string} name
  * @param {string} [artist]
@@ -162,7 +162,7 @@ export function matchResolvedMediaUri(items, mediaType, name, artist = "") {
 /**
  * Creates a state snapshot map for monitored media players.
  * @param {Record<string, any> | undefined} states
- * @param {string[]} entityIds
+ * @param {string[] | null | undefined} entityIds
  * @returns {Record<string, { state: string | null, mediaId: string | null, mediaTitle: string | null }>}
  */
 export function snapshotPlaybackStateMap(states, entityIds) {
@@ -184,7 +184,7 @@ export function snapshotPlaybackStateMap(states, entityIds) {
  * Checks if a playback state transition or media change occurred compared to an earlier snapshot.
  * @param {Record<string, { state: string | null, mediaId: string | null, mediaTitle: string | null }>} snapshot
  * @param {Record<string, any> | undefined} states
- * @param {string[]} entityIds
+ * @param {string[] | null | undefined} entityIds
  * @param {(stateObj: any) => boolean} isEntityPlayingFn
  * @param {{ requireMediaChange?: boolean }} [options]
  * @returns {boolean}
@@ -443,6 +443,7 @@ export class SearchController {
 
     this.host.requestUpdate();
 
+    /** @type {string | null} */
     let artistUri = null;
     if (this.host?._isMusicAssistantEntity?.()) {
       try {
@@ -479,7 +480,7 @@ export class SearchController {
       const serviceData = {
         name,
         media_type: [mediaType],
-        ...(configEntryId && configEntryId !== "auto" && { config_entry_id: configEntryId }),
+        ...(configEntryId && configEntryId !== "auto" ? { config_entry_id: configEntryId } : {}),
         ...extraParams,
       };
 
@@ -549,6 +550,7 @@ export class SearchController {
 
     this.host.requestUpdate();
 
+    /** @type {string | null} */
     let albumUri = null;
     if (this.host?._isMusicAssistantEntity?.()) {
       try {
@@ -837,6 +839,12 @@ export class SearchController {
     return `${count} ${localize(key)}`;
   }
 
+  /**
+   * Executes a media search across Music Assistant or Home Assistant entities.
+   * @param {string | null} [mediaType]
+   * @param {Record<string, any>} [searchParams]
+   * @returns {Promise<void>}
+   */
   async doSearch(mediaType = null, searchParams = {}) {
     if (!this.host) return;
     this.host._searchAttempted = true;
@@ -939,6 +947,7 @@ export class SearchController {
         try {
           const mqConfigEntryId = await getMassQueueConfigEntryId(this.host.hass, searchEntityId);
           if (mqConfigEntryId) {
+            /** @type {Record<string, any>} */
             const apiData = { limit: PLAYLIST_FETCH_LIMIT };
             if (this.host._searchQuery && this.host._searchQuery.trim().length > 0) {
               apiData.search = this.host._searchQuery.trim();
@@ -953,8 +962,9 @@ export class SearchController {
               domain: "mass_queue",
               service: "send_command",
               service_data: {
-                ...(mqConfigEntryId &&
-                  mqConfigEntryId !== "auto" && { config_entry_id: mqConfigEntryId }),
+                ...(mqConfigEntryId && mqConfigEntryId !== "auto"
+                  ? { config_entry_id: mqConfigEntryId }
+                  : {}),
                 command: "music/playlists/library_items",
                 data: apiData,
               },
@@ -1117,7 +1127,8 @@ export class SearchController {
       const rows = Array.isArray(this.host._searchResults) ? this.host._searchResults.length : 0;
       this.host._searchTotalRows = Math.max(15, rows);
     } catch (e) {
-      this.host._searchError = (e && e.message) || "Unknown error";
+      this.host._searchError =
+        e && typeof e === "object" && "message" in e ? String(e.message) : "Unknown error";
       this.host._searchResults = [];
       this.host._searchTotalRows = 0;
     }
@@ -1428,7 +1439,7 @@ export class SearchController {
       }
     } catch (e) {
       console.error("Failed to perform search option action:", e);
-      this.host._searchError = "Action failed: " + e.message;
+      this.host._searchError = "Action failed: " + (e instanceof Error ? e.message : String(e));
       this.host.requestUpdate();
     }
   }
@@ -1462,6 +1473,12 @@ export class SearchController {
     });
   }
 
+  /**
+   * Search and navigate directly to artist albums hierarchy.
+   * @param {string} artistName
+   * @param {string | null} [artistUri]
+   * @returns {Promise<void>}
+   */
   async searchArtistAlbums(artistName, artistUri = null) {
     this.host._searchHierarchy.push({
       type: "artist",
@@ -1977,6 +1994,11 @@ export class SearchController {
     }
   }
 
+  /**
+   * Toggles or sets the recently played filter state.
+   * @param {boolean | null} [forceState]
+   * @returns {Promise<void>}
+   */
   async toggleRecentlyPlayedFilter(forceState = null) {
     const targetState =
       typeof forceState === "boolean" ? forceState : !this.host._recentlyPlayedFilterActive;
@@ -2018,6 +2040,11 @@ export class SearchController {
     }
   }
 
+  /**
+   * Toggles or sets the upcoming queue filter state.
+   * @param {boolean | null} [forceState]
+   * @returns {Promise<void>}
+   */
   async toggleUpcomingFilter(forceState = null) {
     if (!this.host?.hass) return;
 
@@ -2067,6 +2094,11 @@ export class SearchController {
     }
   }
 
+  /**
+   * Toggles or sets the recommendations filter state.
+   * @param {boolean | null} [forceState]
+   * @returns {Promise<void>}
+   */
   async toggleRecommendationsFilter(forceState = null) {
     const targetState =
       typeof forceState === "boolean" ? forceState : !this.host._recommendationsFilterActive;
@@ -2284,6 +2316,13 @@ export class SearchController {
     }
   }
 
+  /**
+   * Fetches album tracks via mass_queue or browse_media.
+   * @param {string | null} albumUri
+   * @param {string} albumName
+   * @param {string | null} [artistName]
+   * @returns {Promise<void>}
+   */
   async loadAlbumTracks(albumUri, albumName, artistName = null) {
     if (albumUri && (await this.host._isMassQueueIntegrationAvailable?.(this.host.hass))) {
       const mqTracks = await this.host._fetchMassQueueTracks?.(albumUri, "get_album_tracks");
@@ -2343,6 +2382,13 @@ export class SearchController {
     await this.doSearch("track", searchParams);
   }
 
+  /**
+   * Pushes album to search hierarchy and loads tracks.
+   * @param {string} albumName
+   * @param {string | null} [artistName]
+   * @param {string | null} [albumUri]
+   * @returns {Promise<void>}
+   */
   async searchAlbumTracks(albumName, artistName, albumUri = null) {
     this.host._searchHierarchy.push({
       type: "album",
@@ -2365,6 +2411,12 @@ export class SearchController {
     await this.loadAlbumTracks(albumUri, albumName, artistName);
   }
 
+  /**
+   * Loads tracks for a playlist via mass_queue or browse_media.
+   * @param {string | null} playlistUri
+   * @param {string} playlistName
+   * @returns {Promise<boolean>}
+   */
   async loadPlaylistTracks(playlistUri, playlistName) {
     if (playlistUri && (await this.host._isMassQueueIntegrationAvailable?.(this.host.hass))) {
       const mqTracks = await this.host._fetchMassQueueTracks?.(playlistUri, "get_playlist_tracks");
@@ -2420,6 +2472,12 @@ export class SearchController {
     return false;
   }
 
+  /**
+   * Pushes playlist to search hierarchy and loads tracks.
+   * @param {string} playlistName
+   * @param {string | null} playlistUri
+   * @returns {Promise<void>}
+   */
   async searchPlaylistTracks(playlistName, playlistUri) {
     this.host._searchHierarchy.push({
       type: "playlist",
@@ -2453,6 +2511,12 @@ export class SearchController {
     this.host._errorSearchRowMenuId = null;
   }
 
+  /**
+   * Shows success toast feedback for queue or playlist actions.
+   * @param {string | null} [menuId]
+   * @param {string | null} [type]
+   * @returns {void}
+   */
   showSearchSuccessToast(menuId = null, type = null) {
     this.host._showQueueSuccessMessage = true;
     if (menuId) this.host._successSearchRowMenuId = menuId;
