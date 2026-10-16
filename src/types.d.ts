@@ -650,6 +650,179 @@ export function buildTransferQueuePayload(
 ): Record<string, string>;
 export function hasQueueInState(maState: any, cachedUpcoming?: any[] | null): boolean;
 
+export function getMusicAssistantConfigEntryId(
+  hass?: any,
+  targetEntityId?: string | null
+): Promise<string | null>;
+export function getMassQueueConfigEntryId(
+  hass?: any,
+  targetEntityId?: string | null
+): Promise<string | null>;
+export function searchMedia(
+  hass?: any,
+  entityId?: string | null,
+  query?: string,
+  mediaType?: string | null,
+  searchParams?: any,
+  searchResultsLimit?: number
+): Promise<{ results: any[]; usedMusicAssistant: boolean }>;
+export function getRecentlyPlayed(
+  hass?: any,
+  entityId?: string | null,
+  mediaType?: string | null,
+  limit?: number,
+  options?: any
+): Promise<{ results: any[]; usedMusicAssistant: boolean }>;
+export function getFavorites(
+  hass?: any,
+  entityId?: string | null,
+  mediaType?: string | null,
+  limit?: number,
+  options?: any
+): Promise<{ results: any[]; usedMusicAssistant: boolean }>;
+
+export function mapLegacySortOption(sort?: string | null): string;
+export function isSortableSearchMode(mode?: string | null): boolean;
+export function getOppositeSearchSortMode(mode?: string | null): string | null;
+export function sortSearchResultsList(
+  results?: any[] | null,
+  sortMode?: string,
+  skipSort?: boolean
+): any[];
+export function filterHierarchySearchResults(
+  results?: any[] | null,
+  hierarchy?: Array<{ type?: string; name?: string }> | null,
+  query?: string
+): any[];
+export function matchResolvedMediaUri(
+  items?: any[] | null,
+  mediaType?: string,
+  name?: string,
+  artist?: string
+): string | null;
+export function snapshotPlaybackStateMap(
+  states?: any,
+  entityIds?: string[] | null
+): Record<string, any>;
+export function hasPlaybackStateChanged(
+  snapshot: Record<string, any>,
+  states?: any,
+  entityIds?: string[] | null,
+  isEntityPlayingFn?: (stateObj: any) => boolean,
+  options?: { requireMediaChange?: boolean }
+): boolean;
+
+export declare class SearchController {
+  host: any;
+  [key: string]: any;
+  constructor(host: any);
+  hostConnected(): void;
+  hostDisconnected(): void;
+  attachSearchSwipe(): void;
+  removeSearchSwipeHandlers(): void;
+  getMockItemFromCurrentTrack(): any;
+  isCurrentlyPlayingRadio(): boolean;
+  handlePlaySimilar(): void;
+  handleAddCurrentToPlaylist(): Promise<void>;
+  searchArtistFromNowPlaying(): Promise<void>;
+  resolveMediaUri(
+    mediaType: string,
+    name: string,
+    extraParams?: Record<string, any>,
+    entityId?: string
+  ): Promise<string | null>;
+  resolveAlbumUri(
+    albumName: string,
+    artistName?: string | null,
+    entityId?: string
+  ): Promise<string | null>;
+  resolveArtistUri(artistName: string, entityId?: string): Promise<string | null>;
+  resolvePlaylistUri(playlistName: string, entityId?: string): Promise<string | null>;
+  searchAlbumFromNowPlaying(): Promise<void>;
+  showSearchSheetInOptions(mode?: string): void;
+  openQuickSearchOverlay(mode?: string): void;
+  hideSearchSheetInOptions(): void;
+  closeMenuIfOpen(): void;
+  sortSearchResults(results: any[], sortModeOverride?: string | null): any[];
+  getConfiguredSearchResultsSortMode(): string;
+  mapLegacySortOption(mode?: string | null): string;
+  isSortableSearchMode(mode?: string | null): boolean;
+  getOppositeSearchSortMode(mode?: string | null): string;
+  shouldShowSearchSortToggle(): boolean;
+  toggleSearchResultsSortDirection(): void;
+  getActiveSearchDisplaySortMode(): string;
+  getSearchSortToggleIcon(): string;
+  getSearchSortToggleTitle(): string;
+  getDisplaySearchResults(): any[];
+  getSearchResultsLimit(): number;
+  getSearchResultsCount(): number;
+  shouldShowSearchResultsCount(): boolean;
+  getSearchResultsCountLabel(): string;
+  doSearch(mediaType?: string | null, searchParams?: Record<string, any>): Promise<void>;
+  playCurrentCollection(): Promise<void>;
+  handleSearchSubmit(): void;
+  handleProgressiveSearchResults(
+    chunk: any[],
+    cacheKey: string,
+    searchToken: string | number
+  ): void;
+  getVisibleSearchFilterClasses(): string[];
+  playMediaFromSearch(item: any, event?: Event): Promise<void>;
+  performSearchPlayback(item: any, targetEntityId: string): Promise<boolean>;
+  collectPlaybackMonitorIds(targetEntityId: string): string[];
+  snapshotPlaybackState(entityIds: string[]): Record<string, any>;
+  waitForPlaybackChange(
+    snapshot: Record<string, any>,
+    entityIds: string[],
+    timeout?: number,
+    options?: { requireMediaChange?: boolean }
+  ): Promise<boolean>;
+  performSearchOptionAction(item: any, mode: string): Promise<void>;
+  invokePlayMedia(targetEntityId: string, item: any): Promise<boolean>;
+  delay(ms: number): Promise<void>;
+  searchArtistAlbums(artistName: string, artistUri?: string | null): Promise<void>;
+  goBackInSearch(): void;
+  scrollToTop(): void;
+  getSearchHeaderHeight(): number;
+  updateSearchHeaderPosition(offset: number, animated?: boolean): void;
+  getSearchResultsElement(): Element | null;
+  applySearchHeaderDelta(delta: number): void;
+  setSearchHeadersRetracted(retracted: boolean, animated?: boolean): void;
+  handleSearchResultsScroll(e: Event, pinSearchHeaders?: boolean): void;
+  handleFilterChipsWheel(e: WheelEvent): void;
+  handleHeaderWheel(e: WheelEvent, pinSearchHeaders?: boolean): void;
+  handleHeaderTouchStart(e: TouchEvent): void;
+  handleHeaderTouchMove(e: TouchEvent, pinSearchHeaders?: boolean): void;
+  handleHeaderTouchEnd(): void;
+  handleSearchContainerWheel(e: WheelEvent, pinSearchHeaders?: boolean): void;
+  handleSearchResultsWheel(e: WheelEvent, pinSearchHeaders?: boolean): void;
+  handleResultsTouchStart(e: TouchEvent): void;
+  handleResultsTouchMove(e: TouchEvent, pinSearchHeaders?: boolean): void;
+  handleResultsTouchEnd(): void;
+  isClickableSearchResult(item: any): boolean;
+  getSearchResultClickTitle(item: any): string;
+  invalidateUpcomingCache(): void;
+  toggleRadioMode(): void;
+  toggleFavoritesFilter(): Promise<void>;
+  toggleRecentlyPlayedFilter(forceState?: boolean | null): Promise<void>;
+  toggleUpcomingFilter(forceState?: boolean | null): Promise<void>;
+  toggleRecommendationsFilter(forceState?: boolean | null): Promise<void>;
+  restoreSearchResultsFromCache(currentMediaType: string): boolean;
+  checkAiRadioAvailability(): Promise<void>;
+  applyLocalFavoritesFilter(results?: any[]): Promise<any[]>;
+  handleSearchResultClick(item: any, event?: Event): Promise<void>;
+  loadAlbumTracks(albumUri: string, albumName: string, artistName?: string | null): Promise<void>;
+  searchAlbumTracks(
+    albumName: string,
+    artistName?: string | null,
+    albumUri?: string | null
+  ): Promise<void>;
+  loadPlaylistTracks(playlistUri: string, playlistName: string): Promise<boolean>;
+  searchPlaylistTracks(playlistName: string, playlistUri: string): Promise<void>;
+  resetSearchContext(): void;
+  showSearchSuccessToast(menuId?: string | null, type?: string | null): void;
+}
+
 export function mediaPlay(hass?: HomeAssistant, entityId?: string): Promise<any>;
 export function mediaPause(hass?: HomeAssistant, entityId?: string): Promise<any>;
 export function mediaPlayPause(hass?: HomeAssistant, entityId?: string): Promise<any>;
@@ -757,6 +930,8 @@ export interface YetAnotherMediaPlayerCard {
   _artworkController?: ArtworkController;
   queueController?: QueueController;
   _queueController?: QueueController;
+  searchController?: SearchController;
+  _searchController?: SearchController;
   _volumeHoldController?: VolumeHoldController;
   _canUseVolumeHold?: (allowMenuMode?: boolean) => boolean;
   _applyVolumeLevel?: (newVol: number) => void;

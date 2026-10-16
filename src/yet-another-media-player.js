@@ -14,18 +14,7 @@ import "./lyrics-view.js";
 import { YampMediaSessionManager } from "./yamp-media-session.js";
 import {
   renderSearchOptionsOverlay,
-  searchMedia,
-  playSearchedMedia,
-  getFavorites,
-  getRecentlyPlayed,
   isTrackFavorited,
-  getMassQueueConfigEntryId,
-  getMusicAssistantConfigEntryId,
-  ALLOWED_MEDIA_TYPES,
-  transformMusicAssistantItem,
-  isAiRadioAvailable,
-  playAiRadioStation,
-  isShow
 } from "./search-sheet.js";
 import "./yamp-editor.js";
 
@@ -50,6 +39,7 @@ import { LyricsController, cleanTrackMetadata } from "./controllers/lyrics-contr
 import { ArtworkController } from "./controllers/artwork-controller.js";
 import { QueueController } from "./controllers/queue-controller.js";
 import { VolumeHoldController, getVolumeIconForPercent } from "./controllers/volume-hold-controller.js";
+import { SearchController } from "./controllers/search-controller.js";
 import {
   mediaPlay,
   mediaPause,
@@ -77,7 +67,6 @@ import {
   getActionPlacement,
   findAssociatedButtonEntities,
   getMusicAssistantState,
-  getSearchResultClickTitle,
   isMusicAssistantEntity,
   isValidArtworkUrl,
   getEntityName,
@@ -103,9 +92,6 @@ import {
   SESSION_STORAGE_PREFIX,
   SESSION_STORAGE_TTL_MS,
 } from "./constants.js";
-
-const PLAYLIST_FETCH_LIMIT = 500;
-const SUCCESS_MESSAGE_TIMEOUT_MS = 3000;
 
 const ADAPTIVE_TEXT_TARGETS = Object.freeze(["details", "menu", "action_chips", "lyrics"]);
 const DEFAULT_ADAPTIVE_TEXT_TARGETS = Object.freeze([...ADAPTIVE_TEXT_TARGETS]);
@@ -1064,6 +1050,9 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._lastVolumeRendered = true;
     // Group base volume for group gain logic
     this._groupBaseVolume = null;
+    // Search controller
+    /** @type {SearchController} */
+    this._searchController = new SearchController(this);
     // Search sheet state variables
     this._searchQuery = "";
     this._searchLoading = false;
@@ -1478,401 +1467,56 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     return resolveTemplateAtActionTime(this.hass, templateString, fallbackEntityId);
   }
 
-  /**
-   * Attach horizontal swipe on the search‑results area to cycle media‑class filters.
-   */
   _attachSearchSwipe() {
-    if (this._searchSwipeAttached) return;
-    const area = this.renderRoot.querySelector('.entity-options-search-results');
-    if (!area) return;
-
-    // Disable swipe-to-filter when in a hierarchy (artist -> albums -> tracks)
-    if (this._searchHierarchy.length > 0) {
-      return;
-    }
-
-    this._searchSwipeAttached = true;
-
-    const threshold = 40;  // px needed to trigger change
-
-    const touchstartHandler = e => {
-      if (e.touches.length === 1) {
-        this._swipeStartX = e.touches[0].clientX;
-      }
-    };
-
-    const touchendHandler = e => {
-      if (this._swipeStartX === null) return;
-      const endX = (e.changedTouches && e.changedTouches[0].clientX) || null;
-      if (endX === null) { this._swipeStartX = null; return; }
-      const dx = endX - this._swipeStartX;
-      if (Math.abs(dx) > threshold) {
-        // Get all available media classes from cached results
-        const allClasses = new Set();
-        Object.values(this._searchResultsByType).forEach(results => {
-          results.forEach(item => {
-            if (item.media_class) allClasses.add(item.media_class);
-          });
-        });
-        const currEntityObj = this.entityObjs?.[this._selectedIndex] || null;
-        const hiddenSet = new Set(currEntityObj?.hidden_filter_chips || []);
-        const classes = Array.from(allClasses).filter(c => !hiddenSet.has(c));
-        const filterOrder = ['all', ...classes];
-        const currIdx = filterOrder.indexOf(this._searchMediaClassFilter || 'all');
-        const dir = dx < 0 ? 1 : -1;   // swipe left -> next, right -> prev
-        let nextIdx = (currIdx + dir + filterOrder.length) % filterOrder.length;
-        const nextFilter = filterOrder[nextIdx];
-        this._doSearch(nextFilter === 'all' ? null : nextFilter);
-      }
-      this._swipeStartX = null;
-    };
-
-    area.addEventListener('touchstart', touchstartHandler, { passive: true });
-    area.addEventListener('touchend', touchendHandler, { passive: true });
-
-    // Store handlers for cleanup
-    area._searchSwipeHandlers = {
-      touchstart: touchstartHandler,
-      touchend: touchendHandler
-    };
+    return this._searchController.attachSearchSwipe();
   }
 
   _getMockItemFromCurrentTrack() {
-    const stateObj = this.currentActivePlaybackStateObj || this.currentPlaybackStateObj || this.currentStateObj;
-    if (!stateObj || !stateObj.attributes || !stateObj.attributes.media_title) return null;
-
-    return {
-      title: stateObj.attributes.media_title,
-      media_title: stateObj.attributes.media_title,
-      media_content_id: stateObj.attributes.media_content_id || stateObj.attributes.media_title,
-      media_artist: stateObj.attributes.media_artist || "",
-      media_content_type: 'track',
-      media_type: 'track'
-    };
+    return this._searchController.getMockItemFromCurrentTrack();
   }
 
   _isCurrentlyPlayingRadio() {
-    const stateObj = this.currentActivePlaybackStateObj || this.currentPlaybackStateObj || this.currentStateObj;
-    if (!stateObj?.attributes) return false;
-    const ct = (stateObj.attributes.media_content_type || "").toLowerCase();
-    const cid = (stateObj.attributes.media_content_id || "").toLowerCase();
-    return ct === "radio" || cid.startsWith("library://radio/");
+    return this._searchController.isCurrentlyPlayingRadio();
   }
 
   _handlePlaySimilar() {
-    const mockItem = this._getMockItemFromCurrentTrack();
-    if (!mockItem) return;
-
-    this._showMediaTitleOptions = false;
-    this._radioModeActive = true;
-
-    this._playMediaFromSearch(mockItem);
+    return this._searchController.handlePlaySimilar();
   }
 
   async _handleAddCurrentToPlaylist() {
-    const mockItem = this._getMockItemFromCurrentTrack();
-    if (!mockItem) return;
-
-    this._showMediaTitleOptions = false;
-
-    // Open options sheet menu to show playlist search sheet
-    this._showEntityOptions = true;
-    this._showSearchInSheet = true;
-    this._dismissMenuAfterPlaylistAdd = true;
-
-    if (this._isCurrentlyPlayingRadio()) {
-      // Radio streams don't have a valid MA track URI, so we need the user
-      // to pick the correct track from a search first.
-      // Use the track title as the primary query and artist/album as filters for precision.
-      const searchTerm = mockItem.title;
-      this._addToPlaylistTarget = null; // will be set when user picks a track
-      this._searchHierarchy.push({
-        type: 'select_track_for_playlist',
-        name: localize('search.select_track_for_playlist', { '{track}': mockItem.title, '{artist}': mockItem.media_artist }),
-        query: this._searchQuery,
-        filter: this._searchMediaClassFilter
-      });
-      this._searchBreadcrumb = localize('search.select_track_for_playlist', { '{track}': mockItem.title, '{artist}': mockItem.media_artist });
-      this._searchQuery = searchTerm;
-      this._currentSearchQuery = searchTerm;
-      this._searchMediaClassFilter = 'track';
-      this._resetSearchContext();
-      this._removeSearchSwipeHandlers();
-      await this._doSearch('track', {
-        clearFilters: true,
-        artist: mockItem.media_artist
-      });
-      return;
-    }
-
-    this._performSearchOptionAction(mockItem, 'add_to_playlist');
+    return this._searchController.handleAddCurrentToPlaylist();
   }
 
-  /**
-   * Open the search sheet and navigate directly to the current artist's albums
-   * in hierarchical search view (only when media_artist is present).
-   */
   async _searchArtistFromNowPlaying() {
-    const artist = (this.currentActivePlaybackStateObj || this.currentPlaybackStateObj || this.currentStateObj)?.attributes?.media_artist || "";
-    if (!artist) return;
-
-    this._openedSearchFromNowPlaying = true;
-
-    // Open overlay + search sheet
-    this._showEntityOptions = true;
-    this._showSearchInSheet = true;
-    this._searchInputAutoFocused = false;
-
-    // Reset search state
-    this._searchError = "";
-    this._searchResults = [];
-    this._searchQuery = "";
-    this._searchAttempted = false;
-    this._searchResultsByType = {};
-    this._currentSearchQuery = "";
-    this._searchHierarchy = [];
-    this._searchBreadcrumb = "";
-    this._usingMusicAssistant = false;
-    this._favoritesFilterActive = false;
-    this._recentlyPlayedFilterActive = false;
-    this._upcomingFilterActive = false;
-    this._recommendationsFilterActive = false;
-    this._initialFavoritesLoaded = false;
-    this._lastSearchUsedServerFavorites = false;
-
-    this.requestUpdate();
-
-    let artistUri = null;
-    if (this._isMusicAssistantEntity()) {
-      try {
-        const searchEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
-        const searchEntityId = await this._resolveTemplateAtActionTime(searchEntityIdTemplate, this.currentEntityId);
-        artistUri = await this._resolveArtistUri(artist, searchEntityId);
-      } catch (e) {
-        console.warn("yamp: error resolving artist URI:", e);
-      }
-    }
-
-    this._searchArtistAlbums(artist, artistUri).catch((error) => {
-      console.error("yamp: artist quick-search failed:", error);
-    });
+    return this._searchController.searchArtistFromNowPlaying();
   }
 
-  /**
-   * Resolve a media URI (album or artist) from Music Assistant
-   * @param {"album"|"artist"|"playlist"|string} mediaType
-   * @param {string} name
-   * @param {Record<string, any>} extraParams
-   * @param {string} entityId
-   * @returns {Promise<string|null>}
-   */
   async _resolveMediaUri(mediaType, name, extraParams = {}, entityId) {
-    if (!name || !this.hass) return null;
-    try {
-      const configEntryId = await getMusicAssistantConfigEntryId(this.hass, entityId);
-      if (!configEntryId) return null;
-
-      const serviceData = {
-        name,
-        media_type: [mediaType],
-        ...(configEntryId && configEntryId !== "auto" && { config_entry_id: configEntryId }),
-        ...extraParams,
-      };
-
-      const msg = {
-        type: "call_service",
-        domain: "music_assistant",
-        service: "search",
-        service_data: serviceData,
-        return_response: true,
-      };
-
-      const res = await this.hass.connection.sendMessagePromise(msg);
-      const items = res?.response?.[`${mediaType}s`] || [];
-      if (!items.length) return null;
-
-      const normName = name.trim().toLowerCase();
-      const normArtist = (extraParams.artist || "").trim().toLowerCase();
-
-      if (mediaType === "album") {
-        // Priority 1: Match both album name and artist
-        const matchBoth = items.find((a) => {
-          const aName = (a.name || "").toLowerCase();
-          const aArtistMatch = normArtist
-            ? a.artists?.some((ar) => {
-                const arName = (ar.name || "").toLowerCase();
-                return arName.includes(normArtist) || normArtist.includes(arName);
-              })
-            : true;
-          return (
-            (aName === normName || aName.includes(normName) || normName.includes(aName)) &&
-            aArtistMatch
-          );
-        });
-        if (matchBoth?.uri) return matchBoth.uri;
-      }
-
-      // Match item name
-      const exactMatch = items.find((it) => (it.name || "").toLowerCase() === normName);
-      if (exactMatch?.uri) return exactMatch.uri;
-
-      const matchName = items.find((it) => {
-        const itName = (it.name || "").toLowerCase();
-        return itName === normName || itName.includes(normName) || normName.includes(itName);
-      });
-      if (matchName?.uri) return matchName.uri;
-
-      // Fallback: First returned item
-      return items[0]?.uri || null;
-    } catch (e) {
-      console.warn(`yamp: Failed to resolve ${mediaType} URI:`, e);
-      return null;
-    }
+    return this._searchController.resolveMediaUri(mediaType, name, extraParams, entityId);
   }
 
   _resolveAlbumUri(albumName, artistName, entityId) {
-    return this._resolveMediaUri("album", albumName, artistName ? { artist: artistName } : {}, entityId);
+    return this._searchController.resolveAlbumUri(albumName, artistName, entityId);
   }
 
   _resolveArtistUri(artistName, entityId) {
-    return this._resolveMediaUri("artist", artistName, {}, entityId);
+    return this._searchController.resolveArtistUri(artistName, entityId);
   }
 
   _resolvePlaylistUri(playlistName, entityId) {
-    return this._resolveMediaUri("playlist", playlistName, {}, entityId);
+    return this._searchController.resolvePlaylistUri(playlistName, entityId);
   }
 
-  /**
-   * Open the search sheet and navigate directly to the current album's tracks
-   * in hierarchical search view (only when media_album_name is present).
-   */
   async _searchAlbumFromNowPlaying() {
-    const activeObj = this.currentActivePlaybackStateObj || this.currentPlaybackStateObj || this.currentStateObj;
-    const album = activeObj?.attributes?.media_album_name || "";
-    const artist = activeObj?.attributes?.media_artist || "";
-    if (!album) return;
-
-    this._openedSearchFromNowPlaying = true;
-
-    // Open overlay + search sheet
-    this._showEntityOptions = true;
-    this._showSearchInSheet = true;
-    this._searchInputAutoFocused = false;
-
-    // Reset search state
-    this._searchError = "";
-    this._searchResults = [];
-    this._searchQuery = "";
-    this._searchAttempted = false;
-    this._searchResultsByType = {};
-    this._currentSearchQuery = "";
-    this._searchHierarchy = [];
-    this._searchBreadcrumb = "";
-    this._usingMusicAssistant = false;
-    this._favoritesFilterActive = false;
-    this._recentlyPlayedFilterActive = false;
-    this._upcomingFilterActive = false;
-    this._recommendationsFilterActive = false;
-    this._initialFavoritesLoaded = false;
-    this._lastSearchUsedServerFavorites = false;
-
-    this.requestUpdate();
-
-    let albumUri = null;
-    if (this._isMusicAssistantEntity()) {
-      try {
-        const searchEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
-        const searchEntityId = await this._resolveTemplateAtActionTime(searchEntityIdTemplate, this.currentEntityId);
-        albumUri = await this._resolveAlbumUri(album, artist, searchEntityId);
-      } catch (e) {
-        console.warn("yamp: error resolving album URI:", e);
-      }
-    }
-
-    this._searchAlbumTracks(album, artist, albumUri).catch((error) => {
-      console.error("yamp: album quick-search failed:", error);
-    });
+    return this._searchController.searchAlbumFromNowPlaying();
   }
-  // Show search sheet inside entity options
+
   _showSearchSheetInOptions(mode = "default") {
-    this._showSearchInSheet = true;
-    this._searchHeadersRetracted = false;
-    this._searchHeaderOffset = 0;
-    this._searchHeaderNaturalHeight = 0;
-    this._lastSearchResultsScrollTop = 0;
-    this._searchInputAutoFocused = false;
-    this._searchError = "";
-    this._searchResults = [];
-    this._searchQuery = "";
-    this._searchAttempted = false;
-    this._searchResultsByType = {}; // Clear cache when opening new search
-    this._currentSearchQuery = ""; // Reset current search query
-    this._searchHierarchy = []; // Clear search hierarchy
-    this._searchBreadcrumb = ""; // Clear breadcrumb
-    this._usingMusicAssistant = false; // Track if we're using Music Assistant search
-    this._favoritesFilterActive = this.config.default_search_favorites === true; // Track if favorites filter is active
-    this._recentlyPlayedFilterActive = false; // Track if recently played filter is active
-    this._upcomingFilterActive = false; // Track if upcoming queue filter is active
-    this._recommendationsFilterActive = false; // Track if recommendations filter is active
-    this._initialFavoritesLoaded = false; // Track if initial favorites have been loaded
-    void this._checkAiRadioAvailability();
-
-    this.requestUpdate();
-
-    // Trigger selected search mode after sheet opens
-    setTimeout(() => {
-      let promise;
-      switch (mode) {
-        case "recently-played":
-          promise = this._toggleRecentlyPlayedFilter(true);
-          break;
-        case "next-up":
-          promise = this._toggleUpcomingFilter(true);
-          break;
-        case "recommendations":
-          promise = this._toggleRecommendationsFilter(true);
-          break;
-        default:
-          {
-            const defaultFilter = this.config.default_search_filter === 'all' ? null : this.config.default_search_filter;
-            promise = this._doSearch(defaultFilter);
-          }
-          break;
-      }
-      if (promise?.catch) {
-        promise.catch((err) => {
-          console.error("yamp: search initialization failed:", err);
-        });
-      }
-    }, 100);
-
-    if (!this._disableSearchAutofocus) {
-      // Handle focus for expand on search
-      const focusDelay = this._alwaysCollapsed && this._expandOnSearch ? 300 : 200;
-      setTimeout(() => {
-        const inp = this.renderRoot.querySelector('#search-input-box');
-        if (inp) {
-          inp.focus();
-        } else {
-          // If input not found, try again with a longer delay
-          setTimeout(() => {
-            const retryInp = this.renderRoot.querySelector('#search-input-box');
-            if (retryInp) {
-              retryInp.focus();
-            }
-          }, 200);
-        }
-      }, focusDelay);
-    }
+    return this._searchController.showSearchSheetInOptions(mode);
   }
 
   _openQuickSearchOverlay(mode = "default") {
-    this._quickMenuInvoke = true;
-    this._showEntityOptions = true;
-    this._showSearchSheetInOptions(mode);
-    setTimeout(() => {
-      this._notifyResize();
-    }, 0);
+    return this._searchController.openQuickSearchOverlay(mode);
   }
 
   _handleNavigate(path, openInNewTab = false) {
@@ -1919,214 +1563,71 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
 
   _hideSearchSheetInOptions() {
-    // In dedicated search mode, never close the search
-    if (this._cardType === "search" || this._cardType === "up_next") return;
-    this._openedSearchFromNowPlaying = false;
-    this._showSearchInSheet = false;
-    this._searchHeadersRetracted = false;
-    this._searchHeaderOffset = 0;
-    this._searchHeaderNaturalHeight = 0;
-    this._lastSearchResultsScrollTop = 0;
-    this._searchError = "";
-    this._searchResults = [];
-    this._searchQuery = "";
-    this._searchDisplaySortOverride = null;
-    this._searchInputAutoFocused = false;
-    this._searchLoading = false;
-    this._searchAttempted = false;
-    this._searchResultsByType = {}; // Clear cache when closing
-    this._currentSearchQuery = ""; // Reset current search query
-    this._searchHierarchy = []; // Clear search hierarchy
-    this._searchBreadcrumb = ""; // Clear breadcrumb
-    this._addToPlaylistTarget = null; // Clear playlist target
-    this._dismissMenuAfterPlaylistAdd = false; // Clear dismiss flag
-    this._recommendationsFilterActive = false;
-    this._lastSearchUsedServerFavorites = false;
-    if (this._quickMenuInvoke) {
-      this._showEntityOptions = false;
-      this._quickMenuInvoke = false;
-    }
-    this.requestUpdate();
-    // Force layout update for expand on search
-    setTimeout(() => {
-      this._notifyResize();
-    }, 0);
+    return this._searchController.hideSearchSheetInOptions();
   }
-  // Search sheet methods
-
 
   _closeMenuIfOpen() {
-    if (this._queueActionsMenuOpenId) {
-      this._closeQueueActionsMenu();
-    }
+    return this._searchController.closeMenuIfOpen();
   }
 
   _sortSearchResults(results, sortModeOverride = null) {
-    // Upcoming queue items, Recently Played items, and Recommendations should never be sorted
-    if (this._upcomingFilterActive || this._recentlyPlayedFilterActive || this._recommendationsFilterActive) {
-      return Array.isArray(results) ? [...results] : [];
-    }
-    const sortMode = sortModeOverride ?? this._getConfiguredSearchResultsSortMode();
-    const list = Array.isArray(results) ? [...results] : [];
-
-    if (sortMode === "random") {
-      // Fisher-Yates shuffle for an unbiased random order
-      for (let i = list.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [list[i], list[j]] = [list[j], list[i]];
-      }
-      return list;
-    }
-
-    // All other sorting is handled server-side via order_by parameter
-    return list;
+    return this._searchController.sortSearchResults(results, sortModeOverride);
   }
 
   _getConfiguredSearchResultsSortMode() {
-    const configured = this.config?.search_results_sort;
-    const mode = typeof configured === "string" ? configured : "default";
-    return this._mapLegacySortOption(mode);
+    return this._searchController.getConfiguredSearchResultsSortMode();
   }
 
   _mapLegacySortOption(mode) {
-    if (!mode) return "default";
-    const legacyMap = {
-      "title_asc": "name",
-      "title_desc": "name_desc",
-      "artist_asc": "artist_name",
-      "artist_desc": "artist_name_desc"
-    };
-    return legacyMap[mode] || mode;
+    return this._searchController.mapLegacySortOption(mode);
   }
 
   _isSortableSearchMode(mode) {
-    if (!mode || mode === "default" || mode === "random" || mode === "random_play_count") return false;
-    return true;
+    return this._searchController.isSortableSearchMode(mode);
   }
 
   _getOppositeSearchSortMode(mode) {
-    if (!mode || mode === "default" || mode === "random" || mode === "random_play_count") return null;
-    // Toggle between asc and desc variants
-    if (mode.endsWith("_desc")) {
-      return mode.replace(/_desc$/, "");
-    }
-    return `${mode}_desc`;
+    return this._searchController.getOppositeSearchSortMode(mode);
   }
 
   _shouldShowSearchSortToggle() {
-    if (this._upcomingFilterActive || this._recentlyPlayedFilterActive || this._recommendationsFilterActive) return false;
-    return this._isSortableSearchMode(this._getConfiguredSearchResultsSortMode());
+    return this._searchController.shouldShowSearchSortToggle();
   }
 
   _toggleSearchResultsSortDirection() {
-    if (!this._shouldShowSearchSortToggle()) {
-      this._searchDisplaySortOverride = null;
-      return;
-    }
-    const configured = this._getConfiguredSearchResultsSortMode();
-    const alternate = this._getOppositeSearchSortMode(configured);
-    if (!alternate) {
-      this._searchDisplaySortOverride = null;
-      return;
-    }
-    if (this._searchDisplaySortOverride === alternate) {
-      this._searchDisplaySortOverride = null;
-    } else {
-      this._searchDisplaySortOverride = alternate;
-    }
-    // Clear cached results so _doSearch re-fetches with the new order_by
-    this._searchResultsByType = {};
-    // Re-trigger search with new sort order
-    this._doSearch(this._searchMediaClassFilter === 'all' ? null : this._searchMediaClassFilter, { orderBy: this._getActiveSearchDisplaySortMode() });
-    this.requestUpdate();
+    return this._searchController.toggleSearchResultsSortDirection();
   }
 
   _getActiveSearchDisplaySortMode() {
-    if (this._upcomingFilterActive || this._recentlyPlayedFilterActive || this._recommendationsFilterActive) {
-      return "default";
-    }
-    if (!this._shouldShowSearchSortToggle()) {
-      return this._getConfiguredSearchResultsSortMode();
-    }
-    const override = this._searchDisplaySortOverride;
-    if (override && this._isSortableSearchMode(override)) {
-      return override;
-    }
-    return this._getConfiguredSearchResultsSortMode();
+    return this._searchController.getActiveSearchDisplaySortMode();
   }
 
   _getSearchSortToggleIcon() {
-    const mode = this._getActiveSearchDisplaySortMode();
-    if (!this._isSortableSearchMode(mode)) {
-      return "mdi:sort-variant";
-    }
-    return mode.endsWith("_desc") ? "mdi:sort-descending" : "mdi:sort-ascending";
+    return this._searchController.getSearchSortToggleIcon();
   }
 
   _getSearchSortToggleTitle() {
-    const mode = this._getActiveSearchDisplaySortMode();
-    if (!this._isSortableSearchMode(mode)) {
-      return "Toggle search result order";
-    }
-    const isDesc = mode.endsWith("_desc");
-    const baseName = isDesc ? mode.replace(/_desc$/, "") : mode;
-    const label = baseName.replace(/_/g, " ");
-    return `Sort by ${label} ${isDesc ? "descending" : "ascending"}`;
+    return this._searchController.getSearchSortToggleTitle();
   }
 
   _getDisplaySearchResults() {
-    const results = Array.isArray(this._searchResults) ? this._searchResults : [];
-    const isInHierarchy = this._searchHierarchy.some(
-      (h) => h.type === "album" || h.type === "playlist" || h.type === "artist"
-    );
-    if (isInHierarchy && this._searchQuery && this._searchQuery.trim() !== "") {
-      const q = this._searchQuery.trim().toLowerCase();
-      return results.filter((item) => {
-        const title = (item.title || item.name || "").toLowerCase();
-        const artist = (item.artist || "").toLowerCase();
-        return title.includes(q) || artist.includes(q);
-      });
-    }
-    return results;
+    return this._searchController.getDisplaySearchResults();
   }
 
   _getSearchResultsLimit() {
-    const raw = Number(this.config?.search_results_limit);
-    if (Number.isFinite(raw)) {
-      if (raw === 0) {
-        return 0; // Explicitly disable limit
-      }
-      return Math.min(Math.max(raw, 1), 1000);
-    }
-    return 20;
+    return this._searchController.getSearchResultsLimit();
   }
 
   _getSearchResultsCount() {
-    return this._getDisplaySearchResults().length;
+    return this._searchController.getSearchResultsCount();
   }
 
   _shouldShowSearchResultsCount() {
-    if (this._isNarrowViewport || !this._usingMusicAssistant || this._searchLoading) {
-      return false;
-    }
-    const count = this._getSearchResultsCount();
-    if (count > 0) {
-      return true;
-    }
-    return (
-      this._searchAttempted ||
-      this._initialFavoritesLoaded ||
-      this._favoritesFilterActive ||
-      this._recentlyPlayedFilterActive ||
-      this._upcomingFilterActive ||
-      this._recommendationsFilterActive
-    );
+    return this._searchController.shouldShowSearchResultsCount();
   }
 
   _getSearchResultsCountLabel() {
-    const count = this._getSearchResultsCount();
-    const key = count === 1 ? 'search.result' : 'search.results';
-    return `${count} ${localize(key)}`;
+    return this._searchController.getSearchResultsCountLabel();
   }
 
 
@@ -2137,610 +1638,54 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
 
   async _doSearch(mediaType = null, searchParams = {}) {
-    this._searchAttempted = true;
-    this._closeMenuIfOpen();
-    this._setSearchHeadersRetracted(false);
-    this._lastSearchResultsScrollTop = 0;
-    // Set the current filter - but don't use "favorites" as a media type
-    this._searchMediaClassFilter = (mediaType && mediaType !== 'favorites') ? mediaType : 'all';
-
-    // Respect favorites toggle across chip changes, but allow explicit filter clearing
-    // FIX: Include _initialFavoritesLoaded AND _lastSearchUsedServerFavorites to persist implicit favorites state
-    const isFavorites = !!(searchParams.favorites || ((this._favoritesFilterActive || this._initialFavoritesLoaded || this._lastSearchUsedServerFavorites) && !searchParams.clearFilters));
-
-    // FIX: Explicitly persist the favorites filter state if we determined we are in favorites mode
-    if (isFavorites) {
-      this._favoritesFilterActive = true;
-    }
-
-    const isRecentlyPlayed = !!(searchParams.isRecentlyPlayed || (this._recentlyPlayedFilterActive && !searchParams.clearFilters));
-    const isUpcoming = !!(searchParams.isUpcoming || (this._upcomingFilterActive && !searchParams.clearFilters));
-    const isRecommendations = !!(searchParams.isRecommendations || (this._recommendationsFilterActive && !searchParams.clearFilters));
-
-    // Check if search query has changed - if so, clear cache
-    if (this._currentSearchQuery !== this._searchQuery) {
-      this._searchResultsByType = {};
-      this._currentSearchQuery = this._searchQuery;
-    }
-
-    // Use cached results if available for this media type and search params
-    const sortMode = this._getActiveSearchDisplaySortMode();
-    const cacheKey = `${mediaType || 'all'}${isFavorites ? '_favorites' : ''}${isRecentlyPlayed ? '_recently_played' : ''}${isUpcoming ? '_upcoming' : ''}${isRecommendations ? '_recommendations' : ''}_sort_${sortMode}`;
-    const forceFetch = !!searchParams.force;
-
-    if (this._searchResultsByType[cacheKey] && !forceFetch) {
-      if (this._searchTimeoutHandle) {
-        clearTimeout(this._searchTimeoutHandle);
-        this._searchTimeoutHandle = null;
-      }
-      this._latestSearchToken = 0;
-      this._searchResults = this._sortSearchResults(this._searchResultsByType[cacheKey]);
-      this._searchLoading = false;
-      this._searchError = "";
-      this.requestUpdate();
-      return;
-    }
-
-    const isSilent = !!searchParams.silent;
-
-    if (!isSilent) {
-      this._searchLoading = true;
-      this._searchError = "";
-      this._searchResults = [];
-      this.requestUpdate();
-    }
-    const searchToken = searchParams.token || Date.now();
-    this._latestSearchToken = searchToken;
-    const progressiveUpdate = (chunk) => this._handleProgressiveSearchResults(chunk, cacheKey, searchToken);
-    if (this._searchTimeoutHandle) {
-      clearTimeout(this._searchTimeoutHandle);
-    }
-    this._searchTimeoutHandle = window.setTimeout(() => {
-      if (this._latestSearchToken === searchToken && this._searchLoading) {
-        this._searchLoading = false;
-        this._searchError = "Search timed out. Try again.";
-        this.requestUpdate();
-      }
-    }, this.config?.search_timeout_ms ? Number(this.config.search_timeout_ms) : 15000);
-
-    try {
-      const searchEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
-      const searchEntityId = await this._resolveTemplateAtActionTime(searchEntityIdTemplate, this.currentEntityId);
-
-      let searchResponse;
-
-      // Special case: "Add to Playlist" directly reads unstripped MA library playlists with mass_queue.send_command
-      if (this._addToPlaylistTarget && mediaType === 'playlist' && this._massQueueAvailable) {
-        this._initialFavoritesLoaded = false;
-        try {
-          const mqConfigEntryId = await getMassQueueConfigEntryId(this.hass, searchEntityId);
-          if (mqConfigEntryId) {
-            // Fetch a generous amount so we don't truncate before filtering
-            const apiData = { limit: PLAYLIST_FETCH_LIMIT };
-            if (this._searchQuery && this._searchQuery.trim().length > 0) {
-              apiData.search = this._searchQuery.trim();
-            }
-            const orderBy = this._getActiveSearchDisplaySortMode();
-            if (orderBy && orderBy !== 'default') {
-              apiData.order_by = orderBy;
-            }
-
-            const message = {
-              type: "call_service",
-              domain: "mass_queue",
-              service: "send_command",
-              service_data: {
-                ...(mqConfigEntryId && mqConfigEntryId !== "auto" && { config_entry_id: mqConfigEntryId }),
-                command: "music/playlists/library_items",
-                data: apiData
-              },
-              return_response: true
-            };
-
-            const res = await this.hass.connection.sendMessagePromise(message);
-
-            let rawPlaylists = [];
-
-            // The Music Assistant API send_command wrapper wraps the response deeply.
-            // e.g. res.response = { id: "xxx", response: [...] }
-            if (Array.isArray(res?.response)) {
-              rawPlaylists = res.response;
-            } else if (Array.isArray(res?.response?.response)) {
-              rawPlaylists = res.response.response;
-            } else if (Array.isArray(res?.response?.items)) {
-              rawPlaylists = res.response.items;
-            } else if (Array.isArray(res?.response?.results)) {
-              rawPlaylists = res.response.results;
-            }
-
-            if (Array.isArray(rawPlaylists)) {
-              const displayLimit = this._getSearchResultsLimit() || 30;
-              const mappedPlaylists = rawPlaylists
-                .filter(p => p.is_editable === true)
-                .map(p => transformMusicAssistantItem(p))
-                .filter(Boolean)
-                // only return up to the configured display limit
-                .slice(0, displayLimit);
-
-              searchResponse = { results: mappedPlaylists, usedMusicAssistant: true };
-            }
-          }
-        } catch (e) {
-          console.warn("yamp: error fetching direct native playlists for add-to-target logic", e);
-        }
-
-        if (!searchResponse) {
-          searchResponse = { results: [], usedMusicAssistant: true };
-        }
-        this._lastSearchUsedServerFavorites = false;
-      } else if (isRecentlyPlayed) {
-        // Load recently played items
-        this._initialFavoritesLoaded = false;
-        searchResponse = await getRecentlyPlayed(
-          this.hass,
-          searchEntityId,
-          mediaType,
-          this._getSearchResultsLimit(),
-          { onChunk: progressiveUpdate }
-        );
-        this._lastSearchUsedServerFavorites = false;
-      } else if (isUpcoming) {
-        // Load upcoming queue items
-        this._initialFavoritesLoaded = false;
-        const upcomingLimit = Math.min(250, this._getSearchResultsLimit());
-        searchResponse = await this._getUpcomingQueue(this.hass, searchEntityId, upcomingLimit);
-        this._lastSearchUsedServerFavorites = false;
-      } else if (isRecommendations) {
-        this._initialFavoritesLoaded = false;
-        searchResponse = await this._getRecommendations(
-          this.hass,
-          searchEntityId,
-          mediaType,
-          this._getSearchResultsLimit()
-        );
-        this._lastSearchUsedServerFavorites = false;
-      } else if (isFavorites) {
-        // Ask backend (Music Assistant) to filter favorites at source with the current query
-        this._initialFavoritesLoaded = false;
-        const orderBy = this._getActiveSearchDisplaySortMode();
-        searchResponse = await searchMedia(
-          this.hass,
-          searchEntityId,
-          this._searchQuery,
-          mediaType,
-          { ...searchParams, favorites: true, orderBy: orderBy !== 'default' ? orderBy : undefined },
-          this._getSearchResultsLimit()
-        );
-        this._lastSearchUsedServerFavorites = true;
-      } else if ((!this._searchQuery || this._searchQuery.trim() === '') && !isFavorites && !isRecentlyPlayed && (mediaType === 'all' || !mediaType)) {
-        const orderBy = this._getActiveSearchDisplaySortMode();
-        searchResponse = await getFavorites(
-          this.hass,
-          searchEntityId,
-          mediaType === 'favorites' ? null : mediaType,
-          this._getSearchResultsLimit(),
-          { onChunk: progressiveUpdate, orderBy: orderBy !== 'default' ? orderBy : undefined }
-        );
-        // Mark that initial favorites have been loaded only if we're in default view
-        if (!this._searchQuery || this._searchQuery.trim() === '') {
-          this._initialFavoritesLoaded = true;
-        }
-        this._lastSearchUsedServerFavorites = true;
-      } else {
-        // Perform search - reset initial favorites flag since this is a user search
-        this._initialFavoritesLoaded = false;
-        const orderBy = this._getActiveSearchDisplaySortMode();
-        searchResponse = await searchMedia(this.hass, searchEntityId, this._searchQuery, mediaType, { ...searchParams, orderBy: orderBy !== 'default' ? orderBy : undefined }, this._getSearchResultsLimit());
-        this._lastSearchUsedServerFavorites = false;
-      }
-
-
-
-      // Handle the new response format
-      let arr = searchResponse.results || [];
-      this._usingMusicAssistant = searchResponse.usedMusicAssistant || false;
-
-      // Initialize/Reset internal states when config changes is a completely new search (not just switching filters)
-      const isNewSearch = this._currentSearchQuery !== this._searchQuery;
-      if (isNewSearch) {
-        this._favoritesFilterActive = false;
-        this._recentlyPlayedFilterActive = false;
-        this._upcomingFilterActive = false;
-        this._recommendationsFilterActive = false;
-        this._initialFavoritesLoaded = false;
-      }
-
-      let normalizedResults = Array.isArray(arr) ? arr : [];
-      // Check search token *after* await to discard stale background fetches
-      if (this._latestSearchToken !== searchToken) {
-        return;
-      }
-
-      // 1. Client-side filtering for search query (Recent, Upcoming, Recommendations)
-      if ((isRecentlyPlayed || isUpcoming || isRecommendations) && this._searchQuery && this._searchQuery.trim() !== '') {
-        const query = this._searchQuery.trim().toLowerCase();
-        normalizedResults = normalizedResults.filter(item => {
-          const title = (item.title || "").toLowerCase();
-          const artist = (item.artist || "").toLowerCase();
-          const album = (item.album || "").toLowerCase();
-          return title.includes(query) || artist.includes(query) || album.includes(query);
-        });
-      }
-
-      // 2. Apply local favorites filter ONLY when needed
-      if (!isNewSearch && this._favoritesFilterActive && !this._lastSearchUsedServerFavorites) {
-        normalizedResults = await this._applyLocalFavoritesFilter(normalizedResults);
-
-        // Check token again after await
-        if (this._latestSearchToken !== searchToken) {
-          return;
-        }
-      }
-
-      // Cache the results for this media type and search params
-      this._searchResultsByType[cacheKey] = normalizedResults;
-
-      // Update active UI results
-      this._searchResults = this._sortSearchResults(normalizedResults);
-
-      // remember how many rows exist in the full ("All") set, but keep at least 15 for layout
-      const rows = Array.isArray(this._searchResults) ? this._searchResults.length : 0;
-      this._searchTotalRows = Math.max(15, rows);   // keep at least 15
-    } catch (e) {
-      this._searchError = (e && e.message) || "Unknown error";
-      this._searchResults = [];
-      this._searchTotalRows = 0;
-    }
-    if (this._latestSearchToken === searchToken && this._searchTimeoutHandle) {
-      clearTimeout(this._searchTimeoutHandle);
-      this._searchTimeoutHandle = null;
-    }
-    if (this._latestSearchToken === searchToken) {
-      this._latestSearchToken = 0;
-    }
-    this._searchLoading = false;
-    this.requestUpdate();
-    setTimeout(() => this._notifyResize(), 0);
+    return this._searchController.doSearch(mediaType, searchParams);
   }
 
   async _playCurrentCollection() {
-    if (this._searchHierarchy.length === 0) return;
-    const currentLevel = this._searchHierarchy[this._searchHierarchy.length - 1];
-    if (!currentLevel || !currentLevel.uri) {
-      this._searchError = localize('search.play_collection_error');
-      this.requestUpdate();
-      return;
-    }
-
-    const item = {
-      media_content_id: currentLevel.uri,
-      media_content_type: currentLevel.type
-    };
-
-    await this._playMediaFromSearch(item);
+    return this._searchController.playCurrentCollection();
   }
 
   // Handle explicit search submission from UI (Enter key or Search Button)
   _handleSearchSubmit() {
-    if (this._searchHierarchy.some((h) => h.type === "album" || h.type === "playlist" || h.type === "artist")) {
-      // In hierarchy mode, filtering is already live in real-time
-      return;
-    }
-    const keepFilters = this._keepFiltersOnSearch;
-    if (!keepFilters) {
-      this._favoritesFilterActive = false;
-      this._recentlyPlayedFilterActive = false;
-      this._upcomingFilterActive = false;
-      this._recommendationsFilterActive = false;
-    }
-    const clearFilters = !keepFilters;
-    this._doSearch(
-      this._searchMediaClassFilter === 'all' ? null : this._searchMediaClassFilter,
-      { clearFilters }
-    );
+    return this._searchController.handleSearchSubmit();
   }
 
   _handleProgressiveSearchResults(chunk, cacheKey, searchToken) {
-    if (!Array.isArray(chunk) || !chunk.length) {
-      return;
-    }
-    if (this._latestSearchToken !== searchToken) {
-      return;
-    }
-    const mergedResults = (this._searchResultsByType[cacheKey] || []).concat(chunk);
-    this._searchResultsByType[cacheKey] = mergedResults;
-    this._searchResults = this._sortSearchResults(mergedResults);
-    const rows = Array.isArray(mergedResults) ? mergedResults.length : 0;
-    this._searchTotalRows = Math.max(15, rows);
-    this.requestUpdate();
+    return this._searchController.handleProgressiveSearchResults(chunk, cacheKey, searchToken);
   }
 
   // Derive the list of visible search filter chips based on cached results and entity visibility settings
   _getVisibleSearchFilterClasses() {
-    const currEntityObj = this.entityObjs?.[this._selectedIndex] || null;
-    const hiddenSet = new Set(currEntityObj?.hidden_filter_chips || []);
-
-    const list = [...ALLOWED_MEDIA_TYPES];
-    if (this._aiRadioShowsAvailable) {
-      list.push("shows");
-    }
-    return list.filter(c => !hiddenSet.has(c));
+    return this._searchController.getVisibleSearchFilterClasses();
   }
 
   async _playMediaFromSearch(item, event) {
-    if (this._isDragging) {
-      if (event) {
-        event.stopPropagation();
-        event.preventDefault();
-      }
-      return;
-    }
-    const targetEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
-    const targetEntityId = await this._resolveTemplateAtActionTime(targetEntityIdTemplate, this.currentEntityId);
-    this._mediaSessionManager?.startPlaybackGesture(targetEntityId);
-    this._searchError = "";
-
-    this._loadingSearchRowMenuId = item?.media_content_id || null;
-    this.requestUpdate();
-
-    let playbackStarted;
-    try {
-      playbackStarted = await this._performSearchPlayback(item, targetEntityId);
-    } finally {
-      this._loadingSearchRowMenuId = null;
-      this.requestUpdate();
-    }
-
-    if (!playbackStarted) {
-      this._searchError = "Unable to start playback. Please try again.";
-      this.requestUpdate();
-      return;
-    }
-
-    const { shouldDismiss, shouldReset } = this._getSearchDismissBehavior();
-
-    if (shouldDismiss) {
-      if (this._showSearchInSheet) {
-        this._closeEntityOptions();
-        this._showSearchInSheet = false;
-      }
-      this._hideSearchSheetInOptions();
-    } else if (shouldReset) {
-      this._showSearchSheetInOptions();
-    } else {
-      // If staying open, force a repaint to reflect playing state if needed
-      this.requestUpdate();
-    }
+    return this._searchController.playMediaFromSearch(item, event);
   }
 
   async _performSearchPlayback(item, targetEntityId) {
-    // Check if this is a queue item (has queue_item_id) and we're in the upcoming filter with working mass_queue
-    if (item.queue_item_id && this._upcomingFilterActive && this._isMusicAssistantEntity() && this._massQueueAvailable) {
-      // For queue items in the "Next Up" filter, play the specific queue item
-      try {
-        const maState = this._getMusicAssistantState();
-        const maEntityId = maState?.entity_id;
-
-        if (maEntityId) {
-          // Use mass_queue to play the specific queue item
-          await this.hass.callService("mass_queue", "play_queue_item", {
-            entity: maEntityId,
-            queue_item_id: item.queue_item_id
-          });
-          this._advanceQueueInUI(item.queue_item_id, true); // Manual advance
-          return true;
-        }
-      } catch (error) {
-        console.error('yamp: Error playing queue item:', error);
-        // Fallback to next track if service call fails
-        await mediaNextTrack(this.hass, targetEntityId);
-        return true;
-      }
-    }
-
-    if (!targetEntityId) {
-      return false;
-    }
-
-    if (isShow(item)) {
-      const monitorIds = this._collectPlaybackMonitorIds(targetEntityId);
-      const snapshot = this._snapshotPlaybackState(monitorIds);
-      const attempt = await this._invokePlayMedia(targetEntityId, item);
-      if (!attempt) {
-        return false;
-      }
-      const wasPlaying = monitorIds.some((id) => snapshot[id]?.state === "playing");
-      await this._waitForPlaybackChange(snapshot, monitorIds, 25000, {
-        requireMediaChange: wasPlaying,
-      });
-      return true;
-    }
-
-    // For regular search results or fallback mode, use the normal play method with a retry guard.
-    const monitorIds = this._collectPlaybackMonitorIds(targetEntityId);
-    const firstSnapshot = this._snapshotPlaybackState(monitorIds);
-    const firstAttempt = await this._invokePlayMedia(targetEntityId, item);
-    if (!firstAttempt) {
-      return false;
-    }
-    const firstWasPlaying = monitorIds.some((id) => firstSnapshot[id]?.state === "playing");
-    const firstChangeDetected = await this._waitForPlaybackChange(firstSnapshot, monitorIds, 2500, {
-      requireMediaChange: firstWasPlaying,
-    });
-    if (firstChangeDetected) {
-      return true;
-    }
-
-    // Retry once if we didn't observe playback starting yet.
-    const retrySnapshot = this._snapshotPlaybackState(monitorIds);
-    const retryAttempt = await this._invokePlayMedia(targetEntityId, item);
-    if (!retryAttempt) {
-      return false;
-    }
-    const retryWasPlaying = monitorIds.some((id) => retrySnapshot[id]?.state === "playing");
-    return await this._waitForPlaybackChange(retrySnapshot, monitorIds, 2500, {
-      requireMediaChange: retryWasPlaying,
-    });
+    return this._searchController.performSearchPlayback(item, targetEntityId);
   }
 
   _collectPlaybackMonitorIds(targetEntityId) {
-    const ids = new Set();
-    if (targetEntityId) ids.add(targetEntityId);
-    const playbackEntity = this._getPlaybackEntityId(this._selectedIndex);
-    if (playbackEntity) ids.add(playbackEntity);
-    const mainEntity = this.currentEntityId;
-    if (mainEntity) ids.add(mainEntity);
-    const maEntity = this._getActualResolvedMaEntityForState(this._selectedIndex);
-    if (maEntity) ids.add(maEntity);
-    return Array.from(ids).filter(Boolean);
+    return this._searchController.collectPlaybackMonitorIds(targetEntityId);
   }
 
   _snapshotPlaybackState(entityIds) {
-    const snapshot = {};
-    if (!Array.isArray(entityIds)) {
-      return snapshot;
-    }
-    entityIds.forEach(id => {
-      const stateObj = id ? this.hass?.states?.[id] : null;
-      snapshot[id] = {
-        state: stateObj?.state ?? null,
-        mediaId: stateObj?.attributes?.media_content_id ?? null,
-        mediaTitle: stateObj?.attributes?.media_title ?? null
-      };
-    });
-    return snapshot;
+    return this._searchController.snapshotPlaybackState(entityIds);
   }
 
   async _waitForPlaybackChange(snapshot, entityIds, timeout = 2500, { requireMediaChange = false } = {}) {
-    if (!Array.isArray(entityIds) || entityIds.length === 0) {
-      return true;
-    }
-    const start = Date.now();
-    while (Date.now() - start < timeout) {
-      await this._delay(150);
-      for (const id of entityIds) {
-        if (!id) continue;
-        const stateObj = this.hass?.states?.[id];
-        if (!stateObj) continue;
-        const previous = snapshot[id] || {};
-        const wasPlaying = previous.state === "playing";
-        const currentMediaId = stateObj.attributes?.media_content_id ?? null;
-        const currentTitle = stateObj.attributes?.media_title ?? null;
-        const mediaChanged =
-          (currentMediaId && currentMediaId !== previous.mediaId) ||
-          (currentTitle && currentTitle !== previous.mediaTitle) ||
-          (!previous.mediaId && currentMediaId) ||
-          (!previous.mediaTitle && currentTitle);
-
-        if (mediaChanged) {
-          return true;
-        }
-
-        if (!requireMediaChange && !wasPlaying && this._isEntityPlaying(stateObj)) {
-          return true;
-        }
-      }
-    }
-    return false;
+    const controller = this._searchController || new SearchController(this);
+    return controller.waitForPlaybackChange(snapshot, entityIds, timeout, { requireMediaChange });
   }
 
   async _performSearchOptionAction(item, mode) {
-    if (mode === 'add_to_playlist') {
-      this._addToPlaylistTarget = item;
-      this._searchHierarchy.push({
-        type: 'select_playlist',
-        name: localize('search.add_to_playlist'),
-        query: this._searchQuery,
-        filter: this._searchMediaClassFilter
-      });
-      // Set a special breadcrumb for context
-      this._searchBreadcrumb = localize('search.select_playlist').replace('{track}', item.title);
-      this._searchQuery = '';
-      this._currentSearchQuery = '';
-      this._searchMediaClassFilter = 'playlist';
-      this._resetSearchContext();
-
-      this._removeSearchSwipeHandlers();
-
-      // Fetch playlists
-      await this._doSearch('playlist', { clearFilters: true });
-      return;
-    }
-
-    const targetEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
-    const targetEntityId = await this._resolveTemplateAtActionTime(targetEntityIdTemplate, this.currentEntityId);
-
-    try {
-      const playParams = {
-        entity_id: targetEntityId,
-        media_id: item.media_content_id,
-        media_type: item.media_content_type,
-        enqueue: mode
-      };
-      if (this._radioModeActive) {
-        playParams.radio_mode = true;
-      }
-
-      await this.hass.callService("music_assistant", "play_media", playParams);
-      // Invalidate the "Next Up" cache because we've modified the queue
-      this._invalidateUpcomingCache();
-
-      // For 'replace' mode, we dismiss according to settings and don't show success overlay
-      if (mode === 'replace') {
-        const { shouldDismiss, shouldReset } = this._getSearchDismissBehavior();
-
-        if (shouldDismiss) {
-          this._closeEntityOptions();
-        } else if (shouldReset) {
-          this._showSearchSheetInOptions();
-        }
-        this._activeSearchRowMenuId = null;
-      } else {
-        // For other modes, show the localized success message overlay within the slide-out
-        this._successSearchRowMenuId = item.media_content_id;
-        this.requestUpdate();
-
-        const shouldDismissMenu = this._dismissMenuAfterPlaylistAdd && mode === 'add_to_playlist';
-
-        setTimeout(() => {
-          this._successSearchRowMenuId = null;
-          this._activeSearchRowMenuId = null; // Also dismiss the slide-out after message fades
-
-          if (shouldDismissMenu) {
-            this._closeEntityOptions();
-            this._dismissMenuAfterPlaylistAdd = false;
-          }
-
-          this.requestUpdate();
-        }, 2000);
-      }
-    } catch (e) {
-      console.error("Failed to perform search option action:", e);
-      this._searchError = "Action failed: " + e.message;
-      this.requestUpdate();
-    }
+    return this._searchController.performSearchOptionAction(item, mode);
   }
 
   async _invokePlayMedia(targetEntityId, item) {
-    try {
-      this._mediaSessionManager?.startPlaybackGesture(targetEntityId);
-      if (isShow(item)) {
-        await playAiRadioStation(this.hass, targetEntityId, item.station_id || item.item_id);
-      } else if (this._radioModeActive) {
-        await this.hass.callService("music_assistant", "play_media", {
-          entity_id: targetEntityId,
-          media_id: item.media_content_id,
-          media_type: item.media_content_type,
-          radio_mode: true
-        });
-      } else {
-        await playSearchedMedia(this.hass, targetEntityId, item);
-      }
-      return true;
-    } catch (error) {
-      console.error("yamp: Error starting playback from search:", error);
-      return false;
-    }
+    return this._searchController.invokePlayMedia(targetEntityId, item);
   }
 
   _delay(ms) {
@@ -2756,642 +1701,119 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
   // Handle hierarchical search - search for albums by artist
   async _searchArtistAlbums(artistName, artistUri = null) {
-    this._searchHierarchy.push({ type: 'artist', name: artistName, query: this._searchQuery, uri: artistUri, filter: this._searchMediaClassFilter });
-    this._searchBreadcrumb = `Albums by ${artistName}`;
-    this._searchResultsByType = {}; // Clear cache for new search
-    this._currentSearchQuery = "";
-    this._searchMediaClassFilter = 'album';
-
-    // Immediate loading state
-    this._searchResults = [];
-    this._searchLoading = true;
-    this._searchQuery = "";
-    this.requestUpdate();
-
-    // Clear filter states to ensure accurate artist search results
-    this._favoritesFilterActive = false;
-    this._recentlyPlayedFilterActive = false;
-    this._upcomingFilterActive = false;
-    this._initialFavoritesLoaded = false;
-
-    // Remove swipe handlers when entering hierarchy
-    this._removeSearchSwipeHandlers();
-
-    // Priority 1: Use browse_media if artistUri is available and entity is Music Assistant
-    if (artistUri && this._isMusicAssistantEntity()) {
-      try {
-        const searchEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
-        const searchEntityId = await this._resolveTemplateAtActionTime(searchEntityIdTemplate, this.currentEntityId);
-
-        const browseMsg = {
-          type: "call_service",
-          domain: "media_player",
-          service: "browse_media",
-          service_data: {
-            entity_id: searchEntityId,
-            media_content_id: artistUri,
-          },
-          return_response: true,
-        };
-
-        const browseRes = await this.hass.connection.sendMessagePromise(browseMsg);
-        const browseResult = browseRes?.response?.[searchEntityId]?.result || browseRes?.result || {};
-        const children = browseResult.children || [];
-        const albums = children.filter(c => c.media_class === 'album' || c.media_content_type === 'album');
-
-        if (albums.length > 0) {
-          this._searchQuery = "";
-          this._searchResults = this._sortSearchResults(albums);
-          this._searchTotalRows = Math.max(15, albums.length);
-          this._searchAttempted = true;
-          this._searchLoading = false;
-          this.requestUpdate();
-          return;
-        }
-      } catch (e) {
-        // Fall back to search
-      }
-    }
-
-    // Priority 2: Use Music Assistant search with artist parameter for albums (explicitly clear filters)
-    await this._doSearch('album', { artist: artistName, clearFilters: true });
+    return this._searchController.searchArtistAlbums(artistName, artistUri);
   }
-
 
   // Go back in search hierarchy
   _goBackInSearch() {
-    if (this._dismissMenuAfterPlaylistAdd) {
-      this._closeEntityOptions();
-      this._dismissMenuAfterPlaylistAdd = false;
-      return;
-    }
-
-    if (this._searchHierarchy.length === 0) return;
-
-    // Immediate loading state
-    this._searchResults = [];
-    this._searchLoading = true;
-    this.requestUpdate();
-
-    const previousLevel = this._searchHierarchy.pop();
-    if (previousLevel.type === 'select_playlist' || previousLevel.type === 'select_track_for_playlist') {
-      this._addToPlaylistTarget = null;
-    }
-
-    this._searchQuery = previousLevel.query;
-    this._currentSearchQuery = previousLevel.query;
-    this._searchResultsByType = {}; // Clear cache for new search
-
-    // Restore filter state
-    this._searchMediaClassFilter = previousLevel.filter || 'all';
-
-    if (this._searchHierarchy.length === 0) {
-      if (this._openedSearchFromNowPlaying) {
-        this._openedSearchFromNowPlaying = false;
-        this._closeEntityOptions();
-        return;
-      }
-      this._searchBreadcrumb = "";
-      this._doSearch(this._searchMediaClassFilter === 'all' ? null : this._searchMediaClassFilter);
-    } else {
-      const currentLevel = this._searchHierarchy[this._searchHierarchy.length - 1];
-      if (currentLevel.type === 'artist') {
-        this._searchBreadcrumb = `Albums by ${currentLevel.name}`;
-        this._searchMediaClassFilter = 'album';
-        this._doSearch('album', { artist: currentLevel.name });
-      } else if (currentLevel.type === 'album') {
-        this._searchBreadcrumb = `Tracks from ${currentLevel.name}`;
-        this._searchMediaClassFilter = 'track';
-        const artistLevel = this._searchHierarchy.find(level => level.type === 'artist');
-        const artistName = artistLevel ? artistLevel.name : null;
-        if (currentLevel.uri && this._isMusicAssistantEntity()) {
-          this._searchQuery = "";
-          this._currentSearchQuery = "";
-          this._searchResults = [];
-          this._searchLoading = true;
-          this.requestUpdate();
-          this._loadAlbumTracks(currentLevel.uri, currentLevel.name, artistName).then(() => {
-            this._scrollToTop();
-          });
-          return;
-        }
-        // Fallback search
-        const searchParams = { album: currentLevel.name };
-        if (artistName) {
-          searchParams.artist = artistName;
-        }
-        this._doSearch('track', searchParams);
-      } else if (currentLevel.type === 'playlist') {
-        this._searchBreadcrumb = `Tracks from ${currentLevel.name}`;
-        this._searchMediaClassFilter = 'track';
-        if (currentLevel.uri && this._isMusicAssistantEntity()) {
-          this._searchQuery = "";
-          this._currentSearchQuery = "";
-          this._searchResults = [];
-          this._searchLoading = true;
-          this.requestUpdate();
-          this._loadPlaylistTracks(currentLevel.uri, currentLevel.name).then(() => {
-            this._scrollToTop();
-          });
-          return;
-        }
-        this._doSearch('track');
-      }
-    }
+    return this._searchController.goBackInSearch();
   }
 
   _scrollToTop() {
-    const results = this.shadowRoot?.querySelector(".search-sheet-results");
-    if (results) results.scrollTop = 0;
-    this._updateSearchHeaderPosition(0, true);
-    this._lastSearchResultsScrollTop = 0;
+    return this._searchController.scrollToTop();
   }
 
   _getSearchHeaderHeight() {
-    const panel = this.shadowRoot?.querySelector(".search-header-panel");
-    if (!panel) return this._searchHeaderNaturalHeight || 120;
-    const height = panel.offsetHeight;
-    if (height > 0) {
-      this._searchHeaderNaturalHeight = height;
-      return height;
-    }
-    return this._searchHeaderNaturalHeight || 120;
+    return this._searchController.getSearchHeaderHeight();
   }
 
   _updateSearchHeaderPosition(offset, animated = false) {
-    const headerHeight = this._getSearchHeaderHeight();
-    const clampedOffset = Math.max(0, Math.min(headerHeight, offset));
-    this._searchHeaderOffset = clampedOffset;
-    const isRetracted = clampedOffset >= headerHeight && headerHeight > 0;
-    this._searchHeadersRetracted = isRetracted;
-
-    const panel = this.shadowRoot?.querySelector(".search-header-panel");
-    if (!panel) return;
-
-    if (animated) {
-      panel.classList.add("smooth-transition");
-      clearTimeout(this._searchHeaderTransitionTimer);
-      this._searchHeaderTransitionTimer = setTimeout(() => {
-        panel.classList.remove("smooth-transition");
-      }, 280);
-    } else {
-      panel.classList.remove("smooth-transition");
-    }
-
-    panel.classList.toggle("retracted", isRetracted);
-    panel.style.marginTop = clampedOffset > 0 ? `-${clampedOffset}px` : "0px";
-
-    const progress = headerHeight > 0 ? clampedOffset / headerHeight : 0;
-    const opacity = Math.max(0, Math.min(1, 1 - progress));
-    panel.style.opacity = clampedOffset > 0 ? opacity.toFixed(3) : "";
-
-    if (isRetracted) {
-      panel.style.pointerEvents = "none";
-      const input = panel.querySelector("#search-input-box");
-      if (input && document.activeElement === input) {
-        input.blur();
-      }
-    } else {
-      panel.style.pointerEvents = "";
-    }
+    return this._searchController.updateSearchHeaderPosition(offset, animated);
   }
 
   _getSearchResultsElement() {
-    if (!this._cachedSearchResultsElement || !this._cachedSearchResultsElement.isConnected) {
-      this._cachedSearchResultsElement = this.shadowRoot?.querySelector(
-        ".virtualized-results-wrapper, .queue-results-wrapper, .search-sheet-results, .entity-options-search-results"
-      );
-    }
-    return this._cachedSearchResultsElement;
+    return this._searchController.getSearchResultsElement();
   }
 
   _applySearchHeaderDelta(delta) {
-    if (this.config?.pin_search_headers === true) return;
-    const headerHeight = this._getSearchHeaderHeight();
-    if (headerHeight <= 0) return;
-
-    const currentOffset = this._searchHeaderOffset || 0;
-    const newOffset = Math.max(0, Math.min(headerHeight, currentOffset + delta));
-    if (newOffset !== currentOffset) {
-      this._updateSearchHeaderPosition(newOffset, false);
-    }
+    return this._searchController.applySearchHeaderDelta(delta);
   }
 
   _setSearchHeadersRetracted(retracted, animated = true) {
-    const headerHeight = this._getSearchHeaderHeight();
-    const targetOffset = retracted ? headerHeight : 0;
-    this._updateSearchHeaderPosition(targetOffset, animated);
+    return this._searchController.setSearchHeadersRetracted(retracted, animated);
   }
 
   _handleSearchResultsScroll(e, pinSearchHeaders) {
-    if (pinSearchHeaders || this.config?.pin_search_headers === true || this._isDragging) return;
-    const el = e.currentTarget || e.target;
-    if (!el) return;
-
-    const currentScrollTop = el.scrollTop;
-    const lastScrollTop = this._lastSearchResultsScrollTop ?? currentScrollTop;
-    const delta = currentScrollTop - lastScrollTop;
-    this._lastSearchResultsScrollTop = currentScrollTop;
-
-    const maxScroll = Math.max(0, el.scrollHeight - el.clientHeight);
-    if (maxScroll <= 0) {
-      if ((this._searchHeaderOffset || 0) !== 0) {
-        this._updateSearchHeaderPosition(0, false);
-      }
-      return;
-    }
-
-    if (currentScrollTop <= 0) {
-      this._updateSearchHeaderPosition(0, false);
-      return;
-    }
-
-    if (currentScrollTop >= maxScroll - 6) {
-      return;
-    }
-
-    if (delta === 0) return;
-
-    this._applySearchHeaderDelta(delta);
+    return this._searchController.handleSearchResultsScroll(e, pinSearchHeaders);
   }
 
   _handleFilterChipsWheel(e) {
-    if (Math.abs(e.deltaX) >= Math.abs(e.deltaY) && e.deltaX !== 0) {
-      e.stopPropagation();
-    }
+    return this._searchController.handleFilterChipsWheel(e);
   }
 
   _handleHeaderWheel(e, pinSearchHeaders) {
-    const chipRow =
-      e.target?.closest?.(".search-filter-chips") ||
-      e.composedPath?.().find?.((el) => el?.classList?.contains?.("search-filter-chips"));
-
-    // Allow native horizontal scrolling when scrolling horizontally over filter chips
-    if (chipRow && (Math.abs(e.deltaX) >= Math.abs(e.deltaY) && e.deltaX !== 0)) {
-      e.stopPropagation();
-      return;
-    }
-
-    // Discriminate horizontal gestures across the header panel
-    if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
-      return;
-    }
-
-    if (e.cancelable) e.preventDefault();
-    e.stopPropagation();
-    if (pinSearchHeaders || this.config?.pin_search_headers === true) {
-      const results = this._getSearchResultsElement();
-      if (results) {
-        results.scrollTop += e.deltaY;
-      }
-      return;
-    }
-    this._applySearchHeaderDelta(e.deltaY);
+    return this._searchController.handleHeaderWheel(e, pinSearchHeaders);
   }
 
   _handleHeaderTouchStart(e) {
-    if (e.touches && e.touches.length === 1) {
-      this._headerTouchStartY = e.touches[0].clientY;
-      this._headerTouchStartX = e.touches[0].clientX;
-    }
+    return this._searchController.handleHeaderTouchStart(e);
   }
 
   _handleHeaderTouchMove(e, pinSearchHeaders) {
-    if (pinSearchHeaders || this.config?.pin_search_headers === true || this._headerTouchStartY == null) return;
-    if (!e.touches || e.touches.length !== 1) return;
-
-    const currentY = e.touches[0].clientY;
-    const currentX = e.touches[0].clientX;
-    const deltaY = currentY - this._headerTouchStartY;
-    const deltaX = currentX - this._headerTouchStartX;
-
-    // Discriminate vertical gesture to avoid conflicting with horizontal chip scroll
-    if (Math.abs(deltaY) > Math.abs(deltaX)) {
-      if (e.cancelable) e.preventDefault();
-      this._applySearchHeaderDelta(-deltaY);
-      this._headerTouchStartY = currentY;
-      this._headerTouchStartX = currentX;
-    }
+    return this._searchController.handleHeaderTouchMove(e, pinSearchHeaders);
   }
 
   _handleHeaderTouchEnd() {
-    this._headerTouchStartY = null;
-    this._headerTouchStartX = null;
+    return this._searchController.handleHeaderTouchEnd();
   }
 
-
   _handleSearchContainerWheel(e, pinSearchHeaders) {
-    if (pinSearchHeaders || this.config?.pin_search_headers === true) return;
-    if (Math.abs(e.deltaX) > Math.abs(e.deltaY)) return;
-    const headerHeight = this._getSearchHeaderHeight();
-    const currentOffset = this._searchHeaderOffset || 0;
-    if (e.deltaY < 0) {
-      const results = this._getSearchResultsElement();
-      if (!results || results.scrollTop <= 5) {
-        if (e.cancelable) e.preventDefault();
-        this._applySearchHeaderDelta(e.deltaY);
-      }
-    } else if (e.deltaY > 0 && currentOffset < headerHeight) {
-      if (e.cancelable) e.preventDefault();
-      this._applySearchHeaderDelta(e.deltaY);
-    }
+    return this._searchController.handleSearchContainerWheel(e, pinSearchHeaders);
   }
 
   _handleSearchResultsWheel(e, pinSearchHeaders) {
-    if (pinSearchHeaders || this.config?.pin_search_headers === true) return;
-    const el = e.currentTarget || e.target;
-    const scrollTop = el ? el.scrollTop : 0;
-    if (e.deltaY < 0 && scrollTop <= 5) {
-      if ((this._searchHeaderOffset || 0) > 0 && e.cancelable) {
-        e.preventDefault();
-      }
-      this._applySearchHeaderDelta(e.deltaY);
-    }
+    return this._searchController.handleSearchResultsWheel(e, pinSearchHeaders);
   }
 
   _handleResultsTouchStart(e) {
-    if (e.touches && e.touches.length === 1) {
-      this._resultsTouchStartY = e.touches[0].clientY;
-      this._resultsTouchStartX = e.touches[0].clientX;
-    }
+    return this._searchController.handleResultsTouchStart(e);
   }
 
   _handleResultsTouchMove(e, pinSearchHeaders) {
-    if (pinSearchHeaders || this.config?.pin_search_headers === true || this._resultsTouchStartY == null) return;
-    if (!e.touches || e.touches.length !== 1) return;
-    const el = e.currentTarget;
-    const scrollTop = el ? el.scrollTop : 0;
-    const deltaY = e.touches[0].clientY - this._resultsTouchStartY;
-    const deltaX = e.touches[0].clientX - this._resultsTouchStartX;
-
-    if (Math.abs(deltaY) > Math.abs(deltaX) && deltaY > 0 && scrollTop <= 5) {
-      if ((this._searchHeaderOffset || 0) > 0 && e.cancelable) {
-        e.preventDefault();
-      }
-      this._applySearchHeaderDelta(-deltaY);
-      this._resultsTouchStartY = e.touches[0].clientY;
-      this._resultsTouchStartX = e.touches[0].clientX;
-    }
+    return this._searchController.handleResultsTouchMove(e, pinSearchHeaders);
   }
 
   _handleResultsTouchEnd() {
-    this._resultsTouchStartY = null;
-    this._resultsTouchStartX = null;
+    return this._searchController.handleResultsTouchEnd();
   }
 
   // Check if a search result is clickable for hierarchical navigation
   _isClickableSearchResult(item) {
-    if (!item) return false;
-    // Always clickable if we are in a selection flow
-    if (this._addToPlaylistTarget) return true;
-    const currentHierarchyLevel = this._searchHierarchy[this._searchHierarchy.length - 1];
-    if (currentHierarchyLevel?.type === 'select_track_for_playlist') return true;
-
-    return !!item.is_browsable;
+    return this._searchController.isClickableSearchResult(item);
   }
-
-
 
   // Get the tooltip title for clickable search results
   _getSearchResultClickTitle(item) {
-    if (!this._isClickableSearchResult(item)) return "";
-
-    if (this._addToPlaylistTarget && item.media_class === 'playlist') {
-      return localize('search.add_to_playlist');
-    }
-
-    // Track selection step for radio add-to-playlist
-    const currentHierarchy = this._searchHierarchy[this._searchHierarchy.length - 1];
-    if (currentHierarchy?.type === 'select_track_for_playlist' && (item.media_class === 'track' || item.media_content_type === 'track')) {
-      const mockItem = this._getMockItemFromCurrentTrack();
-      return localize('search.select_track_for_playlist', {
-        '{track}': mockItem?.title || "",
-        '{artist}': mockItem?.media_artist || ""
-      });
-    }
-
-    return getSearchResultClickTitle(item);
+    return this._searchController.getSearchResultClickTitle(item);
   }
 
   // Force-invalidate the "Next Up" results cache
   _invalidateUpcomingCache() {
-    // Force a reload of the queue to reflect server-side changes
-    if (this._upcomingFilterActive) {
-      // In strictly optimistic mode, we don't force a fetch here.
-      // The local UI is already updated. The 20s heartbeat will eventually sync.
-    } else {
-      // If not active, just clear it so its fresh next time it opens
-      const classFilter = this._searchMediaClassFilter || 'all';
-      const cacheKey = `${classFilter}_upcoming_sort_default`;
-      if (this._searchResultsByType) {
-        delete this._searchResultsByType[cacheKey];
-      }
-      this.requestUpdate();
-    }
+    return this._searchController.invalidateUpcomingCache();
   }
 
   _toggleRadioMode() {
-    this._radioModeActive = !this._radioModeActive;
-    this.requestUpdate();
+    return this._searchController.toggleRadioMode();
   }
 
   // Toggle favorites filter - use existing _doSearch method with favorites parameter
   async _toggleFavoritesFilter() {
-    const wasActive = this._favoritesFilterActive || this._initialFavoritesLoaded;
-    this._favoritesFilterActive = !wasActive;
-
-    // Make mutually exclusive with other filters
-    if (this._favoritesFilterActive) {
-      this._recentlyPlayedFilterActive = false;
-      this._upcomingFilterActive = false;
-      this._recommendationsFilterActive = false;
-    }
-
-    if (this._favoritesFilterActive) {
-      // Use the existing _doSearch method with favorites parameter
-      // This aligns with how initial favorites loading works
-      const currentMediaType = this._searchMediaClassFilter;
-
-      // FIX: Always use the structured search with favorites: true
-      // This ensures we respect the current filter (e.g., Radio) and don't pass invalid 'favorites' media type
-      try {
-        await this._doSearch(currentMediaType, { favorites: true });
-      } catch (error) {
-        console.error('yamp: Error searching favorites:', error);
-      }
-    } else {
-      // Favorites filter turned OFF:
-      // We must reload the standard items for the current filter.
-      const currentMediaType = this._searchMediaClassFilter;
-
-      // FIX: Explicitly clear the persistence flags so _doSearch doesn't immediately re-enable favorites
-      this._lastSearchUsedServerFavorites = false;
-      this._initialFavoritesLoaded = false;
-
-      // Pass clearFilters: true to ensure we don't pick up any lingering filter states from the isFavorites calculation
-      await this._doSearch(currentMediaType, { clearFilters: true });
-    }
+    return this._searchController.toggleFavoritesFilter();
   }
 
   // Toggle recently played filter
   async _toggleRecentlyPlayedFilter(forceState = null) {
-    const targetState = typeof forceState === "boolean"
-      ? forceState
-      : !this._recentlyPlayedFilterActive;
-    this._recentlyPlayedFilterActive = targetState;
-
-    // Make mutually exclusive with other filters
-    if (this._recentlyPlayedFilterActive) {
-      this._favoritesFilterActive = false;
-      this._upcomingFilterActive = false;
-      this._recommendationsFilterActive = false;
-      this._initialFavoritesLoaded = false; // Clear the initial favorites state
-    }
-
-    if (this._recentlyPlayedFilterActive) {
-      // Clear search box since it's not used in recently played mode
-      this._searchQuery = '';
-      // Load recently played items
-      try {
-        const currentMediaType = this._searchMediaClassFilter || 'all';
-        const targetFilter = this._keepFiltersOnSearch && currentMediaType !== 'favorites' ? currentMediaType : 'all';
-        await this._doSearch(targetFilter, { isRecentlyPlayed: true, clearFilters: true });
-      } catch (error) {
-        console.error('yamp: Error in _doSearch for recently played:', error);
-      }
-    } else {
-      // Restore original search results
-      if (this._searchQuery && this._searchQuery.trim() !== '') {
-        // Resubmit the original search without recently played filter
-        const currentMediaType = this._searchMediaClassFilter;
-        await this._doSearch(currentMediaType);
-      } else {
-        // Restore from cache or load favorites if no search query
-        const currentMediaType = this._searchMediaClassFilter || 'all';
-        if (this._restoreSearchResultsFromCache(currentMediaType)) {
-          // Restored from cache
-        } else if (this._keepFiltersOnSearch && currentMediaType !== 'all') {
-          await this._doSearch(currentMediaType);
-        } else {
-          // No cache, load favorites as default
-          await this._doSearch('favorites');
-        }
-      }
-    }
+    return this._searchController.toggleRecentlyPlayedFilter(forceState);
   }
 
   // Toggle upcoming queue filter
   async _toggleUpcomingFilter(forceState = null) {
-    if (!this.hass) return;
-
-    if (forceState !== null) {
-      this._upcomingFilterActive = forceState;
-    } else {
-      this._upcomingFilterActive = !this._upcomingFilterActive;
-    }
-
-    // Make mutually exclusive with other filters
-    if (this._upcomingFilterActive) {
-      this._favoritesFilterActive = false;
-      this._recentlyPlayedFilterActive = false;
-      this._recommendationsFilterActive = false;
-      this._initialFavoritesLoaded = false; // Clear the initial favorites state
-    }
-
-    if (this._upcomingFilterActive) {
-      // Clear search box since it's not used in upcoming mode
-      this._searchQuery = '';
-      // Clear cache to force fresh fetch
-      const cacheKey = `${this._searchMediaClassFilter || 'all'}_upcoming_sort_default`;
-      delete this._searchResultsByType[cacheKey];
-      // Subscribe to queue update events
-      await this._subscribeToQueueUpdates();
-      // Load upcoming queue items
-      try {
-        const currentMediaType = this._searchMediaClassFilter || 'all';
-        const targetFilter = this._keepFiltersOnSearch && currentMediaType !== 'favorites' ? currentMediaType : 'all';
-        await this._doSearch(targetFilter, { isUpcoming: true, clearFilters: true });
-      } catch (error) {
-        console.error('yamp: Error in _doSearch for upcoming queue:', error);
-      }
-    } else {
-      // Unsubscribe from queue update events
-      this._unsubscribeFromQueueUpdates();
-      // Restore original search results
-      if (this._searchQuery && this._searchQuery.trim() !== '') {
-        // Resubmit the original search without upcoming filter
-        const currentMediaType = this._searchMediaClassFilter;
-        await this._doSearch(currentMediaType);
-      } else {
-        // Restore from cache or load favorites if no search query
-        const currentMediaType = this._searchMediaClassFilter || 'all';
-        if (this._restoreSearchResultsFromCache(currentMediaType)) {
-          // Restored from cache
-        } else if (this._keepFiltersOnSearch && currentMediaType !== 'all') {
-          await this._doSearch(currentMediaType);
-        } else {
-          // No cache, load favorites as default
-          await this._doSearch('favorites');
-        }
-      }
-    }
+    return this._searchController.toggleUpcomingFilter(forceState);
   }
 
   // Toggle recommendations filter (mass_queue)
   async _toggleRecommendationsFilter(forceState = null) {
-    const targetState = typeof forceState === "boolean"
-      ? forceState
-      : !this._recommendationsFilterActive;
-    this._recommendationsFilterActive = targetState;
-
-    if (this._recommendationsFilterActive) {
-      this._favoritesFilterActive = false;
-      this._recentlyPlayedFilterActive = false;
-      this._upcomingFilterActive = false;
-      this._initialFavoritesLoaded = false;
-      this._searchQuery = '';
-
-      try {
-        const hasMassQueue = await this._isMassQueueIntegrationAvailable(this.hass);
-        this._hasMassQueueIntegration = hasMassQueue;
-        this._massQueueAvailable = hasMassQueue;
-
-        if (!hasMassQueue) {
-          this._recommendationsFilterActive = false;
-          this._searchError = "Recommendations require the Music Assistant queue integration.";
-          this.requestUpdate();
-          return;
-        }
-
-        const targetFilter =
-          this._keepFiltersOnSearch &&
-          this._searchMediaClassFilter &&
-          this._searchMediaClassFilter !== "favorites"
-            ? this._searchMediaClassFilter
-            : "all";
-
-        await this._doSearch(targetFilter, { isRecommendations: true, clearFilters: true });
-      } catch (error) {
-        console.error('yamp: Error in _doSearch for recommendations:', error);
-        this._searchError = "Unable to load recommendations.";
-        this._recommendationsFilterActive = false;
-        this.requestUpdate();
-      }
-    } else {
-      if (this._searchQuery && this._searchQuery.trim() !== '') {
-        const currentMediaType = this._searchMediaClassFilter;
-        await this._doSearch(currentMediaType);
-      } else {
-        const currentMediaType = this._searchMediaClassFilter || 'all';
-        if (this._restoreSearchResultsFromCache(currentMediaType)) {
-          // Restored from cache
-        } else if (this._keepFiltersOnSearch && currentMediaType !== 'all') {
-          await this._doSearch(currentMediaType);
-        } else {
-          await this._doSearch('favorites');
-        }
-      }
-    }
+    return this._searchController.toggleRecommendationsFilter(forceState);
   }
 
   /**
@@ -3400,16 +1822,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
    * @returns {boolean} True if restored from cache, false otherwise
    */
   _restoreSearchResultsFromCache(currentMediaType) {
-    const sortMode = this._getActiveSearchDisplaySortMode();
-    const cacheKey = `${currentMediaType}_sort_${sortMode}`;
-    if (this._searchResultsByType[cacheKey] || this._searchResultsByType[currentMediaType]) {
-      this._searchResults = this._sortSearchResults(
-        this._searchResultsByType[cacheKey] || this._searchResultsByType[currentMediaType]
-      );
-      this.requestUpdate();
-      return true;
-    }
-    return false;
+    return this._searchController.restoreSearchResultsFromCache(currentMediaType);
   }
 
   // Get next track from Music Assistant (delegated to QueueController)
@@ -3429,21 +1842,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
   // Check if Music Assistant AI Radio shows are available
   async _checkAiRadioAvailability() {
-    if (!this.hass) return;
-    try {
-      const searchEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
-      const searchEntityId = await this._resolveTemplateAtActionTime(
-        searchEntityIdTemplate,
-        this.currentEntityId
-      );
-      const available = await isAiRadioAvailable(this.hass, searchEntityId);
-      if (this._aiRadioShowsAvailable !== available) {
-        this._aiRadioShowsAvailable = available;
-        this.requestUpdate();
-      }
-    } catch {
-      this._aiRadioShowsAvailable = false;
-    }
+    return this._searchController.checkAiRadioAvailability();
   }
 
   // Get queue using mass_queue integration (delegated to QueueController)
@@ -3573,281 +1972,32 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
   // Apply favorites filter to current results (called when switching filter chips)
   async _applyLocalFavoritesFilter(results = []) {
-    if (!this._favoritesFilterActive) return results;
-
-    const searchEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
-    const searchEntityId = await this._resolveTemplateAtActionTime(searchEntityIdTemplate, this.currentEntityId);
-
-    try {
-      const favoritesResponse = await getFavorites(this.hass, searchEntityId, this._searchMediaClassFilter, this._getSearchResultsLimit());
-      const favorites = favoritesResponse.results || [];
-
-      // Create a set of favorite URIs for quick lookup
-      const favoriteUris = new Set(favorites.map(fav => fav.media_content_id));
-
-      // Filter current results to only show favorites
-      return results.filter(item => favoriteUris.has(item.media_content_id));
-    } catch (error) {
-      // If favorites loading fails, just show current results
-      return results;
-    }
+    return this._searchController.applyLocalFavoritesFilter(results);
   }
 
   // Handle clicks on search result titles
   async _handleSearchResultClick(item, event) {
-    if (this._isDragging) {
-      if (event) {
-        event.stopPropagation();
-        event.preventDefault();
-      }
-      return;
-    }
-    if (!this._isClickableSearchResult(item)) return;
-
-
-    // Radio flow: user is picking a track to resolve from search results
-    const currentHierarchyLevel = this._searchHierarchy[this._searchHierarchy.length - 1];
-    if (currentHierarchyLevel?.type === 'select_track_for_playlist' && (item.media_class === 'track' || item.media_content_type === 'track')) {
-      // Use the selected real MA track and continue to playlist selection
-      this._performSearchOptionAction(item, 'add_to_playlist');
-      return;
-    }
-
-    if (this._addToPlaylistTarget && item.media_class === 'playlist') {
-      this._loadingSearchRowMenuId = item.media_content_id;
-      this.requestUpdate();
-
-      try {
-        const searchEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
-        const searchEntityId = await this._resolveTemplateAtActionTime(searchEntityIdTemplate, this.currentEntityId);
-        const mqConfigEntryId = await getMassQueueConfigEntryId(this.hass, searchEntityId);
-        if (mqConfigEntryId) {
-          const playlistId = item.item_id || item.media_content_id?.split('/').pop();
-          const servicePayload = {
-            command: "music/playlists/add_playlist_tracks",
-            data: {
-              db_playlist_id: playlistId,
-              uris: [this._addToPlaylistTarget.media_content_id]
-            }
-          };
-          if (mqConfigEntryId && mqConfigEntryId !== "auto") {
-            servicePayload.config_entry_id = mqConfigEntryId;
-          }
-          await this.hass.callService("mass_queue", "send_command", servicePayload);
-
-          this._showSearchSuccessToast(item.media_content_id, 'playlist');
-        }
-      } catch (e) {
-        console.error("Failed to add to playlist:", e);
-        this._errorSearchRowMenuId = item.media_content_id;
-        this.requestUpdate();
-        setTimeout(() => {
-          this._errorSearchRowMenuId = null;
-          this.requestUpdate();
-        }, 3000);
-      } finally {
-        this._loadingSearchRowMenuId = null;
-        this.requestUpdate();
-      }
-      this._addToPlaylistTarget = null;
-      setTimeout(() => {
-        if (this._dismissMenuAfterPlaylistAdd) {
-          this._closeEntityOptions();
-          this._dismissMenuAfterPlaylistAdd = false;
-        } else {
-          this._goBackInSearch();
-        }
-      }, SUCCESS_MESSAGE_TIMEOUT_MS);
-      return;
-    }
-
-    if (item.media_class === 'artist') {
-      await this._searchArtistAlbums(item.title, item.media_content_id);
-    } else if (item.media_class === 'album') {
-      // Get artist name from hierarchy if we're viewing artist albums, or from item metadata if available
-      let artistName = null;
-      if (this._searchHierarchy.length > 0 && this._searchHierarchy[this._searchHierarchy.length - 1].type === 'artist') {
-        artistName = this._searchHierarchy[this._searchHierarchy.length - 1].name;
-      } else if (item.artist) {
-        artistName = item.artist;
-      }
-      await this._searchAlbumTracks(item.title, artistName, item.media_content_id);
-    } else if (item.media_class === 'track') {
-      // Navigate to the album this track belongs to
-      if (item.album) {
-        await this._searchAlbumTracks(item.album, item.artist, item.album_uri);
-      }
-    } else if (item.media_class === 'playlist') {
-      let playlistUri = item.media_content_id || item.uri || null;
-      if (!playlistUri && this._isMusicAssistantEntity()) {
-        try {
-          const searchEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
-          const searchEntityId = await this._resolveTemplateAtActionTime(searchEntityIdTemplate, this.currentEntityId);
-          playlistUri = await this._resolvePlaylistUri(item.title, searchEntityId);
-        } catch (e) {
-          console.warn("yamp: error resolving playlist URI:", e);
-        }
-      }
-      await this._searchPlaylistTracks(item.title, playlistUri);
-    }
+    return this._searchController.handleSearchResultClick(item, event);
   }
 
   // Stack-safe loader: fetches album tracks without modifying _searchHierarchy
   async _loadAlbumTracks(albumUri, albumName, artistName = null) {
-    // Priority 1: Use mass_queue integration if available (preferred for Music Assistant)
-    if (albumUri && (await this._isMassQueueIntegrationAvailable(this.hass))) {
-      const mqTracks = await this._fetchMassQueueTracks(albumUri, "get_album_tracks");
-      if (mqTracks && mqTracks.length > 0) {
-        this._setSearchResultsFromMassQueue(mqTracks, "");
-        return;
-      }
-    }
-
-    // Priority 2: Use browse_media (fallback for non-mass_queue MA or other integration)
-    if (albumUri && this._isMusicAssistantEntity()) {
-      try {
-        const searchEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
-        const searchEntityId = await this._resolveTemplateAtActionTime(searchEntityIdTemplate, this.currentEntityId);
-
-        const browseMsg = {
-          type: "call_service",
-          domain: "media_player",
-          service: "browse_media",
-          service_data: {
-            entity_id: searchEntityId,
-            media_content_id: albumUri,
-          },
-          return_response: true,
-        };
-
-        const browseRes = await this.hass.connection.sendMessagePromise(browseMsg);
-        const browseResult = browseRes?.response?.[searchEntityId]?.result || browseRes?.result || {};
-        const tracks = browseResult.children || [];
-
-        if (tracks.length > 0) {
-          this._searchQuery = "";
-          this._searchResults = this._sortSearchResults(tracks);
-          this._searchTotalRows = Math.max(15, tracks.length);
-          this._searchAttempted = true;
-          this._searchLoading = false;
-          this.requestUpdate();
-          return;
-        }
-      } catch (e) {
-        console.error("yamp: Failed to browse album tracks:", e);
-      }
-    }
-
-    // Fallback to search-based navigation
-    this._searchQuery = "";
-
-    // Clear filter states to ensure accurate album search results
-    this._favoritesFilterActive = false;
-    this._recentlyPlayedFilterActive = false;
-    this._initialFavoritesLoaded = false;
-
-    // Pass artist and album as search parameters for more precise results
-    const searchParams = { album: albumName, clearFilters: true };
-    if (artistName) {
-      searchParams.artist = artistName;
-    }
-
-    // Use Music Assistant search with specific parameters for tracks
-    await this._doSearch('track', searchParams);
+    return this._searchController.loadAlbumTracks(albumUri, albumName, artistName);
   }
 
   // Handle hierarchical search - search for tracks by album
   async _searchAlbumTracks(albumName, artistName, albumUri = null) {
-    this._searchHierarchy.push({ type: 'album', name: albumName, query: this._searchQuery, uri: albumUri, filter: this._searchMediaClassFilter });
-    this._searchBreadcrumb = `Tracks from ${albumName}`;
-    this._searchResultsByType = {}; // Clear cache for new search
-    this._currentSearchQuery = "";
-    this._searchMediaClassFilter = 'track';
-
-    // Immediate loading state
-    this._searchResults = [];
-    this._searchLoading = true;
-    this._searchQuery = "";
-    this.requestUpdate();
-
-    // Remove swipe handlers when entering hierarchy
-    this._removeSearchSwipeHandlers();
-
-    await this._loadAlbumTracks(albumUri, albumName, artistName);
+    return this._searchController.searchAlbumTracks(albumName, artistName, albumUri);
   }
 
   // Helper to load tracks for a playlist via mass_queue or browse_media
   async _loadPlaylistTracks(playlistUri, playlistName) {
-    // Priority 1: Use mass_queue integration if available (preferred for Music Assistant)
-    if (playlistUri && (await this._isMassQueueIntegrationAvailable(this.hass))) {
-      const mqTracks = await this._fetchMassQueueTracks(playlistUri, "get_playlist_tracks");
-      if (mqTracks && mqTracks.length > 0) {
-        this._setSearchResultsFromMassQueue(mqTracks, "");
-        return true;
-      }
-    }
-
-    // Priority 2: Use browse_media (fallback for non-mass_queue MA or other integration)
-    if (playlistUri && this._isMusicAssistantEntity()) {
-      try {
-        const searchEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
-        const searchEntityId = await this._resolveTemplateAtActionTime(searchEntityIdTemplate, this.currentEntityId);
-
-        const browseMsg = {
-          type: "call_service",
-          domain: "media_player",
-          service: "browse_media",
-          service_data: {
-            entity_id: searchEntityId,
-            media_content_id: playlistUri,
-          },
-          return_response: true,
-        };
-
-        const browseRes = await this.hass.connection.sendMessagePromise(browseMsg);
-        const browseResult = browseRes?.response?.[searchEntityId]?.result || browseRes?.result || {};
-        const tracks = browseResult.children || [];
-
-        if (tracks.length > 0) {
-          this._searchQuery = "";
-          this._searchResults = this._sortSearchResults(tracks);
-          this._searchTotalRows = Math.max(15, tracks.length);
-          this._searchAttempted = true;
-          this._searchLoading = false;
-          this.requestUpdate();
-          return true;
-        }
-      } catch (e) {
-        console.error("yamp: Failed to browse playlist tracks:", e);
-      }
-    }
-
-    this._searchQuery = "";
-    this._searchResults = [];
-    this._searchAttempted = true;
-    this._searchLoading = false;
-    this.requestUpdate();
-    return false;
+    return this._searchController.loadPlaylistTracks(playlistUri, playlistName);
   }
 
   // Handle hierarchical search - search for tracks in a playlist
   async _searchPlaylistTracks(playlistName, playlistUri) {
-    this._searchHierarchy.push({ type: 'playlist', name: playlistName, query: this._searchQuery, uri: playlistUri, filter: this._searchMediaClassFilter });
-    this._searchBreadcrumb = `Tracks from ${playlistName}`;
-    this._searchResultsByType = {}; // Clear cache for new search
-    this._currentSearchQuery = "";
-    this._searchMediaClassFilter = 'track';
-
-    // Immediate loading state
-    this._searchResults = [];
-    this._searchLoading = true;
-    this._searchQuery = "";
-    this.requestUpdate();
-
-    // Remove swipe handlers when entering hierarchy
-    this._removeSearchSwipeHandlers();
-
-    await this._loadPlaylistTracks(playlistUri, playlistName);
+    return this._searchController.searchPlaylistTracks(playlistName, playlistUri);
   }
 
   async _fetchMassQueueTracks(uri, serviceName) {
@@ -8142,33 +6292,11 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _resetSearchContext() {
-    this._searchResultsByType = {}; // Clear cache
-    this._favoritesFilterActive = false;
-    this._recentlyPlayedFilterActive = false;
-    this._upcomingFilterActive = false;
-    this._recommendationsFilterActive = false;
-    this._initialFavoritesLoaded = false;
-    this._loadingSearchRowMenuId = null;
-    this._errorSearchRowMenuId = null;
+    return this._searchController.resetSearchContext();
   }
 
   _showSearchSuccessToast(menuId = null, type = null) {
-    this._showQueueSuccessMessage = true;
-    if (menuId) this._successSearchRowMenuId = menuId;
-    if (type) this._successSearchRowType = type;
-    this.requestUpdate();
-
-    if (this._successToastHandle) {
-      clearTimeout(this._successToastHandle);
-    }
-
-    this._successToastHandle = setTimeout(() => {
-      this._showQueueSuccessMessage = false;
-      this._successSearchRowMenuId = null;
-      this._successSearchRowType = null;
-      this._successToastHandle = null;
-      this.requestUpdate();
-    }, SUCCESS_MESSAGE_TIMEOUT_MS);
+    return this._searchController.showSearchSuccessToast(menuId, type);
   }
 
   render() {
@@ -10205,15 +8333,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _removeSearchSwipeHandlers() {
-    // Remove search swipe handlers
-    const area = this.renderRoot.querySelector('.entity-options-search-results');
-    if (area && area._searchSwipeHandlers) {
-      const handlers = area._searchSwipeHandlers;
-      area.removeEventListener('touchstart', handlers.touchstart);
-      area.removeEventListener('touchend', handlers.touchend);
-      delete area._searchSwipeHandlers;
-      this._searchSwipeAttached = false;
-    }
+    this._searchController.removeSearchSwipeHandlers();
   }
 
   disconnectedCallback() {
@@ -10250,6 +8370,9 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     }
     if (this._queueController) {
       this._queueController.hostDisconnected();
+    }
+    if (this._searchController) {
+      this._searchController.hostDisconnected();
     }
     if (this._mediaSessionManager) {
       this._mediaSessionManager.destroy();
