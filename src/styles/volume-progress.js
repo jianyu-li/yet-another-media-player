@@ -187,7 +187,6 @@ export const volumeProgressStyles = css`
 
   .volume-icon-btn ha-icon,
   .custom-bottom-action ha-icon,
-  .more-info-btn ha-icon,
   .vol-stepper .button ha-icon {
     font-size: var(--yamp-computed-bottom-icon-size, var(--yamp-bottom-icon-size, 22px));
     --mdc-icon-size: var(--yamp-computed-bottom-icon-size, var(--yamp-bottom-icon-size, 22px));
