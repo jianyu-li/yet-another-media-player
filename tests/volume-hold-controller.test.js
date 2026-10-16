@@ -352,12 +352,12 @@ describe("VolumeHoldController & Helpers", () => {
       assert.strictEqual(ctrl._pointerId, null);
     });
 
-    it("activates for persistent menu stepper even when global volume_mode is not stepper", () => {
+    it("activates for track title when target element has track-title-holdable class", () => {
       mock.timers.enable();
       try {
         targetEl.classList = {
           contains(name) {
-            return name === "persistent-volume-stepper";
+            return name === "track-title-holdable";
           },
         };
 
@@ -371,13 +371,131 @@ describe("VolumeHoldController & Helpers", () => {
         });
 
         assert.strictEqual(host._canUseVolumeHold.mock.calls.length, 1);
-        assert.strictEqual(host._canUseVolumeHold.mock.calls[0].arguments[0], true);
+        assert.strictEqual(host._canUseVolumeHold.mock.calls[0].arguments[0], false);
+        assert.strictEqual(host._canUseVolumeHold.mock.calls[0].arguments[1], true);
 
         mock.timers.tick(HOLD_DELAY_MS);
         assert.strictEqual(ctrl.active, true);
       } finally {
         mock.timers.reset();
       }
+    });
+
+    it("does not activate for track title if _canUseVolumeHold returns false", () => {
+      mock.timers.enable();
+      try {
+        host._canUseVolumeHold = mock.fn((allowMenu, isTitle) => !isTitle);
+        targetEl.classList = {
+          contains(name) {
+            return name === "track-title-holdable";
+          },
+        };
+
+        ctrl.onPointerDown({
+          isPrimary: true,
+          pointerType: "touch",
+          pointerId: 1,
+          clientX: 50,
+          clientY: 100,
+          currentTarget: targetEl,
+        });
+
+        assert.strictEqual(host._canUseVolumeHold.mock.calls.length, 1);
+        assert.strictEqual(ctrl._pointerId, null);
+
+        mock.timers.tick(HOLD_DELAY_MS);
+        assert.strictEqual(ctrl.active, false);
+      } finally {
+        mock.timers.reset();
+      }
+    });
+  });
+
+  describe("YetAnotherMediaPlayerCard - Volume Hold Integration", () => {
+    let card;
+
+    beforeEach(async () => {
+      const g = /** @type {any} */ (globalThis);
+      g.window = globalThis;
+      if (!g.customElements) g.customElements = { define() {} };
+      if (!g.HTMLElement) {
+        class MockHTMLElement {
+          attachShadow() {
+            return {};
+          }
+        }
+        g.HTMLElement = MockHTMLElement;
+      }
+      g.__VERSION__ = "1.0.0-test";
+      const { YetAnotherMediaPlayerCard } = await import("../src/yet-another-media-player.js");
+      card = new YetAnotherMediaPlayerCard();
+      card._selectedIndex = 0;
+      card.hass = {
+        states: {
+          "media_player.test": {
+            entity_id: "media_player.test",
+            state: "playing",
+            attributes: {
+              volume_level: 0.5,
+              supported_features: SUPPORT_VOLUME_SET,
+            },
+          },
+        },
+      };
+    });
+
+    it("defaults hold_title_for_volume to false", () => {
+      card.setConfig({
+        entities: ["media_player.test"],
+      });
+      assert.strictEqual(card._holdTitleForVolume, false);
+      assert.strictEqual(card._canUseVolumeHold(false, true), false);
+    });
+
+    it("enables hold on track title when hold_title_for_volume is true", () => {
+      card.setConfig({
+        entities: ["media_player.test"],
+        hold_title_for_volume: true,
+      });
+      assert.strictEqual(card._holdTitleForVolume, true);
+      assert.strictEqual(card._canUseVolumeHold(false, true), true);
+    });
+
+    it("supports alias hold_track_title_for_volume", () => {
+      card.setConfig({
+        entities: ["media_player.test"],
+        hold_track_title_for_volume: true,
+      });
+      assert.strictEqual(card._holdTitleForVolume, true);
+      assert.strictEqual(card._canUseVolumeHold(false, true), true);
+    });
+
+    it("allows title hold even if volume_mode is slider or hidden", () => {
+      card.setConfig({
+        entities: ["media_player.test"],
+        volume_mode: "hidden",
+        hold_title_for_volume: true,
+      });
+      assert.strictEqual(card._canUseVolumeHold(false, true), true);
+      assert.strictEqual(card._canUseVolumeHold(false, false), false);
+    });
+
+    it("rejects title hold if entity does not support volume set", () => {
+      card.hass.states["media_player.test"].attributes.supported_features = 0;
+      card.setConfig({
+        entities: ["media_player.test"],
+        hold_title_for_volume: true,
+      });
+      assert.strictEqual(card._canUseVolumeHold(false, true), false);
+    });
+
+    it("supports per-entity override of hold_title_for_volume", () => {
+      card.setConfig({
+        entities: [{ entity: "media_player.test", hold_title_for_volume: false }],
+        hold_title_for_volume: true,
+      });
+      assert.strictEqual(card._getEffectiveHoldTitleForVolume(), false);
+      assert.strictEqual(card._canUseVolumeHold(false, true), false);
     });
   });
 });

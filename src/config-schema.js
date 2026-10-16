@@ -183,6 +183,7 @@ export const CARD_CONFIG_DEFAULTS = Object.freeze({
   dismiss_search_on_play: false,
   disable_autofocus: false,
   show_volume_overlay: false,
+  hold_title_for_volume: false,
   always_show_quick_group: false,
   always_collapsed: false,
   hide_menu_player: false,

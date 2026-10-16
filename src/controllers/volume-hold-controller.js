@@ -92,13 +92,19 @@ export class VolumeHoldController {
       if (!e.isPrimary) return;
       if (e.pointerType === "mouse" && e.button !== 0) return;
       if (this._pointerId !== null) return;
-      const isMenu = !!(
-        this.host?._showEntityOptions ||
-        /** @type {HTMLElement} */ (e.currentTarget)?.classList?.contains(
-          "persistent-volume-stepper"
-        )
+      const isTitle = !!(
+        /** @type {HTMLElement} */ (e.currentTarget)?.classList?.contains("track-title-holdable") ||
+        /** @type {HTMLElement} */ (e.currentTarget)?.classList?.contains("track-options-title")
       );
-      if (!this.host?._canUseVolumeHold?.(isMenu)) return;
+      const isMenu =
+        !isTitle &&
+        !!(
+          this.host?._showEntityOptions ||
+          /** @type {HTMLElement} */ (e.currentTarget)?.classList?.contains(
+            "persistent-volume-stepper"
+          )
+        );
+      if (!this.host?._canUseVolumeHold?.(isMenu, isTitle)) return;
 
       this._clearSuppressClick();
       if (this.releasing) {
@@ -204,11 +210,17 @@ export class VolumeHoldController {
 
   _activate() {
     this._holdTimer = null;
-    const isMenu = !!(
-      this.host?._showEntityOptions ||
-      this._element?.classList?.contains("persistent-volume-stepper")
+    const isTitle = !!(
+      this._element?.classList?.contains("track-title-holdable") ||
+      this._element?.classList?.contains("track-options-title")
     );
-    if (!this.host?._canUseVolumeHold?.(isMenu)) {
+    const isMenu =
+      !isTitle &&
+      !!(
+        this.host?._showEntityOptions ||
+        this._element?.classList?.contains("persistent-volume-stepper")
+      );
+    if (!this.host?._canUseVolumeHold?.(isMenu, isTitle)) {
       this._reset();
       return;
     }

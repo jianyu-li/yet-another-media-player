@@ -1309,6 +1309,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._volumeOverlayMuted = false;
     this._internalVolumeChangeFlag = false;
     this._showVolumeOverlay = false;
+    this._holdTitleForVolume = false;
     this._queueOperationPromise = Promise.resolve();
     this._queueOpsTotal = 0;
     this._queueOpsCompleted = 0;
@@ -2972,6 +2973,8 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._updateHostAttributes();
     // Volume overlay toggle
     this._showVolumeOverlay = !!config.show_volume_overlay;
+    // Hold track title for volume overlay toggle
+    this._holdTitleForVolume = !!(config.hold_title_for_volume ?? config.hold_track_title_for_volume);
     // Collapse card when idle
     this._collapseOnIdle = !!config.collapse_on_idle;
     // Expand on search option (only available when always_collapsed is true)
@@ -3126,7 +3129,10 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         ...(transient ? { transient } : {}),
         ...(typeof group_volume !== "undefined" ? { group_volume } : {}),
         ...(entity_volume_mode ? { entity_volume_mode } : {}),
-        ...(typeof entity_volume_step === "number" ? { entity_volume_step } : {})
+        ...(typeof entity_volume_step === "number" ? { entity_volume_step } : {}),
+        ...(typeof e === "object" && typeof (e.hold_title_for_volume ?? e.hold_track_title_for_volume) === "boolean"
+          ? { hold_title_for_volume: (e.hold_title_for_volume ?? e.hold_track_title_for_volume) }
+          : {}),
       };
     });
     return this._cachedEntityObjs;
@@ -3290,10 +3296,26 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     return obj?.entity_volume_mode || this._volumeMode;
   }
 
-  // Whether the stepper press-and-hold volume overlay is available for the active entity
-  _canUseVolumeHold(allowMenuMode = false) {
-    if (!allowMenuMode && this._getEffectiveVolumeMode() !== "stepper") return false;
-    if (this._getEffectiveVolumeMode() === "hidden") return false;
+  // Returns whether track title press-and-hold volume overlay is enabled for active entity
+  _getEffectiveHoldTitleForVolume() {
+    const obj = this.entityObjs?.[this._selectedIndex];
+    if (typeof obj?.hold_title_for_volume === "boolean") {
+      return obj.hold_title_for_volume;
+    }
+    if (typeof obj?.hold_track_title_for_volume === "boolean") {
+      return obj.hold_track_title_for_volume;
+    }
+    return this._holdTitleForVolume;
+  }
+
+  // Whether the press-and-hold volume overlay is available for the active entity
+  _canUseVolumeHold(allowMenuMode = false, isTitle = false) {
+    if (isTitle) {
+      if (!this._getEffectiveHoldTitleForVolume()) return false;
+    } else {
+      if (!allowMenuMode && this._getEffectiveVolumeMode() !== "stepper") return false;
+      if (this._getEffectiveVolumeMode() === "hidden") return false;
+    }
     const entity = this._getVolumeEntity(this._selectedIndex);
     if (!entity || (typeof entity === "string" && entity.startsWith("remote."))) return false;
     const stateObj = this.currentVolumeStateObj;
@@ -7238,11 +7260,45 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
                           <ha-icon icon="mdi:close"></ha-icon>
                         </div>
                       </div>
-                    ` : html`
-                      <div class="title track-options-title" @click=${(e) => { if (!this._suppressMarqueeClick && shouldShowDetails && title) { e.stopPropagation(); this._showMediaTitleOptions = true; } }} style="${shouldShowDetails && title ? 'cursor: pointer;' : ''}" title="${shouldShowDetails && title ? localize('search.show_track_options') : ''}">
-                        <span class="marquee-inner">${shouldShowDetails && title ? title : html`&nbsp;`}</span>
-                      </div>
-                    `}
+                    ` : (() => {
+                      const canHoldTitle = shouldShowDetails && !!title && this._canUseVolumeHold(false, true);
+                      const titleHoldHandlers = canHoldTitle ? this._volumeHoldController : null;
+                      return html`
+                        <div
+                          class="title track-options-title ${titleHoldHandlers ? "track-title-holdable" : ""}"
+                          @pointerdown=${(e) => {
+                            if (titleHoldHandlers) {
+                              e.stopPropagation();
+                              titleHoldHandlers.onPointerDown(e);
+                            }
+                          }}
+                          @pointermove=${titleHoldHandlers?.onPointerMove}
+                          @pointerup=${(e) => {
+                            if (titleHoldHandlers) {
+                              e.stopPropagation();
+                              titleHoldHandlers.onPointerUp(e);
+                            }
+                          }}
+                          @pointercancel=${titleHoldHandlers?.onPointerCancel}
+                          @lostpointercapture=${titleHoldHandlers?.onLostPointerCapture}
+                          @contextmenu=${titleHoldHandlers?.onContextMenu}
+                          @click=${(e) => {
+                            if (titleHoldHandlers) {
+                              titleHoldHandlers.clickCapture.handleEvent(e);
+                              if (e.defaultPrevented) return;
+                            }
+                            if (!this._suppressMarqueeClick && shouldShowDetails && title) {
+                              e.stopPropagation();
+                              this._showMediaTitleOptions = true;
+                            }
+                          }}
+                          style="${shouldShowDetails && title ? "cursor: pointer;" : ""}"
+                          title="${shouldShowDetails && title ? localize("search.show_track_options") : ""}"
+                        >
+                          <span class="marquee-inner">${shouldShowDetails && title ? title : html`&nbsp;`}</span>
+                        </div>
+                      `;
+                    })()}
                     <div class="artist">
                       <span class="marquee-inner">${shouldShowDetails ? (
                         artist && album ? html`

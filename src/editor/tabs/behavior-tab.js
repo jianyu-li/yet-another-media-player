@@ -161,6 +161,19 @@ export function renderBehaviorTab() {
       <div class="form-row form-row-multi-column">
         <div>
           <ha-switch
+            id="hold-title-for-volume-toggle"
+            .checked=${this._config.hold_title_for_volume ?? false}
+            @change=${(e) => this._updateConfig("hold_title_for_volume", e.target.checked)}
+          ></ha-switch>
+          <label for="hold-title-for-volume-toggle"
+            >${localize("editor.labels.hold_title_for_volume")}</label
+          >
+        </div>
+        <div class="config-subtitle">${localize("editor.subtitles.hold_title_for_volume")}</div>
+      </div>
+      <div class="form-row form-row-multi-column">
+        <div>
+          <ha-switch
             .checked=${this._config.disable_autofocus ?? false}
             @change=${(e) => this._updateConfig("disable_autofocus", e.target.checked)}
           ></ha-switch>

@@ -258,6 +258,8 @@ export default {
         "Verwenden Sie immer die gekoppelte Music Assistant-Entität für Titel, Künstler und Artwork, auch wenn die primäre Entität gerade spielt.",
       show_volume_overlay:
         "Zeige kurz eine große Lautstärkeanzeige über dem Cover an, wenn sich die Lautstärke ändert.",
+      hold_title_for_volume:
+        "Titel gedrückt halten, um das Lautstärke-Overlay zu öffnen und die Lautstärke anzupassen.",
       font_color_helper:
         "Text- und Symbolfarben anpassen. Akzeptiert Hex, CSS-Namen, RGBA oder Vorlagen (Standard: Theme-Farbe).",
       queue_controls_style:
@@ -320,6 +322,7 @@ export default {
       show_idle_artwork_when_not_playing: "Ruhebild anzeigen, wenn nicht abgespielt wird",
       prefer_ma_metadata: "Music Assistant Metadaten bevorzugen",
       show_volume_overlay: "Lautstärke-Overlay anzeigen",
+      hold_title_for_volume: "Titel für Lautstärke gedrückt halten",
     },
     fields: {
       artwork_fit: "Artwork-Anpassung",
