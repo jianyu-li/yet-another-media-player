@@ -58,6 +58,15 @@ export const baseCardStyles = css`
     --yamp-chip-selected-bg: var(--custom-accent);
     --yamp-chip-selected-text: #fff;
     --yamp-grouped-card-bg: rgba(255, 255, 255, 0.05);
+
+    /* Bottom row action button sizing defaults */
+    --yamp-computed-bottom-btn-size: var(--yamp-bottom-button-size, 36px);
+    --yamp-computed-bottom-icon-size: var(--yamp-bottom-icon-size, 22px);
+    --yamp-computed-bottom-gap: var(--yamp-bottom-gap, 8px);
+    --yamp-computed-more-info-icon-size: var(
+      --yamp-more-info-icon-size,
+      calc(var(--yamp-computed-bottom-icon-size, 22px) * 1.27)
+    );
     --yamp-grouped-card-border: var(--yamp-overlay-divider, rgba(255, 255, 255, 0.2));
     --search-text-secondary: #bbb;
     --search-error-bg: rgba(244, 67, 54, 0.8);
@@ -238,6 +247,19 @@ export const baseCardStyles = css`
     background: var(--ha-card-background, var(--card-background-color, #111)) !important;
     transform: none !important;
     box-sizing: border-box !important;
+    --yamp-computed-bottom-btn-size: var(
+      --yamp-bottom-button-size-fullscreen,
+      var(--yamp-bottom-button-size, 46px)
+    );
+    --yamp-computed-bottom-icon-size: var(
+      --yamp-bottom-icon-size-fullscreen,
+      var(--yamp-bottom-icon-size, 30px)
+    );
+    --yamp-computed-bottom-gap: var(--yamp-bottom-gap-fullscreen, var(--yamp-bottom-gap, 18px));
+    --yamp-computed-more-info-icon-size: var(
+      --yamp-more-info-icon-size-fullscreen,
+      var(--yamp-more-info-icon-size, calc(var(--yamp-computed-bottom-icon-size, 30px) * 1.27))
+    );
   }
 
   :host([fullscreen]) ha-card.yamp-card {

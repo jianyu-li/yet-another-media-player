@@ -39,6 +39,13 @@ export const volumeProgressStyles = css`
 
   /* Volume controls */
   .volume-row {
+    --yamp-computed-bottom-btn-size: var(--yamp-bottom-button-size, 36px);
+    --yamp-computed-bottom-icon-size: var(--yamp-bottom-icon-size, 22px);
+    --yamp-computed-bottom-gap: var(--yamp-bottom-gap, 8px);
+    --yamp-computed-more-info-icon-size: var(
+      --yamp-more-info-icon-size,
+      calc(var(--yamp-computed-bottom-icon-size, 22px) * 1.27)
+    );
     display: grid;
     grid-template-columns: minmax(min-content, 1fr) auto minmax(min-content, 1fr);
     align-items: center;
@@ -46,6 +53,26 @@ export const volumeProgressStyles = css`
     position: relative;
     z-index: ${Z_LAYERS.FLOATING_CONTROLS};
     flex-shrink: 0;
+  }
+
+  :host([fullscreen]) .volume-row {
+    --yamp-computed-bottom-btn-size: var(
+      --yamp-bottom-button-size-fullscreen,
+      var(--yamp-bottom-button-size, 46px)
+    );
+    --yamp-computed-bottom-icon-size: var(
+      --yamp-bottom-icon-size-fullscreen,
+      var(--yamp-bottom-icon-size, 30px)
+    );
+    --yamp-computed-bottom-gap: var(--yamp-bottom-gap-fullscreen, var(--yamp-bottom-gap, 18px));
+    --yamp-computed-more-info-icon-size: var(
+      --yamp-more-info-icon-size-fullscreen,
+      var(--yamp-more-info-icon-size, calc(var(--yamp-computed-bottom-icon-size, 30px) * 1.27))
+    );
+    padding: var(
+      --yamp-volume-row-padding-fullscreen,
+      var(--yamp-volume-row-padding, 14px 28px 20px 28px)
+    );
   }
 
   /* Remove flex:1 since we are using grid columns */
@@ -59,14 +86,18 @@ export const volumeProgressStyles = css`
     grid-column: 1;
     justify-self: start;
     justify-content: flex-start;
-    gap: 8px;
+    gap: var(--yamp-computed-bottom-gap);
   }
 
   .volume-right {
     grid-column: 3;
     justify-self: end;
     justify-content: flex-end;
-    gap: 8px;
+    gap: var(--yamp-computed-bottom-gap);
+  }
+
+  .volume-row .more-info-menu {
+    margin: 0;
   }
 
   .volume-center {
@@ -138,9 +169,13 @@ export const volumeProgressStyles = css`
     display: flex;
     align-items: center;
     justify-content: center;
-    transition: background-color var(--transition-normal);
-    min-width: 36px;
-    min-height: 36px;
+    transition:
+      background-color var(--transition-normal),
+      transform 0.12s ease;
+    min-width: var(--yamp-computed-bottom-btn-size, var(--yamp-bottom-button-size, 36px));
+    min-height: var(--yamp-computed-bottom-btn-size, var(--yamp-bottom-button-size, 36px));
+    width: var(--yamp-computed-bottom-btn-size, var(--yamp-bottom-button-size, 36px));
+    height: var(--yamp-computed-bottom-btn-size, var(--yamp-bottom-button-size, 36px));
     margin: 0;
   }
 
@@ -153,11 +188,11 @@ export const volumeProgressStyles = css`
   .volume-icon-btn ha-icon,
   .custom-bottom-action ha-icon,
   .vol-stepper .button ha-icon {
-    font-size: 22px;
-    --mdc-icon-size: 22px;
-    --ha-icon-size: 22px;
-    width: 22px;
-    height: 22px;
+    font-size: var(--yamp-computed-bottom-icon-size, var(--yamp-bottom-icon-size, 22px));
+    --mdc-icon-size: var(--yamp-computed-bottom-icon-size, var(--yamp-bottom-icon-size, 22px));
+    --ha-icon-size: var(--yamp-computed-bottom-icon-size, var(--yamp-bottom-icon-size, 22px));
+    width: var(--yamp-computed-bottom-icon-size, var(--yamp-bottom-icon-size, 22px));
+    height: var(--yamp-computed-bottom-icon-size, var(--yamp-bottom-icon-size, 22px));
     display: flex;
     align-items: center;
     justify-content: center;
@@ -165,10 +200,10 @@ export const volumeProgressStyles = css`
   }
 
   .volume-icon-btn.favorite-volume-btn {
-    width: 36px;
-    height: 36px;
-    min-width: 36px;
-    min-height: 36px;
+    width: var(--yamp-computed-bottom-btn-size, var(--yamp-bottom-button-size, 36px));
+    height: var(--yamp-computed-bottom-btn-size, var(--yamp-bottom-button-size, 36px));
+    min-width: var(--yamp-computed-bottom-btn-size, var(--yamp-bottom-button-size, 36px));
+    min-height: var(--yamp-computed-bottom-btn-size, var(--yamp-bottom-button-size, 36px));
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -177,10 +212,10 @@ export const volumeProgressStyles = css`
   }
 
   .volume-leading-placeholder {
-    width: 36px;
-    height: 36px;
-    min-width: 36px;
-    min-height: 36px;
+    width: var(--yamp-computed-bottom-btn-size, var(--yamp-bottom-button-size, 36px));
+    height: var(--yamp-computed-bottom-btn-size, var(--yamp-bottom-button-size, 36px));
+    min-width: var(--yamp-computed-bottom-btn-size, var(--yamp-bottom-button-size, 36px));
+    min-height: var(--yamp-computed-bottom-btn-size, var(--yamp-bottom-button-size, 36px));
     display: inline-flex;
     align-items: center;
     justify-content: center;
@@ -259,10 +294,10 @@ export const volumeProgressStyles = css`
   }
 
   .volume-placeholder {
-    width: 36px;
-    min-width: 36px;
-    min-height: 36px;
-    height: 36px;
+    width: var(--yamp-computed-bottom-btn-size, var(--yamp-bottom-button-size, 36px));
+    min-width: var(--yamp-computed-bottom-btn-size, var(--yamp-bottom-button-size, 36px));
+    min-height: var(--yamp-computed-bottom-btn-size, var(--yamp-bottom-button-size, 36px));
+    height: var(--yamp-computed-bottom-btn-size, var(--yamp-bottom-button-size, 36px));
     display: inline-flex;
     align-items: center;
     justify-content: center;
