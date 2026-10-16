@@ -6,8 +6,7 @@ export const menusSheetsStyles = css`
   .more-info-menu {
     display: flex;
     align-items: center;
-    margin-right: -4px;
-    margin-top: -5px;
+    margin: 0;
     z-index: ${Z_LAYERS.FLOATING_CONTROLS};
   }
 
@@ -39,15 +38,31 @@ export const menusSheetsStyles = css`
     border-radius: 50%;
   }
 
-  .more-info-btn ha-icon {
+  .more-info-btn ha-icon,
+  .more-info-icon {
     display: flex;
     align-items: center;
     justify-content: center;
-    font-size: var(--yamp-computed-bottom-icon-size, var(--yamp-bottom-icon-size, 22px));
-    --mdc-icon-size: var(--yamp-computed-bottom-icon-size, var(--yamp-bottom-icon-size, 22px));
-    --ha-icon-size: var(--yamp-computed-bottom-icon-size, var(--yamp-bottom-icon-size, 22px));
-    width: var(--yamp-computed-bottom-icon-size, var(--yamp-bottom-icon-size, 22px));
-    height: var(--yamp-computed-bottom-icon-size, var(--yamp-bottom-icon-size, 22px));
+    font-size: var(
+      --yamp-computed-more-info-icon-size,
+      var(--yamp-computed-bottom-icon-size, var(--yamp-bottom-icon-size, 22px))
+    );
+    --mdc-icon-size: var(
+      --yamp-computed-more-info-icon-size,
+      var(--yamp-computed-bottom-icon-size, var(--yamp-bottom-icon-size, 22px))
+    );
+    --ha-icon-size: var(
+      --yamp-computed-more-info-icon-size,
+      var(--yamp-computed-bottom-icon-size, var(--yamp-bottom-icon-size, 22px))
+    );
+    width: var(
+      --yamp-computed-more-info-icon-size,
+      var(--yamp-computed-bottom-icon-size, var(--yamp-bottom-icon-size, 22px))
+    );
+    height: var(
+      --yamp-computed-more-info-icon-size,
+      var(--yamp-computed-bottom-icon-size, var(--yamp-bottom-icon-size, 22px))
+    );
     line-height: 1;
     vertical-align: middle;
     position: relative;
@@ -56,41 +71,17 @@ export const menusSheetsStyles = css`
     transition: color var(--transition-normal, 0.2s);
   }
 
-  .dim-idle .more-info-btn ha-icon {
-    color: #fff;
-  }
-
-  .more-info-icon {
-    font-size: var(
-      --yamp-computed-more-info-icon-size,
-      var(--yamp-more-info-icon-size, calc(var(--yamp-computed-bottom-icon-size, 22px) * 1.27))
-    );
-    line-height: 1;
-    color: #fff;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    transition: color var(--transition-normal, 0.2s);
-  }
-
-  :host([fullscreen]) .more-info-icon {
-    font-size: var(
-      --yamp-computed-more-info-icon-size,
-      var(
-        --yamp-more-info-icon-size-fullscreen,
-        var(--yamp-more-info-icon-size, calc(var(--yamp-computed-bottom-icon-size, 30px) * 1.27))
-      )
-    );
-  }
-
+  .dim-idle .more-info-btn ha-icon,
   .dim-idle .more-info-icon {
     color: #fff;
   }
 
+  :host([data-disable-artwork-gradient="true"]) .more-info-btn ha-icon,
   :host([data-disable-artwork-gradient="true"]) .more-info-icon {
     color: var(--yamp-icon-color, var(--primary-text, #444));
   }
 
+  :host([data-disable-artwork-gradient="true"]) .dim-idle .more-info-btn ha-icon,
   :host([data-disable-artwork-gradient="true"]) .dim-idle .more-info-icon {
     color: var(--secondary-text, #9ea2a8);
   }

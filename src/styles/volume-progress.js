@@ -44,7 +44,7 @@ export const volumeProgressStyles = css`
     --yamp-computed-bottom-gap: var(--yamp-bottom-gap, 8px);
     --yamp-computed-more-info-icon-size: var(
       --yamp-more-info-icon-size,
-      calc(var(--yamp-computed-bottom-icon-size, 22px) * 1.27)
+      var(--yamp-computed-bottom-icon-size, 22px)
     );
     display: grid;
     grid-template-columns: minmax(min-content, 1fr) auto minmax(min-content, 1fr);
@@ -67,7 +67,7 @@ export const volumeProgressStyles = css`
     --yamp-computed-bottom-gap: var(--yamp-bottom-gap-fullscreen, var(--yamp-bottom-gap, 18px));
     --yamp-computed-more-info-icon-size: var(
       --yamp-more-info-icon-size-fullscreen,
-      var(--yamp-more-info-icon-size, calc(var(--yamp-computed-bottom-icon-size, 30px) * 1.27))
+      var(--yamp-more-info-icon-size, var(--yamp-computed-bottom-icon-size, 30px))
     );
     padding: var(
       --yamp-volume-row-padding-fullscreen,
@@ -187,6 +187,7 @@ export const volumeProgressStyles = css`
 
   .volume-icon-btn ha-icon,
   .custom-bottom-action ha-icon,
+  .more-info-btn ha-icon,
   .vol-stepper .button ha-icon {
     font-size: var(--yamp-computed-bottom-icon-size, var(--yamp-bottom-icon-size, 22px));
     --mdc-icon-size: var(--yamp-computed-bottom-icon-size, var(--yamp-bottom-icon-size, 22px));

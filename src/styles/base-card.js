@@ -65,7 +65,7 @@ export const baseCardStyles = css`
     --yamp-computed-bottom-gap: var(--yamp-bottom-gap, 8px);
     --yamp-computed-more-info-icon-size: var(
       --yamp-more-info-icon-size,
-      calc(var(--yamp-computed-bottom-icon-size, 22px) * 1.27)
+      var(--yamp-computed-bottom-icon-size, 22px)
     );
     --yamp-grouped-card-border: var(--yamp-overlay-divider, rgba(255, 255, 255, 0.2));
     --search-text-secondary: #bbb;
@@ -258,7 +258,7 @@ export const baseCardStyles = css`
     --yamp-computed-bottom-gap: var(--yamp-bottom-gap-fullscreen, var(--yamp-bottom-gap, 18px));
     --yamp-computed-more-info-icon-size: var(
       --yamp-more-info-icon-size-fullscreen,
-      var(--yamp-more-info-icon-size, calc(var(--yamp-computed-bottom-icon-size, 30px) * 1.27))
+      var(--yamp-more-info-icon-size, var(--yamp-computed-bottom-icon-size, 30px))
     );
   }
 
