@@ -39,6 +39,8 @@ describe("config-schema", () => {
       assert.equal(CARD_CONFIG_DEFAULTS.volume_step, 0.05);
       assert.equal(CARD_CONFIG_DEFAULTS.progress_bar_height, 6);
       assert.equal(CARD_CONFIG_DEFAULTS.hold_to_pin, false);
+      assert.equal(CARD_CONFIG_DEFAULTS.show_volume_overlay, false);
+      assert.equal(CARD_CONFIG_DEFAULTS.hold_title_for_volume, false);
       assert.equal(CARD_CONFIG_DEFAULTS.match_theme, false);
       assert.equal(CARD_CONFIG_DEFAULTS.show_album, true);
       assert.equal(CARD_CONFIG_DEFAULTS.full_screen, false);

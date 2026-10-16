@@ -243,6 +243,8 @@ export default {
         "Utilizar sempre a entidade Music Assistant emparelhada para o título da faixa, artista e arte, mesmo que a entidade primária esteja a ser reproduzida.",
       show_volume_overlay:
         "Exibe brevemente um indicador de volume grande sobre a arte quando o nível de volume muda.",
+      hold_title_for_volume:
+        "Mantenha pressionado o título da faixa para abrir a sobreposição de volume e ajustá-lo.",
       font_color_helper:
         "Personalize as cores do texto e dos ícones. Aceita hexadecimal, nomes CSS, rgba ou modelos (padrão: cor do tema).",
       queue_controls_style:
@@ -305,6 +307,7 @@ export default {
       show_idle_artwork_when_not_playing: "Mostrar imagem de repouso quando não reproduzindo",
       prefer_ma_metadata: "Preferir metadados do Music Assistant",
       show_volume_overlay: "Mostrar sobreposição de volume",
+      hold_title_for_volume: "Manter título pressionado para volume",
     },
     fields: {
       artwork_fit: "Ajuste",

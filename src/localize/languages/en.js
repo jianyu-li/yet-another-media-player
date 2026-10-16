@@ -261,6 +261,8 @@ export default {
         "Always use the paired Music Assistant entity for track title, artist, and artwork, even if the primary entity is playing.",
       show_volume_overlay:
         "Briefly display a large volume indicator over the artwork when the volume level changes.",
+      hold_title_for_volume:
+        "Press and hold the track title to open the volume overlay and adjust the volume.",
       font_color_helper:
         "Customize text and icon colors. Accepts hex, CSS names, rgba, or templates (default: theme color).",
     },
@@ -321,6 +323,7 @@ export default {
       show_idle_artwork_when_not_playing: "Show Idle Image When Not Playing",
       prefer_ma_metadata: "Prefer Music Assistant Metadata",
       show_volume_overlay: "Show Volume Overlay",
+      hold_title_for_volume: "Hold Track Title for Volume",
     },
     fields: {
       artwork_fit: "Artwork Fit",

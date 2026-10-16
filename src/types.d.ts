@@ -312,6 +312,8 @@ export interface YampCardConfig {
   dismiss_search_on_play?: boolean;
   disable_autofocus?: boolean;
   show_volume_overlay?: boolean;
+  hold_title_for_volume?: boolean;
+  hold_track_title_for_volume?: boolean;
   always_show_quick_group?: boolean;
   always_collapsed?: boolean;
   hide_menu_player?: boolean;
@@ -933,7 +935,9 @@ export interface YetAnotherMediaPlayerCard {
   searchController?: SearchController;
   _searchController?: SearchController;
   _volumeHoldController?: VolumeHoldController;
-  _canUseVolumeHold?: (allowMenuMode?: boolean) => boolean;
+  _canUseVolumeHold?: (allowMenuMode?: boolean, isTitle?: boolean) => boolean;
+  _holdTitleForVolume?: boolean;
+  _getEffectiveHoldTitleForVolume?: () => boolean;
   _applyVolumeLevel?: (newVol: number) => void;
   _aiRadioShowsAvailable?: boolean;
   _isFullScreen?: boolean;

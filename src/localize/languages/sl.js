@@ -239,6 +239,8 @@ export default {
         "Za naslov skladbe, izvajalca in grafiko vedno uporabi seznanjeno entiteto Music Assistant, tudi če se predvaja primarna entiteta.",
       show_volume_overlay:
         "Ob spremembi glasnosti za kratek čas prikaže velik indikator glasnosti čez naslovnico.",
+      hold_title_for_volume:
+        "Pritisnite in pridržite naslov skladbe, da odprete prekrivno ploščo za glasnost in prilagodite glasnost.",
       font_color_helper:
         "Prilagodite barve besedila in ikon. Sprejema šestnajstiško, imena CSS, rgba ali predloge (privzeto: barva teme).",
       queue_controls_style:
@@ -301,6 +303,7 @@ export default {
       show_idle_artwork_when_not_playing: "Prikaži sliko za nedejavnost, ko se ne predvaja",
       prefer_ma_metadata: "Prednost metapodatkom Music Assistant",
       show_volume_overlay: "Prikaži prekrivno ploščo za glasnost",
+      hold_title_for_volume: "Pridrži naslov skladbe za glasnost",
     },
     fields: {
       artwork_fit: "Prileganje grafike",

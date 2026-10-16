@@ -267,6 +267,8 @@ export default {
         "Gebruik altijd de gekoppelde Music Assistant-entiteit voor de tracktitel, artiest en artwork, zelfs als de primaire entiteit wordt afgespeeld.",
       show_volume_overlay:
         "Geef kort een grote volume-indicator weer over het artwork wanneer het volumeniveau verandert.",
+      hold_title_for_volume:
+        "Houd de titel van het nummer ingedrukt om de volume-overlay te openen en het volume aan te passen.",
       font_color_helper:
         "Pas tekst- en pictogramkleuren aan. Accepteert hex, CSS-namen, rgba of sjablonen (standaard: themakleur).",
       queue_controls_style:
@@ -329,6 +331,7 @@ export default {
       show_idle_artwork_when_not_playing: "Toon stand-by afbeelding wanneer niet afgespeeld",
       prefer_ma_metadata: "Voorkeur voor Music Assistant-metadata",
       show_volume_overlay: "Volume-overlay weergeven",
+      hold_title_for_volume: "Nummertitel ingedrukt houden voor volume",
     },
     fields: {
       artwork_fit: "Artwork Passend Maken",

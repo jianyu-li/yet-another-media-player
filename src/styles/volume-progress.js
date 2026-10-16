@@ -467,8 +467,9 @@ export const volumeProgressStyles = css`
     font-size: clamp(1.6rem, 8cqw, 2.5rem);
   }
 
-  /* Stepper press-and-hold volume overlay */
-  .vol-stepper-holdable {
+  /* Stepper and track title press-and-hold volume overlay */
+  .vol-stepper-holdable,
+  .track-title-holdable {
     touch-action: none;
     user-select: none;
     -webkit-user-select: none;

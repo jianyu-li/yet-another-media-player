@@ -83,6 +83,7 @@ Below you will find a list of all configuration options.
 | `idle_screen`              | choice       | No           | `default`   | Choose the idle experience: `default` keeps the artwork splash, `search` opens the search sheet immediately, `search-recently-played` jumps to the Recently Played view, and `search-next-up` opens the Next Up queue |
 | `dim_chips_on_idle`        | boolean      | No           | `true`      | Dim entity and action chips when the media player is idle                                       |
 | `always_show_quick_group` | boolean      | No           | `false`     | When `true`, Quick Grouping Mode will be active by default. You can still toggle it manually via double-tap. |
+| `hold_title_for_volume`    | boolean      | No           | `false`     | Allow pressing and holding the track title to open the full-card volume overlay and adjust volume |
 | `always_show_lyrics`      | boolean      | No           | `false`     | Automatically open the lyrics view when the page is refreshed |
 | `lyrics_mode`             | choice       | No           | `default`   | Choose the lyrics display mode: `default` (sync + highlight), `scroll` (sync + no highlight), or `text` (plain text) |
 | `lyrics_source`           | choice       | No           | `mass_lrclib` | Choose where to fetch lyrics: `mass_lrclib` (MA with LRCLIB fallback), `mass` (MA only), `lrclib` (LRCLIB only), or `lrclib_mass` (LRCLIB with MA fallback). Note: MA sources require [mass_queue](#native-synced-lyrics-mass_queue) |
@@ -278,6 +279,7 @@ You can override the global `volume_mode` and `volume_step` settings for specifi
 
 - `entity_volume_mode`: Can be set to `slider`, `stepper`, or `hidden`. If omitted, it falls back to the global `volume_mode`. In `stepper` mode, press and hold the stepper to open a full-card volume overlay, then drag up or down to adjust the volume.
 - `entity_volume_step`: The step size for the stepper (e.g., `0.05`). This is only applicable when the entity's effective volume mode is `stepper`. If omitted, it falls back to the global `volume_step`.
+- `hold_title_for_volume`: Can be set at the card level or per-entity (`true` or `false`, default: `false`). When enabled, press and hold the track title to open the full-card volume overlay and adjust the volume.
 
 ```yaml
 type: custom:yet-another-media-player
