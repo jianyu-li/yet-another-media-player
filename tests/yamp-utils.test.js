@@ -589,5 +589,37 @@ describe("yamp-utils & progress-bar helpers", () => {
       assert.equal(result.length, 1);
       assert.equal(result[0].entity_id, "button.kitchen_favorite_current_song");
     });
+
+    it("ignores disabled or missing-state button entries in hass.entities", () => {
+      const hass = mockHass({
+        states: {
+          "media_player.office": mockEntity({
+            entity_id: "media_player.office",
+            attributes: { friendly_name: "Office Speaker" },
+          }),
+          "button.office_active_favorite": mockEntity({
+            entity_id: "button.office_active_favorite",
+            attributes: { friendly_name: "Favorite Current Song" },
+          }),
+        },
+        entities: {
+          "media_player.office": { device_id: "dev_office" },
+          "button.office_disabled_favorite": {
+            device_id: "dev_office",
+            disabled_by: "user",
+          },
+          "button.office_missing_state_favorite": {
+            device_id: "dev_office",
+          },
+          "button.office_active_favorite": {
+            device_id: "dev_office",
+          },
+        },
+      });
+
+      const result = findAssociatedButtonEntities(hass, "media_player.office");
+      assert.equal(result.length, 1);
+      assert.equal(result[0].entity_id, "button.office_active_favorite");
+    });
   });
 });

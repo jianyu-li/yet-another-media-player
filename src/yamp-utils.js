@@ -347,81 +347,102 @@ export function findAssociatedButtonEntities(hass, maEntityId) {
   if (!maEntity) return [];
 
   const reg = hass.entities;
-  if (reg && typeof reg === "object" && Object.keys(reg).length > 0) {
+  if (reg && typeof reg === "object") {
     let cacheForRegistry = associatedButtonsRegistryCache.get(reg);
-    if (!cacheForRegistry) {
-      cacheForRegistry = new Map();
-      associatedButtonsRegistryCache.set(reg, cacheForRegistry);
-    }
-    if (cacheForRegistry.has(maEntityId)) {
+    if (cacheForRegistry?.has(maEntityId)) {
       return cacheForRegistry.get(maEntityId);
     }
 
-    const sameDeviceButtons = [];
-    const entityIdMatchButtons = [];
-    const nameMatchButtons = [];
-
-    const maDeviceId = reg[maEntityId]?.device_id || maEntity.attributes?.device_id || null;
-    const maDisplayName = getEntityName(hass, maEntity) || maEntityId;
-    const maDisplayNameLower = maDisplayName.toLowerCase();
-    const maSuffix = maEntityId.includes(".") ? maEntityId.split(".")[1].toLowerCase() : "";
-
-    for (const entityId in reg) {
-      if (!entityId.startsWith("button.")) continue;
-
-      const regEntry = reg[entityId];
-      const buttonDeviceId = regEntry?.device_id;
-
-      // 1. Same device matching (most reliable & precise)
-      if (maDeviceId && buttonDeviceId && buttonDeviceId === maDeviceId) {
-        const state = hass.states[entityId];
-        const buttonDisplayName =
-          (state ? getEntityName(hass, state) : null) || regEntry?.name || entityId;
-        sameDeviceButtons.push({
-          entity_id: entityId,
-          friendly_name: buttonDisplayName,
-          device_class: state?.attributes?.device_class || regEntry?.device_class,
-          reason: "same_device",
-        });
-        continue;
-      }
-
-      // 2. Entity ID match (e.g., button.amzn_echo_show_5_favorite for media_player.amzn_echo_show_5)
-      if (maSuffix && entityId.toLowerCase().includes(maSuffix)) {
-        const state = hass.states[entityId];
-        const buttonDisplayName =
-          (state ? getEntityName(hass, state) : null) || regEntry?.name || entityId;
-        entityIdMatchButtons.push({
-          entity_id: entityId,
-          friendly_name: buttonDisplayName,
-          device_class: state?.attributes?.device_class || regEntry?.device_class,
-          reason: "entity_id_match",
-        });
-        continue;
-      }
-
-      // 3. Name similarity match
-      const state = hass.states[entityId];
-      const buttonDisplayName = (state ? getEntityName(hass, state) : null) || regEntry?.name || "";
-      if (buttonDisplayName) {
-        const btnNameLower = buttonDisplayName.toLowerCase();
-        if (
-          btnNameLower.includes(maDisplayNameLower) ||
-          maDisplayNameLower.includes(btnNameLower)
-        ) {
-          nameMatchButtons.push({
-            entity_id: entityId,
-            friendly_name: buttonDisplayName,
-            device_class: state?.attributes?.device_class || regEntry?.device_class,
-            reason: "name_similarity",
-          });
-        }
-      }
+    let hasRegistryEntries = false;
+    for (const _k in reg) {
+      hasRegistryEntries = true;
+      break;
     }
 
-    const buttonEntities = [...sameDeviceButtons, ...entityIdMatchButtons, ...nameMatchButtons];
-    cacheForRegistry.set(maEntityId, buttonEntities);
-    return buttonEntities;
+    if (hasRegistryEntries) {
+      if (!cacheForRegistry) {
+        cacheForRegistry = new Map();
+        associatedButtonsRegistryCache.set(reg, cacheForRegistry);
+      }
+
+      const sameDeviceButtons = [];
+      const entityIdMatchButtons = [];
+      const nameMatchButtons = [];
+
+      const maDeviceId = reg[maEntityId]?.device_id || maEntity.attributes?.device_id || null;
+      const maDisplayName = getEntityName(hass, maEntity) || maEntityId;
+      const maDisplayNameLower = maDisplayName.toLowerCase();
+      const maSuffix = maEntityId.includes(".") ? maEntityId.split(".")[1].toLowerCase() : "";
+
+      for (const entityId in reg) {
+        if (!entityId.startsWith("button.")) continue;
+
+        const regEntry = reg[entityId];
+        if (regEntry?.disabled_by) continue;
+        const buttonDeviceId = regEntry?.device_id;
+
+        // 1. Same device matching (most reliable & precise)
+        if (maDeviceId && buttonDeviceId && buttonDeviceId === maDeviceId) {
+          const state = hass.states[entityId];
+          if (!state) continue;
+          const buttonDisplayName = getEntityName(hass, state) || regEntry?.name || entityId;
+          sameDeviceButtons.push({
+            entity_id: entityId,
+            friendly_name: buttonDisplayName,
+            device_class: state.attributes?.device_class || regEntry?.device_class,
+            reason: "same_device",
+          });
+          continue;
+        }
+
+        // 2. Entity ID match (e.g., button.amzn_echo_show_5_favorite for media_player.amzn_echo_show_5)
+        if (maSuffix && entityId.toLowerCase().includes(maSuffix)) {
+          const state = hass.states[entityId];
+          if (!state) continue;
+          const buttonDisplayName = getEntityName(hass, state) || regEntry?.name || entityId;
+          entityIdMatchButtons.push({
+            entity_id: entityId,
+            friendly_name: buttonDisplayName,
+            device_class: state.attributes?.device_class || regEntry?.device_class,
+            reason: "entity_id_match",
+          });
+          continue;
+        }
+
+        // 3. Name similarity match
+        const regName = regEntry?.name || regEntry?.original_name || "";
+        if (regName) {
+          const regNameLower = regName.toLowerCase();
+          if (
+            !regNameLower.includes(maDisplayNameLower) &&
+            !maDisplayNameLower.includes(regNameLower)
+          ) {
+            continue;
+          }
+        }
+        const state = hass.states[entityId];
+        if (!state) continue;
+        const buttonDisplayName = getEntityName(hass, state) || regName || "";
+        if (buttonDisplayName) {
+          const btnNameLower = buttonDisplayName.toLowerCase();
+          if (
+            btnNameLower.includes(maDisplayNameLower) ||
+            maDisplayNameLower.includes(btnNameLower)
+          ) {
+            nameMatchButtons.push({
+              entity_id: entityId,
+              friendly_name: buttonDisplayName,
+              device_class: state.attributes?.device_class || regEntry?.device_class,
+              reason: "name_similarity",
+            });
+          }
+        }
+      }
+
+      const buttonEntities = [...sameDeviceButtons, ...entityIdMatchButtons, ...nameMatchButtons];
+      cacheForRegistry.set(maEntityId, buttonEntities);
+      return buttonEntities;
+    }
   }
 
   // Fallback when hass.entities is not available (e.g. test environments without registry)

@@ -303,9 +303,10 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     if (!this._favoriteButtonCache) {
       this._favoriteButtonCache = new Map();
     }
-    if (this.hass?.entities && this._lastEntitiesRef !== this.hass.entities) {
+    const currentEntities = this.hass?.entities ?? null;
+    if (this._lastEntitiesRef !== currentEntities) {
       this._favoriteButtonCache.clear();
-      this._lastEntitiesRef = this.hass.entities;
+      this._lastEntitiesRef = currentEntities;
     }
 
     if (this._favoriteButtonCache.has(activeEntityId)) {
@@ -472,12 +473,13 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const row = this.renderRoot?.querySelector('.controls-row');
     if (!row) return true; // Default to show if can't measure
     const minWide = row.offsetWidth > 480;
-    const showFavorite = !this._getHiddenControlsForCurrentEntity().favorite && !!this._getFavoriteButtonEntity();
+    const hiddenControls = this._getHiddenControlsForCurrentEntity();
+    const showFavorite = !hiddenControls.favorite && !!this._getFavoriteButtonEntity();
     const controls = countMainControls(
       stateObj,
       (s, f) => this._supportsFeature(s, f),
       showFavorite,
-      this._getHiddenControlsForCurrentEntity(),
+      hiddenControls,
       true,
       this._controlLayout
     );
