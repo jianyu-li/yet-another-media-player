@@ -11,6 +11,7 @@ import {
   isMusicAssistantEntity,
   getMusicAssistantState,
   getActionPlacement,
+  findAssociatedButtonEntities,
 } from "../src/yamp-utils.js";
 /**
  * Helper to create a partial HassEntity mock.
@@ -387,6 +388,206 @@ describe("yamp-utils & progress-bar helpers", () => {
       assert.equal(getActionPlacement({ in_menu: "menu" }, 0), "menu");
       assert.equal(getActionPlacement({ in_menu: false }, 0), "chip");
       assert.equal(getActionPlacement({}, 0), "chip");
+    });
+  });
+
+  describe("findAssociatedButtonEntities", () => {
+    it("returns empty array for invalid inputs", () => {
+      assert.deepEqual(findAssociatedButtonEntities(null, "media_player.test"), []);
+      assert.deepEqual(findAssociatedButtonEntities({}, "media_player.test"), []);
+      assert.deepEqual(findAssociatedButtonEntities({ states: {} }, ""), []);
+      assert.deepEqual(
+        findAssociatedButtonEntities({ states: {} }, "media_player.nonexistent"),
+        []
+      );
+    });
+
+    it("matches associated button by same_device using hass.entities registry", () => {
+      const hass = mockHass({
+        states: {
+          "media_player.living_room": mockEntity({
+            entity_id: "media_player.living_room",
+            attributes: { friendly_name: "Living Room Speaker" },
+          }),
+          "button.living_room_favorite_current_song": mockEntity({
+            entity_id: "button.living_room_favorite_current_song",
+            attributes: { friendly_name: "Favorite Current Song" },
+          }),
+        },
+        entities: {
+          "media_player.living_room": { device_id: "dev_123" },
+          "button.living_room_favorite_current_song": { device_id: "dev_123" },
+        },
+      });
+
+      const result = findAssociatedButtonEntities(hass, "media_player.living_room");
+      assert.equal(result.length, 1);
+      assert.equal(result[0].entity_id, "button.living_room_favorite_current_song");
+      assert.equal(result[0].reason, "same_device");
+    });
+
+    it("matches button by entity_id_match when device_id is not shared", () => {
+      const hass = mockHass({
+        states: {
+          "media_player.bedroom_speaker": mockEntity({
+            entity_id: "media_player.bedroom_speaker",
+            attributes: { friendly_name: "Bedroom" },
+          }),
+          "button.bedroom_speaker_favorite": mockEntity({
+            entity_id: "button.bedroom_speaker_favorite",
+            attributes: { friendly_name: "Favorite" },
+          }),
+        },
+        entities: {
+          "media_player.bedroom_speaker": { device_id: "dev_bed" },
+          "button.bedroom_speaker_favorite": { device_id: "dev_other" },
+        },
+      });
+
+      const result = findAssociatedButtonEntities(hass, "media_player.bedroom_speaker");
+      assert.equal(result.length, 1);
+      assert.equal(result[0].entity_id, "button.bedroom_speaker_favorite");
+      assert.equal(result[0].reason, "entity_id_match");
+    });
+
+    it("matches button by name_similarity when entity_id differs", () => {
+      const hass = mockHass({
+        states: {
+          "media_player.den": mockEntity({
+            entity_id: "media_player.den",
+            attributes: { friendly_name: "Den Speaker" },
+          }),
+          "button.custom_fav": mockEntity({
+            entity_id: "button.custom_fav",
+            attributes: { friendly_name: "Den Speaker Favorite" },
+          }),
+        },
+        entities: {
+          "media_player.den": { device_id: "dev_den" },
+          "button.custom_fav": { device_id: "dev_virtual" },
+        },
+      });
+
+      const result = findAssociatedButtonEntities(hass, "media_player.den");
+      assert.equal(result.length, 1);
+      assert.equal(result[0].entity_id, "button.custom_fav");
+      assert.equal(result[0].reason, "name_similarity");
+    });
+
+    it("prioritizes same_device match over entity_id or name matches", () => {
+      const hass = mockHass({
+        states: {
+          "media_player.patio": mockEntity({
+            entity_id: "media_player.patio",
+            attributes: { friendly_name: "Patio" },
+          }),
+          "button.patio_same_device": mockEntity({
+            entity_id: "button.patio_same_device",
+            attributes: { friendly_name: "Patio Favorite (Device)" },
+          }),
+          "button.patio_external": mockEntity({
+            entity_id: "button.patio_external",
+            attributes: { friendly_name: "Patio Favorite (External)" },
+          }),
+        },
+        entities: {
+          "media_player.patio": { device_id: "dev_patio" },
+          "button.patio_same_device": { device_id: "dev_patio" },
+          "button.patio_external": { device_id: "dev_external" },
+        },
+      });
+
+      const result = findAssociatedButtonEntities(hass, "media_player.patio");
+      assert.ok(result.length >= 2);
+      assert.equal(result[0].entity_id, "button.patio_same_device");
+      assert.equal(result[0].reason, "same_device");
+    });
+
+    it("does not enumerate hass.states (protecting Kiosk Satellite proxy) when hass.entities is present", () => {
+      let ownKeysTrapTriggered = false;
+      const rawStates = {
+        "media_player.kiosk_speaker": mockEntity({
+          entity_id: "media_player.kiosk_speaker",
+          attributes: { friendly_name: "Kiosk Speaker" },
+        }),
+        "button.kiosk_speaker_fav": mockEntity({
+          entity_id: "button.kiosk_speaker_fav",
+          attributes: { friendly_name: "Kiosk Speaker Favorite" },
+        }),
+        "sensor.temp": mockEntity({ entity_id: "sensor.temp" }),
+        "light.kitchen": mockEntity({ entity_id: "light.kitchen" }),
+      };
+
+      // Wrap states in Proxy mimicking Kiosk Satellite's update filter proxy
+      const proxiedStates = new Proxy(rawStates, {
+        ownKeys(target) {
+          ownKeysTrapTriggered = true;
+          return Reflect.ownKeys(target);
+        },
+      });
+
+      const hass = mockHass({
+        states: proxiedStates,
+        entities: {
+          "media_player.kiosk_speaker": { device_id: "dev_kiosk" },
+          "button.kiosk_speaker_fav": { device_id: "dev_kiosk" },
+        },
+      });
+
+      const result = findAssociatedButtonEntities(hass, "media_player.kiosk_speaker");
+      assert.equal(result.length, 1);
+      assert.equal(result[0].entity_id, "button.kiosk_speaker_fav");
+      assert.equal(ownKeysTrapTriggered, false, "Kiosk Satellite proxy ownKeys trap was tripped!");
+    });
+
+    it("caches result for identical hass.entities reference", () => {
+      const hass = mockHass({
+        states: {
+          "media_player.cached_speaker": mockEntity({
+            entity_id: "media_player.cached_speaker",
+            attributes: { friendly_name: "Cached Speaker" },
+          }),
+          "button.cached_speaker_fav": mockEntity({
+            entity_id: "button.cached_speaker_fav",
+            attributes: { friendly_name: "Favorite" },
+          }),
+        },
+        entities: {
+          "media_player.cached_speaker": { device_id: "dev_cache" },
+          "button.cached_speaker_fav": { device_id: "dev_cache" },
+        },
+      });
+
+      const firstCall = findAssociatedButtonEntities(hass, "media_player.cached_speaker");
+      const secondCall = findAssociatedButtonEntities(hass, "media_player.cached_speaker");
+      assert.equal(
+        firstCall,
+        secondCall,
+        "Second call should return the exact cached array instance"
+      );
+    });
+
+    it("falls back to probing candidates or hass.states when hass.entities is undefined", () => {
+      const hass = mockHass({
+        states: {
+          "media_player.kitchen": mockEntity({
+            entity_id: "media_player.kitchen",
+            attributes: { friendly_name: "Kitchen", device_id: "dev_fallback" },
+          }),
+          "button.kitchen_favorite_current_song": mockEntity({
+            entity_id: "button.kitchen_favorite_current_song",
+            attributes: {
+              friendly_name: "Kitchen Favorite Current Song",
+              device_id: "dev_fallback",
+            },
+          }),
+        },
+        // No entities registry
+      });
+
+      const result = findAssociatedButtonEntities(hass, "media_player.kitchen");
+      assert.equal(result.length, 1);
+      assert.equal(result[0].entity_id, "button.kitchen_favorite_current_song");
     });
   });
 });

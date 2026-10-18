@@ -629,4 +629,98 @@ describe("Low-End Device Reactivity & shouldUpdate Optimizations", () => {
       assert.deepStrictEqual(card._sessionEntities, ["media_player.existing_entity"]);
     });
   });
+
+  describe("Favorite Button Discovery & Caching", () => {
+    it("caches favorite button entity on card instance and avoids redundant lookups", () => {
+      const card = new YetAnotherMediaPlayerCard();
+      card.setConfig({
+        entities: ["media_player.living_room"],
+      });
+
+      card.hass = {
+        states: {
+          "media_player.living_room": {
+            entity_id: "media_player.living_room",
+            state: "playing",
+            attributes: { friendly_name: "Living Room" },
+          },
+          "button.living_room_favorite": {
+            entity_id: "button.living_room_favorite",
+            state: "2026-10-18T12:00:00Z",
+            attributes: { friendly_name: "Favorite" },
+          },
+        },
+        entities: {
+          "media_player.living_room": { device_id: "dev_lr" },
+          "button.living_room_favorite": { device_id: "dev_lr" },
+        },
+      };
+
+      let discoveryCallCount = 0;
+      const originalFind = card._findAssociatedButtonEntities;
+      card._findAssociatedButtonEntities = function (id) {
+        discoveryCallCount++;
+        return originalFind.call(this, id);
+      };
+
+      const firstCall = card._getFavoriteButtonEntity();
+      assert.strictEqual(firstCall, "button.living_room_favorite");
+      assert.strictEqual(discoveryCallCount, 1);
+
+      // Second call should return from _favoriteButtonCache without running discovery
+      const secondCall = card._getFavoriteButtonEntity();
+      assert.strictEqual(secondCall, "button.living_room_favorite");
+      assert.strictEqual(discoveryCallCount, 1);
+      assert.strictEqual(
+        card._favoriteButtonCache.get("media_player.living_room"),
+        "button.living_room_favorite"
+      );
+    });
+
+    it("clears favorite button cache when hass.entities reference changes", () => {
+      const card = new YetAnotherMediaPlayerCard();
+      card.setConfig({ entities: ["media_player.living_room"] });
+
+      const initialEntities = {
+        "media_player.living_room": { device_id: "dev_1" },
+        "button.living_room_favorite": { device_id: "dev_1" },
+      };
+
+      card.hass = {
+        states: {
+          "media_player.living_room": { entity_id: "media_player.living_room", attributes: {} },
+          "button.living_room_favorite": {
+            entity_id: "button.living_room_favorite",
+            attributes: {},
+          },
+          "button.new_favorite": { entity_id: "button.new_favorite", attributes: {} },
+        },
+        entities: initialEntities,
+      };
+
+      card._getFavoriteButtonEntity();
+      assert.strictEqual(card._favoriteButtonCache.size, 1);
+
+      // Simulating entity registry change (new reference)
+      card.hass = {
+        ...card.hass,
+        entities: {
+          "media_player.living_room": { device_id: "dev_2" },
+          "button.new_favorite": { device_id: "dev_2" },
+        },
+      };
+
+      const result = card._getFavoriteButtonEntity();
+      assert.strictEqual(result, "button.new_favorite");
+    });
+
+    it("clears favorite button cache on setConfig", () => {
+      const card = new YetAnotherMediaPlayerCard();
+      card.setConfig({ entities: ["media_player.living_room"] });
+      card._favoriteButtonCache = new Map([["media_player.living_room", "button.favorite"]]);
+
+      card.setConfig({ entities: ["media_player.bedroom"] });
+      assert.strictEqual(card._favoriteButtonCache.size, 0);
+    });
+  });
 });

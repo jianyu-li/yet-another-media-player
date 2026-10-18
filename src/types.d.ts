@@ -965,6 +965,8 @@ export interface YetAnotherMediaPlayerCard {
   _pruneMissingSessionEntities?: () => void;
   _actionHelperEntities?: string[] | null;
   _jsTemplateEntities?: string[] | null;
+  _favoriteButtonCache?: Map<string, string | null> | null;
+  _lastEntitiesRef?: Record<string, EntityRegistryEntry> | null;
   _handleVisibilityChangeBound?: () => void;
   _getHiddenMenuOptions?: (idx?: number) => string[];
   _isMenuOptionHidden?: (optionKey: string, idx?: number) => boolean;

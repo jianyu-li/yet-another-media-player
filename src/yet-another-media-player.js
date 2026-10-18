@@ -300,6 +300,22 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       return null;
     }
 
+    if (!this._favoriteButtonCache) {
+      this._favoriteButtonCache = new Map();
+    }
+    if (this.hass?.entities && this._lastEntitiesRef !== this.hass.entities) {
+      this._favoriteButtonCache.clear();
+      this._lastEntitiesRef = this.hass.entities;
+    }
+
+    if (this._favoriteButtonCache.has(activeEntityId)) {
+      const cachedId = this._favoriteButtonCache.get(activeEntityId);
+      if (!cachedId || this.hass?.states?.[cachedId]) {
+        return cachedId;
+      }
+      this._favoriteButtonCache.delete(activeEntityId);
+    }
+
     // Find a favorite button associated with this entity
     const buttonEntities = this._findAssociatedButtonEntities(activeEntityId);
     const favoriteButton = buttonEntities.find(btn =>
@@ -308,7 +324,9 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       btn.device_class === 'favorite' ||
       btn.entity_id.toLowerCase().includes('favorite')
     );
-    return favoriteButton?.entity_id || null;
+    const result = favoriteButton?.entity_id || null;
+    this._favoriteButtonCache.set(activeEntityId, result);
+    return result;
   }
 
   // Get the current Music Assistant state
@@ -454,7 +472,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const row = this.renderRoot?.querySelector('.controls-row');
     if (!row) return true; // Default to show if can't measure
     const minWide = row.offsetWidth > 480;
-    const showFavorite = !!this._getFavoriteButtonEntity() && !this._getHiddenControlsForCurrentEntity().favorite;
+    const showFavorite = !this._getHiddenControlsForCurrentEntity().favorite && !!this._getFavoriteButtonEntity();
     const controls = countMainControls(
       stateObj,
       (s, f) => this._supportsFeature(s, f),
@@ -978,6 +996,10 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._actionHelperEntities = null;
     /** @type {string[] | null} */
     this._jsTemplateEntities = null;
+    /** @type {Map<string, string | null> | null} */
+    this._favoriteButtonCache = null;
+    /** @type {Record<string, any> | null} */
+    this._lastEntitiesRef = null;
     this._mediaSessionOverride = null;
     this._mediaSessionUpdatePending = false;
     this._mediaSessionManager = new YampMediaSessionManager(this);
@@ -2848,6 +2870,8 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
   setConfig(rawConfig) {
     this._isEditorPreviewCached = undefined;
+    this._favoriteButtonCache?.clear();
+    this._lastEntitiesRef = null;
     if (!rawConfig.entities || !Array.isArray(rawConfig.entities) || rawConfig.entities.length === 0) {
       throw new Error("You must define at least one media_player entity.");
     }
@@ -6434,7 +6458,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     if (!stateObj) return html`<div class="details">${localize('common.not_found')}</div>`;
 
     const currentHiddenControls = this._getHiddenControlsForCurrentEntity();
-    const showFavoriteButton = !!this._getFavoriteButtonEntity() && !currentHiddenControls.favorite;
+    const showFavoriteButton = !currentHiddenControls.favorite && !!this._getFavoriteButtonEntity();
     const favoriteActive = this._isCurrentTrackFavorited();
     const powerSupported = !currentHiddenControls.power && (this._supportsFeature(stateObj, SUPPORT_TURN_OFF) || this._supportsFeature(stateObj, SUPPORT_TURN_ON));
     const showModernPowerButton = this._controlLayout === "modern" && powerSupported;

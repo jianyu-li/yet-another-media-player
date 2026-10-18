@@ -296,9 +296,9 @@ export class ArtworkController {
    */
   getCollapsedArtworkStyle() {
     if (this.host?._alwaysCollapsed) {
+      const hiddenControls = this.host._getHiddenControlsForCurrentEntity?.();
       const showFavorite =
-        Boolean(this.host._getFavoriteButtonEntity?.()) &&
-        !this.host._getHiddenControlsForCurrentEntity?.()?.favorite;
+        !hiddenControls?.favorite && Boolean(this.host._getFavoriteButtonEntity?.());
       const controls = countMainControls(
         this.host.currentActivePlaybackStateObj,
         (s, f) => this.host._supportsFeature?.(s, f) ?? false,

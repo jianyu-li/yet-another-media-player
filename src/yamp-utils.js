@@ -331,8 +331,11 @@ export function evaluateJsTemplate(templateStr, hass, context = {}, compiledCach
   }
 }
 
+// WeakMap cache keyed by hass.entities to avoid recomputing for identical registry snapshots
+const associatedButtonsRegistryCache = new WeakMap();
+
 /**
- * Find button entities associated with a Music Assistant entity
+ * Find button entities associated with a Music Assistant or media player entity
  * @param {Object} hass - Home Assistant object
  * @param {string} maEntityId - Music Assistant entity ID
  * @returns {Array} Array of associated button entities
@@ -340,22 +343,125 @@ export function evaluateJsTemplate(templateStr, hass, context = {}, compiledCach
 export function findAssociatedButtonEntities(hass, maEntityId) {
   if (!hass?.states || !maEntityId) return [];
 
-  const buttonEntities = [];
   const maEntity = hass.states[maEntityId];
   if (!maEntity) return [];
 
-  // Look for button entities that might be associated with this MA entity
-  // Common patterns: device_id matching, friendly_name similarity, or device_class
+  const reg = hass.entities;
+  if (reg && typeof reg === "object" && Object.keys(reg).length > 0) {
+    let cacheForRegistry = associatedButtonsRegistryCache.get(reg);
+    if (!cacheForRegistry) {
+      cacheForRegistry = new Map();
+      associatedButtonsRegistryCache.set(reg, cacheForRegistry);
+    }
+    if (cacheForRegistry.has(maEntityId)) {
+      return cacheForRegistry.get(maEntityId);
+    }
+
+    const sameDeviceButtons = [];
+    const entityIdMatchButtons = [];
+    const nameMatchButtons = [];
+
+    const maDeviceId = reg[maEntityId]?.device_id || maEntity.attributes?.device_id || null;
+    const maDisplayName = getEntityName(hass, maEntity) || maEntityId;
+    const maDisplayNameLower = maDisplayName.toLowerCase();
+    const maSuffix = maEntityId.includes(".") ? maEntityId.split(".")[1].toLowerCase() : "";
+
+    for (const entityId in reg) {
+      if (!entityId.startsWith("button.")) continue;
+
+      const regEntry = reg[entityId];
+      const buttonDeviceId = regEntry?.device_id;
+
+      // 1. Same device matching (most reliable & precise)
+      if (maDeviceId && buttonDeviceId && buttonDeviceId === maDeviceId) {
+        const state = hass.states[entityId];
+        const buttonDisplayName =
+          (state ? getEntityName(hass, state) : null) || regEntry?.name || entityId;
+        sameDeviceButtons.push({
+          entity_id: entityId,
+          friendly_name: buttonDisplayName,
+          device_class: state?.attributes?.device_class || regEntry?.device_class,
+          reason: "same_device",
+        });
+        continue;
+      }
+
+      // 2. Entity ID match (e.g., button.amzn_echo_show_5_favorite for media_player.amzn_echo_show_5)
+      if (maSuffix && entityId.toLowerCase().includes(maSuffix)) {
+        const state = hass.states[entityId];
+        const buttonDisplayName =
+          (state ? getEntityName(hass, state) : null) || regEntry?.name || entityId;
+        entityIdMatchButtons.push({
+          entity_id: entityId,
+          friendly_name: buttonDisplayName,
+          device_class: state?.attributes?.device_class || regEntry?.device_class,
+          reason: "entity_id_match",
+        });
+        continue;
+      }
+
+      // 3. Name similarity match
+      const state = hass.states[entityId];
+      const buttonDisplayName = (state ? getEntityName(hass, state) : null) || regEntry?.name || "";
+      if (buttonDisplayName) {
+        const btnNameLower = buttonDisplayName.toLowerCase();
+        if (
+          btnNameLower.includes(maDisplayNameLower) ||
+          maDisplayNameLower.includes(btnNameLower)
+        ) {
+          nameMatchButtons.push({
+            entity_id: entityId,
+            friendly_name: buttonDisplayName,
+            device_class: state?.attributes?.device_class || regEntry?.device_class,
+            reason: "name_similarity",
+          });
+        }
+      }
+    }
+
+    const buttonEntities = [...sameDeviceButtons, ...entityIdMatchButtons, ...nameMatchButtons];
+    cacheForRegistry.set(maEntityId, buttonEntities);
+    return buttonEntities;
+  }
+
+  // Fallback when hass.entities is not available (e.g. test environments without registry)
+  // First probe deterministic button candidate IDs directly on hass.states to avoid enumerating keys
+  const maSuffix = maEntityId.includes(".") ? maEntityId.split(".")[1].toLowerCase() : "";
+  const directCandidates = [
+    `button.${maSuffix}_favorite_current_song`,
+    `button.${maSuffix}_favorite`,
+    `button.${maSuffix}_preset_favorite`,
+  ];
+
+  const directMatches = [];
+  for (const candidateId of directCandidates) {
+    const state = hass.states[candidateId];
+    if (state && state.attributes) {
+      const buttonDisplayName = getEntityName(hass, state) || candidateId;
+      directMatches.push({
+        entity_id: candidateId,
+        friendly_name: buttonDisplayName,
+        device_class: state.attributes.device_class,
+        reason: "entity_id_match",
+      });
+    }
+  }
+
+  if (directMatches.length > 0) {
+    return directMatches;
+  }
+
+  // Final fallback: scan hass.states
+  const buttonEntities = [];
   const maDeviceId = maEntity.attributes?.device_id;
   const maDisplayName = getEntityName(hass, maEntity) || maEntityId;
+  const maDisplayNameLower = maDisplayName.toLowerCase();
 
-  // Search through all button entities
   for (const [entityId, state] of Object.entries(hass.states)) {
-    if (entityId.startsWith("button.") && state.attributes) {
+    if (entityId.startsWith("button.") && state?.attributes) {
       const buttonDeviceId = state.attributes.device_id;
       const buttonDisplayName = getEntityName(hass, state) || entityId;
 
-      // Check if this button is associated with the same device
       if (maDeviceId && buttonDeviceId === maDeviceId) {
         buttonEntities.push({
           entity_id: entityId,
@@ -363,26 +469,22 @@ export function findAssociatedButtonEntities(hass, maEntityId) {
           device_class: state.attributes.device_class,
           reason: "same_device",
         });
-      }
-      // Check for name similarity (e.g., "HomePod Favorite" button for "HomePod" MA entity)
-      else if (
-        buttonDisplayName.toLowerCase().includes(maDisplayName.toLowerCase()) ||
-        maDisplayName.toLowerCase().includes(buttonDisplayName.toLowerCase())
+      } else if (maSuffix && entityId.toLowerCase().includes(maSuffix)) {
+        buttonEntities.push({
+          entity_id: entityId,
+          friendly_name: buttonDisplayName,
+          device_class: state.attributes.device_class,
+          reason: "entity_id_match",
+        });
+      } else if (
+        buttonDisplayName.toLowerCase().includes(maDisplayNameLower) ||
+        maDisplayNameLower.includes(buttonDisplayName.toLowerCase())
       ) {
         buttonEntities.push({
           entity_id: entityId,
           friendly_name: buttonDisplayName,
           device_class: state.attributes.device_class,
           reason: "name_similarity",
-        });
-      }
-      // Check for entity ID match (e.g., button.amzn_echo_show_5_favorite for media_player.amzn_echo_show_5)
-      else if (entityId.toLowerCase().includes(maEntityId.split(".")[1].toLowerCase())) {
-        buttonEntities.push({
-          entity_id: entityId,
-          friendly_name: buttonDisplayName,
-          device_class: state.attributes.device_class,
-          reason: "entity_id_match",
         });
       }
     }
