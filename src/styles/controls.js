@@ -296,7 +296,7 @@ export const controlsStyles = css`
     justify-self: center;
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 21px;
   }
 
   .persistent-volume-stepper {
