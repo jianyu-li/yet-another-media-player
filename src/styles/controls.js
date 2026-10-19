@@ -391,7 +391,14 @@ export const controlsStyles = css`
   }
 
   .persistent-control-btn ha-icon {
-    font-size: 16px;
+    font-size: var(--yamp-computed-bottom-icon-size, var(--yamp-bottom-icon-size, 22px));
+    --mdc-icon-size: var(--yamp-computed-bottom-icon-size, var(--yamp-bottom-icon-size, 22px));
+    --ha-icon-size: var(--yamp-computed-bottom-icon-size, var(--yamp-bottom-icon-size, 22px));
+    width: var(--yamp-computed-bottom-icon-size, var(--yamp-bottom-icon-size, 22px));
+    height: var(--yamp-computed-bottom-icon-size, var(--yamp-bottom-icon-size, 22px));
+    display: flex;
+    align-items: center;
+    justify-content: center;
     color: inherit;
   }
 `;
