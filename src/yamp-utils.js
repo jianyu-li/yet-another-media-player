@@ -935,9 +935,117 @@ export function applyHostnameToUrl(url, hostname) {
   return finalUrl;
 }
 
+const secureThumbnailCache = new Map();
+const inFlightThumbnailRequests = new Map();
+const MAX_SECURE_THUMBNAIL_CACHE_SIZE = 500;
+
+/**
+ * Checks if a URL is an insecure http:// URL while running in an https: browser context.
+ * Returns false in SSR/Node environments (when window is undefined) or when window.location.protocol is not "https:".
+ * @param {string | null | undefined} [url]
+ * @returns {boolean}
+ */
+export function isInsecureHttpUrlOnHttps(url) {
+  if (!url || typeof url !== "string") return false;
+  if (typeof window === "undefined" || window.location?.protocol !== "https:") {
+    return false;
+  }
+  return /^http:\/\//i.test(url.trim());
+}
+
+/**
+ * Retrieves a cached base64/secure data URI for a given thumbnail URL if available.
+ * Refreshes the entry's position in the LRU cache on hit.
+ * @param {string | null | undefined} [url]
+ * @returns {string | null}
+ */
+export function getCachedSecureThumbnail(url) {
+  if (!url || typeof url !== "string") return null;
+  const cached = secureThumbnailCache.get(url);
+  if (cached) {
+    // Refresh LRU order on hit
+    secureThumbnailCache.delete(url);
+    secureThumbnailCache.set(url, cached);
+    return cached;
+  }
+  return null;
+}
+
+/**
+ * Clears or modifies the secure thumbnail cache (primarily for testing).
+ * @param {string} [url]
+ */
+export function clearSecureThumbnailCache(url) {
+  if (url) {
+    secureThumbnailCache.delete(url);
+    inFlightThumbnailRequests.delete(url);
+  } else {
+    secureThumbnailCache.clear();
+    inFlightThumbnailRequests.clear();
+  }
+}
+
+/**
+ * Asynchronously resolves an insecure http:// thumbnail URL to a data:image;base64 URI
+ * using the mass_queue/download_and_encode_image WebSocket command if available.
+ * Caches resolved images in memory with an LRU cap.
+ *
+ * @param {any} hass - Home Assistant connection object with callWS
+ * @param {string | null | undefined} [url] - Insecure artwork URL
+ * @returns {Promise<string | null>} Base64 data URI or null if resolution fails
+ */
+export async function resolveSecureThumbnailUrl(hass, url) {
+  if (!url || typeof url !== "string" || !hass?.callWS) {
+    return null;
+  }
+
+  // If already cached, return immediately and refresh LRU order
+  const cached = getCachedSecureThumbnail(url);
+  if (cached) {
+    return cached;
+  }
+
+  // Deduplicate concurrent in-flight requests for the same URL
+  if (inFlightThumbnailRequests.has(url)) {
+    return inFlightThumbnailRequests.get(url);
+  }
+
+  // Normalize /imageproxy/ URLs: change size=0 to size=256 to avoid downloading massive raw images
+  let fetchUrl = url;
+  if (fetchUrl.includes("/imageproxy/") && /[?&]size=0\b/.test(fetchUrl)) {
+    fetchUrl = fetchUrl.replace(/([?&]size=)0\b/, "$1256");
+  }
+
+  const fetchPromise = (async () => {
+    try {
+      const response = await hass.callWS({
+        type: "mass_queue/download_and_encode_image",
+        url: fetchUrl,
+      });
+
+      if (response?.image && typeof response.image === "string") {
+        if (secureThumbnailCache.size >= MAX_SECURE_THUMBNAIL_CACHE_SIZE) {
+          const oldestKey = secureThumbnailCache.keys().next().value;
+          secureThumbnailCache.delete(oldestKey);
+        }
+        secureThumbnailCache.set(url, response.image);
+        return response.image;
+      }
+      return null;
+    } catch (_error) {
+      return null;
+    } finally {
+      inFlightThumbnailRequests.delete(url);
+    }
+  })();
+
+  inFlightThumbnailRequests.set(url, fetchPromise);
+  return fetchPromise;
+}
+
 /**
  * Validate artwork URL to prevent proxy errors
- * @param {string} url - Artwork URL to validate
+ * @param {string | null | undefined} [url] - Artwork URL to validate
  * @returns {boolean} True if valid
  */
 export function isValidArtworkUrl(url) {
@@ -945,6 +1053,9 @@ export function isValidArtworkUrl(url) {
 
   // Check for obviously invalid URLs
   if (url.includes("undefined") || url.includes("null") || url.trim() === "") return false;
+
+  // Reject insecure HTTP URLs on HTTPS pages to prevent browser Mixed Content warnings
+  if (isInsecureHttpUrlOnHttps(url)) return false;
 
   // Skip validation for data URLs and base64 images
   if (url.startsWith("data:")) return true;

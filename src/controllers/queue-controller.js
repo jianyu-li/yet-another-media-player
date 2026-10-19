@@ -6,7 +6,7 @@
  * background subscriptions, sequential operation locks, and transfer queue dialog state.
  */
 
-import { isMusicAssistantEntity, getEntityName } from "../yamp-utils.js";
+import { isMusicAssistantEntity, getEntityName, getCachedSecureThumbnail } from "../yamp-utils.js";
 import { playMedia } from "../services/ha-media-services.js";
 import { getMassQueueConfigEntryId } from "../search-sheet.js";
 import { localize } from "../localize/localize.js";
@@ -108,7 +108,13 @@ export function transformMassQueueItems(queueItems, currentTrackId = null, limit
     title: item.media_title || item.name || "Unknown Track",
     artist: item.media_artist || item.artist || "Unknown Artist",
     album: item.media_album_name || item.album || "Unknown Album",
-    thumbnail: item.media_image || item.image || null,
+    thumbnail:
+      item.local_image_encoded ||
+      getCachedSecureThumbnail(item.media_image) ||
+      getCachedSecureThumbnail(item.image) ||
+      item.media_image ||
+      item.image ||
+      null,
     duration: item.duration || null,
     position: index + 1,
     queue_item_id: item.queue_item_id || null,
@@ -133,7 +139,7 @@ export function transformQueueNextItem(queueData) {
       title: item.name || item.media_item?.name || "Unknown Track",
       artist: item.media_item?.artists?.[0]?.name || "Unknown Artist",
       album: item.media_item?.album?.name || "Unknown Album",
-      thumbnail: item.media_item?.image || null,
+      thumbnail: getCachedSecureThumbnail(item.media_item?.image) || item.media_item?.image || null,
       duration: item.duration || null,
       position: 1,
       queue_item_id: item.queue_item_id || null,
@@ -215,8 +221,9 @@ export function normalizeRecommendations(
   for (const group of groups) {
     if (collected >= limitToUse) break;
     const groupName = group?.name || group?.sort_name || "";
-    const groupImage =
+    const rawGroupImage =
       typeof group?.image === "string" && group.image.trim() !== "" ? group.image : null;
+    const groupImage = getCachedSecureThumbnail(rawGroupImage) || rawGroupImage;
     const groupItems =
       Array.isArray(group?.items) && group.items.length > 0 ? group.items : [group];
 
@@ -225,8 +232,14 @@ export function normalizeRecommendations(
       const mediaContentId = item?.uri || item?.item_id;
       if (!mediaContentId) continue;
 
-      const itemImage =
+      const rawItemImage =
         typeof item?.image === "string" && item.image.trim() !== "" ? item.image : null;
+      const itemImage =
+        (typeof item?.local_image_encoded === "string" && item.local_image_encoded.trim() !== ""
+          ? item.local_image_encoded
+          : null) ||
+        getCachedSecureThumbnail(rawItemImage) ||
+        rawItemImage;
       const rawType = item?.media_type || group?.media_type || "music";
       const normalizedClass = normalizeMediaClass(rawType);
       if (requestedClass && normalizedClass !== requestedClass) {
@@ -715,7 +728,13 @@ export class QueueController {
       title: track.media_title,
       artist: track.media_artist,
       album: track.media_album_name,
-      thumbnail: track.media_image,
+      thumbnail:
+        track.local_image_encoded ||
+        getCachedSecureThumbnail(track.media_image) ||
+        getCachedSecureThumbnail(track.image) ||
+        track.media_image ||
+        track.image ||
+        null,
       duration: track.duration,
       is_browsable: false,
       favorite: track.favorite,
@@ -724,6 +743,7 @@ export class QueueController {
     this.host._searchTotalRows = Math.max(15, tracks.length);
     this.host._searchAttempted = true;
     this.host._searchLoading = false;
+    this.host?._searchController?.resolveInsecureResultThumbnails?.(this.host._searchResults);
     this.host.triggerRender?.() || this.host.requestUpdate?.();
   }
 

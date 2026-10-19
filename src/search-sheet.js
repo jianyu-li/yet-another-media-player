@@ -1,5 +1,10 @@
 import { html, nothing } from "lit";
-import { isMusicAssistantEntity, applyHostnameToUrl } from "./yamp-utils.js";
+import {
+  isMusicAssistantEntity,
+  applyHostnameToUrl,
+  isValidArtworkUrl,
+  getCachedSecureThumbnail,
+} from "./yamp-utils.js";
 import { localize } from "./localize/localize.js";
 import { playMedia } from "./services/ha-media-services.js";
 
@@ -413,7 +418,7 @@ export function transformMusicAssistantItem(item) {
     media_content_type: item.media_type,
     media_class: item.media_type,
     item_id: item.item_id,
-    thumbnail: item.image,
+    thumbnail: item.local_image_encoded || getCachedSecureThumbnail(item.image) || item.image,
     ...(item.artists && { artist: item.artists.map((a) => a.name).join(", ") }),
     ...(item.album && { album: item.album.name, album_uri: item.album.uri }),
     is_browsable:
@@ -805,7 +810,7 @@ export function renderSearchResultItem({
   onMoveNext,
   onRemove,
   isMusicAssistant = false,
-  isValidArtwork = (url) => !!url,
+  isValidArtwork = (url) => isValidArtworkUrl(url),
   getClickTitle = (item) => "",
   artworkHostname = "",
 }) {

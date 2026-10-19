@@ -11,6 +11,7 @@ import {
   snapshotPlaybackStateMap,
   hasPlaybackStateChanged,
 } from "../src/controllers/search-controller.js";
+import { clearSecureThumbnailCache } from "../src/yamp-utils.js";
 
 describe("SearchController & Pure Search Helpers", () => {
   describe("mapLegacySortOption", () => {
@@ -337,6 +338,103 @@ describe("SearchController & Pure Search Helpers", () => {
       assert.strictEqual(mockCard._searchHeaderTransitionTimer, null);
       assert.strictEqual(mockCard._searchTimeoutHandle, null);
       assert.strictEqual(mockCard._successToastHandle, null);
+    });
+
+    describe("resolveInsecureResultThumbnails", () => {
+      it("does not call mass_queue when on http protocol", async () => {
+        const origWindow = globalThis.window;
+        try {
+          globalThis.window = /** @type {any} */ ({ location: { protocol: "http:" } });
+          let calledWS = false;
+          mockCard.hass.callWS = async () => {
+            calledWS = true;
+            return { image: "data:...", success: true };
+          };
+          const results = [{ thumbnail: "http://192.168.6.90:8095/imageproxy/1?size=0" }];
+          await controller.resolveInsecureResultThumbnails(results);
+          assert.strictEqual(calledWS, false);
+          assert.strictEqual(results[0].thumbnail, "http://192.168.6.90:8095/imageproxy/1?size=0");
+        } finally {
+          globalThis.window = origWindow;
+        }
+      });
+
+      it("does not call mass_queue when disable_mass_queue is true in card config", async () => {
+        const origWindow = globalThis.window;
+        try {
+          globalThis.window = /** @type {any} */ ({ location: { protocol: "https:" } });
+          let calledWS = false;
+          mockCard.config = { disable_mass_queue: true };
+          mockCard.hass = {
+            services: { mass_queue: {} },
+            callWS: async () => {
+              calledWS = true;
+              return { image: "data:...", success: true };
+            },
+          };
+          const results = [{ thumbnail: "http://192.168.6.90:8095/imageproxy/1?size=0" }];
+          await controller.resolveInsecureResultThumbnails(results);
+          assert.strictEqual(calledWS, false);
+          assert.strictEqual(results[0].thumbnail, "http://192.168.6.90:8095/imageproxy/1?size=0");
+        } finally {
+          globalThis.window = origWindow;
+        }
+      });
+
+      it("does not call mass_queue when mass_queue service is not installed", async () => {
+        const origWindow = globalThis.window;
+        try {
+          globalThis.window = /** @type {any} */ ({ location: { protocol: "https:" } });
+          let calledWS = false;
+          mockCard.config = {};
+          mockCard.hass = {
+            services: {}, // No mass_queue
+            callWS: async () => {
+              calledWS = true;
+              return { image: "data:...", success: true };
+            },
+          };
+          const results = [{ thumbnail: "http://192.168.6.90:8095/imageproxy/1?size=0" }];
+          await controller.resolveInsecureResultThumbnails(results);
+          assert.strictEqual(calledWS, false);
+          assert.strictEqual(results[0].thumbnail, "http://192.168.6.90:8095/imageproxy/1?size=0");
+        } finally {
+          globalThis.window = origWindow;
+        }
+      });
+
+      it("resolves and swaps thumbnail to data: URI when mass_queue is available and enabled", async () => {
+        clearSecureThumbnailCache();
+        const origWindow = globalThis.window;
+        try {
+          globalThis.window = /** @type {any} */ ({ location: { protocol: "https:" } });
+          let updated = false;
+          mockCard.config = {};
+          mockCard.requestUpdate = () => {
+            updated = true;
+          };
+          mockCard.hass = {
+            services: { mass_queue: {} },
+            callWS: async (msg) => {
+              if (msg.type === "mass_queue/download_and_encode_image") {
+                return { image: "data:image/jpeg;base64,RESOLVED_BASE64", success: true };
+              }
+              return null;
+            },
+          };
+          const results = [
+            { thumbnail: "http://192.168.6.90:8095/imageproxy/test1?size=0" },
+            { thumbnail: "https://example.com/already_secure.jpg" },
+          ];
+          await controller.resolveInsecureResultThumbnails(results);
+          assert.strictEqual(results[0].thumbnail, "data:image/jpeg;base64,RESOLVED_BASE64");
+          assert.strictEqual(results[1].thumbnail, "https://example.com/already_secure.jpg");
+          assert.strictEqual(updated, true);
+        } finally {
+          globalThis.window = origWindow;
+          clearSecureThumbnailCache();
+        }
+      });
     });
   });
 });
