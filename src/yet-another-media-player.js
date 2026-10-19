@@ -326,7 +326,9 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       btn.entity_id.toLowerCase().includes('favorite')
     );
     const result = favoriteButton?.entity_id || null;
-    this._favoriteButtonCache.set(activeEntityId, result);
+    if (result || !/** @type {any} */ (buttonEntities)._incomplete) {
+      this._favoriteButtonCache.set(activeEntityId, result);
+    }
     return result;
   }
 

@@ -450,7 +450,7 @@ describe("yamp-utils & progress-bar helpers", () => {
       assert.equal(result[0].reason, "entity_id_match");
     });
 
-    it("matches button by name_similarity when entity_id differs", () => {
+    it("matches button by name_similarity when entity_id differs (including has_entity_name original_name)", () => {
       const hass = mockHass({
         states: {
           "media_player.den": mockEntity({
@@ -464,7 +464,7 @@ describe("yamp-utils & progress-bar helpers", () => {
         },
         entities: {
           "media_player.den": { device_id: "dev_den" },
-          "button.custom_fav": { device_id: "dev_virtual" },
+          "button.custom_fav": { device_id: "dev_virtual", original_name: "Favorite" },
         },
       });
 
@@ -590,16 +590,12 @@ describe("yamp-utils & progress-bar helpers", () => {
       assert.equal(result[0].entity_id, "button.kitchen_favorite_current_song");
     });
 
-    it("ignores disabled or missing-state button entries in hass.entities", () => {
+    it("ignores disabled or missing-state button entries in hass.entities and resolves once state arrives", () => {
       const hass = mockHass({
         states: {
           "media_player.office": mockEntity({
             entity_id: "media_player.office",
             attributes: { friendly_name: "Office Speaker" },
-          }),
-          "button.office_active_favorite": mockEntity({
-            entity_id: "button.office_active_favorite",
-            attributes: { friendly_name: "Favorite Current Song" },
           }),
         },
         entities: {
@@ -608,18 +604,26 @@ describe("yamp-utils & progress-bar helpers", () => {
             device_id: "dev_office",
             disabled_by: "user",
           },
-          "button.office_missing_state_favorite": {
-            device_id: "dev_office",
-          },
           "button.office_active_favorite": {
             device_id: "dev_office",
           },
         },
       });
 
-      const result = findAssociatedButtonEntities(hass, "media_player.office");
-      assert.equal(result.length, 1);
-      assert.equal(result[0].entity_id, "button.office_active_favorite");
+      // Before button state arrives in hass.states, returns empty array marked _incomplete
+      const initialResult = findAssociatedButtonEntities(hass, "media_player.office");
+      assert.equal(initialResult.length, 0);
+      assert.equal(/** @type {any} */ (initialResult)._incomplete, true);
+
+      // Once state arrives in hass.states (with same hass.entities reference), resolves and caches
+      hass.states["button.office_active_favorite"] = mockEntity({
+        entity_id: "button.office_active_favorite",
+        attributes: { friendly_name: "Favorite Current Song" },
+      });
+
+      const resolvedResult = findAssociatedButtonEntities(hass, "media_player.office");
+      assert.equal(resolvedResult.length, 1);
+      assert.equal(resolvedResult[0].entity_id, "button.office_active_favorite");
     });
   });
 });

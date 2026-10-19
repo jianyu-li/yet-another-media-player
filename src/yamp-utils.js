@@ -335,6 +335,38 @@ export function evaluateJsTemplate(templateStr, hass, context = {}, compiledCach
 const associatedButtonsRegistryCache = new WeakMap();
 
 /**
+ * Probe deterministic favorite button candidate entity IDs directly on hass.states
+ * without enumerating all keys on hass.states.
+ * @param {Object} hass - Home Assistant object
+ * @param {string} maSuffix - Lowercase object_id suffix of the media player entity
+ * @param {Record<string, any>|null} [reg] - Optional entity registry map
+ * @returns {Array} Matching button descriptors
+ */
+function probeDirectButtonCandidates(hass, maSuffix, reg = null) {
+  if (!maSuffix) return [];
+  const directCandidates = [
+    `button.${maSuffix}_favorite_current_song`,
+    `button.${maSuffix}_favorite`,
+    `button.${maSuffix}_preset_favorite`,
+  ];
+  const matches = [];
+  for (const candidateId of directCandidates) {
+    if (reg?.[candidateId]?.disabled_by) continue;
+    const state = hass.states[candidateId];
+    if (state?.attributes) {
+      const buttonDisplayName = getEntityName(hass, state) || candidateId;
+      matches.push({
+        entity_id: candidateId,
+        friendly_name: buttonDisplayName,
+        device_class: state.attributes.device_class,
+        reason: "entity_id_match",
+      });
+    }
+  }
+  return matches;
+}
+
+/**
  * Find button entities associated with a Music Assistant or media player entity
  * @param {Object} hass - Home Assistant object
  * @param {string} maEntityId - Music Assistant entity ID
@@ -346,6 +378,7 @@ export function findAssociatedButtonEntities(hass, maEntityId) {
   const maEntity = hass.states[maEntityId];
   if (!maEntity) return [];
 
+  const maSuffix = maEntityId.includes(".") ? maEntityId.split(".")[1].toLowerCase() : "";
   const reg = hass.entities;
   if (reg && typeof reg === "object") {
     let cacheForRegistry = associatedButtonsRegistryCache.get(reg);
@@ -368,11 +401,11 @@ export function findAssociatedButtonEntities(hass, maEntityId) {
       const sameDeviceButtons = [];
       const entityIdMatchButtons = [];
       const nameMatchButtons = [];
+      let skippedMissingState = false;
 
       const maDeviceId = reg[maEntityId]?.device_id || maEntity.attributes?.device_id || null;
       const maDisplayName = getEntityName(hass, maEntity) || maEntityId;
       const maDisplayNameLower = maDisplayName.toLowerCase();
-      const maSuffix = maEntityId.includes(".") ? maEntityId.split(".")[1].toLowerCase() : "";
 
       for (const entityId in reg) {
         if (!entityId.startsWith("button.")) continue;
@@ -384,7 +417,10 @@ export function findAssociatedButtonEntities(hass, maEntityId) {
         // 1. Same device matching (most reliable & precise)
         if (maDeviceId && buttonDeviceId && buttonDeviceId === maDeviceId) {
           const state = hass.states[entityId];
-          if (!state) continue;
+          if (!state) {
+            skippedMissingState = true;
+            continue;
+          }
           const buttonDisplayName = getEntityName(hass, state) || regEntry?.name || entityId;
           sameDeviceButtons.push({
             entity_id: entityId,
@@ -398,7 +434,10 @@ export function findAssociatedButtonEntities(hass, maEntityId) {
         // 2. Entity ID match (e.g., button.amzn_echo_show_5_favorite for media_player.amzn_echo_show_5)
         if (maSuffix && entityId.toLowerCase().includes(maSuffix)) {
           const state = hass.states[entityId];
-          if (!state) continue;
+          if (!state) {
+            skippedMissingState = true;
+            continue;
+          }
           const buttonDisplayName = getEntityName(hass, state) || regEntry?.name || entityId;
           entityIdMatchButtons.push({
             entity_id: entityId,
@@ -410,19 +449,19 @@ export function findAssociatedButtonEntities(hass, maEntityId) {
         }
 
         // 3. Name similarity match
-        const regName = regEntry?.name || regEntry?.original_name || "";
-        if (regName) {
-          const regNameLower = regName.toLowerCase();
+        if (regEntry?.name) {
+          const customNameLower = regEntry.name.toLowerCase();
           if (
-            !regNameLower.includes(maDisplayNameLower) &&
-            !maDisplayNameLower.includes(regNameLower)
+            !customNameLower.includes(maDisplayNameLower) &&
+            !maDisplayNameLower.includes(customNameLower)
           ) {
             continue;
           }
         }
         const state = hass.states[entityId];
         if (!state) continue;
-        const buttonDisplayName = getEntityName(hass, state) || regName || "";
+        const buttonDisplayName =
+          getEntityName(hass, state) || regEntry?.name || regEntry?.original_name || "";
         if (buttonDisplayName) {
           const btnNameLower = buttonDisplayName.toLowerCase();
           if (
@@ -439,35 +478,23 @@ export function findAssociatedButtonEntities(hass, maEntityId) {
         }
       }
 
-      const buttonEntities = [...sameDeviceButtons, ...entityIdMatchButtons, ...nameMatchButtons];
-      cacheForRegistry.set(maEntityId, buttonEntities);
+      let buttonEntities = [...sameDeviceButtons, ...entityIdMatchButtons, ...nameMatchButtons];
+      if (buttonEntities.length === 0) {
+        buttonEntities = probeDirectButtonCandidates(hass, maSuffix, reg);
+      }
+
+      if (buttonEntities.length > 0 || !skippedMissingState) {
+        cacheForRegistry.set(maEntityId, buttonEntities);
+      } else {
+        Object.defineProperty(buttonEntities, "_incomplete", { value: true });
+      }
       return buttonEntities;
     }
   }
 
   // Fallback when hass.entities is not available (e.g. test environments without registry)
   // First probe deterministic button candidate IDs directly on hass.states to avoid enumerating keys
-  const maSuffix = maEntityId.includes(".") ? maEntityId.split(".")[1].toLowerCase() : "";
-  const directCandidates = [
-    `button.${maSuffix}_favorite_current_song`,
-    `button.${maSuffix}_favorite`,
-    `button.${maSuffix}_preset_favorite`,
-  ];
-
-  const directMatches = [];
-  for (const candidateId of directCandidates) {
-    const state = hass.states[candidateId];
-    if (state && state.attributes) {
-      const buttonDisplayName = getEntityName(hass, state) || candidateId;
-      directMatches.push({
-        entity_id: candidateId,
-        friendly_name: buttonDisplayName,
-        device_class: state.attributes.device_class,
-        reason: "entity_id_match",
-      });
-    }
-  }
-
+  const directMatches = probeDirectButtonCandidates(hass, maSuffix);
   if (directMatches.length > 0) {
     return directMatches;
   }
