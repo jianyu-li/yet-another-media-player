@@ -7788,6 +7788,8 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         let smallIcon = 24;
         let controlsPadding = "16px";
         let controlsGap = "20px";
+        let volumePaddingTop = "10px";
+        let volumePaddingBottom = "14px";
         let volumePadding = "10px 16px 14px 16px";
 
         if (effectiveHeight < 380) {
@@ -7803,7 +7805,9 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           
           controlsPadding = `${Math.max(4, Math.round(16 * heightRatio))}px 16px`;
           controlsGap = `${Math.max(8, Math.round(20 * heightRatio))}px`;
-          volumePadding = `${Math.max(4, Math.round(10 * heightRatio))}px 16px ${Math.max(8, Math.round(14 * heightRatio))}px 16px`;
+          volumePaddingTop = `${Math.max(4, Math.round(10 * heightRatio))}px`;
+          volumePaddingBottom = `${Math.max(8, Math.round(14 * heightRatio))}px`;
+          volumePadding = `${volumePaddingTop} 16px ${volumePaddingBottom} 16px`;
         }
 
         host.style.setProperty('--yamp-modern-primary-size', `${primarySize}px`);
@@ -7815,6 +7819,8 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         host.style.setProperty('--yamp-modern-padding', controlsPadding);
         host.style.setProperty('--yamp-modern-gap', controlsGap);
         host.style.setProperty('--yamp-volume-row-padding', volumePadding);
+        host.style.setProperty('--yamp-volume-row-padding-top', volumePaddingTop);
+        host.style.setProperty('--yamp-volume-row-padding-bottom', volumePaddingBottom);
       } else {
         host.style.removeProperty('--yamp-modern-primary-size');
         host.style.removeProperty('--yamp-modern-medium-size');
@@ -7825,6 +7831,8 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         host.style.removeProperty('--yamp-modern-padding');
         host.style.removeProperty('--yamp-modern-gap');
         host.style.removeProperty('--yamp-volume-row-padding');
+        host.style.removeProperty('--yamp-volume-row-padding-top');
+        host.style.removeProperty('--yamp-volume-row-padding-bottom');
       }
 
       host.style.removeProperty('--yamp-collapsed-controls-offset');

@@ -221,7 +221,8 @@ export const controlsStyles = css`
     grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
     align-items: center;
     gap: 10px;
-    padding: 14px 22px 18px 22px;
+    padding: var(--yamp-volume-row-padding-top, 10px) 22px
+      var(--yamp-volume-row-padding-bottom, 14px) 22px;
     margin: 0;
     background: transparent;
     border-radius: 0;
@@ -233,6 +234,10 @@ export const controlsStyles = css`
     width: 100%;
     box-sizing: border-box;
     z-index: ${Z_LAYERS.FLOATING_CONTROLS};
+  }
+
+  :host([fullscreen]) .persistent-media-controls {
+    padding: 14px 28px 20px 28px;
   }
 
   /* Hide persistent controls when hide_menu_player is enabled */
@@ -249,6 +254,9 @@ export const controlsStyles = css`
     grid-column: 1;
     justify-self: start;
     flex-shrink: 0;
+    height: var(--yamp-computed-bottom-btn-size, 36px);
+    display: flex;
+    align-items: center;
   }
 
   .persistent-artwork {
@@ -257,6 +265,7 @@ export const controlsStyles = css`
     border-radius: 6px;
     object-fit: var(--yamp-artwork-fit, cover);
     box-shadow: 0 1px 4px rgba(0, 0, 0, 0.3);
+    display: block;
   }
 
   .persistent-artwork-placeholder {
