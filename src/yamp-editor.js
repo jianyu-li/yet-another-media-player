@@ -3,7 +3,7 @@ import { editorStyles } from "./styles/editor.js";
 import { localize, setHassLanguage } from "./localize/localize.js";
 
 import { SUPPORT_GROUPING, TEMPLATE_CONFIGS, getTemplatePresetDefaults } from "./constants.js";
-import { getActionPlacement, getEntityName } from "./yamp-utils.js";
+import { getActionPlacement, getEntityName, isValidArtworkUrl } from "./yamp-utils.js";
 import "./yamp-sortable.js";
 
 import { renderArtworkTab } from "./editor/tabs/artwork-tab.js";
@@ -592,6 +592,11 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
         }
       }
 
+      if (!isValidArtworkUrl(trimmed)) {
+        this._entityRatios[entityId] = null;
+        return;
+      }
+
       this._entityRatios[entityId] = "loading";
       const img = new window.Image();
       img.src = trimmed;
@@ -763,6 +768,10 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
       ) {
         trimmed = trimmed.slice(1, -1).trim();
       }
+    }
+
+    if (!isValidArtworkUrl(trimmed)) {
+      return;
     }
 
     const img = new window.Image();

@@ -20,7 +20,13 @@ import {
   isShow,
 } from "../search-sheet.js";
 import { mediaNextTrack } from "../services/ha-media-services.js";
-import { getSearchResultClickTitle } from "../yamp-utils.js";
+import {
+  getSearchResultClickTitle,
+  isInsecureHttpUrlOnHttps,
+  getCachedSecureThumbnail,
+  resolveSecureThumbnailUrl,
+} from "../yamp-utils.js";
+import { checkMassQueueServices } from "./queue-controller.js";
 import { localize } from "../localize/localize.js";
 
 /**
@@ -330,6 +336,64 @@ export class SearchController {
       if (this.host) {
         this.host._searchSwipeAttached = false;
       }
+    }
+  }
+
+  /**
+   * Resolves insecure http:// thumbnails to data URIs over HTTPS when mass_queue is available and not disabled.
+   * If mass_queue is absent or disabled, insecure http:// thumbnails are safely left as-is because
+   * isValidArtworkUrl will prevent them from rendering into <img src> and causing mixed-content warnings.
+   * @param {any[]} [results]
+   * @returns {Promise<void>}
+   */
+  async resolveInsecureResultThumbnails(results) {
+    if (!Array.isArray(results) || results.length === 0) return;
+    if (typeof window === "undefined" || window.location?.protocol !== "https:") return;
+
+    const isMassQueueDisabled = this.host?.config?.disable_mass_queue === true;
+    const hasMassQueueService = checkMassQueueServices(this.host?.hass?.services);
+    const canFetchViaMassQueue =
+      !isMassQueueDisabled && hasMassQueueService && Boolean(this.host?.hass?.callWS);
+
+    let needsImmediateUpdate = false;
+    const toFetch = [];
+
+    for (const item of results) {
+      if (!item || !item.thumbnail || typeof item.thumbnail !== "string") continue;
+      if (!isInsecureHttpUrlOnHttps(item.thumbnail)) continue;
+
+      const cached = getCachedSecureThumbnail(item.thumbnail);
+      if (cached) {
+        item.thumbnail = cached;
+        needsImmediateUpdate = true;
+      } else if (canFetchViaMassQueue) {
+        toFetch.push(item);
+      }
+    }
+
+    if (needsImmediateUpdate) {
+      this.host?.requestUpdate?.();
+    }
+
+    if (toFetch.length === 0) return;
+
+    const promises = toFetch.map(async (item) => {
+      const rawUrl = item.thumbnail;
+      try {
+        const secureUrl = await resolveSecureThumbnailUrl(this.host.hass, rawUrl);
+        if (secureUrl && item.thumbnail === rawUrl) {
+          item.thumbnail = secureUrl;
+          return true;
+        }
+      } catch (_e) {
+        // Fallback remains clean placeholder icon
+      }
+      return false;
+    });
+
+    const resultsUpdated = await Promise.all(promises);
+    if (resultsUpdated.some(Boolean)) {
+      this.host?.requestUpdate?.();
     }
   }
 
@@ -898,6 +962,7 @@ export class SearchController {
       }
       this.host._latestSearchToken = 0;
       this.host._searchResults = this.sortSearchResults(this.host._searchResultsByType[cacheKey]);
+      this.resolveInsecureResultThumbnails(this.host._searchResults);
       this.host._searchLoading = false;
       this.host._searchError = "";
       this.host.requestUpdate();
@@ -1123,6 +1188,7 @@ export class SearchController {
 
       this.host._searchResultsByType[cacheKey] = normalizedResults;
       this.host._searchResults = this.sortSearchResults(normalizedResults);
+      this.resolveInsecureResultThumbnails(this.host._searchResults);
 
       const rows = Array.isArray(this.host._searchResults) ? this.host._searchResults.length : 0;
       this.host._searchTotalRows = Math.max(15, rows);
@@ -1193,6 +1259,7 @@ export class SearchController {
     const mergedResults = (this.host._searchResultsByType[cacheKey] || []).concat(chunk);
     this.host._searchResultsByType[cacheKey] = mergedResults;
     this.host._searchResults = this.sortSearchResults(mergedResults);
+    this.resolveInsecureResultThumbnails(chunk);
     const rows = Array.isArray(mergedResults) ? mergedResults.length : 0;
     this.host._searchTotalRows = Math.max(15, rows);
     this.host.requestUpdate();
@@ -1534,6 +1601,7 @@ export class SearchController {
         if (albums.length > 0) {
           this.host._searchQuery = "";
           this.host._searchResults = this.sortSearchResults(albums);
+          this.resolveInsecureResultThumbnails(this.host._searchResults);
           this.host._searchTotalRows = Math.max(15, albums.length);
           this.host._searchAttempted = true;
           this.host._searchLoading = false;
@@ -2359,6 +2427,7 @@ export class SearchController {
         if (tracks.length > 0) {
           this.host._searchQuery = "";
           this.host._searchResults = this.sortSearchResults(tracks);
+          this.resolveInsecureResultThumbnails(this.host._searchResults);
           this.host._searchTotalRows = Math.max(15, tracks.length);
           this.host._searchAttempted = true;
           this.host._searchLoading = false;
@@ -2453,6 +2522,7 @@ export class SearchController {
         if (tracks.length > 0) {
           this.host._searchQuery = "";
           this.host._searchResults = this.sortSearchResults(tracks);
+          this.resolveInsecureResultThumbnails(this.host._searchResults);
           this.host._searchTotalRows = Math.max(15, tracks.length);
           this.host._searchAttempted = true;
           this.host._searchLoading = false;

@@ -4,6 +4,10 @@ import { formatTime } from "../src/progress-bar.js";
 import {
   getValidArtworkAttr,
   isValidArtworkUrl,
+  isInsecureHttpUrlOnHttps,
+  getCachedSecureThumbnail,
+  clearSecureThumbnailCache,
+  resolveSecureThumbnailUrl,
   applyHostnameToUrl,
   getEntityName,
   isPlaceholderMediaTitle,
@@ -126,6 +130,116 @@ describe("yamp-utils & progress-bar helpers", () => {
       assert.equal(isValidArtworkUrl("/api/proxy/undefined/art"), false);
       assert.equal(isValidArtworkUrl("/api/proxy/null/art"), false);
       assert.equal(isValidArtworkUrl("not a url"), false);
+    });
+
+    it("rejects http URLs when running on an https page", () => {
+      const origWindow = globalThis.window;
+      try {
+        globalThis.window = /** @type {any} */ ({ location: { protocol: "https:" } });
+        assert.equal(isValidArtworkUrl("http://192.168.6.90:8095/imageproxy/abc?size=0"), false);
+        assert.equal(isValidArtworkUrl("http://example.com/art.png"), false);
+        assert.equal(isValidArtworkUrl("https://example.com/art.png"), true);
+        assert.equal(isValidArtworkUrl("/api/media_player_proxy/media_player.kitchen"), true);
+        assert.equal(isValidArtworkUrl("data:image/png;base64,abc"), true);
+      } finally {
+        globalThis.window = origWindow;
+      }
+    });
+  });
+
+  describe("isInsecureHttpUrlOnHttps", () => {
+    it("returns false in Node/SSR environment without window", () => {
+      const origWindow = globalThis.window;
+      try {
+        globalThis.window = /** @type {any} */ (undefined);
+        assert.equal(isInsecureHttpUrlOnHttps("http://example.com/art.png"), false);
+      } finally {
+        globalThis.window = origWindow;
+      }
+    });
+
+    it("returns false when window.location.protocol is http:", () => {
+      const origWindow = globalThis.window;
+      try {
+        globalThis.window = /** @type {any} */ ({ location: { protocol: "http:" } });
+        assert.equal(isInsecureHttpUrlOnHttps("http://example.com/art.png"), false);
+      } finally {
+        globalThis.window = origWindow;
+      }
+    });
+
+    it("returns true for http URLs when window.location.protocol is https:", () => {
+      const origWindow = globalThis.window;
+      try {
+        globalThis.window = /** @type {any} */ ({ location: { protocol: "https:" } });
+        assert.equal(
+          isInsecureHttpUrlOnHttps("http://192.168.6.90:8095/imageproxy/abc?size=0"),
+          true
+        );
+        assert.equal(isInsecureHttpUrlOnHttps("http://example.com/art.png"), true);
+        assert.equal(isInsecureHttpUrlOnHttps("https://example.com/art.png"), false);
+        assert.equal(isInsecureHttpUrlOnHttps("/api/media_player_proxy/art.png"), false);
+        assert.equal(isInsecureHttpUrlOnHttps("data:image/png;base64,abc"), false);
+        assert.equal(isInsecureHttpUrlOnHttps(null), false);
+      } finally {
+        globalThis.window = origWindow;
+      }
+    });
+  });
+
+  describe("resolveSecureThumbnailUrl & getCachedSecureThumbnail", () => {
+    it("returns null for invalid inputs or missing callWS", async () => {
+      assert.equal(await resolveSecureThumbnailUrl(null, "http://example.com/art.png"), null);
+      assert.equal(
+        await resolveSecureThumbnailUrl({ callWS: null }, "http://example.com/art.png"),
+        null
+      );
+      assert.equal(await resolveSecureThumbnailUrl({ callWS: async () => ({}) }, null), null);
+    });
+
+    it("resolves and caches base64 thumbnail, converting size=0 to size=256", async () => {
+      clearSecureThumbnailCache();
+      const calls = [];
+      const mockHass = {
+        callWS: async (msg) => {
+          calls.push(msg);
+          return { image: "data:image/jpeg;base64,TESTBASE64DATA", success: true };
+        },
+      };
+
+      const testUrl = "http://192.168.6.90:8095/imageproxy/12345?size=0";
+      assert.equal(getCachedSecureThumbnail(testUrl), null);
+
+      const result = await resolveSecureThumbnailUrl(mockHass, testUrl);
+      assert.equal(result, "data:image/jpeg;base64,TESTBASE64DATA");
+      assert.equal(calls.length, 1);
+      assert.equal(calls[0].type, "mass_queue/download_and_encode_image");
+      assert.equal(calls[0].url, "http://192.168.6.90:8095/imageproxy/12345?size=256");
+
+      // Synchronous cache lookup now returns the result
+      assert.equal(getCachedSecureThumbnail(testUrl), "data:image/jpeg;base64,TESTBASE64DATA");
+
+      // Repeated call uses cache without calling WebSocket again
+      const cachedResult = await resolveSecureThumbnailUrl(mockHass, testUrl);
+      assert.equal(cachedResult, "data:image/jpeg;base64,TESTBASE64DATA");
+      assert.equal(calls.length, 1);
+
+      clearSecureThumbnailCache();
+    });
+
+    it("handles WebSocket errors gracefully and returns null", async () => {
+      clearSecureThumbnailCache();
+      const mockHass = {
+        callWS: async () => {
+          throw new Error("Connection failed");
+        },
+      };
+
+      const testUrl = "http://192.168.6.90:8095/imageproxy/fail?size=0";
+      const result = await resolveSecureThumbnailUrl(mockHass, testUrl);
+      assert.equal(result, null);
+      assert.equal(getCachedSecureThumbnail(testUrl), null);
+      clearSecureThumbnailCache();
     });
   });
 

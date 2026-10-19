@@ -108,7 +108,7 @@ export function transformMassQueueItems(queueItems, currentTrackId = null, limit
     title: item.media_title || item.name || "Unknown Track",
     artist: item.media_artist || item.artist || "Unknown Artist",
     album: item.media_album_name || item.album || "Unknown Album",
-    thumbnail: item.media_image || item.image || null,
+    thumbnail: item.local_image_encoded || item.media_image || item.image || null,
     duration: item.duration || null,
     position: index + 1,
     queue_item_id: item.queue_item_id || null,
@@ -226,7 +226,11 @@ export function normalizeRecommendations(
       if (!mediaContentId) continue;
 
       const itemImage =
-        typeof item?.image === "string" && item.image.trim() !== "" ? item.image : null;
+        typeof item?.local_image_encoded === "string" && item.local_image_encoded.trim() !== ""
+          ? item.local_image_encoded
+          : typeof item?.image === "string" && item.image.trim() !== ""
+            ? item.image
+            : null;
       const rawType = item?.media_type || group?.media_type || "music";
       const normalizedClass = normalizeMediaClass(rawType);
       if (requestedClass && normalizedClass !== requestedClass) {
@@ -715,7 +719,7 @@ export class QueueController {
       title: track.media_title,
       artist: track.media_artist,
       album: track.media_album_name,
-      thumbnail: track.media_image,
+      thumbnail: track.local_image_encoded || track.media_image || track.image || null,
       duration: track.duration,
       is_browsable: false,
       favorite: track.favorite,

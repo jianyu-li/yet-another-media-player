@@ -137,6 +137,28 @@ describe("QueueController & Pure Queue Helpers", () => {
       assert.strictEqual(results[0].queue_item_id, "q1");
       assert.strictEqual(results[1].queue_item_id, "q2");
     });
+
+    it("prioritizes local_image_encoded over media_image and image", () => {
+      const queueItems = [
+        { active: true, name: "Current" },
+        {
+          queue_item_id: "q1",
+          name: "Next with local base64",
+          local_image_encoded: "data:image/jpeg;base64,LOCALDATA",
+          media_image: "http://192.168.6.90:8095/imageproxy/123",
+          image: "http://192.168.6.90:8095/imageproxy/fallback",
+        },
+        {
+          queue_item_id: "q2",
+          name: "Next with remote media_image",
+          media_image: "https://example.com/remote.jpg",
+          image: "https://example.com/fallback.jpg",
+        },
+      ];
+      const results = transformMassQueueItems(queueItems);
+      assert.strictEqual(results[0].thumbnail, "data:image/jpeg;base64,LOCALDATA");
+      assert.strictEqual(results[1].thumbnail, "https://example.com/remote.jpg");
+    });
   });
 
   describe("transformQueueNextItem", () => {

@@ -394,7 +394,7 @@ export class ArtworkController {
    */
   async extractDominantColor(imgUrl) {
     return new Promise((resolve) => {
-      if (!imgUrl || typeof imgUrl !== "string") {
+      if (!imgUrl || typeof imgUrl !== "string" || !isValidArtworkUrl(imgUrl)) {
         resolve("#888");
         return;
       }
@@ -472,7 +472,7 @@ export class ArtworkController {
    * @param {string} [url]
    */
   calculateAspectRatio(url) {
-    if (!url || typeof url !== "string") return;
+    if (!url || typeof url !== "string" || !isValidArtworkUrl(url)) return;
     if (this.aspectRatioCache[url] !== undefined) return;
 
     this._setAspectRatio(url, null);

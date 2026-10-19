@@ -5019,14 +5019,19 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       const playbackArtwork = this._getArtworkUrl(playbackState, false);
       const mainArtwork = this._getArtworkUrl(mainState, false);
 
-      const artworkUrl =
+      const rawArtworkUrl =
         metadataArtwork?.url ||
         playbackArtwork?.url ||
         mainArtwork?.url ||
+        metadataState?.attributes?.entity_picture_local ||
+        playbackState?.attributes?.entity_picture_local ||
+        mainState?.attributes?.entity_picture_local ||
         metadataState?.attributes?.entity_picture ||
         playbackState?.attributes?.entity_picture ||
         mainState?.attributes?.entity_picture ||
         "";
+
+      const artworkUrl = isValidArtworkUrl(rawArtworkUrl) ? rawArtworkUrl : "";
 
       const title =
         metadataState?.attributes?.media_title ||
