@@ -2232,6 +2232,7 @@ export class SearchController {
       this.host._searchResults = this.sortSearchResults(
         this.host._searchResultsByType[cacheKey] || this.host._searchResultsByType[currentMediaType]
       );
+      this.resolveInsecureResultThumbnails(this.host._searchResults);
       this.host.requestUpdate();
       return true;
     }

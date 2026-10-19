@@ -241,6 +241,21 @@ describe("yamp-utils & progress-bar helpers", () => {
       assert.equal(getCachedSecureThumbnail(testUrl), null);
       clearSecureThumbnailCache();
     });
+
+    it("refreshes LRU position on getCachedSecureThumbnail hits", async () => {
+      clearSecureThumbnailCache();
+      const mockHass = {
+        callWS: async (msg) => ({ image: `data:${msg.url}`, success: true }),
+      };
+
+      await resolveSecureThumbnailUrl(mockHass, "http://example.com/1");
+      await resolveSecureThumbnailUrl(mockHass, "http://example.com/2");
+
+      // Reading "1" moves it to the back (most recently used)
+      assert.equal(getCachedSecureThumbnail("http://example.com/1"), "data:http://example.com/1");
+
+      clearSecureThumbnailCache();
+    });
   });
 
   describe("applyHostnameToUrl", () => {

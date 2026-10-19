@@ -383,6 +383,13 @@ export function getEntityName(
   hass?: HomeAssistant | null,
   stateOrEntityId?: HassEntity | string | null
 ): string;
+export function getValidArtworkAttr(attrs: any, key: string): string | null;
+export function isValidArtworkUrl(url?: string | null): boolean;
+export function isInsecureHttpUrlOnHttps(url?: string | null): boolean;
+export function getCachedSecureThumbnail(url?: string | null): string | null;
+export function clearSecureThumbnailCache(url?: string): void;
+export function resolveSecureThumbnailUrl(hass?: any, url?: string | null): Promise<string | null>;
+export function applyHostnameToUrl(url?: string | null, hostname?: string): string | null;
 
 export interface TemplateResolveCacheEntry<T = string> {
   id?: string;
@@ -720,6 +727,7 @@ export declare class SearchController {
   constructor(host: any);
   hostConnected(): void;
   hostDisconnected(): void;
+  resolveInsecureResultThumbnails(results?: any[]): Promise<void>;
   attachSearchSwipe(): void;
   removeSearchSwipeHandlers(): void;
   getMockItemFromCurrentTrack(): any;

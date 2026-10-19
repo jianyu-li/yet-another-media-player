@@ -942,7 +942,7 @@ const MAX_SECURE_THUMBNAIL_CACHE_SIZE = 500;
 /**
  * Checks if a URL is an insecure http:// URL while running in an https: browser context.
  * Returns false in SSR/Node environments (when window is undefined) or when window.location.protocol is not "https:".
- * @param {string} url
+ * @param {string | null | undefined} [url]
  * @returns {boolean}
  */
 export function isInsecureHttpUrlOnHttps(url) {
@@ -955,12 +955,20 @@ export function isInsecureHttpUrlOnHttps(url) {
 
 /**
  * Retrieves a cached base64/secure data URI for a given thumbnail URL if available.
- * @param {string} url
+ * Refreshes the entry's position in the LRU cache on hit.
+ * @param {string | null | undefined} [url]
  * @returns {string | null}
  */
 export function getCachedSecureThumbnail(url) {
   if (!url || typeof url !== "string") return null;
-  return secureThumbnailCache.get(url) || null;
+  const cached = secureThumbnailCache.get(url);
+  if (cached) {
+    // Refresh LRU order on hit
+    secureThumbnailCache.delete(url);
+    secureThumbnailCache.set(url, cached);
+    return cached;
+  }
+  return null;
 }
 
 /**
@@ -983,7 +991,7 @@ export function clearSecureThumbnailCache(url) {
  * Caches resolved images in memory with an LRU cap.
  *
  * @param {any} hass - Home Assistant connection object with callWS
- * @param {string} url - Insecure artwork URL
+ * @param {string | null | undefined} [url] - Insecure artwork URL
  * @returns {Promise<string | null>} Base64 data URI or null if resolution fails
  */
 export async function resolveSecureThumbnailUrl(hass, url) {
@@ -991,9 +999,10 @@ export async function resolveSecureThumbnailUrl(hass, url) {
     return null;
   }
 
-  // If already cached, return immediately
-  if (secureThumbnailCache.has(url)) {
-    return secureThumbnailCache.get(url);
+  // If already cached, return immediately and refresh LRU order
+  const cached = getCachedSecureThumbnail(url);
+  if (cached) {
+    return cached;
   }
 
   // Deduplicate concurrent in-flight requests for the same URL
@@ -1036,7 +1045,7 @@ export async function resolveSecureThumbnailUrl(hass, url) {
 
 /**
  * Validate artwork URL to prevent proxy errors
- * @param {string} url - Artwork URL to validate
+ * @param {string | null | undefined} [url] - Artwork URL to validate
  * @returns {boolean} True if valid
  */
 export function isValidArtworkUrl(url) {
