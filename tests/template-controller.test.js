@@ -92,6 +92,7 @@ describe("TemplateController (Reactive Lit Controller)", () => {
     assert.deepEqual(ctrl.remoteResolveCache, {});
     assert.deepEqual(ctrl.alwaysCollapsedResolveCache, {});
     assert.deepEqual(ctrl.fullScreenResolveCache, {});
+    assert.deepEqual(ctrl.showChipRowResolveCache, {});
   });
 
   it("evaluates client-side JS templates synchronously", () => {
@@ -227,5 +228,32 @@ describe("TemplateController (Reactive Lit Controller)", () => {
     // Static value cleans up cache
     ctrl.syncTemplateSubscriptions("full_screen", contextStr, false);
     assert.equal(ctrl.fullScreenResolveCache["card"], undefined);
+  });
+
+  it("syncs UI template subscriptions for show_chip_row", () => {
+    const host = createMockHost();
+    const ctrl = new TemplateController(host);
+
+    const contextStr = JSON.stringify(host._getTemplateContext());
+
+    // JavaScript template evaluation correctly evaluates and populates showChipRowResolveCache
+    ctrl.syncTemplateSubscriptions(
+      "show_chip_row",
+      contextStr,
+      "[[[ return is_idle ? 'in_menu' : 'always'; ]]]"
+    );
+    assert.equal(ctrl.showChipRowResolveCache["card"]?.value, "always");
+
+    // Jinja template subscription subscribes and updates showChipRowResolveCache upon callback
+    ctrl.subscribeToTemplate("card", "show_chip_row", "{{ 'in_menu' }}");
+    assert.ok(host.hass.connection.lastSubscribedTemplate.includes("in_menu"));
+    host.hass.connection.subscribeMessageCallback({
+      result: "in_menu",
+    });
+    assert.equal(ctrl.showChipRowResolveCache["card"]?.value, "in_menu");
+
+    // Static configuration value cleans up the cache
+    ctrl.syncTemplateSubscriptions("show_chip_row", contextStr, "never");
+    assert.equal(ctrl.showChipRowResolveCache["card"], undefined);
   });
 });

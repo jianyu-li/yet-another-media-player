@@ -430,6 +430,8 @@ export declare class TemplateController {
   lockScreenControlsResolveCache: Record<string, TemplateResolveCacheEntry<string | boolean>>;
   fullScreenTemplateValue: Record<string, TemplateValueEntry>;
   fullScreenResolveCache: Record<string, TemplateResolveCacheEntry<string | boolean>>;
+  showChipRowTemplateValue: Record<string, TemplateValueEntry>;
+  showChipRowResolveCache: Record<string, TemplateResolveCacheEntry>;
   contextKeyMap: Record<string, string>;
   hostConnected(): void;
   hostDisconnected(): void;

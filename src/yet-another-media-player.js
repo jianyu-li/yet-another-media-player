@@ -852,6 +852,31 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     return this._lyricsBackgroundFade;
   }
 
+  get _showChipRow() {
+    const raw = this.config?.show_chip_row;
+    let val = raw;
+    if (typeof raw === "string" && (raw.includes("{{") || raw.includes("{%") || raw.trim().startsWith("[[["))) {
+      let resolved = this._showChipRowResolveCache?.["card"]?.value;
+      if (resolved === undefined && raw.trim().startsWith("[[[")) {
+        try {
+          resolved = resolveStringTemplateSync(this.hass, raw, this._getTemplateContext());
+        } catch (e) {
+          // Ignore sync evaluation error
+        }
+      }
+      if (resolved !== undefined && resolved !== null && resolved !== "") {
+        val = resolved;
+      } else {
+        return "auto"; // Default until template resolves
+      }
+    }
+    return typeof val === "string" ? val.trim() : (val || "auto");
+  }
+
+  _getShowChipRow() {
+    return this._showChipRow;
+  }
+
   get _artworkGradientDisabled() {
     return this.config?.disable_artwork_gradient === true;
   }
@@ -1066,6 +1091,8 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._lockScreenControlsResolveCache = {};
     this._fullScreenTemplateValue = {};
     this._fullScreenResolveCache = {};
+    this._showChipRowTemplateValue = {};
+    this._showChipRowResolveCache = {};
     this._transferQueuePendingTarget = null;
     this._transferQueueStatus = null;
     this._hasTransferQueueForCurrent = false;
@@ -1307,6 +1334,8 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._lockScreenControlsResolveCache = this._templateController.lockScreenControlsResolveCache;
     this._fullScreenTemplateValue = this._templateController.fullScreenTemplateValue;
     this._fullScreenResolveCache = this._templateController.fullScreenResolveCache;
+    this._showChipRowTemplateValue = this._templateController.showChipRowTemplateValue;
+    this._showChipRowResolveCache = this._templateController.showChipRowResolveCache;
     this._maResolveCache = this._templateController.maResolveCache;
     this._volResolveCache = this._templateController.volResolveCache;
     this._remoteResolveCache = this._templateController.remoteResolveCache;
@@ -4747,6 +4776,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._syncTemplateSubscriptions('lyrics_background_fade', currentContext, this.config?.lyrics_background_fade);
     this._syncTemplateSubscriptions('lock_screen_controls', currentContext, this.config?.lock_screen_controls);
     this._syncTemplateSubscriptions('full_screen', currentContext, this.config?.full_screen);
+    this._syncTemplateSubscriptions('show_chip_row', currentContext, this.config?.show_chip_row);
     this._syncEntityTemplateSubscriptions('ma', currentContext);
     this._syncEntityTemplateSubscriptions('vol', currentContext);
     this._syncEntityTemplateSubscriptions('remote', currentContext);
@@ -6388,7 +6418,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
 
 
-    const showChipRow = this.config.show_chip_row || "auto";
+    const showChipRow = this._showChipRow || "auto";
     const hasMultipleEntities = this.entityObjs.length > 1;
     // Show chips in menu if explicitly set to in_menu, or if in_menu_on_idle and currently idle
     const showChipsInMenu = (showChipRow === "in_menu" || (showChipRow === "in_menu_on_idle" && this._isIdle)) && hasMultipleEntities;
@@ -7697,7 +7727,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
   _updateHostLayoutStyles(host, config, collapsed, customCardHeight, hasCustomCardHeight) {
     const isCompact = hasCustomCardHeight && customCardHeight < 280;
-    const showChipRow = config.show_chip_row || "auto";
+    const showChipRow = this._showChipRow || "auto";
     const hasMultipleEntities = (this.entityObjs || []).length > 1;
     const showChipsInMenu = (showChipRow === "in_menu" || (showChipRow === "in_menu_on_idle" && this._isIdle)) && hasMultipleEntities;
     const renderChipRowSeparately = showChipRow !== "hidden" && !showChipsInMenu && hasMultipleEntities;
