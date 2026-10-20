@@ -67,7 +67,7 @@ export const menusSheetsStyles = css`
     vertical-align: middle;
     position: relative;
     margin: 0;
-    color: var(--yamp-icon-color, #fff);
+    color: #fff;
     transition: color var(--transition-normal, 0.2s);
   }
 
