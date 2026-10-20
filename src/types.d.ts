@@ -709,6 +709,10 @@ export function matchResolvedMediaUri(
   name?: string,
   artist?: string
 ): string | null;
+export function normalizeBrowseMediaChild(
+  child: any,
+  context?: { fallbackArtist?: string | null; fallbackAlbum?: string | null }
+): any;
 export function snapshotPlaybackStateMap(
   states?: any,
   entityIds?: string[] | null
@@ -790,6 +794,7 @@ export declare class SearchController {
   performSearchOptionAction(item: any, mode: string): Promise<void>;
   invokePlayMedia(targetEntityId: string, item: any): Promise<boolean>;
   delay(ms: number): Promise<void>;
+  loadArtistAlbums(artistUri: string | null, artistName: string): Promise<void>;
   searchArtistAlbums(artistName: string, artistUri?: string | null): Promise<void>;
   goBackInSearch(): void;
   scrollToTop(): void;
@@ -821,14 +826,18 @@ export declare class SearchController {
   checkAiRadioAvailability(): Promise<void>;
   applyLocalFavoritesFilter(results?: any[]): Promise<any[]>;
   handleSearchResultClick(item: any, event?: Event): Promise<void>;
-  loadAlbumTracks(albumUri: string, albumName: string, artistName?: string | null): Promise<void>;
+  loadAlbumTracks(
+    albumUri: string | null,
+    albumName: string,
+    artistName?: string | null
+  ): Promise<void>;
   searchAlbumTracks(
     albumName: string,
     artistName?: string | null,
     albumUri?: string | null
   ): Promise<void>;
-  loadPlaylistTracks(playlistUri: string, playlistName: string): Promise<boolean>;
-  searchPlaylistTracks(playlistName: string, playlistUri: string): Promise<void>;
+  loadPlaylistTracks(playlistUri: string | null, playlistName: string): Promise<boolean>;
+  searchPlaylistTracks(playlistName: string, playlistUri?: string | null): Promise<void>;
   resetSearchContext(): void;
   showSearchSuccessToast(menuId?: string | null, type?: string | null): void;
 }

@@ -8,6 +8,7 @@ import {
   sortSearchResultsList,
   filterHierarchySearchResults,
   matchResolvedMediaUri,
+  normalizeBrowseMediaChild,
   snapshotPlaybackStateMap,
   hasPlaybackStateChanged,
 } from "../src/controllers/search-controller.js";
@@ -141,6 +142,138 @@ describe("SearchController & Pure Search Helpers", () => {
     });
   });
 
+  describe("normalizeBrowseMediaChild", () => {
+    it("returns null or primitives untouched for non-object inputs", () => {
+      assert.strictEqual(normalizeBrowseMediaChild(null), null);
+      assert.strictEqual(normalizeBrowseMediaChild(undefined), undefined);
+      assert.strictEqual(normalizeBrowseMediaChild("string"), "string");
+      assert.strictEqual(normalizeBrowseMediaChild(123), 123);
+      assert.strictEqual(normalizeBrowseMediaChild(true), true);
+    });
+
+    it("maps can_expand to is_browsable", () => {
+      const expandable = normalizeBrowseMediaChild({
+        title: "Test Album",
+        can_expand: true,
+      });
+      assert.strictEqual(expandable.is_browsable, true);
+      assert.strictEqual(expandable.can_expand, true);
+
+      const nonExpandable = normalizeBrowseMediaChild({
+        title: "Test Track",
+        can_expand: false,
+      });
+      assert.strictEqual(nonExpandable.is_browsable, false);
+      assert.strictEqual(nonExpandable.can_expand, false);
+    });
+
+    it("preserves explicit boolean is_browsable over can_expand", () => {
+      const explicitTrue = normalizeBrowseMediaChild({
+        title: "Item",
+        is_browsable: true,
+        can_expand: false,
+      });
+      assert.strictEqual(explicitTrue.is_browsable, true);
+
+      const explicitFalse = normalizeBrowseMediaChild({
+        title: "Item",
+        is_browsable: false,
+        can_expand: true,
+      });
+      assert.strictEqual(explicitFalse.is_browsable, false);
+    });
+
+    it("infers is_browsable based on media_class or media_content_type when neither is_browsable nor can_expand is boolean", () => {
+      assert.strictEqual(
+        normalizeBrowseMediaChild({ title: "Album", media_class: "album" }).is_browsable,
+        true
+      );
+      assert.strictEqual(
+        normalizeBrowseMediaChild({ title: "Artist", media_class: "artist" }).is_browsable,
+        true
+      );
+      assert.strictEqual(
+        normalizeBrowseMediaChild({ title: "Playlist", media_class: "playlist" }).is_browsable,
+        true
+      );
+      assert.strictEqual(
+        normalizeBrowseMediaChild({ title: "Track", media_class: "track" }).is_browsable,
+        false
+      );
+
+      assert.strictEqual(
+        normalizeBrowseMediaChild({ title: "Album", media_content_type: "album" }).is_browsable,
+        true
+      );
+      assert.strictEqual(
+        normalizeBrowseMediaChild({ title: "Track", media_content_type: "track" }).is_browsable,
+        false
+      );
+    });
+
+    it("parses 'Artist Name - Track Title' from title when child.artist is not already set", () => {
+      const item = normalizeBrowseMediaChild({
+        title: "Mac DeMarco - Chamber of Reflection",
+        media_class: "track",
+      });
+      assert.strictEqual(item.artist, "Mac DeMarco");
+      assert.strictEqual(item.title, "Chamber of Reflection");
+    });
+
+    it("preserves existing artist without parsing title if child.artist is already set", () => {
+      const item = normalizeBrowseMediaChild({
+        title: "Mac DeMarco - Chamber of Reflection",
+        artist: "Explicit Artist",
+        media_class: "track",
+      });
+      assert.strictEqual(item.artist, "Explicit Artist");
+      assert.strictEqual(item.title, "Mac DeMarco - Chamber of Reflection");
+    });
+
+    it("leaves title untouched if it does not contain ' - ' separator", () => {
+      const item = normalizeBrowseMediaChild({
+        title: "Chamber of Reflection",
+        media_class: "track",
+      });
+      assert.strictEqual(item.title, "Chamber of Reflection");
+      assert.strictEqual(item.artist, undefined);
+    });
+
+    it("applies fallbackArtist and fallbackAlbum when missing on child item", () => {
+      const item = normalizeBrowseMediaChild(
+        { title: "My Old Man", media_class: "track" },
+        { fallbackArtist: "Mac DeMarco", fallbackAlbum: "This Old Dog" }
+      );
+      assert.strictEqual(item.artist, "Mac DeMarco");
+      assert.strictEqual(item.album, "This Old Dog");
+      assert.strictEqual(item.title, "My Old Man");
+    });
+
+    it("does not override existing artist and album with fallbacks", () => {
+      const item = normalizeBrowseMediaChild(
+        {
+          title: "My Old Man",
+          artist: "Original Artist",
+          album: "Original Album",
+          media_class: "track",
+        },
+        { fallbackArtist: "Fallback Artist", fallbackAlbum: "Fallback Album" }
+      );
+      assert.strictEqual(item.artist, "Original Artist");
+      assert.strictEqual(item.album, "Original Album");
+    });
+
+    it("prefers parsed title artist over fallbackArtist", () => {
+      const item = normalizeBrowseMediaChild(
+        { title: "Mac DeMarco - My Old Man", media_class: "track" },
+        { fallbackArtist: "Fallback Artist", fallbackAlbum: "This Old Dog" }
+      );
+      assert.strictEqual(item.artist, "Mac DeMarco");
+      assert.strictEqual(item.title, "My Old Man");
+      assert.strictEqual(item.album, "This Old Dog");
+    });
+  });
+
   describe("snapshotPlaybackStateMap", () => {
     it("returns empty object for non-array entityIds", () => {
       assert.deepStrictEqual(snapshotPlaybackStateMap({}, null), {});
@@ -252,7 +385,9 @@ describe("SearchController & Pure Search Helpers", () => {
   });
 
   describe("SearchController Lifecycle & Instance Methods", () => {
+    /** @type {any} */
     let mockCard;
+    /** @type {any} */
     let controller;
 
     beforeEach(() => {
@@ -434,6 +569,254 @@ describe("SearchController & Pure Search Helpers", () => {
           globalThis.window = origWindow;
           clearSecureThumbnailCache();
         }
+      });
+    });
+
+    describe("Hierarchical browse_media calls (Issue #559)", () => {
+      /** @type {any[]} */
+      let sentMessages;
+
+      beforeEach(() => {
+        sentMessages = [];
+        mockCard._searchHierarchy = [];
+        mockCard._isMusicAssistantEntity = () => true;
+        mockCard._isMassQueueIntegrationAvailable = async () => false;
+        mockCard._getSearchEntityId = () => "media_player.mass_player";
+        mockCard._resolveTemplateAtActionTime = async (/** @type {any} */ t) => t;
+        mockCard.doSearch = async () => {};
+        mockCard.scrollToTop = () => {};
+        mockCard.requestUpdate = () => {};
+
+        mockCard.hass = {
+          states: mockCard.hass?.states || {},
+          connection: {
+            sendMessagePromise: async (/** @type {any} */ msg) => {
+              sentMessages.push(msg);
+              if (msg.service_data?.media_content_type === "album") {
+                return {
+                  response: {
+                    "media_player.mass_player": {
+                      result: {
+                        children: [
+                          {
+                            title: "Mac DeMarco - My Old Man",
+                            media_content_id: "library://track/101",
+                            media_content_type: "track",
+                            media_class: "track",
+                            can_expand: false,
+                          },
+                          {
+                            title: "Mac DeMarco - This Old Dog",
+                            media_content_id: "library://track/102",
+                            media_content_type: "track",
+                            media_class: "track",
+                            can_expand: false,
+                          },
+                        ],
+                      },
+                    },
+                  },
+                };
+              }
+              if (msg.service_data?.media_content_type === "artist") {
+                return {
+                  response: {
+                    "media_player.mass_player": {
+                      result: {
+                        children: [
+                          {
+                            title: "This Old Dog",
+                            media_content_id: "library://album/1750",
+                            media_content_type: "album",
+                            media_class: "album",
+                            can_expand: true,
+                          },
+                          {
+                            title: "Salad Days",
+                            media_content_id: "library://album/1751",
+                            media_content_type: "album",
+                            media_class: "album",
+                            can_expand: true,
+                          },
+                        ],
+                      },
+                    },
+                  },
+                };
+              }
+              if (msg.service_data?.media_content_type === "playlist") {
+                return {
+                  response: {
+                    "media_player.mass_player": {
+                      result: {
+                        children: [
+                          {
+                            title: "Fleetwood Mac - Dreams",
+                            media_content_id: "library://track/501",
+                            media_content_type: "track",
+                            media_class: "track",
+                            can_expand: false,
+                          },
+                        ],
+                      },
+                    },
+                  },
+                };
+              }
+              return { result: { children: [] } };
+            },
+          },
+        };
+      });
+
+      it("loadAlbumTracks sends media_content_type: 'album' and populates normalized tracks", async () => {
+        mockCard.config = { disable_mass_queue: true };
+
+        await controller.loadAlbumTracks("library://album/1750", "This Old Dog", "Mac DeMarco");
+
+        assert.strictEqual(sentMessages.length, 1);
+        const msg = sentMessages[0];
+        assert.strictEqual(msg.domain, "media_player");
+        assert.strictEqual(msg.service, "browse_media");
+        assert.strictEqual(msg.service_data.entity_id, "media_player.mass_player");
+        assert.strictEqual(msg.service_data.media_content_id, "library://album/1750");
+        assert.strictEqual(msg.service_data.media_content_type, "album");
+
+        assert.strictEqual(mockCard._searchResults.length, 2);
+        const track1 = mockCard._searchResults[0];
+        assert.strictEqual(track1.title, "My Old Man");
+        assert.strictEqual(track1.artist, "Mac DeMarco");
+        assert.strictEqual(track1.album, "This Old Dog");
+        assert.strictEqual(track1.is_browsable, false);
+
+        const track2 = mockCard._searchResults[1];
+        assert.strictEqual(track2.title, "This Old Dog");
+        assert.strictEqual(track2.artist, "Mac DeMarco");
+        assert.strictEqual(track2.album, "This Old Dog");
+        assert.strictEqual(track2.is_browsable, false);
+      });
+
+      it("searchArtistAlbums sends media_content_type: 'artist' and populates clickable browsable albums", async () => {
+        await controller.searchArtistAlbums("Mac DeMarco", "library://artist/42");
+
+        assert.strictEqual(sentMessages.length, 1);
+        const msg = sentMessages[0];
+        assert.strictEqual(msg.domain, "media_player");
+        assert.strictEqual(msg.service, "browse_media");
+        assert.strictEqual(msg.service_data.entity_id, "media_player.mass_player");
+        assert.strictEqual(msg.service_data.media_content_id, "library://artist/42");
+        assert.strictEqual(msg.service_data.media_content_type, "artist");
+
+        assert.strictEqual(mockCard._searchBreadcrumb, "Albums by Mac DeMarco");
+        assert.strictEqual(mockCard._searchHierarchy.length, 1);
+        assert.strictEqual(mockCard._searchHierarchy[0].type, "artist");
+        assert.strictEqual(mockCard._searchHierarchy[0].name, "Mac DeMarco");
+        assert.strictEqual(mockCard._searchHierarchy[0].uri, "library://artist/42");
+
+        assert.strictEqual(mockCard._searchResults.length, 2);
+        const album1 = mockCard._searchResults[0];
+        assert.strictEqual(album1.title, "This Old Dog");
+        assert.strictEqual(album1.artist, "Mac DeMarco");
+        assert.strictEqual(album1.is_browsable, true);
+        assert.strictEqual(controller.isClickableSearchResult(album1), true);
+
+        const album2 = mockCard._searchResults[1];
+        assert.strictEqual(album2.title, "Salad Days");
+        assert.strictEqual(album2.artist, "Mac DeMarco");
+        assert.strictEqual(album2.is_browsable, true);
+        assert.strictEqual(controller.isClickableSearchResult(album2), true);
+      });
+
+      it("loadArtistAlbums directly browses artist albums with fallback artist and is_browsable", async () => {
+        await controller.loadArtistAlbums("library://artist/42", "Mac DeMarco");
+
+        assert.strictEqual(sentMessages.length, 1);
+        const msg = sentMessages[0];
+        assert.strictEqual(msg.service_data.media_content_id, "library://artist/42");
+        assert.strictEqual(msg.service_data.media_content_type, "artist");
+
+        assert.strictEqual(mockCard._searchResults.length, 2);
+        assert.strictEqual(mockCard._searchResults[0].artist, "Mac DeMarco");
+        assert.strictEqual(mockCard._searchResults[0].is_browsable, true);
+      });
+
+      it("loadPlaylistTracks sends media_content_type: 'playlist' and normalizes playlist tracks", async () => {
+        const result = await controller.loadPlaylistTracks("library://playlist/99", "Road Trip");
+
+        assert.strictEqual(result, true);
+        assert.strictEqual(sentMessages.length, 1);
+        const msg = sentMessages[0];
+        assert.strictEqual(msg.domain, "media_player");
+        assert.strictEqual(msg.service, "browse_media");
+        assert.strictEqual(msg.service_data.entity_id, "media_player.mass_player");
+        assert.strictEqual(msg.service_data.media_content_id, "library://playlist/99");
+        assert.strictEqual(msg.service_data.media_content_type, "playlist");
+
+        assert.strictEqual(mockCard._searchResults.length, 1);
+        const track = mockCard._searchResults[0];
+        assert.strictEqual(track.title, "Dreams");
+        assert.strictEqual(track.artist, "Fleetwood Mac");
+        assert.strictEqual(track.is_browsable, false);
+      });
+
+      it("goBackInSearch navigates back from album level to artist level reloading artist albums", async () => {
+        mockCard._searchHierarchy = [
+          {
+            type: "artist",
+            name: "Mac DeMarco",
+            uri: "library://artist/42",
+            query: "",
+            filter: "album",
+          },
+          {
+            type: "album",
+            name: "This Old Dog",
+            uri: "library://album/1750",
+            query: "",
+            filter: "track",
+          },
+        ];
+
+        controller.goBackInSearch();
+
+        await new Promise((r) => setTimeout(r, 10));
+
+        assert.strictEqual(mockCard._searchHierarchy.length, 1);
+        assert.strictEqual(mockCard._searchHierarchy[0].type, "artist");
+        assert.strictEqual(mockCard._searchBreadcrumb, "Albums by Mac DeMarco");
+        assert.strictEqual(mockCard._searchMediaClassFilter, "album");
+
+        assert.strictEqual(sentMessages.length, 1);
+        assert.strictEqual(sentMessages[0].service_data.media_content_id, "library://artist/42");
+        assert.strictEqual(sentMessages[0].service_data.media_content_type, "artist");
+        assert.strictEqual(mockCard._searchResults.length, 2);
+      });
+
+      it("goBackInSearch resets breadcrumb and re-runs search when popping the last hierarchy level", () => {
+        let doSearchCalled = false;
+        let searchMediaClass = null;
+        controller.doSearch = async (mediaClass) => {
+          doSearchCalled = true;
+          searchMediaClass = mediaClass;
+        };
+
+        mockCard._searchHierarchy = [
+          {
+            type: "artist",
+            name: "Mac DeMarco",
+            uri: "library://artist/42",
+            query: "demarco",
+            filter: "artist",
+          },
+        ];
+
+        controller.goBackInSearch();
+
+        assert.strictEqual(mockCard._searchHierarchy.length, 0);
+        assert.strictEqual(mockCard._searchBreadcrumb, "");
+        assert.strictEqual(mockCard._searchQuery, "demarco");
+        assert.strictEqual(doSearchCalled, true);
+        assert.strictEqual(searchMediaClass, "artist");
       });
     });
   });
