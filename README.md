@@ -98,7 +98,7 @@ Below you will find a list of all configuration options.
 | `match_theme`              | boolean      | No           | `false`     | Updates card accent colors to match your Home Assistant theme                                   |
 | `appearance`               | choice       | No           | `automatic` | Force the card into `light` or `dark` mode, or use `automatic` to follow system/theme settings |
 | `display_timestamps`       | boolean      | No           | `false`     | Display timestamps on the progress bar                                                          |
-| `show_chip_row`            | choice       | No           | `auto`      | `auto`: hides chip row if only one entity, `always`: always shows the chip row, `in_menu`: moves chips into the entity-options menu, `in_menu_on_idle`: shows chips inline when active but moves them to the menu when idle |
+| `show_chip_row`            | choice       | No           | `auto`      | `auto`: hides chip row if only one entity, `always`: always shows the chip row, `in_menu`: moves chips into the entity-options menu, `in_menu_on_idle`: shows chips inline when active but moves them to the menu when idle ([Supports Templates](#template-support)) |
 | `alternate_progress_bar`   | boolean      | No           | `false`     | Uses the collapsed progress bar when expanded                                                   |
 | `adaptive_controls`        | boolean      | No           | `false`     | Control buttons expand to fill extra horizontal space, giving you larger tap targets when there’s room |
 | `control_layout`           | choice       | No           | `classic`   | `classic` keeps the legacy evenly sized controls, while `modern` adopts Home Assistant’s more-info layout (shuffle/prev/play/next/repeat) and moves the favorite and power buttons along the bottom of the card ([Supports Templates](#template-support)) |
@@ -846,6 +846,7 @@ The following configuration keys support templates:
 - **`lock_screen_controls`**: Dynamically enable or disable lock screen controls.
 - **`full_screen`**: Dynamically toggle full-screen dashboard overlay mode.
 - **`control_layout`**: Dynamically select the control layout style (`classic` or `modern`).
+- **`show_chip_row`**: Dynamically control chip row visibility mode (`auto`, `always`, `in_menu`, or `in_menu_on_idle`).
 - **`in_menu`**: Dynamically determine where an action is placed (`true`, `false`, or `hidden`).
 - **`image_url` / `missing_art_url`**: (Inside `media_artwork_overrides`) Dynamically determine artwork.
 

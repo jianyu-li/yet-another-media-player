@@ -149,6 +149,7 @@ describe("config-schema", () => {
         "lyrics_background_fade",
         "lock_screen_controls",
         "full_screen",
+        "show_chip_row",
       ];
       expectedFields.forEach((field) => {
         assert.ok(TEMPLATE_SUPPORTED_FIELDS.has(field), `Field should support templates: ${field}`);
@@ -171,6 +172,7 @@ describe("config-schema", () => {
       assert.equal(isFieldTemplateSupported("icon"), true);
       assert.equal(isFieldTemplateSupported("lyrics"), true);
       assert.equal(isFieldTemplateSupported("idle_image"), true);
+      assert.equal(isFieldTemplateSupported("show_chip_row"), true);
       assert.equal(isFieldTemplateSupported("volume_step"), false);
       assert.equal(isFieldTemplateSupported("entities"), false);
       assert.equal(isFieldTemplateSupported("template"), false);

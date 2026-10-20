@@ -93,6 +93,11 @@ export class TemplateController {
     /** @type {Record<string, { value: string | boolean, ts: number }>} */
     this.fullScreenResolveCache = {};
 
+    /** @type {Record<string, { template: string, resolved: string | null }>} */
+    this.showChipRowTemplateValue = {};
+    /** @type {Record<string, { value: string, ts: number }>} */
+    this.showChipRowResolveCache = {};
+
     /** @type {Record<string, string>} */
     this.contextKeyMap = {};
   }
@@ -172,6 +177,12 @@ export class TemplateController {
         cache: this.fullScreenResolveCache,
       };
     }
+    if (type === "show_chip_row") {
+      return {
+        templateVals: this.showChipRowTemplateValue,
+        cache: this.showChipRowResolveCache,
+      };
+    }
     return null;
   }
 
@@ -237,6 +248,7 @@ export class TemplateController {
               type === "lyrics_background_fade" ||
               type === "lock_screen_controls" ||
               type === "full_screen" ||
+              type === "show_chip_row" ||
               type === "hidden_controls"
             ) {
               isValid = true; // Any string result is valid
@@ -262,6 +274,7 @@ export class TemplateController {
               type === "lyrics_background_fade" ||
               type === "lock_screen_controls" ||
               type === "full_screen" ||
+              type === "show_chip_row" ||
               type === "hidden_controls"
             ) {
               const currentCached = cache[idx]?.value;
@@ -566,7 +579,8 @@ export class TemplateController {
       type === "card_height" ||
       type === "lyrics_background_fade" ||
       type === "lock_screen_controls" ||
-      type === "full_screen"
+      type === "full_screen" ||
+      type === "show_chip_row"
     ) {
       processItem("card", rawConfigData);
     } else if (type === "action_in_menu") {

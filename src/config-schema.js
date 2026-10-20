@@ -235,6 +235,7 @@ export const TEMPLATE_SUPPORTED_FIELDS = Object.freeze(
     "lyrics_background_fade",
     "lock_screen_controls",
     "full_screen",
+    "show_chip_row",
   ])
 );
 

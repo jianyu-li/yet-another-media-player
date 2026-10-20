@@ -79,24 +79,62 @@ export function renderBehaviorTab() {
           @click=${() => this._updateConfig("idle_timeout_ms", 60000)}
         ></ha-icon>
       </div>
-      <div class="form-row">
-        <ha-selector
-          .hass=${this.hass}
-          .selector=${{
-            select: {
-              mode: "dropdown",
-              options: [
-                { value: "auto", label: "Auto" },
-                { value: "always", label: "Always" },
-                { value: "in_menu", label: "In Menu" },
-                { value: "in_menu_on_idle", label: "In Menu on Idle" },
-              ],
-            },
-          }}
-          .value=${this._config.show_chip_row ?? "auto"}
-          label="${localize("editor.fields.show_chip_row")}"
-          @value-changed=${(e) => this._updateConfig("show_chip_row", e.detail.value)}
-        ></ha-selector>
+      <div class="form-row" data-search-keys="show_chip_row auto always in_menu in_menu_on_idle">
+        <div class="editor-field-wrapper">
+          ${
+            this._isTemplateMode("show_chip_row", this._config.show_chip_row)
+              ? html`
+                  <div class="grow-children" style="flex-direction: column;">
+                    <span class="form-label">${localize("editor.fields.show_chip_row")}</span>
+                    <ha-code-editor
+                      lint
+                      .hass=${this.hass}
+                      mode="jinja2"
+                      autocomplete-entities
+                      label="${localize("editor.fields.show_chip_row")}"
+                      .value=${
+                        typeof this._config.show_chip_row === "string"
+                          ? this._config.show_chip_row
+                          : ""
+                      }
+                      @value-changed=${(e) => this._updateConfig("show_chip_row", e.detail.value)}
+                    ></ha-code-editor>
+                  </div>
+                  <div class="field-actions">
+                    ${this._renderTemplateToggle("show_chip_row", this._config.show_chip_row, (v) =>
+                      this._updateConfig("show_chip_row", v)
+                    )}
+                  </div>
+                `
+              : html`
+                  <div class="grow-children">
+                    <ha-selector
+                      .hass=${this.hass}
+                      class="full-width"
+                      .selector=${{
+                        select: {
+                          mode: "dropdown",
+                          options: [
+                            { value: "auto", label: "Auto" },
+                            { value: "always", label: "Always" },
+                            { value: "in_menu", label: "In Menu" },
+                            { value: "in_menu_on_idle", label: "In Menu on Idle" },
+                          ],
+                        },
+                      }}
+                      .value=${this._config.show_chip_row ?? "auto"}
+                      label="${localize("editor.fields.show_chip_row")}"
+                      @value-changed=${(e) => this._updateConfig("show_chip_row", e.detail.value)}
+                    ></ha-selector>
+                  </div>
+                  <div class="field-actions">
+                    ${this._renderTemplateToggle("show_chip_row", this._config.show_chip_row, (v) =>
+                      this._updateConfig("show_chip_row", v)
+                    )}
+                  </div>
+                `
+          }
+        </div>
         <div class="config-subtitle">${localize("editor.subtitles.show_chip_row")}</div>
       </div>
       <div class="form-row form-row-multi-column">
