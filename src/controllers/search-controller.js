@@ -166,6 +166,51 @@ export function matchResolvedMediaUri(items, mediaType, name, artist = "") {
 }
 
 /**
+ * Normalizes a Home Assistant BrowseMedia child item into YAMP's search result item shape.
+ * @param {any} child
+ * @param {{ fallbackArtist?: string | null, fallbackAlbum?: string | null }} [context]
+ * @returns {any}
+ */
+export function normalizeBrowseMediaChild(
+  child,
+  { fallbackArtist = null, fallbackAlbum = null } = {}
+) {
+  if (!child || typeof child !== "object") return child;
+  const mediaClass = child.media_class || child.media_content_type || "";
+  const isBrowsable =
+    typeof child.is_browsable === "boolean"
+      ? child.is_browsable
+      : typeof child.can_expand === "boolean"
+        ? child.can_expand
+        : mediaClass === "artist" || mediaClass === "album" || mediaClass === "playlist";
+
+  let title = child.title ?? child.name ?? "";
+  let artist = child.artist ?? "";
+  const album = child.album ?? fallbackAlbum ?? undefined;
+
+  if (!artist && typeof title === "string" && title.includes(" - ")) {
+    const sepIdx = title.indexOf(" - ");
+    const parsedArtist = title.slice(0, sepIdx).trim();
+    const parsedTitle = title.slice(sepIdx + 3).trim();
+    if (parsedArtist && parsedTitle) {
+      artist = parsedArtist;
+      title = parsedTitle;
+    }
+  }
+  if (!artist && fallbackArtist) {
+    artist = fallbackArtist;
+  }
+
+  return {
+    ...child,
+    title,
+    ...(artist ? { artist } : {}),
+    ...(album ? { album } : {}),
+    is_browsable: isBrowsable,
+  };
+}
+
+/**
  * Creates a state snapshot map for monitored media players.
  * @param {Record<string, any> | undefined} states
  * @param {string[] | null | undefined} entityIds
@@ -1541,6 +1586,59 @@ export class SearchController {
   }
 
   /**
+   * Loads albums for an artist via browse_media or search.
+   * @param {string | null} artistUri
+   * @param {string} artistName
+   * @returns {Promise<void>}
+   */
+  async loadArtistAlbums(artistUri, artistName) {
+    if (artistUri && this.host?._isMusicAssistantEntity?.()) {
+      try {
+        const searchEntityIdTemplate = this.host._getSearchEntityId(this.host._selectedIndex);
+        const searchEntityId = await this.host._resolveTemplateAtActionTime(
+          searchEntityIdTemplate,
+          this.host.currentEntityId
+        );
+
+        const browseMsg = {
+          type: "call_service",
+          domain: "media_player",
+          service: "browse_media",
+          service_data: {
+            entity_id: searchEntityId,
+            media_content_id: artistUri,
+            media_content_type: "artist",
+          },
+          return_response: true,
+        };
+
+        const browseRes = await this.host.hass.connection.sendMessagePromise(browseMsg);
+        const browseResult =
+          browseRes?.response?.[searchEntityId]?.result || browseRes?.result || {};
+        const children = browseResult.children || [];
+        const albums = children
+          .filter((c) => c.media_class === "album" || c.media_content_type === "album")
+          .map((c) => normalizeBrowseMediaChild(c, { fallbackArtist: artistName }));
+
+        if (albums.length > 0) {
+          this.host._searchQuery = "";
+          this.host._searchResults = this.sortSearchResults(albums);
+          this.resolveInsecureResultThumbnails(this.host._searchResults);
+          this.host._searchTotalRows = Math.max(15, albums.length);
+          this.host._searchAttempted = true;
+          this.host._searchLoading = false;
+          this.host.requestUpdate();
+          return;
+        }
+      } catch (_e) {
+        // Fall back to search
+      }
+    }
+
+    await this.doSearch("album", { artist: artistName, clearFilters: true });
+  }
+
+  /**
    * Search and navigate directly to artist albums hierarchy.
    * @param {string} artistName
    * @param {string | null} [artistUri]
@@ -1570,50 +1668,7 @@ export class SearchController {
     this.host._initialFavoritesLoaded = false;
 
     this.removeSearchSwipeHandlers();
-
-    if (artistUri && this.host?._isMusicAssistantEntity?.()) {
-      try {
-        const searchEntityIdTemplate = this.host._getSearchEntityId(this.host._selectedIndex);
-        const searchEntityId = await this.host._resolveTemplateAtActionTime(
-          searchEntityIdTemplate,
-          this.host.currentEntityId
-        );
-
-        const browseMsg = {
-          type: "call_service",
-          domain: "media_player",
-          service: "browse_media",
-          service_data: {
-            entity_id: searchEntityId,
-            media_content_id: artistUri,
-          },
-          return_response: true,
-        };
-
-        const browseRes = await this.host.hass.connection.sendMessagePromise(browseMsg);
-        const browseResult =
-          browseRes?.response?.[searchEntityId]?.result || browseRes?.result || {};
-        const children = browseResult.children || [];
-        const albums = children.filter(
-          (c) => c.media_class === "album" || c.media_content_type === "album"
-        );
-
-        if (albums.length > 0) {
-          this.host._searchQuery = "";
-          this.host._searchResults = this.sortSearchResults(albums);
-          this.resolveInsecureResultThumbnails(this.host._searchResults);
-          this.host._searchTotalRows = Math.max(15, albums.length);
-          this.host._searchAttempted = true;
-          this.host._searchLoading = false;
-          this.host.requestUpdate();
-          return;
-        }
-      } catch (_e) {
-        // Fall back to search
-      }
-    }
-
-    await this.doSearch("album", { artist: artistName, clearFilters: true });
+    await this.loadArtistAlbums(artistUri, artistName);
   }
 
   goBackInSearch() {
@@ -1657,6 +1712,17 @@ export class SearchController {
       if (currentLevel.type === "artist") {
         this.host._searchBreadcrumb = `Albums by ${currentLevel.name}`;
         this.host._searchMediaClassFilter = "album";
+        if (currentLevel.uri && this.host?._isMusicAssistantEntity?.()) {
+          this.host._searchQuery = "";
+          this.host._currentSearchQuery = "";
+          this.host._searchResults = [];
+          this.host._searchLoading = true;
+          this.host.requestUpdate();
+          this.loadArtistAlbums(currentLevel.uri, currentLevel.name).then(() => {
+            this.scrollToTop();
+          });
+          return;
+        }
         this.doSearch("album", { artist: currentLevel.name });
       } else if (currentLevel.type === "album") {
         this.host._searchBreadcrumb = `Tracks from ${currentLevel.name}`;
@@ -2416,6 +2482,7 @@ export class SearchController {
           service_data: {
             entity_id: searchEntityId,
             media_content_id: albumUri,
+            media_content_type: "album",
           },
           return_response: true,
         };
@@ -2423,7 +2490,9 @@ export class SearchController {
         const browseRes = await this.host.hass.connection.sendMessagePromise(browseMsg);
         const browseResult =
           browseRes?.response?.[searchEntityId]?.result || browseRes?.result || {};
-        const tracks = browseResult.children || [];
+        const tracks = (browseResult.children || []).map((c) =>
+          normalizeBrowseMediaChild(c, { fallbackArtist: artistName, fallbackAlbum: albumName })
+        );
 
         if (tracks.length > 0) {
           this.host._searchQuery = "";
@@ -2511,6 +2580,7 @@ export class SearchController {
           service_data: {
             entity_id: searchEntityId,
             media_content_id: playlistUri,
+            media_content_type: "playlist",
           },
           return_response: true,
         };
@@ -2518,7 +2588,7 @@ export class SearchController {
         const browseRes = await this.host.hass.connection.sendMessagePromise(browseMsg);
         const browseResult =
           browseRes?.response?.[searchEntityId]?.result || browseRes?.result || {};
-        const tracks = browseResult.children || [];
+        const tracks = (browseResult.children || []).map((c) => normalizeBrowseMediaChild(c));
 
         if (tracks.length > 0) {
           this.host._searchQuery = "";
