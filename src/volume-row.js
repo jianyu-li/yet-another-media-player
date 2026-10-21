@@ -55,6 +55,8 @@ export function renderVolumeRow({
     leadingControlTemplate !== nothing &&
     leadingControlTemplate !== undefined &&
     leadingControlTemplate !== null;
+  const hasMuteAction =
+    muteSlotTemplate !== nothing && muteSlotTemplate !== undefined && muteSlotTemplate !== null;
   // Determine volume icon based on volume level and mute state
   const getVolumeIcon = (volume, muted) => {
     // For entities that don't support mute, consider them muted when volume is 0
@@ -68,7 +70,11 @@ export function renderVolumeRow({
   const shouldCollapse =
     typeof collapseRow === "boolean"
       ? collapseRow
-      : hideVolume && moreInfoMenu === nothing && !hasLeadingControl && !showRightPlaceholder;
+      : hideVolume &&
+        moreInfoMenu === nothing &&
+        !hasLeadingControl &&
+        !showRightPlaceholder &&
+        !hasMuteAction;
 
   return html`
     <div
@@ -85,13 +91,13 @@ export function renderVolumeRow({
         }
         <div
           style="${
-            hideVolume || isRemoteVolumeEntity
+            !hasMuteAction && (hideVolume || isRemoteVolumeEntity)
               ? "visibility:hidden; opacity:0; pointer-events:none;"
               : ""
           } display: flex; align-items: center; justify-content: center;"
         >
           ${
-            muteSlotTemplate !== nothing
+            hasMuteAction
               ? muteSlotTemplate
               : html`
                   <button

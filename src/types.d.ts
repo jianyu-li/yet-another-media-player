@@ -242,7 +242,7 @@ export interface YampEntityConfig {
   custom_chips?: CustomChipConfig[];
   shortcuts?: ShortcutConfig[];
   show_idle_artwork_when_not_playing?: boolean;
-  volume_mode?: "slider" | "stepper" | "buttons" | "none";
+  volume_mode?: "slider" | "stepper" | "buttons" | "none" | "hidden";
   volume_step?: number;
   control_layout?: "classic" | "modern" | "stacked";
   progress_bar_height?: number;
@@ -269,7 +269,7 @@ export interface YampCardConfig {
     "automatic" | "glassmorphism" | "minimal" | "flat" | "transparent" | "custom" | string;
   card_type?: "standard" | "search" | "group_players" | "players" | string;
   control_layout?: "classic" | "modern" | "stacked" | string;
-  volume_mode?: "slider" | "stepper" | "buttons" | "none" | string;
+  volume_mode?: "slider" | "stepper" | "buttons" | "none" | "hidden" | string;
   volume_step?: number;
   hold_to_pin?: boolean;
   show_chip_row?: "always" | "in_menu" | "in_menu_on_idle" | "never" | "auto" | string;
