@@ -7178,8 +7178,9 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
     const hasRightPlaceholder = this._controlLayout === "modern";
     const hasLeadingControl = leadingVolumeControl !== nothing && leadingVolumeControl !== undefined && leadingVolumeControl !== null;
+    const hasMuteAction = muteSlotTemplate !== nothing && muteSlotTemplate !== undefined && muteSlotTemplate !== null;
 
-    const volumeRowWillCollapse = isVolumeHiddenByConfig && !hasLeadingControl && !hasRightPlaceholder;
+    const volumeRowWillCollapse = isVolumeHiddenByConfig && !hasLeadingControl && !hasRightPlaceholder && !hasMuteAction;
 
     const detailsHasAdaptiveText = !!this._adaptiveTextTargets?.has("details");
     this._lastSpacerRendered = !!(showCollapsedPlaceholder || (!collapsed && (!detailsHasAdaptiveText || hasSpacerContent)));
