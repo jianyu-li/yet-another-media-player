@@ -6,9 +6,20 @@ const g = /** @type {any} */ (globalThis);
 g.window = globalThis;
 g.customElements = { define() {} };
 class MockHTMLElement {
-  attachShadow() {
-    return {};
+  constructor() {
+    this.renderRoot = {
+      querySelector: () => null,
+      querySelectorAll: () => [],
+    };
   }
+  attachShadow() {
+    return this.renderRoot;
+  }
+  dispatchEvent() {
+    return true;
+  }
+  addEventListener() {}
+  removeEventListener() {}
 }
 g.HTMLElement = MockHTMLElement;
 g.__VERSION__ = "1.0.0-test";
@@ -150,6 +161,99 @@ describe("Idle Timeout Paused Entity Linger Behavior", () => {
         HOMEPOD_ID,
         "Active entity ID must not switch to HomePod when Apple TV pauses"
       );
+    });
+
+    it("maintains Apple TV as active entity throughout asynchronous AirPlay pause delay", () => {
+      // Initial state: both playing same media
+      const initialHass = {
+        ...card.hass,
+        states: {
+          [APPLE_TV_ID]: {
+            entity_id: APPLE_TV_ID,
+            state: "playing",
+            attributes: {
+              friendly_name: "Living Room Apple TV",
+              media_title: "Forky Asks a Question",
+            },
+          },
+          [HOMEPOD_ID]: {
+            entity_id: HOMEPOD_ID,
+            state: "playing",
+            attributes: {
+              friendly_name: "Living Room HomePod",
+              media_title: "Forky Asks a Question",
+            },
+          },
+        },
+      };
+
+      card.hass = initialHass;
+      card.updated(new Map([["hass", undefined]]));
+      card.render();
+
+      assert.equal(card._getActivePlaybackEntityForIndex(0), APPLE_TV_ID);
+      assert.equal(card._getActivePlaybackEntityId(0), APPLE_TV_ID);
+
+      // Event 1: Apple TV pauses, but HomePod still reports playing
+      const event1Hass = {
+        ...card.hass,
+        states: {
+          [APPLE_TV_ID]: {
+            entity_id: APPLE_TV_ID,
+            state: "paused",
+            attributes: {
+              friendly_name: "Living Room Apple TV",
+              media_title: "Forky Asks a Question",
+            },
+          },
+          [HOMEPOD_ID]: {
+            entity_id: HOMEPOD_ID,
+            state: "playing",
+            attributes: {
+              friendly_name: "Living Room HomePod",
+              media_title: "Forky Asks a Question",
+            },
+          },
+        },
+      };
+
+      card.hass = event1Hass;
+      card.updated(new Map([["hass", initialHass]]));
+      card.render();
+      assert.equal(card._getActivePlaybackEntityForIndex(0), APPLE_TV_ID);
+      assert.equal(card._getActivePlaybackEntityId(0), APPLE_TV_ID);
+      assert.equal(card._playbackLingerByIdx?.[0]?.entityId, APPLE_TV_ID);
+
+      // Event 2: HomePod pauses 50ms later
+      const event2Hass = {
+        ...card.hass,
+        states: {
+          [APPLE_TV_ID]: {
+            entity_id: APPLE_TV_ID,
+            state: "paused",
+            attributes: {
+              friendly_name: "Living Room Apple TV",
+              media_title: "Forky Asks a Question",
+            },
+          },
+          [HOMEPOD_ID]: {
+            entity_id: HOMEPOD_ID,
+            state: "paused",
+            attributes: {
+              friendly_name: "Living Room HomePod",
+              media_title: "Forky Asks a Question",
+            },
+          },
+        },
+      };
+
+      card.hass = event2Hass;
+      card.updated(new Map([["hass", event1Hass]]));
+      card.render();
+      assert.equal(card._getActivePlaybackEntityForIndex(0), APPLE_TV_ID);
+      assert.equal(card._getActivePlaybackEntityId(0), APPLE_TV_ID);
+      assert.equal(card._playbackLingerByIdx?.[0]?.entityId, APPLE_TV_ID);
+      assert.equal(card._lastActiveEntityIdByChip[0], APPLE_TV_ID);
     });
   });
 
