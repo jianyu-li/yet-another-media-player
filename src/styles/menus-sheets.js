@@ -458,7 +458,6 @@ export const menusSheetsStyles = css`
     background: none;
     color: var(--yamp-overlay-text);
     border: none;
-    border-radius: 10px;
     font-size: 1.12em;
     font-weight: 400;
     margin: 4px 0;
@@ -1343,7 +1342,6 @@ export const menusSheetsStyles = css`
     background: none;
     color: var(--yamp-overlay-text);
     border: none;
-    border-radius: 10px;
     font-size: 1.12em;
     font-weight: 400;
     margin: 4px 0;
