@@ -8,7 +8,8 @@
 export const DEFAULT_PROGRESS_BAR_HEIGHT = 6;
 export const DEFAULT_IDLE_TIMEOUT_MS = 60000;
 export const DEFAULT_VOLUME_STEP = 0.05;
-export const DEFAULT_LYRICS_BACKGROUND_FADE = 75;
+export const DEFAULT_BACKGROUND_FADE = 75;
+export const DEFAULT_LYRICS_BACKGROUND_FADE = DEFAULT_BACKGROUND_FADE;
 
 /**
  * Predefined card configuration presets
@@ -191,6 +192,7 @@ export const CARD_CONFIG_DEFAULTS = Object.freeze({
   hide_active_entity_label_on_idle: false,
   swap_pause_for_stop: false,
   show_album: true,
+  background_fade: DEFAULT_BACKGROUND_FADE,
   lyrics_background_fade: DEFAULT_LYRICS_BACKGROUND_FADE,
   lock_screen_controls: false,
   full_screen: false,
@@ -232,6 +234,7 @@ export const TEMPLATE_SUPPORTED_FIELDS = Object.freeze(
     "idle_image",
     "background_image",
     "font_color",
+    "background_fade",
     "lyrics_background_fade",
     "lock_screen_controls",
     "full_screen",
@@ -289,6 +292,14 @@ export function normalizeCardConfig(rawConfig = {}) {
     ...templateBase,
     ...rawConfig,
   };
+  if (rawConfig.lyrics_background_fade !== undefined && rawConfig.background_fade === undefined) {
+    normalized.background_fade = rawConfig.lyrics_background_fade;
+  } else if (
+    rawConfig.background_fade !== undefined &&
+    rawConfig.lyrics_background_fade === undefined
+  ) {
+    normalized.lyrics_background_fade = rawConfig.background_fade;
+  }
   if (
     templateBase.card_type &&
     (!rawConfig.card_type ||

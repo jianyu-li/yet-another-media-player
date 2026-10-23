@@ -71,6 +71,16 @@ export default {
         description:
           "Una scheda di raggruppamento lettori autonoma. Richiede più entità configurate.",
       },
+      players: {
+        label: "Terapia di gruppo",
+        description:
+          "Una scheda di raggruppamento lettori autonoma. Richiede più entità configurate.",
+      },
+      group_players: {
+        label: "Terapia di gruppo",
+        description:
+          "Una scheda di raggruppamento lettori autonoma. Richiede più entità configurate.",
+      },
       huge_yamp: {
         label: "Questo è un enorme YAMP!",
         description:
@@ -233,6 +243,8 @@ export default {
         "Sposta il tempismo dell'evidenziazione dei testi. I valori positivi lo accelerano, quelli negativi lo ritardano (predefinito: 0).",
       lyrics_background_fade:
         "Regola la dissolvenza dello sfondo e l'opacità di attenuazione della sovrapposizione dei testi (0% per grafica trasparente, 100% per sfondo solido).",
+      background_fade:
+        "Regola l'opacità dello sfondo in sovrimpressione e della sfumatura della copertina (0-100%).",
       blurred_artwork: "Sfoca sempre l'immagine di sfondo",
       hide_collapsed_artwork: "Nascondi l'immagine piccola a destra quando la scheda è compressa",
       disable_artwork_gradient: "Disattiva la sfumatura inferiore sull'immagine di copertina",
@@ -300,6 +312,7 @@ export default {
       lyrics_source: "Sorgente testi",
       lyrics_pre_roll: "Pre-roll testi (secondi)",
       lyrics_background_fade: "Dissolvenza sfondo testi",
+      background_fade: "Dissolvenza sfondo",
       blurred_artwork: "Immagine sfocata",
       hide_collapsed_artwork: "Nascondi immagine contratta",
       disable_artwork_gradient: "Disattiva sfumatura copertina",
@@ -368,6 +381,7 @@ export default {
       no_artwork_option: "Nessuna copertina",
       details_alignment: "Allineamento dei dettagli",
       lyrics_background_fade: "Dissolvenza sfondo testi (%)",
+      background_fade: "Dissolvenza sfondo (%)",
       queue_controls_style: "Stile controlli coda",
     },
     action_types: {

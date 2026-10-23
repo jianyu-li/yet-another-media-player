@@ -85,7 +85,7 @@ import {
   SUPPORT_STOP,
   SUPPORT_GROUPING,
   DEFAULT_PROGRESS_BAR_HEIGHT,
-  DEFAULT_LYRICS_BACKGROUND_FADE,
+  DEFAULT_BACKGROUND_FADE,
   GROUP_SELECTION_FEEDBACK_DURATION_MS,
   getTemplatePresetDefaults,
   CANONICAL_MENU_OPTION_MAP,
@@ -826,10 +826,12 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     return !!raw;
   }
 
-  get _lyricsBackgroundFade() {
-    const raw = this.config?.lyrics_background_fade;
+  get _backgroundFade() {
+    const raw = this.config?.background_fade ?? this.config?.lyrics_background_fade;
     if (typeof raw === "string" && (raw.includes("{{") || raw.includes("{%") || raw.trim().startsWith("[[["))) {
-      let resolved = this._lyricsBackgroundFadeResolveCache?.["card"]?.value;
+      let resolved =
+        this._backgroundFadeResolveCache?.["card"]?.value ??
+        this._lyricsBackgroundFadeResolveCache?.["card"]?.value;
       if (resolved === undefined && raw.trim().startsWith("[[[")) {
         try {
           resolved = resolveStringTemplateSync(this.hass, raw, this._getTemplateContext());
@@ -839,17 +841,25 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       }
       if (resolved !== undefined && resolved !== null && resolved !== "") {
         const num = Number(resolved);
-        return Number.isFinite(num) ? Math.max(0, Math.min(100, num)) : DEFAULT_LYRICS_BACKGROUND_FADE;
+        return Number.isFinite(num) ? Math.max(0, Math.min(100, num)) : DEFAULT_BACKGROUND_FADE;
       }
-      return DEFAULT_LYRICS_BACKGROUND_FADE;
+      return DEFAULT_BACKGROUND_FADE;
     }
-    if (raw === undefined || raw === null || raw === "") return DEFAULT_LYRICS_BACKGROUND_FADE;
+    if (raw === undefined || raw === null || raw === "") return DEFAULT_BACKGROUND_FADE;
     const num = Number(raw);
-    return Number.isFinite(num) ? Math.max(0, Math.min(100, num)) : DEFAULT_LYRICS_BACKGROUND_FADE;
+    return Number.isFinite(num) ? Math.max(0, Math.min(100, num)) : DEFAULT_BACKGROUND_FADE;
+  }
+
+  _getBackgroundFade() {
+    return this._backgroundFade;
+  }
+
+  get _lyricsBackgroundFade() {
+    return this._backgroundFade;
   }
 
   _getLyricsBackgroundFade() {
-    return this._lyricsBackgroundFade;
+    return this._backgroundFade;
   }
 
   get _showChipRow() {
@@ -1085,8 +1095,10 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._showRemoteControl = false;
     this._cardHeightTemplateValue = {};
     this._cardHeightResolveCache = {};
-    this._lyricsBackgroundFadeTemplateValue = {};
-    this._lyricsBackgroundFadeResolveCache = {};
+    this._backgroundFadeTemplateValue = {};
+    this._backgroundFadeResolveCache = {};
+    this._lyricsBackgroundFadeTemplateValue = this._backgroundFadeTemplateValue;
+    this._lyricsBackgroundFadeResolveCache = this._backgroundFadeResolveCache;
     this._lockScreenControlsTemplateValue = {};
     this._lockScreenControlsResolveCache = {};
     this._fullScreenTemplateValue = {};
@@ -1328,8 +1340,10 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._controlLayoutResolveCache = this._templateController.controlLayoutResolveCache;
     this._cardHeightTemplateValue = this._templateController.cardHeightTemplateValue;
     this._cardHeightResolveCache = this._templateController.cardHeightResolveCache;
-    this._lyricsBackgroundFadeTemplateValue = this._templateController.lyricsBackgroundFadeTemplateValue;
-    this._lyricsBackgroundFadeResolveCache = this._templateController.lyricsBackgroundFadeResolveCache;
+    this._backgroundFadeTemplateValue = this._templateController.backgroundFadeTemplateValue;
+    this._backgroundFadeResolveCache = this._templateController.backgroundFadeResolveCache;
+    this._lyricsBackgroundFadeTemplateValue = this._backgroundFadeTemplateValue;
+    this._lyricsBackgroundFadeResolveCache = this._backgroundFadeResolveCache;
     this._lockScreenControlsTemplateValue = this._templateController.lockScreenControlsTemplateValue;
     this._lockScreenControlsResolveCache = this._templateController.lockScreenControlsResolveCache;
     this._fullScreenTemplateValue = this._templateController.fullScreenTemplateValue;
@@ -4832,7 +4846,8 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._syncTemplateSubscriptions('always_collapsed', currentContext, this.config?.always_collapsed);
     this._syncTemplateSubscriptions('control_layout', currentContext, this.config?.control_layout);
     this._syncTemplateSubscriptions('card_height', currentContext, this.config?.card_height);
-    this._syncTemplateSubscriptions('lyrics_background_fade', currentContext, this.config?.lyrics_background_fade);
+    const bgFadeConfig = this.config?.background_fade ?? this.config?.lyrics_background_fade;
+    this._syncTemplateSubscriptions('background_fade', currentContext, bgFadeConfig);
     this._syncTemplateSubscriptions('lock_screen_controls', currentContext, this.config?.lock_screen_controls);
     this._syncTemplateSubscriptions('full_screen', currentContext, this.config?.full_screen);
     this._syncTemplateSubscriptions('show_chip_row', currentContext, this.config?.show_chip_row);
@@ -7193,7 +7208,8 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       (volumeRowWillCollapse ? 0 : 56)
     );
     const lyricsBottomOffset = lowerControlsH;
-    const lyricsFade = this._getLyricsBackgroundFade();
+    const backgroundFade = this._getBackgroundFade();
+    const lyricsFade = backgroundFade;
     const lyricsBlurPx = lyricsFade === 0 ? 0 : Math.min(5, Number(((lyricsFade / 80) * 5).toFixed(1)));
     const lyricsBackdropFilter = lyricsBlurPx === 0 ? "none" : `blur(${lyricsBlurPx}px)`;
 
@@ -7202,15 +7218,21 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
     return html`
         <ha-card class="yamp-card" 
-          style=${(hasCustomCardHeight && (!collapsed || this._alwaysCollapsed)) ? `height:${customCardHeight}px;` : nothing}>
+          style=${[
+            (hasCustomCardHeight && (!collapsed || this._alwaysCollapsed)) ? `height:${customCardHeight}px;` : null,
+            `--yamp-background-fade: ${backgroundFade}%`
+          ].filter(Boolean).join('; ') || nothing}>
           <div
             data-match-theme="${String(this.config.match_theme === true)}"
             data-has-font-color="${String(hasFontColor)}"
             data-artwork-fit="${activeArtworkFit}"
             data-has-background-image="${String(hasCardBg)}"
             data-lyrics-active="${String(this._lyricsActive === true)}"
+            data-options-active="${String(this._showEntityOptions === true)}"
             style=${[
               (hasCustomCardHeight && (!collapsed || this._alwaysCollapsed)) ? `height:${customCardHeight}px;` : null,
+              `--yamp-background-fade: ${backgroundFade}%`,
+              `--yamp-overlay-bg: color-mix(in srgb, var(--yamp-overlay-base, #000) ${backgroundFade}%, transparent)`,
               this._lyricsActive ? `--yamp-lyrics-fade: ${lyricsFade}%; --yamp-lyrics-backdrop-filter: ${lyricsBackdropFilter}` : null,
               hasFontColor ? `--primary-text: ${cardFontColor}; --primary-text-color: ${cardFontColor}; --secondary-text: ${cardFontColor}; --secondary-text-color: ${cardFontColor}; --yamp-icon-color: ${cardFontColor};` : null
             ].filter(Boolean).join('; ') || nothing}
@@ -7224,11 +7246,11 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           >
             ${hasCardBg ? html`
               <div class="card-background-image-layer" style="${cardBgStyle}"></div>
-              ${!this._artworkGradientDisabled && !isDirectColorOrGradient ? html`<div class="card-background-image-overlay"></div>` : nothing}
+              ${!this._artworkGradientDisabled && !isDirectColorOrGradient && !this._showEntityOptions ? html`<div class="card-background-image-overlay"></div>` : nothing}
             ` : nothing}
             ${artworkFullBleed && hasBackgroundImage ? html`
               <div class="full-bleed-artwork-bg" style="${sharedBackgroundStyle}"></div>
-              ${!this._artworkGradientDisabled && !(dimIdleFrame || this._isIdle || this._lyricsActive) ? html`<div class="full-bleed-artwork-fade"></div>` : nothing}
+              ${!this._artworkGradientDisabled && !(dimIdleFrame || this._isIdle || this._lyricsActive || this._showEntityOptions) ? html`<div class="full-bleed-artwork-fade"></div>` : nothing}
             ` : nothing}
             ${(!useInsetArtwork && !artworkUrl && !idleImageUrl && !hasCardBg) ? html`
               <div class="media-artwork-placeholder"
@@ -7270,6 +7292,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
                 style="${[
                   `--yamp-lyrics-top-offset: ${showChipsInline ? 48 : 0}px`,
                   `--yamp-lyrics-bottom-offset: ${lyricsBottomOffset}px`,
+                  `--yamp-background-fade: ${backgroundFade}%`,
                   `--yamp-lyrics-fade: ${lyricsFade}%`,
                   `--yamp-lyrics-backdrop-filter: ${lyricsBackdropFilter}`,
                   this._getGestureStyles()
@@ -7314,7 +7337,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         return styles.join('; ');
       })()}"
               ></div>
-              ${!this._artworkGradientDisabled && !(dimIdleFrame || this._isIdle || this._lyricsActive || (!artworkUrl && hasCardBg)) && (!useInsetArtwork || activeArtworkFit === "scaled-contain") ? html`<div class="card-lower-fade" style="--yamp-lyrics-bottom-offset: ${lyricsBottomOffset}px;"></div>` : nothing}
+              ${!this._artworkGradientDisabled && !(dimIdleFrame || this._isIdle || this._lyricsActive || this._showEntityOptions || (!artworkUrl && hasCardBg)) && (!useInsetArtwork || activeArtworkFit === "scaled-contain") ? html`<div class="card-lower-fade" style="--yamp-lyrics-bottom-offset: ${lyricsBottomOffset}px;"></div>` : nothing}
               <div class="card-lower-content${collapsed ? ' collapsed transitioning' : ' transitioning'}${collapsed && artworkUrl && collapsedArtworkSize > 0 ? ' has-artwork' : ''}" style="${(() => {
         if (!hideControlsNow) return '';
         return collapsed
@@ -7620,6 +7643,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         shouldShowPersistentControls,
         persistentArt,
         selectedArt,
+        backgroundFade,
       }) : nothing}
           ${this._searchActiveOptionsItem ? renderSearchOptionsOverlay({
         item: this._searchActiveOptionsItem,
@@ -7628,7 +7652,8 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           this.requestUpdate();
         },
         onPlayOption: (item, mode) => this._performSearchOptionAction(item, mode),
-        massQueueAvailable: this._massQueueAvailable
+        massQueueAvailable: this._massQueueAvailable,
+        backgroundFade,
       }) : nothing
       }
           </div>
@@ -7979,6 +8004,10 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
     const host = this.shadowRoot.host;
     const config = this.config;
+
+    const backgroundFade = this._getBackgroundFade();
+    host.style.setProperty("--yamp-background-fade", `${backgroundFade}%`);
+    this.style.setProperty("--yamp-background-fade", `${backgroundFade}%`);
 
     const { customCardHeight, hasCustomCardHeight } = this._getCardHeightMetrics(config);
 

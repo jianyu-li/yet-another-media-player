@@ -1,5 +1,5 @@
 import { css } from "lit";
-import { Z_LAYERS, BLUR_5, HIDE_SCROLLBAR, CHIP_ROW_MASK } from "./shared.js";
+import { Z_LAYERS, HIDE_SCROLLBAR, CHIP_ROW_MASK } from "./shared.js";
 
 export const menusSheetsStyles = css`
   /* More info menu */
@@ -182,9 +182,14 @@ export const menusSheetsStyles = css`
     top: 0;
     bottom: 0;
     z-index: ${Z_LAYERS.OVERLAY_BASE};
-    background: var(--yamp-overlay-bg);
-    backdrop-filter: ${BLUR_5};
-    -webkit-backdrop-filter: ${BLUR_5};
+    background: var(
+      --yamp-overlay-bg,
+      color-mix(
+        in srgb,
+        var(--yamp-overlay-base, #000) var(--yamp-background-fade, 82%),
+        transparent
+      )
+    );
     display: flex;
     align-items: flex-start;
     justify-content: center;
@@ -458,6 +463,7 @@ export const menusSheetsStyles = css`
     background: none;
     color: var(--yamp-overlay-text);
     border: none;
+    border-radius: 10px;
     font-size: 1.12em;
     font-weight: 400;
     margin: 4px 0;
@@ -1342,6 +1348,7 @@ export const menusSheetsStyles = css`
     background: none;
     color: var(--yamp-overlay-text);
     border: none;
+    border-radius: 10px;
     font-size: 1.12em;
     font-weight: 400;
     margin: 4px 0;

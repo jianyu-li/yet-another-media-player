@@ -14,7 +14,11 @@ export const lyricsStyles = css`
     -webkit-backdrop-filter: var(--yamp-lyrics-backdrop-filter, ${BLUR_5});
     background: var(
       --yamp-lyrics-bg,
-      color-mix(in srgb, var(--yamp-overlay-base, #000) var(--yamp-lyrics-fade, 80%), transparent)
+      color-mix(
+        in srgb,
+        var(--yamp-overlay-base, #000) var(--yamp-background-fade, var(--yamp-lyrics-fade, 80%)),
+        transparent
+      )
     );
     color: var(--yamp-lyrics-color, var(--primary-text-color, #fff));
   }

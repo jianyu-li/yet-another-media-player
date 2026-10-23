@@ -146,6 +146,7 @@ describe("config-schema", () => {
         "idle_image",
         "background_image",
         "font_color",
+        "background_fade",
         "lyrics_background_fade",
         "lock_screen_controls",
         "full_screen",
@@ -251,6 +252,23 @@ describe("config-schema", () => {
       // User override taking precedence
       assert.equal(normalized.progress_bar_height, 24);
       assert.equal(normalized.custom_user_key, "preserved");
+    });
+
+    it("falls back to lyrics_background_fade when background_fade is omitted and vice-versa", () => {
+      const normalizedWithLegacy = normalizeCardConfig({ lyrics_background_fade: 45 });
+      assert.equal(normalizedWithLegacy.background_fade, 45);
+      assert.equal(normalizedWithLegacy.lyrics_background_fade, 45);
+
+      const normalizedWithNew = normalizeCardConfig({ background_fade: 60 });
+      assert.equal(normalizedWithNew.background_fade, 60);
+      assert.equal(normalizedWithNew.lyrics_background_fade, 60);
+
+      const normalizedWithBoth = normalizeCardConfig({
+        background_fade: 80,
+        lyrics_background_fade: 45,
+      });
+      assert.equal(normalizedWithBoth.background_fade, 80);
+      assert.equal(normalizedWithBoth.lyrics_background_fade, 45);
     });
 
     it("applies template preset card_type when rawConfig card_type is default, standard, or omitted", () => {

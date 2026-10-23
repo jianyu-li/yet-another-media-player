@@ -71,6 +71,16 @@ export default {
         description:
           "Una tarjeta de agrupación de reproductores independiente. Requiere múltiples entidades configuradas.",
       },
+      players: {
+        label: "Terapia de grupo",
+        description:
+          "Una tarjeta de agrupación de reproductores independiente. Requiere múltiples entidades configuradas.",
+      },
+      group_players: {
+        label: "Terapia de grupo",
+        description:
+          "Una tarjeta de agrupación de reproductores independiente. Requiere múltiples entidades configuradas.",
+      },
       huge_yamp: {
         label: "¡Vaya pedazo de YAMP!",
         description:
@@ -234,6 +244,8 @@ export default {
         "Ajusta el tiempo de resaltado de la letra. Los valores positivos lo aceleran, los negativos lo retrasan (por defecto: 0).",
       lyrics_background_fade:
         "Ajustar el desvanecimiento de fondo y la opacidad de atenuación de la superposición de letras (0% para arte transparente, 100% para fondo sólido).",
+      background_fade:
+        "Ajusta la opacidad de la superposición de fondo y el degradado de las ilustraciones (0-100%).",
       blurred_artwork: "Difuminar siempre la imagen de fondo",
       hide_collapsed_artwork:
         "Ocultar la imagen pequeña a la derecha cuando la tarjeta esté contraída",
@@ -302,6 +314,7 @@ export default {
       lyrics_source: "Fuente de letras",
       lyrics_pre_roll: "Anticipo de letra (segundos)",
       lyrics_background_fade: "Desvanecimiento de fondo de letras",
+      background_fade: "Desvanecimiento de fondo",
       blurred_artwork: "Imagen difuminada",
       hide_collapsed_artwork: "Ocultar imagen reducida",
       disable_artwork_gradient: "Desactivar degradado de portada",
@@ -370,6 +383,7 @@ export default {
       no_artwork_option: "Sin imagen",
       details_alignment: "Alineación de detalles",
       lyrics_background_fade: "Desvanecimiento de fondo de letras (%)",
+      background_fade: "Desvanecimiento de fondo (%)",
       queue_controls_style: "Estilo de controles de cola",
     },
     action_types: {

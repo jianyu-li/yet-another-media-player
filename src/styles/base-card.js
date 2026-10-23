@@ -41,7 +41,11 @@ export const baseCardStyles = css`
 
     /* Universal theme-aware variables (default to dark) */
     --yamp-overlay-base: #000;
-    --yamp-overlay-bg: rgba(0, 0, 0, 0.82);
+    --yamp-overlay-bg: color-mix(
+      in srgb,
+      var(--yamp-overlay-base, #000) var(--yamp-background-fade, 82%),
+      transparent
+    );
     --yamp-overlay-text: #fff;
     --yamp-overlay-text-shadow: none;
     --yamp-overlay-divider: rgba(255, 255, 255, 0.2);
@@ -136,7 +140,11 @@ export const baseCardStyles = css`
 
     /* Universal theme-aware variables mapped to HA theme - used when appearance is automatic */
     --yamp-overlay-base: var(--ha-card-background, var(--card-background-color, #000));
-    --yamp-overlay-bg: color-mix(in srgb, var(--yamp-overlay-base), transparent 18%);
+    --yamp-overlay-bg: color-mix(
+      in srgb,
+      var(--yamp-overlay-base) var(--yamp-background-fade, 82%),
+      transparent
+    );
     --yamp-overlay-text: var(--primary-text-color, #fff);
     --yamp-overlay-text-shadow: none;
     --yamp-overlay-divider: var(--divider-color, rgba(255, 255, 255, 0.1));
@@ -226,6 +234,11 @@ export const baseCardStyles = css`
     border-radius: var(--border-radius);
     clip-path: inset(0 round var(--border-radius));
     transform: translateZ(0);
+    --yamp-overlay-bg: color-mix(
+      in srgb,
+      var(--yamp-overlay-base, #000) var(--yamp-background-fade, 82%),
+      transparent
+    );
   }
 
   /* Full screen overlay styles */
@@ -314,6 +327,7 @@ export const baseCardStyles = css`
   }
 
   .yamp-card-inner[data-lyrics-active="true"] .card-background-image-overlay,
+  .yamp-card-inner[data-options-active="true"] .card-background-image-overlay,
   :host([data-disable-artwork-gradient="true"]) .card-background-image-overlay {
     display: none !important;
   }
@@ -344,6 +358,7 @@ export const baseCardStyles = css`
   }
 
   .yamp-card-inner[data-lyrics-active="true"] .full-bleed-artwork-fade,
+  .yamp-card-inner[data-options-active="true"] .full-bleed-artwork-fade,
   :host([data-disable-artwork-gradient="true"]) .full-bleed-artwork-fade {
     display: none !important;
   }
@@ -736,6 +751,7 @@ export const baseCardStyles = css`
   }
 
   .yamp-card-inner[data-lyrics-active="true"] .card-lower-fade,
+  .yamp-card-inner[data-options-active="true"] .card-lower-fade,
   :host([data-disable-artwork-gradient="true"]) .card-lower-fade {
     display: none !important;
   }

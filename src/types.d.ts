@@ -321,6 +321,7 @@ export interface YampCardConfig {
   hide_active_entity_label_on_idle?: boolean;
   swap_pause_for_stop?: boolean;
   show_album?: boolean;
+  background_fade?: number | string;
   lyrics_background_fade?: number | string;
   lock_screen_controls?: boolean | string;
   full_screen?: boolean | string;
@@ -424,6 +425,8 @@ export declare class TemplateController {
   controlLayoutResolveCache: Record<string, TemplateResolveCacheEntry>;
   cardHeightTemplateValue: Record<string, TemplateValueEntry>;
   cardHeightResolveCache: Record<string, TemplateResolveCacheEntry<string | number>>;
+  backgroundFadeTemplateValue: Record<string, TemplateValueEntry>;
+  backgroundFadeResolveCache: Record<string, TemplateResolveCacheEntry<string | number>>;
   lyricsBackgroundFadeTemplateValue: Record<string, TemplateValueEntry>;
   lyricsBackgroundFadeResolveCache: Record<string, TemplateResolveCacheEntry<string | number>>;
   lockScreenControlsTemplateValue: Record<string, TemplateValueEntry>;
@@ -958,6 +961,14 @@ export interface YetAnotherMediaPlayerCard {
   _holdTitleForVolume?: boolean;
   _getEffectiveHoldTitleForVolume?: () => boolean;
   _applyVolumeLevel?: (newVol: number) => void;
+  _backgroundFade?: number;
+  _getBackgroundFade?: () => number;
+  _lyricsBackgroundFade?: number;
+  _getLyricsBackgroundFade?: () => number;
+  _backgroundFadeTemplateValue?: Record<string, TemplateValueEntry>;
+  _backgroundFadeResolveCache?: Record<string, TemplateResolveCacheEntry<string | number>>;
+  _lyricsBackgroundFadeTemplateValue?: Record<string, TemplateValueEntry>;
+  _lyricsBackgroundFadeResolveCache?: Record<string, TemplateResolveCacheEntry<string | number>>;
   _aiRadioShowsAvailable?: boolean;
   _isFullScreen?: boolean;
   _fullScreenOverride?: boolean | null;

@@ -1088,16 +1088,32 @@ export function renderSearchResultItem({
   `;
 }
 
+/**
+ * Render the search options overlay sheet for a media item
+ * @param {object} props
+ * @param {any} props.item - Media item for which options are displayed
+ * @param {(e?: Event) => void} props.onClose - Callback to close overlay
+ * @param {(mode: string, item: any) => void} props.onPlayOption - Callback to handle selected playback option
+ * @param {boolean} [props.massQueueAvailable=false] - Whether Music Assistant queue is available
+ * @param {number} [props.backgroundFade] - Effective background fade percentage
+ * @returns {import("lit").TemplateResult | typeof import("lit").nothing}
+ */
 export function renderSearchOptionsOverlay({
   item,
   onClose,
   onPlayOption,
   massQueueAvailable = false,
+  backgroundFade,
 }) {
   if (!item) return nothing;
+  const effectiveFade = backgroundFade ?? 75;
 
   return html`
-    <div class="entity-options-overlay entity-options-overlay-opening" @click=${onClose}>
+    <div
+      class="entity-options-overlay entity-options-overlay-opening"
+      style="--yamp-background-fade: ${effectiveFade}%; background: color-mix(in srgb, var(--yamp-overlay-base, #000) ${effectiveFade}%, transparent);"
+      @click=${onClose}
+    >
       <div
         class="entity-options-container entity-options-sheet-opening"
         @click=${(e) => e.stopPropagation()}

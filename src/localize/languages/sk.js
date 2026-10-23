@@ -70,6 +70,16 @@ export default {
         description:
           "Samostatná karta na zoskupovanie prehrávačov. Vyžaduje viacero nakonfigurovaných entít.",
       },
+      players: {
+        label: "Skupinová terapia",
+        description:
+          "Samostatná karta na zoskupovanie prehrávačov. Vyžaduje viacero nakonfigurovaných entít.",
+      },
+      group_players: {
+        label: "Skupinová terapia",
+        description:
+          "Samostatná karta na zoskupovanie prehrávačov. Vyžaduje viacero nakonfigurovaných entít.",
+      },
       huge_yamp: {
         label: "To je poriadny YAMP!",
         description:
@@ -249,6 +259,7 @@ export default {
         "Posunutie načasovania zvýraznenia textu piesne. Kladné hodnoty ho zrýchľujú, záporné spomaľujú (predvolené: 0).",
       lyrics_background_fade:
         "Upravte prelínanie pozadia a nepriehľadnosť stmavenia prekrytia textu piesne (0% pre priehľadný obrázok, 100% pre plné pozadie).",
+      background_fade: "Upravte nepriehľadnosť prekrytia pozadia a prechodu obalu (0-100%).",
       blurred_artwork: "Vždy rozmazať obrázok na pozadí",
       hide_collapsed_artwork: "Skryť malý obrázok vpravo, keď je karta zbalená",
       disable_artwork_gradient: "Zakázať prekrytie spodného prechodu na obrázku",
@@ -316,6 +327,7 @@ export default {
       lyrics_source: "Zdroj textov",
       lyrics_pre_roll: "Pre-roll textu piesne (sekundy)",
       lyrics_background_fade: "Prelínanie pozadia textu piesne",
+      background_fade: "Prelínanie pozadia",
       blurred_artwork: "Rozmazaný obrázok",
       hide_collapsed_artwork: "Skryť zmenšený obrázok",
       disable_artwork_gradient: "Zakázať prechod obrázka",
@@ -384,6 +396,7 @@ export default {
       no_artwork_option: "Žiadny obrázok",
       details_alignment: "Zarovnanie detailov",
       lyrics_background_fade: "Prelínanie pozadia textu piesne (%)",
+      background_fade: "Prelínanie pozadia (%)",
       queue_controls_style: "Štýl ovládacích prvkov fronty",
     },
     action_types: {

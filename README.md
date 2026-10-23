@@ -109,7 +109,7 @@ Below you will find a list of all configuration options.
 | `details_alignment`        | choice       | No           | `left`      | Align the track title and artist (`left`, `center`, `right`). Set to `none` to completely hide the details section. |
 | `font_color`               | color/string | No           | —           | Custom color for text and icons (hex, rgba, named, or template) ([Supports Templates](#template-support)) |
 | `card_height`              | number/string| No           | —           | Override the card height (in px) ([Supports Templates](#template-support)) |
-| `lyrics_background_fade`   | number/string| No           | `80`        | Opacity percentage (0–100%) for the lyrics overlay background and artwork gradient ([Supports Templates](#template-support)) |
+| `background_fade`          | number/string| No           | `75`        | Opacity percentage (0–100%) for overlay backgrounds (lyrics and menu sheets) ([Supports Templates](#template-support)). Also accepts legacy `lyrics_background_fade`. |
 | `search_view`              | choice       | No           | `list`      | Choose the default layout for search results: `list`, `card`, or `card_minimal` |
 | `search_card_columns`      | number       | No           | `4`         | Number of columns for search results when `search_view` is set to `card` or `card_minimal` |
 | `queue_controls_style`     | choice       | No           | `drag_handle` | Style of queue controls: `drag_handle` replaces movement buttons with a single drag handle, `icons` shows classic up/down/next buttons |
@@ -737,7 +737,7 @@ Experience synchronized, real-time lyrics directly within the card. YAMP support
     - `scroll`: Synchronized auto-scrolling without line highlighting.
     - `text`: Displays the full lyrics as plain text. No auto-scrolling or highlighting.
   - `lyrics_pre_roll`: Fine-tune the highlighting sync. A value of `1.5` will highlight the line 1.5 seconds before the vocal starts, while `-0.5` will delay it.
-  - `lyrics_background_fade`: Adjust the background fade opacity percentage (`0` to `100`, default `80`). Supports templates for dynamic transparency based on player state or theme.
+  - `background_fade`: Adjust the overlay background fade opacity percentage (`0` to `100`, default `75`). Controls lyrics and menu overlays. Supports templates for dynamic transparency based on player state or theme (legacy alias: `lyrics_background_fade`).
 - **Toggle Action**: You can assign the `toggle_lyrics` action to a chip or gesture to quickly show/hide the lyrics without opening the menu.
 - **Constraints**: The lyrics viewer is automatically disabled when the card is in `always_collapsed: true` mode to maintain layout performance.
 
@@ -835,7 +835,7 @@ YAMP supports two distinct template engines:
 The following configuration keys support templates:
 
 - **`card_height`**: Dynamically adjust the total height of the card.
-- **`lyrics_background_fade`**: Dynamically control the lyrics overlay background opacity percentage (0-100%).
+- **`background_fade`**: Dynamically control the overlay background opacity percentage (0-100%) across lyrics and menu overlays (legacy alias: `lyrics_background_fade`).
 - **`idle_image`**: Change the background image shown when the player is idle.
 - **`background_image`**: Set a persistent card background image URL, gradient, or color.
 - **`font_color`**: Dynamically control text and icon color across the card.

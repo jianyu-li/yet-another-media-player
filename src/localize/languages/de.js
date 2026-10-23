@@ -70,6 +70,16 @@ export default {
         description:
           "Eine eigenständige Player-Gruppierungskarte. Erfordert mehrere konfigurierte Entitäten.",
       },
+      players: {
+        label: "Gruppentherapie",
+        description:
+          "Eine eigenständige Player-Gruppierungskarte. Erfordert mehrere konfigurierte Entitäten.",
+      },
+      group_players: {
+        label: "Gruppentherapie",
+        description:
+          "Eine eigenständige Player-Gruppierungskarte. Erfordert mehrere konfigurierte Entitäten.",
+      },
       huge_yamp: {
         label: "Das ist ein riesiges YAMP!",
         description:
@@ -246,6 +256,8 @@ export default {
         "Music Assistant benötigt die mass_queue-Integration, um Liedtexte von seiner internen Metadaten-Engine abzurufen.",
       lyrics_pre_roll:
         "Passen Sie das Timing der Songtext-Hervorhebung an. Positive Werte beschleunigen sie, negative verzögern sie (Standard: 0).",
+      background_fade:
+        "Hintergrundüberblendung und Dimm-Deckkraft des Overlays anpassen (0% für transparentes Artwork, 100% für durchgehenden Hintergrund).",
       lyrics_background_fade:
         "Hintergrundüberblendung und Dimm-Deckkraft des Liedtext-Overlays anpassen (0% für transparentes Artwork, 100% für durchgehenden Hintergrund).",
       blurred_artwork: "Hintergrundbild immer weichzeichnen",
@@ -315,6 +327,7 @@ export default {
       lyrics_mode: "Liedtext-Modus",
       lyrics_source: "Liedtext-Quelle",
       lyrics_pre_roll: "Liedtext Pre-Roll (Sekunden)",
+      background_fade: "Hintergrundüberblendung",
       lyrics_background_fade: "Liedtext Hintergrundüberblendung",
       blurred_artwork: "Verschwommenes Artwork",
       hide_collapsed_artwork: "Verkleinertes Artwork ausblenden",
@@ -383,6 +396,7 @@ export default {
       appearance: "Erscheinungsbild",
       no_artwork_option: "Kein Artwork",
       details_alignment: "Detail-Ausrichtung",
+      background_fade: "Hintergrundüberblendung (%)",
       lyrics_background_fade: "Liedtext Hintergrundüberblendung (%)",
       queue_controls_style: "Warteschlangen-Steuerungsstil",
     },

@@ -176,6 +176,7 @@ export function renderGroupingMenuOption(isGridMode = false) {
  * @param {boolean} props.shouldShowPersistentControls
  * @param {any} props.persistentArt
  * @param {any} props.selectedArt
+ * @param {number} [props.backgroundFade]
  */
 export function renderOptionsOverlay(props) {
   const {
@@ -190,11 +191,15 @@ export function renderOptionsOverlay(props) {
     shouldShowPersistentControls,
     persistentArt,
     selectedArt,
+    backgroundFade,
   } = props;
+
+  const effectiveFade = backgroundFade ?? this._getBackgroundFade?.() ?? 75;
 
   return html`
     <div
       class="entity-options-overlay entity-options-overlay-opening"
+      style="--yamp-background-fade: ${effectiveFade}%; background: color-mix(in srgb, var(--yamp-overlay-base, #000) ${effectiveFade}%, transparent);"
       @click=${(e) => this._closeEntityOptions(e)}
     >
       <div

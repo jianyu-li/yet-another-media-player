@@ -250,6 +250,8 @@ export default {
         "Music Assistant requires the mass_queue integration to fetch lyrics from its internal metadata engine.",
       lyrics_pre_roll:
         "Shift the lyrics highlight timing. Positive values speed it up, negative values slow it down (default: 0).",
+      background_fade:
+        "Adjust the background fade and dimming opacity of the overlay (0% for transparent artwork, 100% for solid background).",
       lyrics_background_fade:
         "Adjust the background fade and dimming opacity of the lyrics overlay (0% for transparent artwork, 100% for solid background).",
       blurred_artwork: "Always blur the background artwork",
@@ -316,6 +318,7 @@ export default {
       lyrics_mode: "Lyrics Mode",
       lyrics_source: "Lyrics Source",
       lyrics_pre_roll: "Lyrics Pre-Roll (seconds)",
+      background_fade: "Background Fade",
       lyrics_background_fade: "Lyrics Background Fade",
       blurred_artwork: "Blurred Artwork",
       hide_collapsed_artwork: "Hide Collapsed Artwork",
@@ -385,6 +388,7 @@ export default {
       appearance: "Appearance",
       no_artwork_option: "No Artwork",
       details_alignment: "Details Alignment",
+      background_fade: "Background Fade (%)",
       lyrics_background_fade: "Lyrics Background Fade (%)",
     },
     action_types: {
