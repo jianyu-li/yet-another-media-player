@@ -294,6 +294,11 @@ export function normalizeCardConfig(rawConfig = {}) {
   };
   if (rawConfig.lyrics_background_fade !== undefined && rawConfig.background_fade === undefined) {
     normalized.background_fade = rawConfig.lyrics_background_fade;
+  } else if (
+    rawConfig.background_fade !== undefined &&
+    rawConfig.lyrics_background_fade === undefined
+  ) {
+    normalized.lyrics_background_fade = rawConfig.background_fade;
   }
   if (
     templateBase.card_type &&

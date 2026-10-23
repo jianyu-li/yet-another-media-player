@@ -1088,6 +1088,16 @@ export function renderSearchResultItem({
   `;
 }
 
+/**
+ * Render the search options overlay sheet for a media item
+ * @param {object} props
+ * @param {any} props.item - Media item for which options are displayed
+ * @param {(e?: Event) => void} props.onClose - Callback to close overlay
+ * @param {(mode: string, item: any) => void} props.onPlayOption - Callback to handle selected playback option
+ * @param {boolean} [props.massQueueAvailable=false] - Whether Music Assistant queue is available
+ * @param {number} [props.backgroundFade] - Effective background fade percentage
+ * @returns {import("lit").TemplateResult | typeof import("lit").nothing}
+ */
 export function renderSearchOptionsOverlay({
   item,
   onClose,
