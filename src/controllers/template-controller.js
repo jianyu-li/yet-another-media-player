@@ -79,9 +79,14 @@ export class TemplateController {
     this.cardHeightResolveCache = {};
 
     /** @type {Record<string, { template: string, resolved: string | null }>} */
-    this.lyricsBackgroundFadeTemplateValue = {};
+    this.backgroundFadeTemplateValue = {};
     /** @type {Record<string, { value: string | number, ts: number }>} */
-    this.lyricsBackgroundFadeResolveCache = {};
+    this.backgroundFadeResolveCache = {};
+
+    /** @type {Record<string, { template: string, resolved: string | null }>} */
+    this.lyricsBackgroundFadeTemplateValue = this.backgroundFadeTemplateValue;
+    /** @type {Record<string, { value: string | number, ts: number }>} */
+    this.lyricsBackgroundFadeResolveCache = this.backgroundFadeResolveCache;
 
     /** @type {Record<string, { template: string, resolved: string | null }>} */
     this.lockScreenControlsTemplateValue = {};
@@ -159,10 +164,10 @@ export class TemplateController {
     if (type === "card_height") {
       return { templateVals: this.cardHeightTemplateValue, cache: this.cardHeightResolveCache };
     }
-    if (type === "lyrics_background_fade") {
+    if (type === "background_fade" || type === "lyrics_background_fade") {
       return {
-        templateVals: this.lyricsBackgroundFadeTemplateValue,
-        cache: this.lyricsBackgroundFadeResolveCache,
+        templateVals: this.backgroundFadeTemplateValue,
+        cache: this.backgroundFadeResolveCache,
       };
     }
     if (type === "lock_screen_controls") {
@@ -245,6 +250,7 @@ export class TemplateController {
               type === "always_collapsed" ||
               type === "control_layout" ||
               type === "card_height" ||
+              type === "background_fade" ||
               type === "lyrics_background_fade" ||
               type === "lock_screen_controls" ||
               type === "full_screen" ||
@@ -271,6 +277,7 @@ export class TemplateController {
               type === "always_collapsed" ||
               type === "control_layout" ||
               type === "card_height" ||
+              type === "background_fade" ||
               type === "lyrics_background_fade" ||
               type === "lock_screen_controls" ||
               type === "full_screen" ||
@@ -577,6 +584,7 @@ export class TemplateController {
       type === "always_collapsed" ||
       type === "control_layout" ||
       type === "card_height" ||
+      type === "background_fade" ||
       type === "lyrics_background_fade" ||
       type === "lock_screen_controls" ||
       type === "full_screen" ||

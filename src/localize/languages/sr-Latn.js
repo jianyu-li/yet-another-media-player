@@ -254,6 +254,7 @@ export default {
         "Podesi tajming isticanja teksta pesme. Pozitivne vrednosti ubrzavaju, negativne usporavaju (podrazumevano: 0).",
       lyrics_background_fade:
         "Podesi zatamnjenje pozadine i neprozirnost sloja teksta pesme (0% za providan omot, 100% za punu pozadinu).",
+      background_fade: "Prilagodite neprozirnost prekrivanja pozadine i preliva omota (0-100%).",
       blurred_artwork: "Uvek zamuti pozadinski omot",
       hide_collapsed_artwork: "Sakrij manji omot sa desne strane kada je kartica sažeta",
       disable_artwork_gradient: "Onemogući donji gradijent preko omota",
@@ -319,6 +320,7 @@ export default {
       lyrics_source: "Izvor teksta pesme",
       lyrics_pre_roll: "Predhodni pomak teksta (sekunde)",
       lyrics_background_fade: "Zatamnjenje pozadine teksta pesme",
+      background_fade: "Prelivanje pozadine",
       blurred_artwork: "Zamućen omot",
       hide_collapsed_artwork: "Sakrij omot u sažetom prikazu",
       disable_artwork_gradient: "Onemogući gradijent omota",
@@ -388,6 +390,7 @@ export default {
       no_artwork_option: "Bez omota",
       details_alignment: "Poravnanje detalja",
       lyrics_background_fade: "Zatamnjenje pozadine teksta pesme (%)",
+      background_fade: "Prelivanje pozadine (%)",
     },
     action_types: {
       menu: "Otvori stavku iz menija kartice",

@@ -256,4 +256,36 @@ describe("TemplateController (Reactive Lit Controller)", () => {
     ctrl.syncTemplateSubscriptions("show_chip_row", contextStr, "never");
     assert.equal(ctrl.showChipRowResolveCache["card"], undefined);
   });
+
+  it("syncs UI template subscriptions for background_fade and lyrics_background_fade", () => {
+    const host = createMockHost();
+    const ctrl = new TemplateController(host);
+
+    const contextStr = JSON.stringify(host._getTemplateContext());
+
+    // JavaScript template evaluation correctly evaluates and populates backgroundFadeResolveCache
+    ctrl.syncTemplateSubscriptions(
+      "background_fade",
+      contextStr,
+      "[[[ return is_playing ? 90 : 30; ]]]"
+    );
+    assert.equal(ctrl.backgroundFadeResolveCache["card"]?.value, 90);
+    assert.equal(ctrl.lyricsBackgroundFadeResolveCache["card"]?.value, 90);
+
+    // Jinja template subscription subscribes and updates cache
+    ctrl.subscribeToTemplate("card", "background_fade", "{{ 85 }}");
+    assert.ok(host.hass.connection.lastSubscribedTemplate.includes("85"));
+    host.hass.connection.subscribeMessageCallback({
+      result: "85",
+    });
+    assert.equal(ctrl.backgroundFadeResolveCache["card"]?.value, "85");
+
+    // Static configuration value cleans up the cache
+    ctrl.syncTemplateSubscriptions("background_fade", contextStr, 75);
+    assert.equal(ctrl.backgroundFadeResolveCache["card"], undefined);
+
+    // Backwards compatibility: lyrics_background_fade also resolves to backgroundFadeResolveCache
+    ctrl.syncTemplateSubscriptions("lyrics_background_fade", contextStr, "[[[ return 60; ]]]");
+    assert.equal(ctrl.backgroundFadeResolveCache["card"]?.value, 60);
+  });
 });

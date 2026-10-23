@@ -29,6 +29,8 @@ export const VOLUME_STEP_SELECTOR = Object.freeze({
   number: { min: 0.01, max: 1, step: 0.01, unit_of_measurement: "", mode: "box" },
 });
 
-export const LYRICS_BACKGROUND_FADE_SELECTOR = Object.freeze({
+export const BACKGROUND_FADE_SELECTOR = Object.freeze({
   number: { min: 0, max: 100, step: 1, unit_of_measurement: "%", mode: "slider" },
 });
+
+export const LYRICS_BACKGROUND_FADE_SELECTOR = BACKGROUND_FADE_SELECTOR;

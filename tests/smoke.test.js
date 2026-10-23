@@ -1,6 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { menusSheetsStyles } from "../src/styles/menus-sheets.js";
+import { baseCardStyles } from "../src/styles/base-card.js";
 
 describe("Test Harness Verification", () => {
   it("executes basic assertions successfully", () => {
@@ -54,6 +55,32 @@ describe("Test Harness Verification", () => {
     assert.ok(
       cssText.includes("border-radius: 10px;"),
       "Should retain border-radius: 10px on entity-options-item"
+    );
+  });
+
+  it("uses --yamp-background-fade in baseCardStyles for theme-aware overlay fade", () => {
+    const cssText = baseCardStyles.cssText;
+    assert.ok(
+      cssText.includes("--yamp-background-fade"),
+      "baseCardStyles should utilize --yamp-background-fade in --yamp-overlay-bg definitions"
+    );
+    assert.ok(
+      cssText.includes('.yamp-card-inner[data-options-active="true"] .card-lower-fade'),
+      "baseCardStyles should hide card-lower-fade when data-options-active is true"
+    );
+    assert.ok(
+      cssText.includes('.yamp-card-inner[data-options-active="true"] .full-bleed-artwork-fade'),
+      "baseCardStyles should hide full-bleed-artwork-fade when data-options-active is true"
+    );
+  });
+
+  it("references --yamp-background-fade in .entity-options-overlay fallback background", () => {
+    const cssText = menusSheetsStyles.cssText;
+    const match = cssText.match(/\.entity-options-overlay\s*\{([^}]+)\}/);
+    assert.ok(match, "Should contain .entity-options-overlay rule");
+    assert.ok(
+      match[1].includes("--yamp-background-fade"),
+      ".entity-options-overlay background must reference --yamp-background-fade"
     );
   });
 });

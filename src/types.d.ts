@@ -321,6 +321,7 @@ export interface YampCardConfig {
   hide_active_entity_label_on_idle?: boolean;
   swap_pause_for_stop?: boolean;
   show_album?: boolean;
+  background_fade?: number | string;
   lyrics_background_fade?: number | string;
   lock_screen_controls?: boolean | string;
   full_screen?: boolean | string;

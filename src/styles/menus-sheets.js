@@ -182,7 +182,14 @@ export const menusSheetsStyles = css`
     top: 0;
     bottom: 0;
     z-index: ${Z_LAYERS.OVERLAY_BASE};
-    background: var(--yamp-overlay-bg);
+    background: var(
+      --yamp-overlay-bg,
+      color-mix(
+        in srgb,
+        var(--yamp-overlay-base, #000) var(--yamp-background-fade, 82%),
+        transparent
+      )
+    );
     display: flex;
     align-items: flex-start;
     justify-content: center;

@@ -41,7 +41,11 @@ export const lightModeVariables = css`
   --primary-text: #222;
   --secondary-text: #666;
   --yamp-overlay-base: #fff;
-  --yamp-overlay-bg: rgba(255, 255, 255, 0.95);
+  --yamp-overlay-bg: color-mix(
+    in srgb,
+    var(--yamp-overlay-base, #fff) var(--yamp-background-fade, 95%),
+    transparent
+  );
   --yamp-overlay-text: #222;
   --yamp-overlay-divider: rgba(0, 0, 0, 0.1);
   --yamp-icon-color: #444;

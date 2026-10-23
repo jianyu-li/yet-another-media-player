@@ -146,6 +146,7 @@ describe("config-schema", () => {
         "idle_image",
         "background_image",
         "font_color",
+        "background_fade",
         "lyrics_background_fade",
         "lock_screen_controls",
         "full_screen",
@@ -251,6 +252,17 @@ describe("config-schema", () => {
       // User override taking precedence
       assert.equal(normalized.progress_bar_height, 24);
       assert.equal(normalized.custom_user_key, "preserved");
+    });
+
+    it("falls back to lyrics_background_fade when background_fade is omitted", () => {
+      const normalizedWithLegacy = normalizeCardConfig({ lyrics_background_fade: 45 });
+      assert.equal(normalizedWithLegacy.background_fade, 45);
+
+      const normalizedWithBoth = normalizeCardConfig({
+        background_fade: 80,
+        lyrics_background_fade: 45,
+      });
+      assert.equal(normalizedWithBoth.background_fade, 80);
     });
 
     it("applies template preset card_type when rawConfig card_type is default, standard, or omitted", () => {

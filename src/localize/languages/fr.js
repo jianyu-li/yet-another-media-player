@@ -71,6 +71,16 @@ export default {
         description:
           "Une carte autonome de regroupement de lecteurs. Nécessite plusieurs entités configurées.",
       },
+      players: {
+        label: "Thérapie de groupe",
+        description:
+          "Une carte autonome de regroupement de lecteurs. Nécessite plusieurs entités configurées.",
+      },
+      group_players: {
+        label: "Thérapie de groupe",
+        description:
+          "Une carte autonome de regroupement de lecteurs. Nécessite plusieurs entités configurées.",
+      },
       huge_yamp: {
         label: "C'est un énorme YAMP !",
         description:
@@ -240,6 +250,8 @@ export default {
         "Ajuste le timing de mise en évidence des paroles. Les valeurs positives l'accélèrent, les négatives le ralentissent (par défaut : 0).",
       lyrics_background_fade:
         "Ajuster le fondu d'arrière-plan et l'opacité d'assombrissement de la superposition des paroles (0% pour une illustration transparente, 100% pour un arrière-plan plein).",
+      background_fade:
+        "Ajuster l'opacité de l'arrière-plan superposé et du dégradé des pochettes (0-100%).",
       blurred_artwork: "Toujours flouter l'image d'arrière-plan",
       hide_collapsed_artwork: "Masquer l'image réduite sur la droite lorsque la carte est repliée",
       disable_artwork_gradient: "Désactiver le dégradé inférieur superposé sur l'illustration",
@@ -307,6 +319,7 @@ export default {
       lyrics_source: "Source des paroles",
       lyrics_pre_roll: "Pré-roll des paroles (secondes)",
       lyrics_background_fade: "Fondu d'arrière-plan des paroles",
+      background_fade: "Fondu d'arrière-plan",
       blurred_artwork: "Image floutée",
       hide_collapsed_artwork: "Masquer l'image réduite",
       disable_artwork_gradient: "Désactiver le dégradé de l'illustration",
@@ -375,6 +388,7 @@ export default {
       no_artwork_option: "Pas d'illustration",
       details_alignment: "Alignement des détails",
       lyrics_background_fade: "Fondu d'arrière-plan des paroles (%)",
+      background_fade: "Fondu d'arrière-plan (%)",
       queue_controls_style: "Style des commandes de file d'attente",
     },
     action_types: {

@@ -70,6 +70,16 @@ export default {
         description:
           "Samostojna kartica za združevanje predvajalnikov. Zahteva več konfiguriranih entitet.",
       },
+      players: {
+        label: "Skupinska terapija",
+        description:
+          "Samostojna kartica za združevanje predvajalnikov. Zahteva več konfiguriranih entitet.",
+      },
+      group_players: {
+        label: "Skupinska terapija",
+        description:
+          "Samostojna kartica za združevanje predvajalnikov. Zahteva več konfiguriranih entitet.",
+      },
       huge_yamp: {
         label: "To je ogromen YAMP!",
         description:
@@ -230,6 +240,7 @@ export default {
         "Zamaknite časovno uskladitev označevanja besedila. Pozitivne vrednosti ga pospešijo, negativne pa upočasnijo (privzeto: 0).",
       lyrics_background_fade:
         "Prilagodite prelivanje ozadja in motnost zatemnitve prekrivne plošče z besedilom (0% za prosojno grafiko, 100% za enobarvno ozadje).",
+      background_fade: "Prilagodite motnost prekrivanja ozadja in preliva ovitka (0-100%).",
       blurred_artwork: "Vedno zamegli ozadje",
       hide_collapsed_artwork: "Skrij majhno sliko na desni, ko je kartica strnjena",
       disable_artwork_gradient: "Onemogoči spodnji barvni prehod na grafiki",
@@ -297,6 +308,7 @@ export default {
       lyrics_source: "Vir besedil",
       lyrics_pre_roll: "Pre-roll besedila (sekunde)",
       lyrics_background_fade: "Prelivanje ozadja besedila",
+      background_fade: "Prelivanje ozadja",
       blurred_artwork: "Zamegljena grafika",
       hide_collapsed_artwork: "Skrij skrčeno grafika",
       disable_artwork_gradient: "Onemogoči prehod grafike",
@@ -365,6 +377,7 @@ export default {
       no_artwork_option: "Brez grafike",
       details_alignment: "Poravnava podrobnosti",
       lyrics_background_fade: "Prelivanje ozadja besedila (%)",
+      background_fade: "Prelivanje ozadja (%)",
       queue_controls_style: "Slog kontrol čakalne vrste",
     },
     action_types: {

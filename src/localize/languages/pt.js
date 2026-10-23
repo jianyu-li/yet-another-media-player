@@ -71,6 +71,16 @@ export default {
         description:
           "Um cartão autónomo de agrupamento de leitores. Requer várias entidades configuradas.",
       },
+      players: {
+        label: "Terapia de grupo",
+        description:
+          "Um cartão autónomo de agrupamento de leitores. Requer várias entidades configuradas.",
+      },
+      group_players: {
+        label: "Terapia de grupo",
+        description:
+          "Um cartão autónomo de agrupamento de leitores. Requer várias entidades configuradas.",
+      },
       huge_yamp: {
         label: "Isto é um enorme YAMP!",
         description:
@@ -233,6 +243,8 @@ export default {
         "Ajuste o tempo de destaque da letra. Valores positivos aceleram, valores negativos atrasam (padrão: 0).",
       lyrics_background_fade:
         "Ajuste o desvanecimento do fundo e a opacidade de atenuação da sobreposição de letras (0% para arte transparente, 100% para fundo sólido).",
+      background_fade:
+        "Ajuste a opacidade da sobreposição de fundo e do gradiente da capa (0-100%).",
       blurred_artwork: "Sempre desfocar a imagem de fundo",
       hide_collapsed_artwork:
         "Ocultar a imagem pequena à direita quando o cartão estiver recolhido",
@@ -301,6 +313,7 @@ export default {
       lyrics_source: "Fonte das letras",
       lyrics_pre_roll: "Antecipação de letra (segundos)",
       lyrics_background_fade: "Desvanecimento de fundo de letras",
+      background_fade: "Desvanecimento de fundo",
       blurred_artwork: "Imagem desfocada",
       hide_collapsed_artwork: "Ocultar imagem reduzida",
       disable_artwork_gradient: "Desativar gradiente da capa",
@@ -369,6 +382,7 @@ export default {
       no_artwork_option: "Sem imagem",
       details_alignment: "Alinhamento de detalhes",
       lyrics_background_fade: "Desvanecimento de fundo de letras (%)",
+      background_fade: "Desvanecimento de fundo (%)",
       queue_controls_style: "Estilo de controles de fila",
     },
     action_types: {

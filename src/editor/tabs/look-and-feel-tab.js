@@ -1,10 +1,10 @@
 import { html } from "lit";
 import { localize } from "../../localize/localize.js";
-import { DEFAULT_LYRICS_BACKGROUND_FADE } from "../../constants.js";
+import { DEFAULT_BACKGROUND_FADE } from "../../constants.js";
 import {
   VOLUME_MODE_SELECTOR,
   VOLUME_STEP_SELECTOR,
-  LYRICS_BACKGROUND_FADE_SELECTOR,
+  BACKGROUND_FADE_SELECTOR,
   getAdaptiveTextSelectorOptions,
 } from "../constants.js";
 
@@ -238,101 +238,96 @@ export function renderVisualTab() {
       </div>
       <div
         class="form-row"
-        data-search-keys="lyrics_background_fade lyrics background fade overlay"
-        style="${!this._isTemplateValue(this._config.always_collapsed) && this._config.always_collapsed === true ? "opacity: 0.5;" : ""}"
-        title="${
-          !this._isTemplateValue(this._config.always_collapsed) &&
-          this._config.always_collapsed === true
-            ? localize("editor.subtitles.not_available_collapsed")
-            : ""
-        }"
+        data-search-keys="background_fade lyrics_background_fade background fade overlay menu lyrics"
       >
         ${
-          this._isTemplateMode("lyrics_background_fade", this._config.lyrics_background_fade)
+          this._isTemplateMode(
+            "background_fade",
+            this._config.background_fade ?? this._config.lyrics_background_fade
+          ) ||
+          this._isTemplateMode(
+            "lyrics_background_fade",
+            this._config.background_fade ?? this._config.lyrics_background_fade
+          )
             ? html`
                 <div class="editor-field-wrapper">
                   <div class="grow-children" style="flex-direction: column;">
                     <span class="form-label"
-                      >${localize("editor.labels.lyrics_background_fade")}</span
+                      >${localize("editor.labels.background_fade") || localize("editor.labels.lyrics_background_fade")}</span
                     >
                     <ha-code-editor
                       lint
                       .hass=${this.hass}
                       mode="jinja2"
                       autocomplete-entities
-                      label="${localize("editor.labels.lyrics_background_fade")}"
+                      label="${localize("editor.labels.background_fade") || localize("editor.labels.lyrics_background_fade")}"
                       .value=${
-                        this._config.lyrics_background_fade !== undefined &&
-                        this._config.lyrics_background_fade !== null
-                          ? String(this._config.lyrics_background_fade)
+                        (this._config.background_fade ?? this._config.lyrics_background_fade) !==
+                          undefined &&
+                        (this._config.background_fade ?? this._config.lyrics_background_fade) !==
+                          null
+                          ? String(
+                              this._config.background_fade ?? this._config.lyrics_background_fade
+                            )
                           : ""
                       }
-                      @value-changed=${(e) =>
-                        this._updateConfig("lyrics_background_fade", e.detail.value)}
+                      @value-changed=${(e) => {
+                        this._updateConfig("background_fade", e.detail.value);
+                      }}
                     ></ha-code-editor>
                   </div>
                   <div class="field-actions">
                     ${this._renderTemplateToggle(
-                      "lyrics_background_fade",
-                      this._config.lyrics_background_fade,
-                      (v) => this._updateConfig("lyrics_background_fade", v)
+                      "background_fade",
+                      this._config.background_fade ?? this._config.lyrics_background_fade,
+                      (v) => this._updateConfig("background_fade", v)
                     )}
                     <ha-icon
                       class="icon-button-small"
                       icon="mdi:restore"
                       title="${localize("common.reset_default")}"
-                      @click=${() =>
-                        this._updateConfig(
-                          "lyrics_background_fade",
-                          DEFAULT_LYRICS_BACKGROUND_FADE
-                        )}
+                      @click=${() => this._updateConfig("background_fade", DEFAULT_BACKGROUND_FADE)}
                     ></ha-icon>
                   </div>
                 </div>
               `
             : html`
-                <span class="form-label">${localize("editor.labels.lyrics_background_fade")}</span>
+                <span class="form-label"
+                  >${localize("editor.labels.background_fade") || localize("editor.labels.lyrics_background_fade")}</span
+                >
                 <div class="editor-field-wrapper">
                   <div class="grow-children">
                     <ha-selector
                       .hass=${this.hass}
                       class="full-width"
-                      .selector=${LYRICS_BACKGROUND_FADE_SELECTOR}
-                      helper="${localize("editor.subtitles.lyrics_background_fade")}"
-                      .value=${this._config.lyrics_background_fade ?? DEFAULT_LYRICS_BACKGROUND_FADE}
-                      .disabled=${!this._isTemplateValue(this._config.always_collapsed) && this._config.always_collapsed === true}
+                      .selector=${BACKGROUND_FADE_SELECTOR}
+                      helper="${localize("editor.subtitles.background_fade") || localize("editor.subtitles.lyrics_background_fade")}"
+                      .value=${this._config.background_fade ?? this._config.lyrics_background_fade ?? DEFAULT_BACKGROUND_FADE}
                       @value-changed=${(e) => {
                         const raw = e.detail.value;
                         if (raw === "" || raw === undefined) {
-                          this._updateConfig(
-                            "lyrics_background_fade",
-                            DEFAULT_LYRICS_BACKGROUND_FADE
-                          );
+                          this._updateConfig("background_fade", DEFAULT_BACKGROUND_FADE);
                           return;
                         }
                         const parsed = Number(raw);
                         this._updateConfig(
-                          "lyrics_background_fade",
-                          Number.isFinite(parsed) ? parsed : DEFAULT_LYRICS_BACKGROUND_FADE
+                          "background_fade",
+                          Number.isFinite(parsed) ? parsed : DEFAULT_BACKGROUND_FADE
                         );
                       }}
                     ></ha-selector>
                   </div>
                   <div class="field-actions">
                     ${this._renderTemplateToggle(
-                      "lyrics_background_fade",
-                      this._config.lyrics_background_fade,
-                      (v) => this._updateConfig("lyrics_background_fade", v)
+                      "background_fade",
+                      this._config.background_fade ?? this._config.lyrics_background_fade,
+                      (v) => this._updateConfig("background_fade", v)
                     )}
                     <ha-icon
                       class="icon-button-small"
                       icon="mdi:restore"
                       title="${localize("common.reset_default")}"
-                      @click=${() =>
-                        this._updateConfig(
-                          "lyrics_background_fade",
-                          DEFAULT_LYRICS_BACKGROUND_FADE
-                        )}
+                      @click=${() => this._updateConfig("background_fade", DEFAULT_BACKGROUND_FADE)}
                     ></ha-icon>
                   </div>
                 </div>

@@ -70,6 +70,16 @@ export default {
         description:
           "Een zelfstandige spelers-groeperingskaart. Vereist meerdere geconfigureerde entiteiten.",
       },
+      players: {
+        label: "Groepstherapie",
+        description:
+          "Een zelfstandige spelers-groeperingskaart. Vereist meerdere geconfigureerde entiteiten.",
+      },
+      group_players: {
+        label: "Groepstherapie",
+        description:
+          "Een zelfstandige spelers-groeperingskaart. Vereist meerdere geconfigureerde entiteiten.",
+      },
       huge_yamp: {
         label: "Dat is een enorme YAMP!",
         description:
@@ -257,6 +267,8 @@ export default {
         "Verschuif de timing van de songtekstmarkering. Positieve waarden versnellen het, negatieve waarden vertragen het (standaard: 0).",
       lyrics_background_fade:
         "Pas de achtergrondvervaging en dim-dekking van de songtekst-overlay aan (0% voor transparant artwork, 100% voor een effen achtergrond).",
+      background_fade:
+        "Pas de dekking van de achtergrondoverlay en het albumhoesverloop aan (0-100%).",
       blurred_artwork: "Achtergrondafbeelding altijd vervagen",
       hide_collapsed_artwork:
         "Verberg de kleine afbeelding aan de rechterkant wanneer de kaart is ingeklapt",
@@ -325,6 +337,7 @@ export default {
       lyrics_source: "Songtekstbron",
       lyrics_pre_roll: "Songtekst Pre-Roll (seconden)",
       lyrics_background_fade: "Songtekst achtergrondvervaging",
+      background_fade: "Achtergrondvervaging",
       blurred_artwork: "Vervaagde afbeelding",
       hide_collapsed_artwork: "Verkleinde afbeelding verbergen",
       disable_artwork_gradient: "Kleurverloop van hoes uitschakelen",
@@ -393,6 +406,7 @@ export default {
       no_artwork_option: "Geen afbeelding",
       details_alignment: "Details uitlijning",
       lyrics_background_fade: "Songtekst achtergrondvervaging (%)",
+      background_fade: "Achtergrondvervaging (%)",
       queue_controls_style: "Wachtrijbesturingsstijl",
     },
     action_types: {

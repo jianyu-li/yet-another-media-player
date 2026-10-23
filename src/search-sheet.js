@@ -1093,11 +1093,17 @@ export function renderSearchOptionsOverlay({
   onClose,
   onPlayOption,
   massQueueAvailable = false,
+  backgroundFade,
 }) {
   if (!item) return nothing;
+  const effectiveFade = backgroundFade ?? 75;
 
   return html`
-    <div class="entity-options-overlay entity-options-overlay-opening" @click=${onClose}>
+    <div
+      class="entity-options-overlay entity-options-overlay-opening"
+      style="--yamp-background-fade: ${effectiveFade}%; background: color-mix(in srgb, var(--yamp-overlay-base, #000) ${effectiveFade}%, transparent);"
+      @click=${onClose}
+    >
       <div
         class="entity-options-container entity-options-sheet-opening"
         @click=${(e) => e.stopPropagation()}
