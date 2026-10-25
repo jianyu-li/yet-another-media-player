@@ -51,14 +51,31 @@ export function getEntityName(hass, stateOrEntityId) {
 }
 
 /**
- * Resolve a Jinja template string at runtime
+ * Resolve a Jinja or JS template string at runtime
  * @param {Object} hass - Home Assistant object
  * @param {string} templateString - The template string to resolve
  * @param {string} fallbackEntityId - Fallback entity ID if template resolution fails
+ * @param {Record<string, any>} [context] - Optional context variables to inject into the template
  * @returns {Promise<string>} Resolved entity ID
  */
-export async function resolveTemplateAtActionTime(hass, templateString, fallbackEntityId) {
+export async function resolveTemplateAtActionTime(
+  hass,
+  templateString,
+  fallbackEntityId,
+  context = {}
+) {
   if (!templateString || typeof templateString !== "string") return fallbackEntityId;
+
+  if (templateString.trim().startsWith("[[[") && templateString.trim().endsWith("]]]")) {
+    try {
+      const res = evaluateJsTemplate(templateString, /** @type {any} */ (hass), context);
+      const out = (res ?? "").toString().trim();
+      if (out && /^([a-z_]+)\.[A-Za-z0-9_]+$/.test(out)) return out;
+      return fallbackEntityId;
+    } catch {
+      return fallbackEntityId;
+    }
+  }
 
   // Not a template — return as-is
   if (!templateString.includes("{{") && !templateString.includes("{%")) {
@@ -77,7 +94,7 @@ export async function resolveTemplateAtActionTime(hass, templateString, fallback
 }
 
 /**
- * Resolve a generic Jinja template string at runtime (no entity validation)
+ * Resolve a generic Jinja or JS template string at runtime (no entity validation)
  * @param {Object} hass - Home Assistant object
  * @param {string} templateString - The template string to resolve
  * @param {Object} context - Optional context variables to inject into the template
@@ -86,30 +103,32 @@ export async function resolveTemplateAtActionTime(hass, templateString, fallback
 export async function resolveStringTemplate(hass, templateString, context = {}) {
   if (!templateString || typeof templateString !== "string") return templateString;
 
-  // Not a template — return as-is
-  if (!templateString.includes("{{") && !templateString.includes("{%")) {
-    // Check for URL-encoded templates (%7B%7B or %7B%25)
-    if (/%7B%7B|%7B%25/i.test(templateString)) {
-      try {
-        templateString = decodeURIComponent(templateString);
-      } catch (e) {
-        // Ignore decode error
-      }
-    }
-
-    // Re-check after decoding
-    if (!templateString.includes("{{") && !templateString.includes("{%")) {
-      return templateString;
+  let decoded = templateString;
+  if (/%7B%7B|%7B%25|%5B%5B%5B/i.test(decoded)) {
+    try {
+      decoded = decodeURIComponent(decoded);
+    } catch (e) {
+      // Ignore decode error
     }
   }
 
+  if (decoded.trim().startsWith("[[[") && decoded.trim().endsWith("]]]")) {
+    const res = evaluateJsTemplate(decoded, /** @type {any} */ (hass), context);
+    return res !== undefined && res !== null ? String(res).trim() : "";
+  }
+
+  // Not a template — return as-is
+  if (!decoded.includes("{{") && !decoded.includes("{%")) {
+    return decoded;
+  }
+
   // Inject context variables
-  let finalTemplate = templateString;
+  let finalTemplate = decoded;
   if (context && Object.keys(context).length > 0) {
     const setStatements = Object.entries(context)
       .map(([key, value]) => `{% set ${key} = ${JSON.stringify(value)} %}`)
       .join(" ");
-    finalTemplate = `${setStatements} ${templateString}`;
+    finalTemplate = `${setStatements} ${decoded}`;
   }
 
   try {
@@ -122,7 +141,7 @@ export async function resolveStringTemplate(hass, templateString, context = {}) 
 }
 
 /**
- * Attempt to resolve a simple Jinja template string synchronously to bypass mobile WebView popup blockers.
+ * Attempt to resolve a simple Jinja or JS template string synchronously to bypass mobile WebView popup blockers.
  * Supports basic {{ state_attr(entity, attr) }}, {{ states(entity) }} and {{ variable }} patterns.
  * @param {Object} hass - Home Assistant object
  * @param {string} templateString - The template string to resolve
@@ -133,12 +152,17 @@ export function resolveStringTemplateSync(hass, templateString, context = {}) {
   if (!templateString || typeof templateString !== "string") return templateString;
 
   let decoded = templateString;
-  if (/%7B%7B|%7B%25/i.test(decoded)) {
+  if (/%7B%7B|%7B%25|%5B%5B%5B/i.test(decoded)) {
     try {
       decoded = decodeURIComponent(decoded);
     } catch (e) {
       // Ignore
     }
+  }
+
+  if (decoded.trim().startsWith("[[[") && decoded.trim().endsWith("]]]")) {
+    const res = evaluateJsTemplate(decoded, /** @type {any} */ (hass), context);
+    return res !== undefined && res !== null ? String(res).trim() : null;
   }
 
   if (!decoded.includes("{{") && !decoded.includes("{%")) {

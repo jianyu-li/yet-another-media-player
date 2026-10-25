@@ -319,7 +319,8 @@ export function renderOptionsOverlay(props) {
                           class="queue-ops-progress"
                           style="position: absolute !important; bottom: -20px !important; left: 50% !important; transform: translate(-50%, 0) !important; z-index: 1000 !important; width: max-content !important; pointer-events: none !important; color: var(--search-text-secondary) !important;"
                         >
-                          Re-ordering ${this._queueOpsCompleted} / ${this._queueOpsTotal}
+                          ${localize("search.reordering") || "Re-ordering"}
+                          ${this._queueOpsCompleted} / ${this._queueOpsTotal}
                         </div>
                       `;
                     }

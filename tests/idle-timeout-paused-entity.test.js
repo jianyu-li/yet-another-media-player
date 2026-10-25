@@ -1,4 +1,4 @@
-import { describe, it, beforeEach } from "node:test";
+import { describe, it, beforeEach, afterEach } from "node:test";
 import assert from "node:assert/strict";
 
 // Setup mock browser globals before importing Lit component
@@ -65,6 +65,13 @@ describe("Idle Timeout Paused Entity Linger Behavior", () => {
       },
       callService: () => {},
     };
+  });
+
+  afterEach(() => {
+    if (card?._idleTimeout) {
+      clearTimeout(card._idleTimeout);
+      card._idleTimeout = null;
+    }
   });
 
   describe("1. Pausing Apple TV with AirPlay HomePod playing same media", () => {
@@ -627,6 +634,74 @@ describe("Idle Timeout Paused Entity Linger Behavior", () => {
       assert.ok(
         remainingMs >= 44500 && remainingMs <= 46000,
         `Linger duration should match idle_timeout_ms (45000ms), got ${remainingMs}ms`
+      );
+    });
+  });
+
+  describe("6. Per-chip linger state isolation when switching _selectedIndex", () => {
+    it("does not falsely create a linger window on an already paused chip when switching from a playing chip", () => {
+      const BEDROOM_TV_ID = "media_player.bedroom_tv";
+
+      card.setConfig({
+        entities: [
+          {
+            entity_id: APPLE_TV_ID,
+            name: "Living Room",
+          },
+          {
+            entity_id: BEDROOM_TV_ID,
+            name: "Bedroom TV",
+          },
+        ],
+        idle_timeout_ms: 60000,
+      });
+
+      card.hass = {
+        ...card.hass,
+        states: {
+          [APPLE_TV_ID]: {
+            entity_id: APPLE_TV_ID,
+            state: "playing",
+            attributes: {
+              friendly_name: "Living Room Apple TV",
+              media_title: "Playing Movie",
+            },
+          },
+          [BEDROOM_TV_ID]: {
+            entity_id: BEDROOM_TV_ID,
+            state: "paused",
+            attributes: {
+              friendly_name: "Bedroom TV",
+            },
+          },
+        },
+      };
+
+      // 1. Render at _selectedIndex = 0 (Apple TV is playing)
+      card._selectedIndex = 0;
+      card.render();
+
+      assert.equal(
+        card._playbackLingerByIdx?.[0],
+        undefined,
+        "No linger window on chip 0 while playing"
+      );
+      assert.equal(
+        card._playbackLingerByIdx?.[1],
+        undefined,
+        "No linger window on chip 1 before switching"
+      );
+
+      // 2. Switch to _selectedIndex = 1 (Bedroom TV was already paused) and render
+      card._selectedIndex = 1;
+      card.render();
+
+      // Chip 1 was already paused when we switched; it did not transition from playing to paused.
+      // Therefore, switching must NOT create a linger window on chip 1.
+      assert.equal(
+        card._playbackLingerByIdx?.[1],
+        undefined,
+        "Chip 1 must not falsely receive a linger window when selected while already paused"
       );
     });
   });

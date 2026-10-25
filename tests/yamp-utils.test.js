@@ -16,6 +16,9 @@ import {
   getMusicAssistantState,
   getActionPlacement,
   findAssociatedButtonEntities,
+  resolveTemplateAtActionTime,
+  resolveStringTemplate,
+  resolveStringTemplateSync,
 } from "../src/yamp-utils.js";
 /**
  * Helper to create a partial HassEntity mock.
@@ -753,6 +756,117 @@ describe("yamp-utils & progress-bar helpers", () => {
       const resolvedResult = findAssociatedButtonEntities(hass, "media_player.office");
       assert.equal(resolvedResult.length, 1);
       assert.equal(resolvedResult[0].entity_id, "button.office_active_favorite");
+    });
+  });
+
+  describe("resolveTemplateAtActionTime, resolveStringTemplate & resolveStringTemplateSync with JS templates", () => {
+    it("resolves a valid entity ID from a JS template without calling hass.callApi", async () => {
+      let callApiCalled = false;
+      const hass = mockHass({
+        callApi: async () => {
+          callApiCalled = true;
+          return "media_player.api";
+        },
+      });
+
+      const template = "[[[ return 'media_player.ma_kitchen'; ]]]";
+      const result = await resolveTemplateAtActionTime(hass, template, "media_player.fallback");
+      assert.equal(result, "media_player.ma_kitchen");
+      assert.equal(callApiCalled, false, "hass.callApi should not be called for JS templates");
+    });
+
+    it("accesses context variables (4th argument) in a JS template and falls back when returning invalid entity string or throwing error", async () => {
+      const hass = mockHass({
+        states: {
+          "media_player.living_room": mockEntity({
+            entity_id: "media_player.living_room",
+            state: "playing",
+          }),
+        },
+      });
+      const context = { speakerName: "living_room" };
+
+      // Access context variable successfully
+      const templateWithContext = "[[[ return 'media_player.' + context.speakerName; ]]]";
+      const resultWithContext = await resolveTemplateAtActionTime(
+        hass,
+        templateWithContext,
+        "media_player.fallback",
+        context
+      );
+      assert.equal(resultWithContext, "media_player.living_room");
+
+      // Falls back when JS template returns an invalid entity string (e.g. not a valid entity_id format)
+      const invalidTemplate = "[[[ return 'invalid entity id with spaces'; ]]]";
+      const resultInvalid = await resolveTemplateAtActionTime(
+        hass,
+        invalidTemplate,
+        "media_player.fallback",
+        context
+      );
+      assert.equal(resultInvalid, "media_player.fallback");
+
+      // Falls back when JS template returns a non-string or empty string
+      const nonStringTemplate = "[[[ return 12345; ]]]";
+      const resultNonString = await resolveTemplateAtActionTime(
+        hass,
+        nonStringTemplate,
+        "media_player.fallback",
+        context
+      );
+      assert.equal(resultNonString, "media_player.fallback");
+
+      // Falls back when JS template throws an error
+      const throwingTemplate = "[[[ throw new Error('boom'); ]]]";
+      const resultError = await resolveTemplateAtActionTime(
+        hass,
+        throwingTemplate,
+        "media_player.fallback",
+        context
+      );
+      assert.equal(resultError, "media_player.fallback");
+    });
+
+    it("evaluates JS templates synchronously in resolveStringTemplate using hass and context", async () => {
+      let callApiCalled = false;
+      const hass = mockHass({
+        states: {
+          "media_player.kitchen": mockEntity({
+            entity_id: "media_player.kitchen",
+            state: "playing",
+            attributes: { friendly_name: "Kitchen Speaker" },
+          }),
+        },
+        callApi: async () => {
+          callApiCalled = true;
+          return "from_api";
+        },
+      });
+      const context = { prefix: "Playing:" };
+
+      const template =
+        "[[[ return `${context.prefix} ${hass.states['media_player.kitchen'].attributes.friendly_name}`; ]]]";
+      const result = await resolveStringTemplate(hass, template, context);
+      assert.equal(result, "Playing: Kitchen Speaker");
+      assert.equal(callApiCalled, false, "hass.callApi should not be called for JS templates");
+    });
+
+    it("evaluates JS templates synchronously in resolveStringTemplateSync using hass and context", () => {
+      const hass = mockHass({
+        states: {
+          "media_player.kitchen": mockEntity({
+            entity_id: "media_player.kitchen",
+            state: "paused",
+            attributes: { friendly_name: "Kitchen Speaker" },
+          }),
+        },
+      });
+      const context = { room: "kitchen" };
+
+      const template =
+        "[[[ return `${hass.states['media_player.' + context.room].attributes.friendly_name} is ${hass.states['media_player.' + context.room].state}`; ]]]";
+      const result = resolveStringTemplateSync(hass, template, context);
+      assert.equal(result, "Kitchen Speaker is paused");
     });
   });
 });

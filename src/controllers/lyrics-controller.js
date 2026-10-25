@@ -270,7 +270,6 @@ export class LyricsController {
         }
         return;
       } else {
-        console.log(`YAMP: ${localize("lyrics.fallback_to_lrclib_non_admin")}`);
         configSource = "lrclib";
       }
     }

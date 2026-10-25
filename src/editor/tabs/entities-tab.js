@@ -449,38 +449,42 @@ export function renderEntityEditor(entity, idx = this._entityEditorIndex, isSear
             ${
               this._isTemplateMode("music_assistant_entity", entity?.music_assistant_entity)
                 ? html`
-                  <div class="grow-children">
-                    <div class=${
-                      this._yamlError && (entity?.music_assistant_entity ?? "").trim() !== ""
-                        ? "code-editor-wrapper error"
-                        : "code-editor-wrapper"
-                    } style="width: 100%;">
-                      <span class="form-label">${localize("editor.fields.ma_template")}</span>
-                      <ha-code-editor lint
-                        id="ma-template-editor"
-                        label="${localize("editor.fields.ma_template")}"
-                        .hass=${this.hass}
-                        mode="jinja2"
-                        autocomplete-entities
-                        .value=${entity?.music_assistant_entity ?? ""}
-                        @value-changed=${(e) => this._updateEntityProperty("music_assistant_entity", e.detail.value)}
-                      ></ha-code-editor>
-                      <div class="help-text">
-                        <ha-icon icon="mdi:information-outline"></ha-icon>
-                        ${localize("editor.subtitles.jinja_template_hint")}
-                        <pre style="margin:6px 0; white-space:pre-wrap;">{% if is_state('input_select.kitchen_stream_source','Music Stream 1') %}
+                    <div class="grow-children">
+                      <div
+                        class=${
+                          this._yamlError && (entity?.music_assistant_entity ?? "").trim() !== ""
+                            ? "code-editor-wrapper error"
+                            : "code-editor-wrapper"
+                        }
+                        style="width: 100%;"
+                      >
+                        <span class="form-label">${localize("editor.fields.ma_template")}</span>
+                        <ha-code-editor
+                          lint
+                          id="ma-template-editor"
+                          label="${localize("editor.fields.ma_template")}"
+                          .hass=${this.hass}
+                          mode="jinja2"
+                          autocomplete-entities
+                          .value=${entity?.music_assistant_entity ?? ""}
+                          @value-changed=${(e) => this._updateEntityProperty("music_assistant_entity", e.detail.value)}
+                        ></ha-code-editor>
+                        <div class="help-text">
+                          <ha-icon icon="mdi:information-outline"></ha-icon>
+                          ${localize("editor.subtitles.jinja_template_hint")}
+                          <pre style="margin:6px 0; white-space:pre-wrap;">
+{% if is_state('input_select.kitchen_stream_source','Music Stream 1') %}
   media_player.picore_house
 {% else %}
   media_player.ma_wiim_mini
 {% endif %}</pre>
-                       </pre>
+                        </div>
                       </div>
                     </div>
-                  </div>
-                  <div class="field-actions">
-                    ${this._renderTemplateToggle("music_assistant_entity", entity?.music_assistant_entity, (v) => this._updateEntityProperty("music_assistant_entity", v))}
-                  </div>
-                `
+                    <div class="field-actions">
+                      ${this._renderTemplateToggle("music_assistant_entity", entity?.music_assistant_entity, (v) => this._updateEntityProperty("music_assistant_entity", v))}
+                    </div>
+                  `
                 : html`
                     <div class="grow-children">
                       <ha-generic-picker

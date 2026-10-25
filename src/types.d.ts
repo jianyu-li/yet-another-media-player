@@ -391,6 +391,12 @@ export function getCachedSecureThumbnail(url?: string | null): string | null;
 export function clearSecureThumbnailCache(url?: string): void;
 export function resolveSecureThumbnailUrl(hass?: any, url?: string | null): Promise<string | null>;
 export function applyHostnameToUrl(url?: string | null, hostname?: string): string | null;
+export function resolveTemplateAtActionTime(
+  hass?: any,
+  templateString?: string,
+  fallbackEntityId?: string,
+  context?: Record<string, any>
+): Promise<string>;
 
 export interface TemplateResolveCacheEntry<T = string> {
   id?: string;
@@ -466,7 +472,11 @@ export declare class TemplateController {
     idx?: number,
     cacheType?: string
   ): string | null;
-  resolveTemplateAtActionTime(templateString: string, fallbackEntityId?: string): Promise<string>;
+  resolveTemplateAtActionTime(
+    templateString: string,
+    fallbackEntityId?: string,
+    context?: Record<string, any>
+  ): Promise<string>;
 }
 
 export declare function cleanTrackMetadata(text?: any): string;
