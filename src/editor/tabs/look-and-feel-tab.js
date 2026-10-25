@@ -467,7 +467,6 @@ export function renderVisualTab() {
             ? ""
             : localize("editor.subtitles.only_available_modern")
         }"
-        }
       >
         <div>
           <ha-switch

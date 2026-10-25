@@ -1320,6 +1320,9 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     // Track previous states to detect transitions
     this._lastMainState = null;
     this._lastMaState = null;
+    this._lastMainStateByChip = {};
+    this._lastMaStateByChip = {};
+    this._lastLingerRenderIdx = null;
     // Initialize TemplateController for Jinja WS subscriptions and JS template evaluation
     /** @type {TemplateController} */
     this._templateController = new TemplateController(this);
@@ -1534,7 +1537,12 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
   // Resolve template at action time with fallback to main entity (async)
   async _resolveTemplateAtActionTime(templateString, fallbackEntityId) {
-    return resolveTemplateAtActionTime(this.hass, templateString, fallbackEntityId);
+    return resolveTemplateAtActionTime(
+      this.hass,
+      templateString,
+      fallbackEntityId,
+      this._getTemplateContext?.() || {}
+    );
   }
 
   _attachSearchSwipe() {
@@ -3030,6 +3038,11 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._selectedIndex = (newSelectedIndex < this.entityIds.length) ? newSelectedIndex : 0;
     this._lastPlaying = null;
     this._lastActiveEntityId = null;
+    this._lastMainState = null;
+    this._lastMaState = null;
+    this._lastMainStateByChip = {};
+    this._lastMaStateByChip = {};
+    this._lastLingerRenderIdx = null;
     const allowedFits = new Set(["cover", "contain", "fill", "scale-down", "none", "scaled-contain", "scaled-contain-alternate", "no_artwork"]);
     this._baseArtworkObjectFit = allowedFits.has(config.artwork_object_fit) ? config.artwork_object_fit : "cover";
     this._extendArtwork = config.extend_artwork === true;
@@ -3314,10 +3327,10 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
     // Check for linger first - stay on lingering entity unless the other entity is actively playing
     if (linger && linger.until > now) {
-      if (linger.entityId === maId && this._isEntityPlaying(mainState) && !this._areEntitiesPlayingSameMedia(mainState, maState)) {
+      if (linger.entityId === maId && this._isEntityPlaying(mainState)) {
         return resolve(mainId);
       }
-      if (linger.entityId === mainId && this._isEntityPlaying(maState) && !this._areEntitiesPlayingSameMedia(mainState, maState)) {
+      if (linger.entityId === mainId && this._isEntityPlaying(maState)) {
         return resolve(maId);
       }
       if (this.hass?.states?.[linger.entityId]) {
@@ -3331,17 +3344,11 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
     // If both are playing, prioritize main entity if they are playing the same thing; otherwise be sticky
     if (maPlaying && mainPlaying) {
-      if (this._areEntitiesPlayingSameMedia(mainState, maState)) {
-        return resolve(mainId);
-      }
       if (lastResolved === mainId) return resolve(mainId);
       if (lastResolved === maId) return resolve(maId);
       return resolve(maId); // Default to MA
     }
     if (maPlaying) {
-      if (this._areEntitiesPlayingSameMedia(mainState, maState)) {
-        return resolve(mainId);
-      }
       return resolve(maId);
     }
     if (mainPlaying) return resolve(mainId);
@@ -3491,11 +3498,11 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const linger = this._playbackLingerByIdx?.[idx];
     const now = Date.now();
     if (linger && linger.until > now) {
-      if (linger.entityId === maId && this._isEntityPlaying(mainState) && !this._areEntitiesPlayingSameMedia(mainState, maState)) {
+      if (linger.entityId === maId && this._isEntityPlaying(mainState)) {
         this._lastActiveEntityIdByChip[idx] = mainId;
         return mainId;
       }
-      if (linger.entityId === mainId && this._isEntityPlaying(maState) && !this._areEntitiesPlayingSameMedia(mainState, maState)) {
+      if (linger.entityId === mainId && this._isEntityPlaying(maState)) {
         this._lastActiveEntityIdByChip[idx] = maId;
         return maId;
       }
@@ -3522,18 +3529,8 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const maPlaying = this._isEntityPlaying(maState);
     const mainPlaying = this._isEntityPlaying(mainState);
 
-    // If both are playing the same thing, prioritize the main entity
-    if (maPlaying && mainPlaying && this._areEntitiesPlayingSameMedia(mainState, maState)) {
-      this._lastActiveEntityIdByChip[idx] = mainId;
-      return mainId;
-    }
-
     // Prioritize the Music Assistant entity when it's playing
     if (maPlaying) {
-      if (this._areEntitiesPlayingSameMedia(mainState, maState)) {
-        this._lastActiveEntityIdByChip[idx] = mainId;
-        return mainId;
-      }
       this._lastActiveEntityIdByChip[idx] = maId;
       return maId;
     }
@@ -3548,7 +3545,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
     // When checking recent transitions (maWasRecent, mainWasRecent):
     if (maWasRecent && mainWasRecent) {
-      if (this._areEntitiesPlayingSameMedia(mainState, maState) || lastActive === mainId) {
+      if (lastActive === mainId) {
         this._lastActiveEntityIdByChip[idx] = mainId;
         return mainId;
       }
@@ -4824,6 +4821,75 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
 
+  _updateChipPlaybackLinger(
+    idx,
+    mainId,
+    maId,
+    prevMainState,
+    mainState,
+    prevMaState,
+    maState,
+    now = Date.now()
+  ) {
+    const mainStopped = prevMainState === "playing" && mainState !== "playing";
+    const maStopped = Boolean(
+      maId && maId !== mainId && prevMaState === "playing" && maState !== "playing"
+    );
+
+    if (mainStopped || maStopped) {
+      const ttl = Math.max(
+        Number(this._idleTimeoutMs || this.config?.idle_timeout_ms || 60000),
+        500
+      );
+      let lingerEntityId = null;
+
+      const isSameMedia = this._areEntitiesPlayingSameMedia(
+        this.hass?.states?.[mainId],
+        maId ? this.hass?.states?.[maId] : null
+      );
+      const currentLinger = this._playbackLingerByIdx?.[idx];
+      const hasActiveMainLinger =
+        currentLinger?.entityId === mainId && currentLinger.until > now;
+
+      if (isSameMedia || hasActiveMainLinger) {
+        lingerEntityId = mainId;
+      } else if (mainStopped) {
+        lingerEntityId = mainId;
+      } else if (maStopped && mainState !== "playing") {
+        lingerEntityId = maId;
+      }
+
+      if (lingerEntityId) {
+        if (!this._playbackLingerByIdx) this._playbackLingerByIdx = {};
+        this._playbackLingerByIdx[idx] = {
+          entityId: lingerEntityId,
+          until: now + ttl,
+        };
+        if (!this._lastActiveEntityIdByChip) this._lastActiveEntityIdByChip = {};
+        this._lastActiveEntityIdByChip[idx] = lingerEntityId;
+        if (!this._lastResolvedEntityIdByChip) this._lastResolvedEntityIdByChip = {};
+        this._lastResolvedEntityIdByChip[idx] = lingerEntityId;
+      }
+    }
+
+    // Symmetrically clear linger if an entity resumes playing
+    if (mainState === "playing" && this._playbackLingerByIdx?.[idx]?.entityId === maId) {
+      delete this._playbackLingerByIdx[idx];
+    }
+    const isSameMediaResume = this._areEntitiesPlayingSameMedia(
+      this.hass?.states?.[mainId],
+      maId ? this.hass?.states?.[maId] : null
+    );
+    if (
+      maState === "playing" &&
+      mainState !== "playing" &&
+      !isSameMediaResume &&
+      this._playbackLingerByIdx?.[idx]?.entityId === mainId
+    ) {
+      delete this._playbackLingerByIdx[idx];
+    }
+  }
+
   updated(changedProps) {
     if (changedProps.has("hass") && this.hass) {
       const currentLang = this.hass.selectedLanguage || this.hass.language || this.hass.locale?.language;
@@ -4966,43 +5032,16 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           }
         }
 
-        const mainStopped = prevMainState === "playing" && mainState !== "playing";
-        const maStopped = Boolean(maId && maId !== mainId && prevMaState === "playing" && maState !== "playing");
-
-        if (mainStopped || maStopped) {
-          const ttl = Math.max(Number(this._idleTimeoutMs || this.config?.idle_timeout_ms || 60000), 500);
-          let lingerEntityId = null;
-
-          const isSameMedia = this._areEntitiesPlayingSameMedia(this.hass.states[mainId], this.hass.states[maId]);
-          const currentLinger = this._playbackLingerByIdx?.[idx];
-          const hasActiveMainLinger = currentLinger?.entityId === mainId && currentLinger.until > now;
-
-          if (isSameMedia || hasActiveMainLinger) {
-            lingerEntityId = mainId;
-          } else if (mainStopped) {
-            lingerEntityId = mainId;
-          } else if (maStopped && mainState !== "playing") {
-            lingerEntityId = maId;
-          }
-
-          if (lingerEntityId) {
-            this._playbackLingerByIdx[idx] = {
-              entityId: lingerEntityId,
-              until: Date.now() + ttl,
-            };
-            this._lastActiveEntityIdByChip[idx] = lingerEntityId;
-            this._lastResolvedEntityIdByChip[idx] = lingerEntityId;
-          }
-        }
-
-        // Symmetrically clear linger if an entity resumes playing
-        if (mainState === "playing" && this._playbackLingerByIdx?.[idx]?.entityId === maId) {
-          delete this._playbackLingerByIdx[idx];
-        }
-        const isSameMediaResume = this._areEntitiesPlayingSameMedia(this.hass.states[mainId], this.hass.states[maId]);
-        if (maState === "playing" && mainState !== "playing" && !isSameMediaResume && this._playbackLingerByIdx?.[idx]?.entityId === mainId) {
-          delete this._playbackLingerByIdx[idx];
-        }
+        this._updateChipPlaybackLinger(
+          idx,
+          mainId,
+          maId,
+          prevMainState,
+          mainState,
+          prevMaState,
+          maState,
+          now
+        );
 
         this._playerStateCache[mainId] = mainState;
         if (maId && maId !== mainId) {
@@ -6772,50 +6811,42 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const actualResolvedMaId = this._getActualResolvedMaEntityForState(idx);
     const actualMaState = actualResolvedMaId ? this.hass?.states?.[actualResolvedMaId] : null;
 
-    const prevMain = this._lastMainState;
-    const prevMa = this._lastMaState;
-    this._lastMainState = mainStateForPlayback?.state;
-    this._lastMaState = actualMaState?.state;
-
     const mainId = mainStateForPlayback?.entity_id || this.entityIds[idx];
     const maId = actualResolvedMaId;
-    const mainStopped = prevMain === "playing" && this._lastMainState !== "playing";
-    const maStopped = prevMa === "playing" && this._lastMaState !== "playing";
 
-    const isSameMedia = this._areEntitiesPlayingSameMedia(mainStateForPlayback, actualMaState);
+    const sameChipAsLastRender =
+      this._lastLingerRenderIdx === null ||
+      this._lastLingerRenderIdx === undefined ||
+      this._lastLingerRenderIdx === idx;
 
-    if (mainStopped || maStopped) {
-      const ttl = Math.max(Number(this._idleTimeoutMs || this.config?.idle_timeout_ms || 60000), 500);
-      let lingerEntityId = null;
+    const prevMain =
+      sameChipAsLastRender && this._lastMainState !== null && this._lastMainState !== undefined
+        ? this._lastMainState
+        : this._lastMainStateByChip?.[idx];
 
-      const currentLinger = this._playbackLingerByIdx?.[idx];
-      const hasActiveMainLinger = currentLinger?.entityId === mainId && currentLinger.until > Date.now();
+    const prevMa =
+      sameChipAsLastRender && this._lastMaState !== null && this._lastMaState !== undefined
+        ? this._lastMaState
+        : this._lastMaStateByChip?.[idx];
 
-      if (isSameMedia || hasActiveMainLinger) {
-        lingerEntityId = mainId;
-      } else if (mainStopped) {
-        lingerEntityId = mainId;
-      } else if (maStopped && this._lastMainState !== "playing") {
-        lingerEntityId = maId;
-      }
+    this._lastMainState = mainStateForPlayback?.state;
+    this._lastMaState = actualMaState?.state;
+    this._lastLingerRenderIdx = idx;
 
-      if (lingerEntityId) {
-        this._playbackLingerByIdx[idx] = {
-          entityId: lingerEntityId,
-          until: Date.now() + ttl,
-        };
-        this._lastActiveEntityIdByChip[idx] = lingerEntityId;
-        this._lastResolvedEntityIdByChip[idx] = lingerEntityId;
-      }
-    }
+    if (!this._lastMainStateByChip) this._lastMainStateByChip = {};
+    if (!this._lastMaStateByChip) this._lastMaStateByChip = {};
+    this._lastMainStateByChip[idx] = this._lastMainState;
+    this._lastMaStateByChip[idx] = this._lastMaState;
 
-    // Symmetrically clear linger if an entity resumes playing
-    if (this._lastMainState === "playing" && this._playbackLingerByIdx?.[idx]?.entityId === maId) {
-      delete this._playbackLingerByIdx[idx];
-    }
-    if (this._lastMaState === "playing" && this._lastMainState !== "playing" && !isSameMedia && this._playbackLingerByIdx?.[idx]?.entityId === mainId) {
-      delete this._playbackLingerByIdx[idx];
-    }
+    this._updateChipPlaybackLinger(
+      idx,
+      mainId,
+      maId,
+      prevMain,
+      this._lastMainState,
+      prevMa,
+      this._lastMaState
+    );
 
     // Use the unified entity resolution system for playback state.
     // (Note: resolved here at the top of render to support show_idle_artwork_when_not_playing detection)
@@ -8137,11 +8168,13 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
             this._idleTimeout = setTimeout(() => {
               this._handleIdleTimeoutCallback();
             }, this._idleTimeoutMs);
+            if (typeof this._idleTimeout?.unref === "function") this._idleTimeout.unref();
           }
         } else if (!this._idleTimeout) {
           this._idleTimeout = setTimeout(() => {
             this._handleIdleTimeoutCallback();
           }, this._idleTimeoutMs);
+          if (typeof this._idleTimeout?.unref === "function") this._idleTimeout.unref();
         }
       }
 

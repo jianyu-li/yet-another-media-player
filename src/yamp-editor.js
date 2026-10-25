@@ -4,6 +4,7 @@ import { localize, setHassLanguage } from "./localize/localize.js";
 
 import { SUPPORT_GROUPING, TEMPLATE_CONFIGS, getTemplatePresetDefaults } from "./constants.js";
 import { getActionPlacement, getEntityName, isValidArtworkUrl } from "./yamp-utils.js";
+import { normalizeImageSourceValue } from "./controllers/artwork-controller.js";
 import "./yamp-sortable.js";
 
 import { renderArtworkTab } from "./editor/tabs/artwork-tab.js";
@@ -565,41 +566,29 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
 
     if (!this._entityRatios) this._entityRatios = {};
 
-    entities.forEach((entityId) => {
-      if (this._entityRatios[entityId] !== undefined) return;
+    for (const entityId of entities) {
+      if (this._entityRatios[entityId] !== undefined) continue;
       const state = this.hass.states[entityId];
-      if (!state) return;
+      if (!state) continue;
 
       const attrs = state.attributes || {};
-      const url = attrs.entity_picture_local || attrs.entity_picture || attrs.album_art;
-      if (!url) return;
+      let rawVal = attrs.entity_picture_local || attrs.entity_picture || attrs.album_art;
+      if (!rawVal) continue;
 
-      let trimmed = url.trim();
-      if (
-        (trimmed.startsWith("'") && trimmed.endsWith("'")) ||
-        (trimmed.startsWith('"') && trimmed.endsWith('"'))
-      ) {
-        trimmed = trimmed.slice(1, -1).trim();
-      }
-      const urlMatch = trimmed.match(/^url\((.*)\)$/i);
-      if (urlMatch && urlMatch[1]) {
-        trimmed = urlMatch[1].trim();
-        if (
-          (trimmed.startsWith("'") && trimmed.endsWith("'")) ||
-          (trimmed.startsWith('"') && trimmed.endsWith('"'))
-        ) {
-          trimmed = trimmed.slice(1, -1).trim();
-        }
-      }
+      rawVal = normalizeImageSourceValue(rawVal);
+      if (!rawVal || rawVal.includes("{{") || rawVal.includes("{%") || rawVal.startsWith("[[["))
+        continue;
+      if (/^(#|rgb|hsl|var\(|linear-gradient|radial-gradient|conic-gradient)/i.test(rawVal))
+        continue;
 
-      if (!isValidArtworkUrl(trimmed)) {
+      if (!isValidArtworkUrl(rawVal)) {
         this._entityRatios[entityId] = null;
-        return;
+        continue;
       }
 
       this._entityRatios[entityId] = "loading";
       const img = new window.Image();
-      img.src = trimmed;
+      img.src = rawVal;
       img.onload = () => {
         if (img.naturalWidth && img.naturalHeight) {
           this._entityRatios[entityId] = (img.naturalWidth / img.naturalHeight).toFixed(2);
@@ -611,7 +600,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
       img.onerror = () => {
         this._entityRatios[entityId] = null;
       };
-    });
+    }
   }
 
   _formatRatio(ratio) {
