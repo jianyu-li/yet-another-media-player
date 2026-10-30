@@ -260,6 +260,8 @@ export default {
         "Music Assistant zahteva mass_queue integraciju da bi preuzeo tekst iz svog internog sistema metapodataka.",
       lyrics_pre_roll:
         "Podesi tajming isticanja teksta pesme. Pozitivne vrednosti ubrzavaju, negativne usporavaju (podrazumevano: 0).",
+      lrclib_url:
+        "Prilagođeni osnovni URL za LRCLIB API tekstova (podrazumevano https://lrclib.net). Korisno za samohostovane instance.",
       lyrics_background_fade:
         "Podesi zatamnjenje pozadine i neprozirnost sloja teksta pesme (0% za providan omot, 100% za punu pozadinu).",
       background_fade: "Prilagodite neprozirnost prekrivanja pozadine i preliva omota (0-100%).",
@@ -327,6 +329,7 @@ export default {
       lyrics_mode: "Režim teksta pesme",
       lyrics_source: "Izvor teksta pesme",
       lyrics_pre_roll: "Predhodni pomak teksta (sekunde)",
+      lrclib_url: "URL za LRCLIB API",
       lyrics_background_fade: "Zatamnjenje pozadine teksta pesme",
       background_fade: "Prelivanje pozadine",
       blurred_artwork: "Zamućen omot",

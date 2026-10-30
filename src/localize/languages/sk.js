@@ -265,6 +265,8 @@ export default {
         "Music Assistant vyžaduje integráciu mass_queue na načítanie textov z jeho interného metadátového modulu.",
       lyrics_pre_roll:
         "Posunutie načasovania zvýraznenia textu piesne. Kladné hodnoty ho zrýchľujú, záporné spomaľujú (predvolené: 0).",
+      lrclib_url:
+        "Vlastná základná URL adresa LRCLIB API pre texty piesní (predvolená https://lrclib.net). Užitočné pre vlastné hostované inštancie.",
       lyrics_background_fade:
         "Upravte prelínanie pozadia a nepriehľadnosť stmavenia prekrytia textu piesne (0% pre priehľadný obrázok, 100% pre plné pozadie).",
       background_fade: "Upravte nepriehľadnosť prekrytia pozadia a prechodu obalu (0-100%).",
@@ -334,6 +336,7 @@ export default {
       lyrics_mode: "Režim textov piesní",
       lyrics_source: "Zdroj textov",
       lyrics_pre_roll: "Pre-roll textu piesne (sekundy)",
+      lrclib_url: "URL rozhrania LRCLIB API",
       lyrics_background_fade: "Prelínanie pozadia textu piesne",
       background_fade: "Prelínanie pozadia",
       blurred_artwork: "Rozmazaný obrázok",

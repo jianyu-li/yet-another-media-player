@@ -250,6 +250,8 @@ export default {
         "Music Assistant richiede l'integrazione mass_queue per recuperare i testi dal suo motore di metadati interno.",
       lyrics_pre_roll:
         "Sposta il tempismo dell'evidenziazione dei testi. I valori positivi lo accelerano, quelli negativi lo ritardano (predefinito: 0).",
+      lrclib_url:
+        "URL di base personalizzato dell'API dei testi LRCLIB (predefinito https://lrclib.net). Utile per le istanze self-hosted.",
       lyrics_background_fade:
         "Regola la dissolvenza dello sfondo e l'opacità di attenuazione della sovrapposizione dei testi (0% per grafica trasparente, 100% per sfondo solido).",
       background_fade:
@@ -320,6 +322,7 @@ export default {
       lyrics_mode: "Modalità testi",
       lyrics_source: "Sorgente testi",
       lyrics_pre_roll: "Pre-roll testi (secondi)",
+      lrclib_url: "URL dell'API LRCLIB",
       lyrics_background_fade: "Dissolvenza sfondo testi",
       background_fade: "Dissolvenza sfondo",
       blurred_artwork: "Immagine sfocata",

@@ -273,6 +273,8 @@ export default {
         "Music Assistant vereist de mass_queue-integratie om songteksten op te halen uit de interne metadata-engine.",
       lyrics_pre_roll:
         "Verschuif de timing van de songtekstmarkering. Positieve waarden versnellen het, negatieve waarden vertragen het (standaard: 0).",
+      lrclib_url:
+        "Aangepaste basis-URL voor de LRCLIB-songteksten-API (standaard https://lrclib.net). Handig voor zelf-gehoste instanties.",
       lyrics_background_fade:
         "Pas de achtergrondvervaging en dim-dekking van de songtekst-overlay aan (0% voor transparant artwork, 100% voor een effen achtergrond).",
       background_fade:
@@ -344,6 +346,7 @@ export default {
       lyrics_mode: "Songtekstmodus",
       lyrics_source: "Songtekstbron",
       lyrics_pre_roll: "Songtekst Pre-Roll (seconden)",
+      lrclib_url: "LRCLIB API-URL",
       lyrics_background_fade: "Songtekst achtergrondvervaging",
       background_fade: "Achtergrondvervaging",
       blurred_artwork: "Vervaagde afbeelding",

@@ -264,6 +264,8 @@ export default {
         "Music Assistant benötigt die mass_queue-Integration, um Liedtexte von seiner internen Metadaten-Engine abzurufen.",
       lyrics_pre_roll:
         "Passen Sie das Timing der Songtext-Hervorhebung an. Positive Werte beschleunigen sie, negative verzögern sie (Standard: 0).",
+      lrclib_url:
+        "Benutzerdefinierte LRCLIB-Songtext-API-Basis-URL (Standard: https://lrclib.net). Nützlich für selbst gehostete Instanzen.",
       background_fade:
         "Hintergrundüberblendung und Dimm-Deckkraft des Overlays anpassen (0% für transparentes Artwork, 100% für durchgehenden Hintergrund).",
       lyrics_background_fade:
@@ -335,6 +337,7 @@ export default {
       lyrics_mode: "Liedtext-Modus",
       lyrics_source: "Liedtext-Quelle",
       lyrics_pre_roll: "Liedtext Pre-Roll (Sekunden)",
+      lrclib_url: "LRCLIB-API-URL",
       background_fade: "Hintergrundüberblendung",
       lyrics_background_fade: "Liedtext Hintergrundüberblendung",
       blurred_artwork: "Verschwommenes Artwork",

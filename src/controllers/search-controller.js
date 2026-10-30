@@ -459,6 +459,10 @@ export class SearchController {
     };
   }
 
+  /**
+   * Checks whether the current playback state represents radio or streaming broadcast.
+   * @returns {boolean}
+   */
   isCurrentlyPlayingRadio() {
     const stateObj =
       this.host?.currentActivePlaybackStateObj ||
@@ -467,7 +471,15 @@ export class SearchController {
     if (!stateObj?.attributes) return false;
     const ct = (stateObj.attributes.media_content_type || "").toLowerCase();
     const cid = (stateObj.attributes.media_content_id || "").toLowerCase();
-    return ct === "radio" || cid.startsWith("library://radio/");
+    return (
+      ct === "radio" ||
+      ct === "channel" ||
+      cid.startsWith("library://radio/") ||
+      cid.startsWith("radiobrowser://") ||
+      cid.startsWith("tunein:") ||
+      cid.startsWith("radioparadise:") ||
+      stateObj.attributes.mass_item_type === "radio"
+    );
   }
 
   handlePlaySimilar() {

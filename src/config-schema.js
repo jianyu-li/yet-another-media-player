@@ -207,6 +207,7 @@ export const CARD_CONFIG_DEFAULTS = Object.freeze({
   show_player_search: true,
   auto_add_playing_entities: false,
   auto_add_exclude: [],
+  lrclib_url: "",
 });
 
 /**
@@ -329,6 +330,11 @@ export function normalizeCardConfig(rawConfig = {}) {
   } else if (!Array.isArray(definedRaw.adaptive_text_targets)) {
     normalized.adaptive_text_targets =
       normalized.adaptive_text === true ? [...DEFAULT_ADAPTIVE_TEXT_TARGETS] : [];
+  }
+  if (typeof normalized.lrclib_url === "string") {
+    normalized.lrclib_url = normalized.lrclib_url.trim();
+  } else {
+    normalized.lrclib_url = "";
   }
   return normalized;
 }

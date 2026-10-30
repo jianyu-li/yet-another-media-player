@@ -257,6 +257,8 @@ export default {
         "Music Assistant nécessite l'intégration mass_queue pour récupérer les paroles de son moteur de métadonnées interne.",
       lyrics_pre_roll:
         "Ajuste le timing de mise en évidence des paroles. Les valeurs positives l'accélèrent, les négatives le ralentissent (par défaut : 0).",
+      lrclib_url:
+        "URL de base personnalisée de l'API de paroles LRCLIB (par défaut https://lrclib.net). Utile pour les instances auto-hébergées.",
       lyrics_background_fade:
         "Ajuster le fondu d'arrière-plan et l'opacité d'assombrissement de la superposition des paroles (0% pour une illustration transparente, 100% pour un arrière-plan plein).",
       background_fade:
@@ -327,6 +329,7 @@ export default {
       lyrics_mode: "Mode des paroles",
       lyrics_source: "Source des paroles",
       lyrics_pre_roll: "Pré-roll des paroles (secondes)",
+      lrclib_url: "URL de l'API LRCLIB",
       lyrics_background_fade: "Fondu d'arrière-plan des paroles",
       background_fade: "Fondu d'arrière-plan",
       blurred_artwork: "Image floutée",

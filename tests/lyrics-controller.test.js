@@ -4,6 +4,7 @@ import {
   LyricsController,
   cleanTrackMetadata,
   getActiveLyricIndex,
+  getLrclibBaseUrl,
   MAX_LYRICS_CACHE_SIZE,
 } from "../src/controllers/lyrics-controller.js";
 
@@ -94,6 +95,65 @@ describe("LyricsController & Lyric Helpers", () => {
       assert.strictEqual(getActiveLyricIndex(sampleLyrics, 8, 3), 0);
       // At position 18s with 2.5s preRoll, adjusted pos is 20.5s -> should match line 1 (starts at 20s)
       assert.strictEqual(getActiveLyricIndex(sampleLyrics, 18, 2.5), 1);
+    });
+  });
+
+  describe("getLrclibBaseUrl", () => {
+    it("returns 'https://lrclib.net/api' for null, undefined, or empty string", () => {
+      assert.strictEqual(getLrclibBaseUrl(null), "https://lrclib.net/api");
+      assert.strictEqual(getLrclibBaseUrl(undefined), "https://lrclib.net/api");
+      assert.strictEqual(getLrclibBaseUrl(""), "https://lrclib.net/api");
+      assert.strictEqual(getLrclibBaseUrl("   "), "https://lrclib.net/api");
+    });
+
+    it("normalizes domain without /api", () => {
+      assert.strictEqual(getLrclibBaseUrl("https://lrclib.net"), "https://lrclib.net/api");
+    });
+
+    it("normalizes domain with trailing slash", () => {
+      assert.strictEqual(getLrclibBaseUrl("https://lrclib.net/"), "https://lrclib.net/api");
+      assert.strictEqual(getLrclibBaseUrl("https://lrclib.net///"), "https://lrclib.net/api");
+    });
+
+    it("preserves /api", () => {
+      assert.strictEqual(getLrclibBaseUrl("https://lrclib.net/api"), "https://lrclib.net/api");
+    });
+
+    it("preserves /api/", () => {
+      assert.strictEqual(getLrclibBaseUrl("https://lrclib.net/api/"), "https://lrclib.net/api");
+    });
+
+    it("handles custom host and port", () => {
+      assert.strictEqual(
+        getLrclibBaseUrl("http://10.200.204.1:3300"),
+        "http://10.200.204.1:3300/api"
+      );
+    });
+
+    it("handles custom host with /api", () => {
+      assert.strictEqual(
+        getLrclibBaseUrl("http://10.200.204.1:3300/api"),
+        "http://10.200.204.1:3300/api"
+      );
+    });
+
+    it("strips trailing /get or /search", () => {
+      assert.strictEqual(
+        getLrclibBaseUrl("http://10.200.204.1:3300/api/get"),
+        "http://10.200.204.1:3300/api"
+      );
+      assert.strictEqual(
+        getLrclibBaseUrl("http://10.200.204.1:3300/api/search"),
+        "http://10.200.204.1:3300/api"
+      );
+      assert.strictEqual(
+        getLrclibBaseUrl("http://10.200.204.1:3300/get"),
+        "http://10.200.204.1:3300/api"
+      );
+      assert.strictEqual(
+        getLrclibBaseUrl("http://10.200.204.1:3300/search"),
+        "http://10.200.204.1:3300/api"
+      );
     });
   });
 
@@ -354,6 +414,257 @@ describe("LyricsController & Lyric Helpers", () => {
       } finally {
         globalThis.fetch = originalFetch;
       }
+    });
+
+    it("honors custom host.config.lrclib_url in getLrclibLyrics and falls back to search", async () => {
+      mockHost.config = { lyrics_source: "lrclib", lrclib_url: "http://my-lrclib:3300" };
+      const controller = new LyricsController(mockHost);
+      const originalFetch = globalThis.fetch;
+      /** @type {string[]} */
+      const requestedUrls = [];
+
+      globalThis.fetch = /** @type {any} */ (
+        async (url) => {
+          requestedUrls.push(url.toString());
+          if (url.toString().includes("/api/get")) {
+            return { ok: false, status: 404 };
+          }
+          if (url.toString().includes("/api/search")) {
+            return {
+              ok: true,
+              status: 200,
+              json: async () => [
+                {
+                  id: 88,
+                  trackName: "Bohemian Rhapsody",
+                  artistName: "Queen",
+                  syncedLyrics: "[00:01.00] Is this the real life?",
+                },
+              ],
+            };
+          }
+          return { ok: false, status: 500 };
+        }
+      );
+
+      try {
+        const lyrics = await controller.getLrclibLyrics("Queen", "Bohemian Rhapsody");
+        assert.strictEqual(requestedUrls.length, 2);
+        assert.ok(
+          requestedUrls[0].startsWith(
+            "http://my-lrclib:3300/api/get?artist_name=Queen&track_name=Bohemian%20Rhapsody"
+          ),
+          `Expected get URL with custom lrclib_url, got: ${requestedUrls[0]}`
+        );
+        assert.ok(
+          requestedUrls[1].startsWith(
+            "http://my-lrclib:3300/api/search?artist_name=Queen&track_name=Bohemian%20Rhapsody"
+          ),
+          `Expected search URL with custom lrclib_url, got: ${requestedUrls[1]}`
+        );
+        assert.strictEqual(lyrics.length, 1);
+        assert.strictEqual(lyrics[0].text, "Is this the real life?");
+      } finally {
+        globalThis.fetch = originalFetch;
+      }
+    });
+
+    it("resolves template in lrclib_url dynamically before fetching", async () => {
+      mockHost.config = {
+        lyrics_source: "lrclib",
+        lrclib_url: "{{ 'http://dynamic-lrclib:3300' }}",
+      };
+      mockHost.currentEntityId = "media_player.kitchen";
+      mockHost._resolveTemplateAtActionTime = mock.fn(async (template) =>
+        template.replace(/[{ }']/g, "")
+      );
+      const controller = new LyricsController(mockHost);
+      const originalFetch = globalThis.fetch;
+      /** @type {string[]} */
+      const requestedUrls = [];
+
+      globalThis.fetch = /** @type {any} */ (
+        async (url) => {
+          requestedUrls.push(url.toString());
+          return {
+            ok: true,
+            status: 200,
+            json: async () => ({
+              id: 77,
+              trackName: "Song",
+              artistName: "Artist",
+              plainLyrics: "Sample text",
+            }),
+          };
+        }
+      );
+
+      try {
+        await controller.getLrclibLyrics("Artist", "Song");
+        assert.strictEqual(mockHost._resolveTemplateAtActionTime.mock.callCount(), 1);
+        assert.ok(requestedUrls[0].startsWith("http://dynamic-lrclib:3300/api/get"));
+      } finally {
+        globalThis.fetch = originalFetch;
+      }
+    });
+
+    it("omits album name and duration for radio streams in fetchLyrics()", async () => {
+      mockHost.metadataStateObj = {
+        attributes: {
+          media_artist: "Queen",
+          media_title: "Bohemian Rhapsody",
+          media_album_name: "Antenne Bayern", // station name in album attribute
+          media_duration: 7200, // stream duration
+          media_content_type: "radio",
+        },
+      };
+
+      const controller = new LyricsController(mockHost);
+      controller.active = true;
+      mockHost._lyricsActive = true;
+
+      const getLrclibSpy = mock.fn(
+        async (
+          /** @type {any} */ _artist,
+          /** @type {any} */ _title,
+          /** @type {any} */ _album,
+          /** @type {any} */ _duration
+        ) => []
+      );
+      controller.getLrclibLyrics = /** @type {any} */ (getLrclibSpy);
+
+      await controller.fetchLyrics();
+
+      assert.strictEqual(getLrclibSpy.mock.callCount(), 1);
+      const args = /** @type {any[]} */ (getLrclibSpy.mock.calls[0].arguments);
+      assert.strictEqual(args[0], "Queen");
+      assert.strictEqual(args[1], "Bohemian Rhapsody");
+      assert.strictEqual(args[2], ""); // Album omitted for radio
+      assert.strictEqual(args[3], null); // Duration omitted for radio
+    });
+
+    it("includes album name and duration for non-radio music tracks in fetchLyrics()", async () => {
+      mockHost.metadataStateObj = {
+        attributes: {
+          media_artist: "Queen",
+          media_title: "Bohemian Rhapsody",
+          media_album_name: "A Night at the Opera",
+          media_duration: 354,
+          media_content_type: "music",
+        },
+      };
+
+      const controller = new LyricsController(mockHost);
+      controller.active = true;
+      mockHost._lyricsActive = true;
+
+      const getLrclibSpy = mock.fn(
+        async (
+          /** @type {any} */ _artist,
+          /** @type {any} */ _title,
+          /** @type {any} */ _album,
+          /** @type {any} */ _duration
+        ) => []
+      );
+      controller.getLrclibLyrics = /** @type {any} */ (getLrclibSpy);
+
+      await controller.fetchLyrics();
+
+      assert.strictEqual(getLrclibSpy.mock.callCount(), 1);
+      const args = /** @type {any[]} */ (getLrclibSpy.mock.calls[0].arguments);
+      assert.strictEqual(args[0], "Queen");
+      assert.strictEqual(args[1], "Bohemian Rhapsody");
+      assert.strictEqual(args[2], "A Night at the Opera");
+      assert.strictEqual(args[3], 354);
+    });
+
+    it("recognizes various radio stream formats in isCurrentlyPlayingRadio", () => {
+      const controller = new LyricsController(mockHost);
+
+      assert.strictEqual(
+        controller.isCurrentlyPlayingRadio(
+          /** @type {any} */ ({
+            entity_id: "media_player.test",
+            state: "playing",
+            attributes: { media_content_type: "radio" },
+          })
+        ),
+        true
+      );
+      assert.strictEqual(
+        controller.isCurrentlyPlayingRadio(
+          /** @type {any} */ ({
+            entity_id: "media_player.test",
+            state: "playing",
+            attributes: { media_content_type: "channel" },
+          })
+        ),
+        true
+      );
+      assert.strictEqual(
+        controller.isCurrentlyPlayingRadio(
+          /** @type {any} */ ({
+            entity_id: "media_player.test",
+            state: "playing",
+            attributes: { media_content_id: "library://radio/123" },
+          })
+        ),
+        true
+      );
+      assert.strictEqual(
+        controller.isCurrentlyPlayingRadio(
+          /** @type {any} */ ({
+            entity_id: "media_player.test",
+            state: "playing",
+            attributes: { media_content_id: "radiobrowser://station-id" },
+          })
+        ),
+        true
+      );
+      assert.strictEqual(
+        controller.isCurrentlyPlayingRadio(
+          /** @type {any} */ ({
+            entity_id: "media_player.test",
+            state: "playing",
+            attributes: { media_content_id: "tunein:station:123" },
+          })
+        ),
+        true
+      );
+      assert.strictEqual(
+        controller.isCurrentlyPlayingRadio(
+          /** @type {any} */ ({
+            entity_id: "media_player.test",
+            state: "playing",
+            attributes: { media_content_id: "radioparadise:main" },
+          })
+        ),
+        true
+      );
+      assert.strictEqual(
+        controller.isCurrentlyPlayingRadio(
+          /** @type {any} */ ({
+            entity_id: "media_player.test",
+            state: "playing",
+            attributes: { mass_item_type: "radio" },
+          })
+        ),
+        true
+      );
+      assert.strictEqual(
+        controller.isCurrentlyPlayingRadio(
+          /** @type {any} */ ({
+            entity_id: "media_player.test",
+            state: "playing",
+            attributes: {
+              media_content_type: "music",
+              media_content_id: "spotify://track/123",
+            },
+          })
+        ),
+        false
+      );
+      assert.strictEqual(controller.isCurrentlyPlayingRadio(null), false);
     });
   });
 });
