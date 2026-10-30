@@ -40,6 +40,10 @@ export default {
     template_overridden: "Template default ({template}) overridden — click to reset",
     template_dropdown_info:
       "Template active: {template}. Options marked with this icon are adjusted by this template.",
+    template_filter_banner: "Showing options affected by {template}",
+    template_filter_tooltip_off: "Filter to options affected by {template}",
+    template_filter_tooltip_on: "Template filter active — click to show all options",
+    show_all_options: "Show all options",
     templates: {
       custom: {
         label: "Custom (Original Config)",

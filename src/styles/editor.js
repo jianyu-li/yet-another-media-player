@@ -423,14 +423,56 @@ export const editorStyles = css`
           opacity: 1;
           transform: scale(1.15);
         }
-        .template-indicator.template-indicator-dropdown {
+        .template-indicator.template-indicator-dropdown,
+        .template-indicator-dropdown {
           --mdc-icon-size: 20px;
           width: 20px;
           height: 20px;
+          cursor: pointer;
+          padding: 4px;
+          border-radius: 50%;
+          transition: all 0.2s ease-in-out;
+          flex-shrink: 0;
         }
-        .template-indicator.template-indicator-dropdown ha-icon {
+        .template-indicator.template-indicator-dropdown ha-icon,
+        .template-indicator-dropdown ha-icon {
           width: 20px;
           height: 20px;
+        }
+        .template-indicator-dropdown:hover {
+          background: var(--secondary-background-color, rgba(127, 127, 127, 0.15));
+        }
+        .template-indicator-dropdown.filter-active {
+          background: var(--primary-color, #03a9f4);
+          color: var(--text-primary-color, #ffffff) !important;
+          box-shadow: 0 0 0 2px var(--primary-color, #03a9f4);
+          opacity: 1;
+        }
+        .template-filter-banner {
+          display: flex;
+          align-items: center;
+          justify-content: space-between;
+          background: var(--secondary-background-color, rgba(127, 127, 127, 0.1));
+          border: 1px solid var(--divider-color, rgba(127, 127, 127, 0.2));
+          border-radius: 8px;
+          padding: 8px 12px;
+          margin-bottom: 12px;
+          font-size: 13px;
+          color: var(--primary-text-color);
+        }
+        .template-filter-banner .clear-filter-btn {
+          background: none;
+          border: none;
+          color: var(--primary-color, #03a9f4);
+          cursor: pointer;
+          font-weight: 500;
+          font-size: 13px;
+          padding: 4px 8px;
+          border-radius: 4px;
+        }
+        .template-filter-banner .clear-filter-btn:hover {
+          text-decoration: underline;
+          background: var(--secondary-background-color, rgba(127, 127, 127, 0.15));
         }
         .help-text {
           padding: 12px 25px;

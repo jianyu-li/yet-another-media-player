@@ -40,6 +40,10 @@ export default {
     template_overridden: "Predvolená hodnota šablóny ({template}) prepísaná — kliknutím obnovíte",
     template_dropdown_info:
       "Aktívna šablóna: {template}. Možnosti označené touto ikonou sú upravené touto šablónou.",
+    template_filter_banner: "Zobrazujú sa možnosti ovplyvnené šablónou {template}",
+    template_filter_tooltip_off: "Filtrovať možnosti ovplyvnené šablónou {template}",
+    template_filter_tooltip_on: "Filter šablóny aktívny — kliknutím zobrazíte všetky možnosti",
+    show_all_options: "Zobraziť všetky možnosti",
     templates: {
       custom: {
         label: "Vlastné (Pôvodná konfigurácia)",

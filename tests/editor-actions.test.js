@@ -30,6 +30,7 @@ if (!g.window.Image) {
 g.__VERSION__ = "1.0.0-test";
 
 const { YetAnotherMediaPlayerEditor } = await import("../src/yamp-editor.js");
+const { localize } = await import("../src/localize/localize.js");
 
 describe("YetAnotherMediaPlayerEditor - Action Navigation and Management", () => {
   let editor;
@@ -705,6 +706,309 @@ describe("YetAnotherMediaPlayerEditor - Template Indicators and Reset", () => {
 
       const customResult = editor._renderTemplateDropdownIndicator("custom");
       assert.equal(customResult, nothing);
+    });
+  });
+});
+
+describe("YetAnotherMediaPlayerEditor - Template Filter Mode", () => {
+  let editor;
+
+  beforeEach(() => {
+    editor = new YetAnotherMediaPlayerEditor();
+    editor.dispatchEvent = () => true;
+  });
+
+  describe("_filterByTemplate initialization", () => {
+    it("starts as false", () => {
+      assert.equal(editor._filterByTemplate, false);
+    });
+  });
+
+  describe("_toggleTemplateFilter()", () => {
+    it("toggles _filterByTemplate to true when template is large_modern and back to false when called again", () => {
+      editor.setConfig({
+        entities: ["media_player.living_room"],
+        template: "large_modern",
+      });
+      assert.equal(editor._filterByTemplate, false);
+
+      editor._toggleTemplateFilter();
+      assert.equal(editor._filterByTemplate, true);
+
+      editor._toggleTemplateFilter();
+      assert.equal(editor._filterByTemplate, false);
+    });
+
+    it("remains false and does not toggle when template is custom", () => {
+      editor.setConfig({
+        entities: ["media_player.living_room"],
+        template: "custom",
+      });
+      assert.equal(editor._filterByTemplate, false);
+
+      editor._toggleTemplateFilter();
+      assert.equal(editor._filterByTemplate, false);
+    });
+  });
+
+  describe("_changeTemplate('custom')", () => {
+    it("automatically resets _filterByTemplate to false if it was true when switching to custom", () => {
+      editor.setConfig({
+        entities: ["media_player.living_room"],
+        template: "large_modern",
+      });
+      editor._toggleTemplateFilter();
+      assert.equal(editor._filterByTemplate, true);
+
+      editor._changeTemplate("custom");
+      assert.equal(editor._filterByTemplate, false);
+    });
+  });
+
+  describe("_renderTemplateDropdownIndicator(templateName)", () => {
+    it("renders indicator with class filter-active and localized tooltip when _filterByTemplate is true", () => {
+      editor.setConfig({
+        entities: ["media_player.living_room"],
+        template: "large_modern",
+      });
+      editor._filterByTemplate = true;
+
+      const result = editor._renderTemplateDropdownIndicator("large_modern");
+      assert.notEqual(result, nothing);
+      assert.ok(result);
+
+      // Verify class includes filter-active
+      const classValue = result.values[0];
+      assert.equal(classValue, "filter-active");
+
+      // Verify localized tooltip matches editor.template_filter_tooltip_on
+      const tooltip = result.values[1];
+      const expectedTooltip = localize("editor.template_filter_tooltip_on", {
+        "{template}": "Big Ol' Modern YAMP",
+      });
+      assert.equal(tooltip, expectedTooltip);
+
+      // Verify clicking the dropdown indicator invokes _toggleTemplateFilter()
+      const clickHandler = result.values.find((v) => typeof v === "function");
+      assert.ok(clickHandler);
+      clickHandler();
+      assert.equal(editor._filterByTemplate, false);
+    });
+
+    it("renders indicator with class active and localized tooltip when _filterByTemplate is false", () => {
+      editor.setConfig({
+        entities: ["media_player.living_room"],
+        template: "large_modern",
+      });
+      editor._filterByTemplate = false;
+
+      const result = editor._renderTemplateDropdownIndicator("large_modern");
+      assert.notEqual(result, nothing);
+      assert.ok(result);
+
+      // Verify class includes active and not filter-active
+      const classValue = result.values[0];
+      assert.equal(classValue, "");
+      assert.ok(result.strings[0].includes("active"));
+
+      // Verify localized tooltip matches editor.template_filter_tooltip_off
+      const tooltip = result.values[1];
+      const expectedTooltip = localize("editor.template_filter_tooltip_off", {
+        "{template}": "Big Ol' Modern YAMP",
+      });
+      assert.equal(tooltip, expectedTooltip);
+
+      // Verify clicking the dropdown indicator invokes _toggleTemplateFilter()
+      const clickHandler = result.values.find((v) => typeof v === "function");
+      assert.ok(clickHandler);
+      clickHandler();
+      assert.equal(editor._filterByTemplate, true);
+    });
+  });
+
+  describe("Row filtering verification (_applySearchFilter logic)", () => {
+    /**
+     * @param {string} tagName
+     * @param {string[]} classNames
+     * @param {any[]} children
+     * @param {Record<string, string>} attributes
+     */
+    function createMockElement(tagName = "div", classNames = [], children = [], attributes = {}) {
+      const classes = new Set(classNames);
+      /** @type {any} */
+      const element = {
+        tagName: tagName.toUpperCase(),
+        children,
+        style: { display: "" },
+        textContent: "",
+        classList: {
+          contains: (c) => classes.has(c),
+          add: (c) => classes.add(c),
+          remove: (c) => classes.delete(c),
+        },
+        getAttribute: (name) => attributes[name] || null,
+        querySelector: (selector) => {
+          return element.querySelectorAll(selector)[0] || null;
+        },
+        querySelectorAll: (selector) => {
+          const results = [];
+          const match = (el) => {
+            const selList = selector.split(",").map((s) => s.trim());
+            for (const sel of selList) {
+              if (sel.startsWith(".")) {
+                const cls = sel.slice(1);
+                if (el.classList?.contains(cls)) return true;
+              }
+            }
+            return false;
+          };
+          const traverse = (node) => {
+            if (!node.children) return;
+            for (const child of node.children) {
+              if (match(child)) results.push(child);
+              traverse(child);
+            }
+          };
+          traverse(element);
+          return results;
+        },
+      };
+      return element;
+    }
+
+    /**
+     * @param {any} targetEditor
+     * @param {any} container
+     */
+    function setMockShadowRoot(targetEditor, container) {
+      Object.defineProperty(targetEditor, "shadowRoot", {
+        value: {
+          querySelector: (sel) => {
+            if (sel.includes("tab-content") || sel.includes("search-results")) return container;
+            return null;
+          },
+        },
+        configurable: true,
+        writable: true,
+      });
+    }
+
+    it("displays rows with .template-indicator and hides rows without when _filterByTemplate = true", () => {
+      editor.setConfig({
+        entities: ["media_player.living_room"],
+        template: "large_modern",
+      });
+
+      const indicatorEl = createMockElement("ha-icon", ["template-indicator"]);
+      const rowWithIndicator = createMockElement("div", ["form-row"], [indicatorEl]);
+      const rowWithoutIndicator = createMockElement("div", ["form-row"], []);
+      const section = createMockElement(
+        "div",
+        ["config-section"],
+        [rowWithIndicator, rowWithoutIndicator]
+      );
+      const tabContent = createMockElement("div", ["tab-content"], [section]);
+
+      setMockShadowRoot(editor, tabContent);
+
+      editor._filterByTemplate = true;
+      editor._applySearchFilter();
+
+      assert.equal(rowWithIndicator.style.display, "");
+      assert.equal(rowWithoutIndicator.style.display, "none");
+      assert.equal(section.style.display, "");
+    });
+
+    it("displays all rows when _filterByTemplate = false", () => {
+      editor.setConfig({
+        entities: ["media_player.living_room"],
+        template: "large_modern",
+      });
+
+      const indicatorEl = createMockElement("ha-icon", ["template-indicator"]);
+      const rowWithIndicator = createMockElement("div", ["form-row"], [indicatorEl]);
+      const rowWithoutIndicator = createMockElement("div", ["form-row"], []);
+      rowWithoutIndicator.style.display = "none";
+      const section = createMockElement(
+        "div",
+        ["config-section"],
+        [rowWithIndicator, rowWithoutIndicator]
+      );
+      const tabContent = createMockElement("div", ["tab-content"], [section]);
+
+      setMockShadowRoot(editor, tabContent);
+
+      editor._filterByTemplate = false;
+      editor._applySearchFilter();
+
+      assert.equal(rowWithIndicator.style.display, "");
+      assert.equal(rowWithoutIndicator.style.display, "");
+      assert.equal(section.style.display, "");
+    });
+
+    it("correctly filters sub-editor flat rows when _filterByTemplate is toggled", () => {
+      editor.setConfig({
+        entities: ["media_player.living_room"],
+        template: "large_modern",
+      });
+      editor._entityEditorIndex = 0;
+
+      const indicatorEl = createMockElement("ha-icon", ["template-indicator"]);
+      const rowWithIndicator = createMockElement("div", ["form-row"], [indicatorEl]);
+      const rowWithoutIndicator = createMockElement("div", ["form-row"], []);
+      const tabContent = createMockElement(
+        "div",
+        ["tab-content"],
+        [rowWithIndicator, rowWithoutIndicator]
+      );
+
+      setMockShadowRoot(editor, tabContent);
+
+      editor._filterByTemplate = true;
+      editor._applySearchFilter();
+
+      assert.equal(rowWithIndicator.style.display, "");
+      assert.equal(rowWithoutIndicator.style.display, "none");
+
+      editor._filterByTemplate = false;
+      editor._applySearchFilter();
+
+      assert.equal(rowWithIndicator.style.display, "");
+      assert.equal(rowWithoutIndicator.style.display, "");
+    });
+
+    it("correctly filters multi-column rows according to child template indicators", () => {
+      editor.setConfig({
+        entities: ["media_player.living_room"],
+        template: "large_modern",
+      });
+
+      const indicatorEl = createMockElement("ha-icon", ["template-indicator"]);
+      const col1WithIndicator = createMockElement("div", [], [indicatorEl]);
+      const col2WithoutIndicator = createMockElement("div", [], []);
+      const multiColRow = createMockElement(
+        "div",
+        ["form-row", "form-row-multi-column"],
+        [col1WithIndicator, col2WithoutIndicator]
+      );
+      const section = createMockElement("div", ["config-section"], [multiColRow]);
+      const tabContent = createMockElement("div", ["tab-content"], [section]);
+
+      setMockShadowRoot(editor, tabContent);
+
+      editor._filterByTemplate = true;
+      editor._applySearchFilter();
+
+      assert.equal(col1WithIndicator.style.display, "");
+      assert.equal(col2WithoutIndicator.style.display, "none");
+      assert.equal(multiColRow.style.display, "");
+
+      editor._filterByTemplate = false;
+      editor._applySearchFilter();
+
+      assert.equal(col1WithIndicator.style.display, "");
+      assert.equal(col2WithoutIndicator.style.display, "");
+      assert.equal(multiColRow.style.display, "");
     });
   });
 });

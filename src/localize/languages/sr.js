@@ -40,6 +40,10 @@ export default {
     template_overridden: "Подразумевано за шаблон ({template}) прегласано — кликни за ресетовање",
     template_dropdown_info:
       "Шаблон активан: {template}. Опције означене овом иконом су прилагођене овим шаблоном.",
+    template_filter_banner: "Приказују се опције на које утиче {template}",
+    template_filter_tooltip_off: "Филтрирај на опције на које утиче {template}",
+    template_filter_tooltip_on: "Филтер шаблона активан — кликни за приказ свих опција",
+    show_all_options: "Прикажи све опције",
     templates: {
       custom: {
         label: "Прилагођено (Оригинална конфигурација)",

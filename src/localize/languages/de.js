@@ -40,6 +40,10 @@ export default {
     template_overridden: "Vorlagen-Standard ({template}) überschrieben – zum Zurücksetzen klicken",
     template_dropdown_info:
       "Vorlage aktiv: {template}. Optionen mit diesem Symbol werden durch diese Vorlage angepasst.",
+    template_filter_banner: "Optionen werden angezeigt, die von {template} beeinflusst werden",
+    template_filter_tooltip_off: "Auf von {template} beeinflusste Optionen filtern",
+    template_filter_tooltip_on: "Vorlagenfilter aktiv – zum Anzeigen aller Optionen klicken",
+    show_all_options: "Alle Optionen anzeigen",
     templates: {
       custom: {
         label: "Benutzerdefiniert (Originalkonfiguration)",

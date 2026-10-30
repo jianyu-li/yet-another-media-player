@@ -307,6 +307,7 @@ export interface YampCardConfig {
   display_timestamps?: boolean;
   adaptive_controls?: boolean;
   adaptive_text?: boolean;
+  adaptive_text_targets?: ("details" | "menu" | "action_chips" | "lyrics" | string)[];
   details_alignment?: "left" | "center" | "right" | string;
   keep_filters_on_search?: boolean;
   dismiss_search_on_play?: boolean;

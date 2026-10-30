@@ -40,6 +40,10 @@ export default {
     template_overridden: "Sjabloonstandaard ({template}) overschreven — klik om te herstellen",
     template_dropdown_info:
       "Sjabloon actief: {template}. Opties gemarkeerd met dit pictogram zijn aangepast door dit sjabloon.",
+    template_filter_banner: "Opties beïnvloed door {template} worden weergegeven",
+    template_filter_tooltip_off: "Filteren op opties die worden beïnvloed door {template}",
+    template_filter_tooltip_on: "Sjabloonfilter actief — klik om alle opties weer te geven",
+    show_all_options: "Alle opties weergeven",
     templates: {
       custom: {
         label: "Aangepast (Originele configuratie)",

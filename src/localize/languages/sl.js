@@ -41,6 +41,10 @@ export default {
       "Privzeta vrednost predloge ({template}) prepisana — kliknite za ponastavitev",
     template_dropdown_info:
       "Aktivna predloga: {template}. Možnosti, označene s to ikono, so prilagojene s to predlogo.",
+    template_filter_banner: "Prikaz možnosti, na katere vpliva {template}",
+    template_filter_tooltip_off: "Filtriraj na možnosti, na katere vpliva {template}",
+    template_filter_tooltip_on: "Filter predlog aktiven — kliknite za prikaz vseh možnosti",
+    show_all_options: "Pokaži vse možnosti",
     templates: {
       custom: {
         label: "Po meri (Izvirna konfiguracija)",
