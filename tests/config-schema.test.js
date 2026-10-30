@@ -5,6 +5,7 @@ import {
   DEFAULT_IDLE_TIMEOUT_MS,
   DEFAULT_VOLUME_STEP,
   DEFAULT_LYRICS_BACKGROUND_FADE,
+  DEFAULT_ADAPTIVE_TEXT_TARGETS,
   CARD_CONFIG_DEFAULTS,
   ENTITY_CONFIG_DEFAULTS,
   TEMPLATE_CONFIGS,
@@ -22,6 +23,18 @@ describe("config-schema", () => {
       assert.equal(DEFAULT_IDLE_TIMEOUT_MS, 60000);
       assert.equal(DEFAULT_VOLUME_STEP, 0.05);
       assert.equal(DEFAULT_LYRICS_BACKGROUND_FADE, 75);
+    });
+  });
+
+  describe("DEFAULT_ADAPTIVE_TEXT_TARGETS", () => {
+    it("is frozen and contains expected standard targets", () => {
+      assert.equal(Object.isFrozen(DEFAULT_ADAPTIVE_TEXT_TARGETS), true);
+      assert.deepEqual(DEFAULT_ADAPTIVE_TEXT_TARGETS, [
+        "details",
+        "menu",
+        "action_chips",
+        "lyrics",
+      ]);
     });
   });
 
@@ -94,6 +107,21 @@ describe("config-schema", () => {
       assert.equal(TEMPLATE_CONFIGS.dedicated_grouping.card_type, "group_players");
       assert.equal(TEMPLATE_CONFIGS.quick_and_easy.always_show_quick_group, true);
       assert.equal(TEMPLATE_CONFIGS.huge_yamp.progress_bar_height, 48);
+    });
+
+    it("configures adaptive_text_targets on large_modern and huge_yamp presets", () => {
+      assert.deepEqual(TEMPLATE_CONFIGS.large_modern.adaptive_text_targets, [
+        "details",
+        "menu",
+        "action_chips",
+        "lyrics",
+      ]);
+      assert.deepEqual(TEMPLATE_CONFIGS.huge_yamp.adaptive_text_targets, [
+        "details",
+        "menu",
+        "action_chips",
+        "lyrics",
+      ]);
     });
 
     it("automatically validates all configured presets in TEMPLATE_CONFIGS without manual test updates", () => {
@@ -285,6 +313,40 @@ describe("config-schema", () => {
           );
         }
       }
+    });
+
+    it("populates adaptive_text_targets for large_modern when not specified", () => {
+      const normalized = normalizeCardConfig({ template: "large_modern" });
+      assert.deepEqual(normalized.adaptive_text_targets, [
+        "details",
+        "menu",
+        "action_chips",
+        "lyrics",
+      ]);
+    });
+
+    it("preserves manual override of adaptive_text_targets under large_modern", () => {
+      const normalized = normalizeCardConfig({
+        template: "large_modern",
+        adaptive_text_targets: ["details", "menu", "action_chips"],
+      });
+      assert.deepEqual(normalized.adaptive_text_targets, ["details", "menu", "action_chips"]);
+    });
+
+    it("sets adaptive_text_targets to empty array when adaptive_text is explicitly false under large_modern", () => {
+      const normalized = normalizeCardConfig({
+        template: "large_modern",
+        adaptive_text: false,
+      });
+      assert.deepEqual(normalized.adaptive_text_targets, []);
+    });
+
+    it("ignores undefined properties and preserves preset defaults", () => {
+      const normalized = normalizeCardConfig({
+        template: "large_modern",
+        progress_bar_height: undefined,
+      });
+      assert.equal(normalized.progress_bar_height, 16);
     });
   });
 

@@ -36,6 +36,16 @@ export default {
     },
     search_placeholder: "Buscar opciones de configuración...",
     template_label: "Plantilla de tarjeta",
+    template_adjusted: "Ajustado por la plantilla de tarjeta: {template}",
+    template_overridden:
+      "Predeterminado de plantilla ({template}) anulado — pulse para restablecer",
+    template_dropdown_info:
+      "Plantilla activa: {template}. Las opciones marcadas con este icono están ajustadas por esta plantilla.",
+    template_filter_banner: "Mostrando opciones afectadas por {template}",
+    template_filter_tooltip_off: "Filtrar por opciones afectadas por {template}",
+    template_filter_tooltip_on:
+      "Filtro de plantilla activo — pulse para mostrar todas las opciones",
+    show_all_options: "Mostrar todas las opciones",
     templates: {
       custom: {
         label: "Personalizado (Configuración original)",

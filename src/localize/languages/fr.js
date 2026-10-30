@@ -36,6 +36,15 @@ export default {
     },
     search_placeholder: "Rechercher des options de configuration...",
     template_label: "Modèle de carte",
+    template_adjusted: "Ajusté par le modèle de carte : {template}",
+    template_overridden:
+      "Valeur par défaut du modèle ({template}) remplacée — cliquer pour réinitialiser",
+    template_dropdown_info:
+      "Modèle actif : {template}. Les options marquées de cette icône sont ajustées par ce modèle.",
+    template_filter_banner: "Affichage des options affectées par {template}",
+    template_filter_tooltip_off: "Filtrer selon les options affectées par {template}",
+    template_filter_tooltip_on: "Filtre de modèle actif — cliquer pour afficher toutes les options",
+    show_all_options: "Afficher toutes les options",
     templates: {
       custom: {
         label: "Personnalisé (Configuration d'origine)",

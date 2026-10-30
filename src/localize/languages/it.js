@@ -36,6 +36,15 @@ export default {
     },
     search_placeholder: "Cerca opzioni di configurazione...",
     template_label: "Modello di scheda",
+    template_adjusted: "Regolato dal modello di scheda: {template}",
+    template_overridden:
+      "Predefinito del modello ({template}) sovrascritto — fai clic per ripristinare",
+    template_dropdown_info:
+      "Modello attivo: {template}. Le opzioni contrassegnate da questa icona sono regolate da questo modello.",
+    template_filter_banner: "Mostra le opzioni interessate da {template}",
+    template_filter_tooltip_off: "Filtra per le opzioni interessate da {template}",
+    template_filter_tooltip_on: "Filtro modello attivo — fai clic per mostrare tutte le opzioni",
+    show_all_options: "Mostra tutte le opzioni",
     templates: {
       custom: {
         label: "Personalizzato (Configurazione originale)",

@@ -28,6 +28,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     _searchTerm: { type: String },
     _useBackgroundImageUrl: { type: Boolean },
     _useIdleImageUrl: { type: Boolean },
+    _filterByTemplate: { type: Boolean },
   };
 
   constructor() {
@@ -62,6 +63,8 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     this._useBackgroundImageUrl = undefined;
     /** @type {boolean | undefined} */
     this._useIdleImageUrl = undefined;
+    /** @type {boolean} */
+    this._filterByTemplate = false;
   }
 
   firstUpdated() {
@@ -104,7 +107,8 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
       changedProperties.has("_actionMode") ||
       changedProperties.has("_templateModes") ||
       changedProperties.has("_serviceItems") ||
-      changedProperties.has("_searchTerm")
+      changedProperties.has("_searchTerm") ||
+      changedProperties.has("_filterByTemplate")
     ) {
       return true;
     }
@@ -150,7 +154,12 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
       this._fetchAspectRatios();
     }
 
-    if (changedProperties.has("_searchTerm") || this._searchTerm) {
+    if (
+      changedProperties.has("_searchTerm") ||
+      changedProperties.has("_filterByTemplate") ||
+      this._searchTerm ||
+      this._filterByTemplate
+    ) {
       this._applySearchFilter();
     }
   }
@@ -412,6 +421,10 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     const list = Array.isArray(value)
       ? value.filter((item) => ADAPTIVE_TEXT_SELECTOR_VALUES.includes(item))
       : [];
+    const current = this._getAdaptiveTextTargetsValue();
+    if (list.length === current.length && list.every((item, idx) => item === current[idx])) {
+      return;
+    }
     this._updateConfig("adaptive_text_targets", list);
   }
 
@@ -499,6 +512,45 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     return "#ffffff";
   }
 
+  /**
+   * @param {any} yamlConfig
+   * @param {any} [normalizedEntities]
+   * @returns {any}
+   */
+  _buildEffectiveConfig(yamlConfig = {}, normalizedEntities = this._config?.entities) {
+    const templateName = yamlConfig.template || "custom";
+    const templateBase = getTemplatePresetDefaults(templateName);
+    const definedYaml = Object.fromEntries(
+      Object.entries(yamlConfig).filter(([, v]) => v !== undefined)
+    );
+    const merged = /** @type {any} */ ({
+      ...templateBase,
+      ...definedYaml,
+      entities: normalizedEntities,
+    });
+
+    if (
+      templateBase.card_type &&
+      (!definedYaml.card_type ||
+        definedYaml.card_type === "default" ||
+        definedYaml.card_type === "standard")
+    ) {
+      merged.card_type = templateBase.card_type;
+    }
+
+    if (!Array.isArray(definedYaml.adaptive_text_targets)) {
+      if (definedYaml.adaptive_text === false) {
+        merged.adaptive_text_targets = [];
+      } else if (merged.adaptive_text === true) {
+        merged.adaptive_text_targets = [...ADAPTIVE_TEXT_SELECTOR_VALUES];
+      } else {
+        merged.adaptive_text_targets = [];
+      }
+    }
+
+    return merged;
+  }
+
   setConfig(config) {
     this._yamlConfig = { ...config };
     const rawEntities = config.entities ?? [];
@@ -506,20 +558,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
       typeof e === "string" ? { entity_id: e } : e
     );
 
-    const templateName = config.template || "custom";
-    const templateBase = getTemplatePresetDefaults(templateName);
-
-    this._config = {
-      ...templateBase,
-      ...config,
-      entities: normalizedEntities,
-    };
-    if (
-      templateBase.card_type &&
-      (!config.card_type || config.card_type === "default" || config.card_type === "standard")
-    ) {
-      this._config.card_type = templateBase.card_type;
-    }
+    this._config = this._buildEffectiveConfig(config, normalizedEntities);
     if (this._isInternalUpdate) {
       this._isInternalUpdate = false;
     }
@@ -620,11 +659,18 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
       return;
     }
 
-    const newYaml = { ...this._yamlConfig, [key]: value };
+    const newYaml = { ...this._yamlConfig };
+    if (value === undefined) {
+      delete newYaml[key];
+    } else {
+      newYaml[key] = value;
+    }
     this._yamlConfig = newYaml;
 
-    const newConfig = { ...this._config, [key]: value };
-    this._config = newConfig;
+    this._config = this._buildEffectiveConfig(
+      newYaml,
+      key === "entities" ? value : this._config?.entities
+    );
     this._isInternalUpdate = true;
     this.dispatchEvent(
       new CustomEvent("config-changed", {
@@ -639,6 +685,9 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     this._actionEditorIndex = null;
     this._entityEditorIndex = null;
     this._actionMode = null;
+    if (templateName === "custom") {
+      this._filterByTemplate = false;
+    }
     let newYaml = { ...this._yamlConfig };
 
     // Save snapshot if moving away from custom
@@ -658,6 +707,10 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
       for (const k of Object.keys(templateBase)) {
         delete newYaml[k];
       }
+      if ("adaptive_text" in templateBase || "adaptive_text_targets" in templateBase) {
+        delete newYaml.adaptive_text;
+        delete newYaml.adaptive_text_targets;
+      }
       if (newYaml.card_type === "default" || newYaml.card_type === "standard") {
         delete newYaml.card_type;
       }
@@ -666,19 +719,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
 
     this._yamlConfig = newYaml;
 
-    // Compute the new merged UI config
-    const activeTemplateBase = getTemplatePresetDefaults(templateName);
-    this._config = {
-      ...activeTemplateBase,
-      ...newYaml,
-      entities: this._config.entities, // preserve normalized entities
-    };
-    if (
-      activeTemplateBase.card_type &&
-      (!newYaml.card_type || newYaml.card_type === "default" || newYaml.card_type === "standard")
-    ) {
-      this._config.card_type = activeTemplateBase.card_type;
-    }
+    this._config = this._buildEffectiveConfig(newYaml, this._config?.entities);
 
     this._isInternalUpdate = true;
     this.dispatchEvent(
@@ -688,6 +729,166 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
         composed: true,
       })
     );
+  }
+
+  _toggleTemplateFilter() {
+    const currentTemplate = this._getEffectiveTemplate();
+    if (!currentTemplate || currentTemplate === "custom") {
+      this._filterByTemplate = false;
+      return;
+    }
+    this._filterByTemplate = !this._filterByTemplate;
+    this.requestUpdate();
+  }
+
+  /**
+   * @returns {string}
+   */
+  _getEffectiveTemplate() {
+    const raw = this._yamlConfig?.template || "custom";
+    if (
+      raw === "group_players" ||
+      raw === "players" ||
+      raw === "dedicated_players" ||
+      raw === "dedicated_grouping" ||
+      raw === "transfer_queue" ||
+      raw === "dedicated_transfer_queue"
+    ) {
+      return "dedicated_grouping";
+    }
+    return raw;
+  }
+
+  /**
+   * @param {string} key
+   * @returns {boolean}
+   */
+  _isTemplateAdjusted(key) {
+    const templateBase = getTemplatePresetDefaults(this._getEffectiveTemplate());
+    if (!templateBase || Object.keys(templateBase).length === 0) return false;
+    if (key === "adaptive_text_targets" || key === "adaptive_text") {
+      return "adaptive_text" in templateBase || "adaptive_text_targets" in templateBase;
+    }
+    return key in templateBase;
+  }
+
+  /**
+   * @param {string} key
+   * @returns {boolean}
+   */
+  _isTemplateOverridden(key) {
+    if (!this._isTemplateAdjusted(key)) return false;
+    if (!this._yamlConfig) return false;
+    if (key === "adaptive_text_targets" || key === "adaptive_text") {
+      return (
+        (this._yamlConfig.adaptive_text_targets !== undefined &&
+          this._yamlConfig.adaptive_text_targets !== null) ||
+        (this._yamlConfig.adaptive_text !== undefined && this._yamlConfig.adaptive_text !== null)
+      );
+    }
+    return this._yamlConfig[key] !== undefined && this._yamlConfig[key] !== null;
+  }
+
+  /**
+   * @param {string} key
+   */
+  _resetToTemplate(key) {
+    const newYaml = { ...this._yamlConfig };
+    if (key === "adaptive_text_targets" || key === "adaptive_text") {
+      delete newYaml.adaptive_text;
+      delete newYaml.adaptive_text_targets;
+    } else {
+      delete newYaml[key];
+    }
+    this._yamlConfig = newYaml;
+    this._config = this._buildEffectiveConfig(newYaml, this._config?.entities);
+    this._isInternalUpdate = true;
+    this.dispatchEvent(
+      new CustomEvent("config-changed", {
+        detail: { config: newYaml },
+        bubbles: true,
+        composed: true,
+      })
+    );
+    this.requestUpdate();
+  }
+
+  /**
+   * @param {string} key
+   * @returns {import("lit").TemplateResult | typeof nothing}
+   */
+  _renderTemplateIndicator(key) {
+    if (!this._isTemplateAdjusted(key)) {
+      return nothing;
+    }
+    const overridden = this._isTemplateOverridden(key);
+    const template = this._getEffectiveTemplate();
+    const templateLabel = localize(`editor.templates.${template}.label`) || template;
+    let title;
+    if (overridden) {
+      const loc = localize("editor.template_overridden", "{template}", templateLabel);
+      title =
+        !loc || loc === "editor.template_overridden"
+          ? `Overridden from template default (${templateLabel}) (click to reset)`
+          : loc;
+    } else {
+      const loc = localize("editor.template_adjusted", "{template}", templateLabel);
+      title =
+        !loc || loc === "editor.template_adjusted"
+          ? `Value adjusted by active template (${templateLabel})`
+          : loc;
+    }
+
+    return html`
+      <ha-icon
+        class="template-indicator ${overridden ? "overridden" : "active"}"
+        icon="mdi:auto-fix"
+        title=${title}
+        @click=${
+          overridden
+            ? (e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                this._resetToTemplate(key);
+              }
+            : undefined
+        }
+      ></ha-icon>
+    `;
+  }
+
+  /**
+   * @param {string} [templateName]
+   * @returns {import("lit").TemplateResult | typeof nothing}
+   */
+  _renderTemplateDropdownIndicator(templateName) {
+    if (!templateName || templateName === "custom") {
+      return nothing;
+    }
+    const templateLabel = localize(`editor.templates.${templateName}.label`) || templateName;
+    let title;
+    if (this._filterByTemplate) {
+      const loc = localize("editor.template_filter_tooltip_on", { "{template}": templateLabel });
+      title =
+        !loc || loc === "editor.template_filter_tooltip_on"
+          ? `Show all options (currently filtering by ${templateLabel})`
+          : loc;
+    } else {
+      const loc = localize("editor.template_filter_tooltip_off", { "{template}": templateLabel });
+      title =
+        !loc || loc === "editor.template_filter_tooltip_off"
+          ? `Filter options affected by ${templateLabel}`
+          : loc;
+    }
+
+    return html`
+      <ha-icon
+        class="template-indicator template-indicator-dropdown active ${this._filterByTemplate ? "filter-active" : ""}"
+        icon="mdi:auto-fix"
+        title=${title}
+        @click=${() => this._toggleTemplateFilter()}
+      ></ha-icon>
+    `;
   }
 
   _addArtworkOverride() {
@@ -909,18 +1110,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
       }
     }
 
-    const rawTemplate = this._yamlConfig.template || "custom";
-    let currentTemplate = rawTemplate;
-    if (
-      currentTemplate === "group_players" ||
-      currentTemplate === "players" ||
-      currentTemplate === "dedicated_players" ||
-      currentTemplate === "dedicated_grouping" ||
-      currentTemplate === "transfer_queue" ||
-      currentTemplate === "dedicated_transfer_queue"
-    ) {
-      currentTemplate = "dedicated_grouping";
-    }
+    const currentTemplate = this._getEffectiveTemplate();
 
     // When editing an entity/action, keep tabs visible but show editor content
     const editingEntity = this._entityEditorIndex !== null;
@@ -933,26 +1123,32 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px;"
         >
           <div>
-            <ha-selector
-              .hass=${this.hass}
-              label=${localize("editor.template_label")}
-              .selector=${{
-                select: {
-                  mode: "dropdown",
-                  options: Object.keys(TEMPLATE_CONFIGS)
-                    .filter(
-                      (key) =>
-                        key !== "group_players" && key !== "dedicated_players" && key !== "players"
-                    )
-                    .map((key) => ({
-                      value: key,
-                      label: localize(`editor.templates.${key}.label`),
-                    })),
-                },
-              }}
-              .value=${currentTemplate}
-              @value-changed=${(e) => this._updateConfig("template", e.detail.value)}
-            ></ha-selector>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <ha-selector
+                style="flex: 1;"
+                .hass=${this.hass}
+                label=${localize("editor.template_label")}
+                .selector=${{
+                  select: {
+                    mode: "dropdown",
+                    options: Object.keys(TEMPLATE_CONFIGS)
+                      .filter(
+                        (key) =>
+                          key !== "group_players" &&
+                          key !== "dedicated_players" &&
+                          key !== "players"
+                      )
+                      .map((key) => ({
+                        value: key,
+                        label: localize(`editor.templates.${key}.label`),
+                      })),
+                  },
+                }}
+                .value=${currentTemplate}
+                @value-changed=${(e) => this._updateConfig("template", e.detail.value)}
+              ></ha-selector>
+              ${this._renderTemplateDropdownIndicator(currentTemplate)}
+            </div>
             <div class="config-subtitle small" style="margin-top: 8px;">
               ${localize(`editor.templates.${currentTemplate}.description`)}
             </div>
@@ -985,11 +1181,11 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
         </div>
       </div>
       ${
-        this._searchTerm && !editingEntity && !editingAction
+        (this._searchTerm || this._filterByTemplate) && !editingEntity && !editingAction
           ? this._renderActiveTab()
           : html`
               ${
-                this._searchTerm
+                this._searchTerm || this._filterByTemplate
                   ? nothing
                   : html`
                       <div class="tabs">
@@ -1042,6 +1238,27 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     const container = this.shadowRoot.querySelector(".search-results, .tab-content");
     if (!container) return;
 
+    if (!this._searchTerm && !this._filterByTemplate) {
+      const rows = container.querySelectorAll(
+        ".form-row, .artwork-row, .entity-row-inner, .action-row-inner"
+      );
+      rows.forEach((row) => {
+        /** @type {HTMLElement} */ (row).style.display = "";
+        if (row.classList.contains("form-row-multi-column")) {
+          Array.from(row.children)
+            .filter((el) => el.tagName.toLowerCase() === "div")
+            .forEach((child) => {
+              /** @type {HTMLElement} */ (child).style.display = "";
+            });
+        }
+      });
+      const sections = container.querySelectorAll(".config-section, .entity-group, .action-group");
+      sections.forEach((section) => {
+        /** @type {HTMLElement} */ (section).style.display = "";
+      });
+      return;
+    }
+
     const isSubEditor = this._entityEditorIndex !== null || this._actionEditorIndex !== null;
 
     const ENTITY_SUB_EDITOR_KEYS = [
@@ -1077,57 +1294,87 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     ];
 
     const filterRow = (row) => {
-      let text = row.textContent.toLowerCase();
-
-      // If we are in the main editor and filtering entity/action rows,
-      // also match if the search term matches any option inside their sub-editors
-      if (!isSubEditor) {
-        if (row.classList.contains("entity-row-inner")) {
-          const hasSubEditorMatch = ENTITY_SUB_EDITOR_KEYS.some((key) =>
-            key.replace(/[_ ]/g, "").includes(term)
+      // 1. Template filter check
+      let templateMatch = true;
+      if (this._filterByTemplate) {
+        const hasIndicator = !!row.querySelector(".template-indicator");
+        if (row.classList.contains("form-row-multi-column")) {
+          const childDivs = Array.from(row.children).filter(
+            (el) => el.tagName.toLowerCase() === "div"
           );
-          if (hasSubEditorMatch) {
-            row.style.display = "";
-            return true;
-          }
-        } else if (row.classList.contains("action-row-inner")) {
-          const hasSubEditorMatch = ACTION_SUB_EDITOR_KEYS.some((key) =>
-            key.replace(/[_ ]/g, "").includes(term)
-          );
-          if (hasSubEditorMatch) {
-            row.style.display = "";
-            return true;
-          }
-        }
-      }
-
-      // Include the config property name itself in the searchable text
-      // (e.g., 'idle_timeout_ms' -> 'idle timeout ms')
-      const searchKeys = row.getAttribute("data-search-keys");
-      if (searchKeys) {
-        text += " " + searchKeys.toLowerCase().replace(/_/g, " ");
-      }
-
-      // Dynamically include dropdown/selector options if present
-      const selectors = row.querySelectorAll("ha-selector");
-      selectors.forEach((sel) => {
-        const options = sel.selector?.select?.options;
-        if (Array.isArray(options) && options.length <= 15) {
-          options.forEach((opt) => {
-            if (opt.label) text += " " + String(opt.label).toLowerCase();
-            if (opt.value) text += " " + String(opt.value).toLowerCase();
+          let anyChildHasIndicator = false;
+          childDivs.forEach((child) => {
+            const childHas = !!child.querySelector(".template-indicator");
+            /** @type {HTMLElement} */ (child).style.display = childHas ? "" : "none";
+            if (childHas) anyChildHasIndicator = true;
           });
+          templateMatch = anyChildHasIndicator;
+        } else {
+          templateMatch = hasIndicator;
         }
-      });
+      } else if (row.classList.contains("form-row-multi-column")) {
+        Array.from(row.children)
+          .filter((el) => el.tagName.toLowerCase() === "div")
+          .forEach((child) => {
+            /** @type {HTMLElement} */ (child).style.display = "";
+          });
+      }
 
-      // Also grab text from label attributes of nested components
-      const labeledElements = row.querySelectorAll("[label]");
-      labeledElements.forEach((el) => {
-        const label = el.getAttribute("label");
-        if (label) text += " " + String(label).toLowerCase();
-      });
+      // 2. Search term check
+      let searchMatch = true;
+      if (term) {
+        let text = row.textContent?.toLowerCase() || "";
 
-      const match = text.replace(/[_ ]/g, "").includes(term);
+        // If we are in the main editor and filtering entity/action rows,
+        // also match if the search term matches any option inside their sub-editors
+        if (!isSubEditor) {
+          if (row.classList.contains("entity-row-inner")) {
+            const hasSubEditorMatch = ENTITY_SUB_EDITOR_KEYS.some((key) =>
+              key.replace(/[_ ]/g, "").includes(term)
+            );
+            if (hasSubEditorMatch) {
+              text += " " + term;
+            }
+          } else if (row.classList.contains("action-row-inner")) {
+            const hasSubEditorMatch = ACTION_SUB_EDITOR_KEYS.some((key) =>
+              key.replace(/[_ ]/g, "").includes(term)
+            );
+            if (hasSubEditorMatch) {
+              text += " " + term;
+            }
+          }
+        }
+
+        // Include the config property name itself in the searchable text
+        // (e.g., 'idle_timeout_ms' -> 'idle timeout ms')
+        const searchKeys = row.getAttribute("data-search-keys");
+        if (searchKeys) {
+          text += " " + searchKeys.toLowerCase().replace(/_/g, " ");
+        }
+
+        // Dynamically include dropdown/selector options if present
+        const selectors = row.querySelectorAll("ha-selector");
+        selectors.forEach((sel) => {
+          const options = sel.selector?.select?.options;
+          if (Array.isArray(options) && options.length <= 15) {
+            options.forEach((opt) => {
+              if (opt.label) text += " " + String(opt.label).toLowerCase();
+              if (opt.value) text += " " + String(opt.value).toLowerCase();
+            });
+          }
+        });
+
+        // Also grab text from label attributes of nested components
+        const labeledElements = row.querySelectorAll("[label]");
+        labeledElements.forEach((el) => {
+          const label = el.getAttribute("label");
+          if (label) text += " " + String(label).toLowerCase();
+        });
+
+        searchMatch = text.replace(/[_ ]/g, "").includes(term);
+      }
+
+      const match = (this._filterByTemplate ? templateMatch : true) && (term ? searchMatch : true);
       row.style.display = match ? "" : "none";
       return match;
     };
@@ -1157,6 +1404,56 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
   }
 
   _renderActiveTab() {
+    if (this._filterByTemplate) {
+      const template = this._getEffectiveTemplate();
+      const templateLabel = localize(`editor.templates.${template}.label`) || template;
+      const bannerLoc = localize("editor.template_filter_banner", { "{template}": templateLabel });
+      const bannerText =
+        !bannerLoc || bannerLoc === "editor.template_filter_banner"
+          ? `Showing only options modified by ${templateLabel}`
+          : bannerLoc;
+      const showAllText =
+        localize("editor.show_all_options") &&
+        localize("editor.show_all_options") !== "editor.show_all_options"
+          ? localize("editor.show_all_options")
+          : "Show all options";
+
+      const entities = this._searchTerm ? (this._config?.entities ?? []) : [];
+      const actions = this._searchTerm ? (this._config?.actions ?? []) : [];
+
+      return html`
+        <div class="tab-content search-results" style="padding-top: 4px;">
+          <div class="template-filter-banner">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <ha-icon
+                icon="mdi:auto-fix"
+                style="--mdc-icon-size: 18px; color: var(--primary-color);"
+              ></ha-icon>
+              <span>${bannerText}</span>
+            </div>
+            <button class="clear-filter-btn" @click=${() => this._toggleTemplateFilter()}>
+              ${showAllText}
+            </button>
+          </div>
+          ${this._renderBehaviorTab()} ${this._renderVisualTab()} ${this._renderArtworkTab()}
+          ${entities.map(
+            (ent, idx) => html`
+              <div class="entity-group" data-index="${idx}">
+                ${this._renderEntityEditor(ent, idx, true)}
+              </div>
+            `
+          )}
+          ${actions.map(
+            (act, idx) => html`
+              <div class="action-group config-section" data-index="${idx}">
+                ${this._renderActionEditor(act, idx, true)}
+              </div>
+            `
+          )}
+        </div>
+      `;
+    }
+
     if (this._searchTerm) {
       const entities = this._config?.entities ?? [];
       const actions = this._config?.actions ?? [];
