@@ -1172,7 +1172,6 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._hasMassQueueIntegration = null;
     this._checkingMassQueueIntegration = false;
     this._aiRadioShowsAvailable = false;
-    this._lyricsCache = new Map();
     // Quick-dismiss mode for action-triggered menu items
     this._quickMenuInvoke = false;
     // Track collapsed layout height for idle mode
@@ -1368,8 +1367,6 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._controlFocusEntityId = null;
     // Track the last active entity per chip index for intra-chip persistence
     this._lastActiveEntityIdByChip = {};
-    // Track manual active entity overrides selected via More Info sheet
-    this._manualActiveEntityByChip = {};
     // Cache for detecting entity state transitions (playing -> stopped)
     this._playerStateCache = {};
     this._volumeOverlayActive = false;
@@ -5572,6 +5569,8 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           await this._openEntityOptions();
           break;
         case "full-screen":
+        case "full_screen":
+        case "fullscreen":
           this._toggleFullScreen();
           this._showEntityOptions = false;
           this.requestUpdate();
@@ -5930,6 +5929,8 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         "transfer_queue": localize("card.menu.players") || localize("card.menu.group_players") || "Players",
         "main-menu": localize("card.menu.main_menu"),
         "full-screen": localize(this._isFullScreen ? "card.menu.exit_full_screen" : "card.menu.full_screen"),
+        "full_screen": localize(this._isFullScreen ? "card.menu.exit_full_screen" : "card.menu.full_screen"),
+        "fullscreen": localize(this._isFullScreen ? "card.menu.exit_full_screen" : "card.menu.full_screen"),
       };
       return menuLabels[action.menu_item] ?? action.menu_item;
     }

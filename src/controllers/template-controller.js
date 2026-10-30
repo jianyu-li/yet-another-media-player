@@ -676,9 +676,14 @@ export class TemplateController {
    * Resolves template at action time with fallback to main entity.
    * @param {string} templateString
    * @param {string} fallbackEntityId
+   * @param {Record<string, any>} [context]
    * @returns {Promise<string>}
    */
-  async resolveTemplateAtActionTime(templateString, fallbackEntityId) {
-    return resolveTemplateAtActionTime(this.host?.hass, templateString, fallbackEntityId);
+  async resolveTemplateAtActionTime(
+    templateString,
+    fallbackEntityId,
+    context = this.host?._getTemplateContext?.() || {}
+  ) {
+    return resolveTemplateAtActionTime(this.host?.hass, templateString, fallbackEntityId, context);
   }
 }
