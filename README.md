@@ -80,6 +80,7 @@ Below you will find a list of all configuration options.
 | `lyrics_mode`             | choice       | No           | `default`   | Choose the lyrics display mode: `default` (sync + highlight), `scroll` (sync + no highlight), or `text` (plain text) |
 | `lyrics_source`           | choice       | No           | `mass_lrclib` | Choose where to fetch lyrics: `mass_lrclib` (MA with LRCLIB fallback), `mass` (MA only), `lrclib` (LRCLIB only), or `lrclib_mass` (LRCLIB with MA fallback). Note: MA sources require [mass_queue](#native-synced-lyrics-mass_queue) |
 | `lyrics_pre_roll`         | number       | No           | `0`       | Adjust the timing of lyric highlighting in seconds (positive to advance, negative to delay) |
+| `lrclib_url`              | string       | No           | `""`      | Custom LRCLIB API base URL for self-hosted instances (defaults to `https://lrclib.net`) |
 |                                                                                                 |
 | **Search**                 |              |              |             |                                                                                                 |
 | `search_results_limit`     | number       | No           | `20`        | Maximum number of results to request per media category (artist/album/track/etc.) across favorites, recently played, and standard searches; set to `0` to fall back to Music Assistant’s own limits |
@@ -737,6 +738,8 @@ Experience synchronized, real-time lyrics directly within the card. YAMP support
     - `scroll`: Synchronized auto-scrolling without line highlighting.
     - `text`: Displays the full lyrics as plain text. No auto-scrolling or highlighting.
   - `lyrics_pre_roll`: Fine-tune the highlighting sync. A value of `1.5` will highlight the line 1.5 seconds before the vocal starts, while `-0.5` will delay it.
+  - `lrclib_url`: Custom LRCLIB API base URL for self-hosted instances (e.g. `http://10.0.0.50:3300` or `http://10.0.0.50:3300/api`). Defaults to `https://lrclib.net`. Note: The server must be reachable by your browser; dashboards served over HTTPS require HTTPS API endpoints or secure reverse proxies to satisfy browser mixed-content policies.
+  - **Radio Playback**: During internet radio playback, station names populated in the album metadata and stream durations are automatically omitted from LRCLIB lookups, allowing accurate lyrics matching.
   - `background_fade`: Adjust the overlay background fade opacity percentage (`0` to `100`, default `75`). Controls lyrics and menu overlays. Supports templates for dynamic transparency based on player state or theme (legacy alias: `lyrics_background_fade`).
 - **Toggle Action**: You can assign the `toggle_lyrics` action to a chip or gesture to quickly show/hide the lyrics without opening the menu.
 - **Constraints**: The lyrics viewer is automatically disabled when the card is in `always_collapsed: true` mode to maintain layout performance.

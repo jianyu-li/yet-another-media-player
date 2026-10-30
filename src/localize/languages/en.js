@@ -258,6 +258,8 @@ export default {
         "Music Assistant requires the mass_queue integration to fetch lyrics from its internal metadata engine.",
       lyrics_pre_roll:
         "Shift the lyrics highlight timing. Positive values speed it up, negative values slow it down (default: 0).",
+      lrclib_url:
+        "Custom LRCLIB API base URL (defaults to https://lrclib.net). Useful for self-hosted instances.",
       background_fade:
         "Adjust the background fade and dimming opacity of the overlay (0% for transparent artwork, 100% for solid background).",
       lyrics_background_fade:
@@ -326,6 +328,7 @@ export default {
       lyrics_mode: "Lyrics Mode",
       lyrics_source: "Lyrics Source",
       lyrics_pre_roll: "Lyrics Pre-Roll (seconds)",
+      lrclib_url: "LRCLIB API URL",
       background_fade: "Background Fade",
       lyrics_background_fade: "Lyrics Background Fade",
       blurred_artwork: "Blurred Artwork",

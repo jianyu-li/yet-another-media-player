@@ -1,0 +1,5 @@
+# Ignore build artifacts
+yet-another-media-player.js
+
+# Ignore README.md to preserve manual GitHub markdown and table formatting
+README.md

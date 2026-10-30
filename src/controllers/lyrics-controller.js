@@ -10,6 +10,7 @@
 import { parseLrc } from "../lyrics-parser.js";
 import { localize } from "../localize/localize.js";
 import { getMassQueueConfigEntryId } from "../search-sheet.js";
+import { isInsecureHttpUrlOnHttps } from "../yamp-utils.js";
 
 /**
  * @typedef {import("../types.d.ts").HassEntity} HassEntity
@@ -18,6 +19,21 @@ import { getMassQueueConfigEntryId } from "../search-sheet.js";
  */
 
 export const MAX_LYRICS_CACHE_SIZE = 30;
+
+/**
+ * Normalizes custom or default LRCLIB base API URL.
+ * @param {string | null | undefined} [configUrl]
+ * @returns {string}
+ */
+export function getLrclibBaseUrl(configUrl) {
+  let url = (configUrl || "").trim().replace(/\/+$/, "");
+  if (!url) return "https://lrclib.net/api";
+  url = url.replace(/\/(get|search)$/, "");
+  if (!url.endsWith("/api")) {
+    url = `${url}/api`;
+  }
+  return url;
+}
 
 /**
  * Cleans metadata string (removes (feat. ...), [Single], - 2024 Remaster, etc.)
@@ -228,6 +244,36 @@ export class LyricsController {
   }
 
   /**
+   * Checks if active state represents radio or streaming broadcast playback.
+   * @param {HassEntity | null | undefined} [activeState]
+   * @returns {boolean}
+   */
+  isCurrentlyPlayingRadio(activeState) {
+    if (
+      typeof this.host?._isCurrentlyPlayingRadio === "function" &&
+      this.host._isCurrentlyPlayingRadio()
+    ) {
+      return true;
+    }
+    if (this.host?._searchController?.isCurrentlyPlayingRadio?.()) {
+      return true;
+    }
+    if (!activeState?.attributes) return false;
+    const attrs = activeState.attributes;
+    const ct = (attrs.media_content_type || "").toLowerCase();
+    const cid = (attrs.media_content_id || "").toLowerCase();
+    return (
+      ct === "radio" ||
+      ct === "channel" ||
+      cid.startsWith("library://radio/") ||
+      cid.startsWith("radiobrowser://") ||
+      cid.startsWith("tunein:") ||
+      cid.startsWith("radioparadise:") ||
+      attrs.mass_item_type === "radio"
+    );
+  }
+
+  /**
    * Universal lyrics fetcher supporting Music Assistant and LRCLIB sources.
    */
   async fetchLyrics() {
@@ -294,6 +340,10 @@ export class LyricsController {
     const duration = activeState.attributes?.media_duration;
     const trackId = activeState.attributes?.media_content_id;
 
+    const isRadio = this.isCurrentlyPlayingRadio(activeState);
+    const effectiveAlbum = isRadio ? "" : album;
+    const effectiveDuration = isRadio ? null : duration;
+
     // 1. Check Internal Cache
     const cacheKey = trackId ? `${trackId}:${artist}:${title}` : `${artist}:${title}`;
 
@@ -336,10 +386,22 @@ export class LyricsController {
       if (configSource === "mass") {
         lyrics = await this.getMassLyrics(activeState, fetchToken);
       } else if (configSource === "lrclib") {
-        lyrics = await this.getLrclibLyrics(artist, title, album, duration, fetchToken);
+        lyrics = await this.getLrclibLyrics(
+          artist,
+          title,
+          effectiveAlbum,
+          effectiveDuration,
+          fetchToken
+        );
       } else {
         const massPromise = this.getMassLyrics(activeState, fetchToken);
-        const lrclibPromise = this.getLrclibLyrics(artist, title, album, duration, fetchToken);
+        const lrclibPromise = this.getLrclibLyrics(
+          artist,
+          title,
+          effectiveAlbum,
+          effectiveDuration,
+          fetchToken
+        );
 
         const isMassPreferred = configSource === "mass_lrclib";
 
@@ -533,11 +595,29 @@ export class LyricsController {
     const version = typeof __VERSION__ !== "undefined" ? __VERSION__ : "dev";
 
     try {
+      let rawUrl = this.host?.config?.lrclib_url;
+      if (
+        typeof this.host?._resolveTemplateAtActionTime === "function" &&
+        rawUrl &&
+        (rawUrl.includes("{{") || rawUrl.includes("{%") || rawUrl.includes("[[["))
+      ) {
+        rawUrl = await this.host._resolveTemplateAtActionTime(rawUrl, this.host.currentEntityId);
+        if (fetchToken && this.currentFetchToken !== fetchToken) return [];
+      }
+
+      const baseUrl = getLrclibBaseUrl(rawUrl);
+      if (isInsecureHttpUrlOnHttps(baseUrl)) {
+        console.warn(
+          "YAMP: Insecure HTTP LRCLIB URL in HTTPS dashboard context may be blocked by browser mixed-content policy:",
+          baseUrl
+        );
+      }
+
       const headers = {
         "Lrclib-Client": `yet-another-media-player/${version} (https://github.com/jianyu-li/yet-another-media-player)`,
       };
 
-      let url = `https://lrclib.net/api/get?artist_name=${encodeURIComponent(cleanArtist)}&track_name=${encodeURIComponent(cleanTitle)}`;
+      let url = `${baseUrl}/get?artist_name=${encodeURIComponent(cleanArtist)}&track_name=${encodeURIComponent(cleanTitle)}`;
       if (cleanAlbum) url += `&album_name=${encodeURIComponent(cleanAlbum)}`;
       if (duration) url += `&duration=${Math.round(duration)}`;
 
@@ -552,7 +632,7 @@ export class LyricsController {
       if (response.ok) {
         data = await response.json();
       } else {
-        const searchUrl = `https://lrclib.net/api/search?artist_name=${encodeURIComponent(cleanArtist)}&track_name=${encodeURIComponent(cleanTitle)}`;
+        const searchUrl = `${baseUrl}/search?artist_name=${encodeURIComponent(cleanArtist)}&track_name=${encodeURIComponent(cleanTitle)}`;
         const searchRes = await fetch(searchUrl, { headers });
         if (fetchToken && this.currentFetchToken !== fetchToken) return [];
 

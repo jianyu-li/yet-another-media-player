@@ -247,6 +247,8 @@ export default {
         "Music Assistant zahteva integracijo mass_queue za pridobivanje besedil iz svojega notranjega mehanizma metapodatkov.",
       lyrics_pre_roll:
         "Zamaknite časovno uskladitev označevanja besedila. Pozitivne vrednosti ga pospešijo, negativne pa upočasnijo (privzeto: 0).",
+      lrclib_url:
+        "Lastni osnovni URL naslov API LRCLIB (privzeto https://lrclib.net). Uporabno za lastno gostovane primerke.",
       lyrics_background_fade:
         "Prilagodite prelivanje ozadja in motnost zatemnitve prekrivne plošče z besedilom (0% za prosojno grafiko, 100% za enobarvno ozadje).",
       background_fade: "Prilagodite motnost prekrivanja ozadja in preliva ovitka (0-100%).",
@@ -316,6 +318,7 @@ export default {
       lyrics_mode: "Način besedila",
       lyrics_source: "Vir besedil",
       lyrics_pre_roll: "Pre-roll besedila (sekunde)",
+      lrclib_url: "URL naslov API LRCLIB",
       lyrics_background_fade: "Prelivanje ozadja besedila",
       background_fade: "Prelivanje ozadja",
       blurred_artwork: "Zamegljena grafika",

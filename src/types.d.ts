@@ -329,8 +329,11 @@ export interface YampCardConfig {
   show_player_search?: boolean;
   auto_add_playing_entities?: boolean;
   auto_add_exclude?: string[];
+  lrclib_url?: string;
   [key: string]: any;
 }
+
+export type CardConfig = YampCardConfig;
 
 export interface TemplateContext {
   is_playing: boolean;
@@ -394,6 +397,7 @@ export function getCachedSecureThumbnail(url?: string | null): string | null;
 export function clearSecureThumbnailCache(url?: string): void;
 export function resolveSecureThumbnailUrl(hass?: any, url?: string | null): Promise<string | null>;
 export function applyHostnameToUrl(url?: string | null, hostname?: string): string | null;
+export function getLrclibBaseUrl(configUrl?: string | null): string;
 export function resolveTemplateAtActionTime(
   hass?: any,
   templateString?: string,
@@ -538,6 +542,7 @@ export declare class LyricsController {
     duration?: number | null,
     fetchToken?: symbol
   ): Promise<LyricsLine[]>;
+  isCurrentlyPlayingRadio(activeState?: HassEntity | null): boolean;
 }
 
 export declare const MAX_ASPECT_RATIO_CACHE_SIZE: number;

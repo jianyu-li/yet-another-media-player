@@ -252,6 +252,8 @@ export default {
         "Music Assistant requiere la integración de mass_queue para obtener las letras de su motor de metadatos interno.",
       lyrics_pre_roll:
         "Ajusta el tiempo de resaltado de la letra. Los valores positivos lo aceleran, los negativos lo retrasan (por defecto: 0).",
+      lrclib_url:
+        "URL base personalizada de la API de LRCLIB (por defecto https://lrclib.net). Útil para instancias autohospedadas.",
       lyrics_background_fade:
         "Ajustar el desvanecimiento de fondo y la opacidad de atenuación de la superposición de letras (0% para arte transparente, 100% para fondo sólido).",
       background_fade:
@@ -323,6 +325,7 @@ export default {
       lyrics_mode: "Modo de letras",
       lyrics_source: "Fuente de letras",
       lyrics_pre_roll: "Anticipo de letra (segundos)",
+      lrclib_url: "URL de la API de LRCLIB",
       lyrics_background_fade: "Desvanecimiento de fondo de letras",
       background_fade: "Desvanecimiento de fondo",
       blurred_artwork: "Imagen difuminada",
