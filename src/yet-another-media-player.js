@@ -8861,7 +8861,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._kioskInteractionActive = shouldHold;
     const ks = /** @type {any} */ (window).kioskSatellite;
     if (typeof ks?.setInteractionActive === "function") {
-      ks.setInteractionActive(shouldHold);
+      ks.setInteractionActive(shouldHold, "yamp");
     } else if (typeof ks?.pauseScreensaver === "function") {
       ks.pauseScreensaver(shouldHold);
     }
@@ -8881,7 +8881,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       this._kioskInteractionActive = false;
       const ks = typeof window !== "undefined" ? /** @type {any} */ (window).kioskSatellite : null;
       if (typeof ks?.setInteractionActive === "function") {
-        ks.setInteractionActive(false);
+        ks.setInteractionActive(false, "yamp");
       } else if (typeof ks?.pauseScreensaver === "function") {
         ks.pauseScreensaver(false);
       }

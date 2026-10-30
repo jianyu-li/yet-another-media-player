@@ -25,13 +25,15 @@ export function isKioskSatellite() {
  */
 export function getMediaPlayerEntityIds(states, entitiesRegistry = null) {
   if (entitiesRegistry && typeof entitiesRegistry === "object") {
-    const ids = [];
-    for (const id in entitiesRegistry) {
-      if (id.startsWith("media_player.") && !entitiesRegistry[id]?.disabled_by) {
-        ids.push(id);
+    const registryKeys = Object.keys(entitiesRegistry);
+    if (registryKeys.length > 0) {
+      const ids = [];
+      for (let i = 0; i < registryKeys.length; i++) {
+        const id = registryKeys[i];
+        if (id.startsWith("media_player.") && !entitiesRegistry[id]?.disabled_by) {
+          ids.push(id);
+        }
       }
-    }
-    if (ids.length > 0) {
       return ids;
     }
   }

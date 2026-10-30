@@ -201,6 +201,15 @@ describe("Kiosk Satellite Optimizations & Runtime Integrations", () => {
       ]);
     });
 
+    it("getMediaPlayerEntityIds returns empty array without enumerating proxiedStates when registry has non-media entities but no media players", () => {
+      const nonMediaRegistry = {
+        "sensor.temp": { entity_id: "sensor.temp", disabled_by: null },
+        "light.kitchen": { entity_id: "light.kitchen", disabled_by: null },
+      };
+      const ids = getMediaPlayerEntityIds(proxiedStates, nonMediaRegistry);
+      assert.deepEqual(ids, []);
+    });
+
     it("findPlayingUnconfiguredPlayers discovers playing entities without enumerating proxiedStates", () => {
       const covered = ["media_player.living_room"];
       const playing = findPlayingUnconfiguredPlayers(proxiedStates, covered, [], entitiesRegistry);
@@ -650,6 +659,7 @@ describe("Kiosk Satellite Optimizations & Runtime Integrations", () => {
       assert.equal(card._kioskInteractionActive, true);
       assert.equal(setInteractionActiveMock.mock.calls.length, 1);
       assert.equal(setInteractionActiveMock.mock.calls[0].arguments[0], true);
+      assert.equal(setInteractionActiveMock.mock.calls[0].arguments[1], "yamp");
 
       // 2. Fullscreen open while menu closes -> maintains hold without re-calling
       card._showEntityOptions = false;
@@ -666,6 +676,7 @@ describe("Kiosk Satellite Optimizations & Runtime Integrations", () => {
       assert.equal(card._kioskInteractionActive, false);
       assert.equal(setInteractionActiveMock.mock.calls.length, 2);
       assert.equal(setInteractionActiveMock.mock.calls[1].arguments[0], false);
+      assert.equal(setInteractionActiveMock.mock.calls[1].arguments[1], "yamp");
 
       // 4. Fallback to pauseScreensaver if setInteractionActive is not present
       const pauseScreensaverMock = mock.fn();
@@ -709,6 +720,7 @@ describe("Kiosk Satellite Optimizations & Runtime Integrations", () => {
       assert.equal(card._kioskInteractionActive, false);
       assert.equal(setInteractionActiveMock.mock.calls.length, 2);
       assert.equal(setInteractionActiveMock.mock.calls[1].arguments[0], false);
+      assert.equal(setInteractionActiveMock.mock.calls[1].arguments[1], "yamp");
 
       // Window events should no longer affect obscured state
       g.window.dispatchEvent(new CustomEvent("kiosksatellite:screenoff"));
