@@ -488,15 +488,16 @@ export function renderBehaviorTab() {
         <div class="config-subtitle">${localize("editor.subtitles.lyrics_source")}</div>
       </div>
       <div data-search-keys="lrclib_url" class="form-row">
-        <ha-textfield
-          style="width: 100%;"
-          .label=${localize("editor.labels.lrclib_url")}
-          .helper=${localize("editor.subtitles.lrclib_url")}
-          placeholder="https://lrclib.net"
+        <ha-selector
+          .hass=${this.hass}
+          class="full-width"
+          .selector=${{ text: {} }}
           .value=${this._config.lrclib_url || ""}
           .disabled=${this._config.lyrics_source === "mass"}
-          @input=${(e) => this._updateConfig("lrclib_url", e.target.value)}
-        ></ha-textfield>
+          label="${localize("editor.labels.lrclib_url")}"
+          helper="${localize("editor.subtitles.lrclib_url")}"
+          @value-changed=${(e) => this._updateConfig("lrclib_url", e.detail.value)}
+        ></ha-selector>
       </div>
       <div class="form-row form-row-multi-column">
         <div class="grow-children">
