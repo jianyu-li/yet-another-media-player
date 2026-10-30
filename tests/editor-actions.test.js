@@ -1,5 +1,6 @@
 import { describe, it, beforeEach } from "node:test";
 import assert from "node:assert/strict";
+import { nothing } from "lit";
 
 // Setup mock browser globals before importing Lit component
 const g = /** @type {any} */ (globalThis);
@@ -414,5 +415,296 @@ describe("YetAnotherMediaPlayerEditor - Template Preset Population & Overrides",
 
     assert.equal(editor._yamlConfig.artwork_object_fit, "cover");
     assert.equal(editor._config.artwork_object_fit, "cover");
+  });
+});
+
+describe("YetAnotherMediaPlayerEditor - Template Indicators and Reset", () => {
+  let editor;
+
+  beforeEach(() => {
+    editor = new YetAnotherMediaPlayerEditor();
+    editor.dispatchEvent = () => true;
+  });
+
+  describe("_getEffectiveTemplate", () => {
+    it("returns custom when template is undefined or explicitly custom", () => {
+      editor.setConfig({ entities: ["media_player.living_room"] });
+      assert.equal(editor._getEffectiveTemplate(), "custom");
+
+      editor.setConfig({
+        entities: ["media_player.living_room"],
+        template: "custom",
+      });
+      assert.equal(editor._getEffectiveTemplate(), "custom");
+    });
+
+    it("returns large_modern when template is large_modern", () => {
+      editor.setConfig({
+        entities: ["media_player.living_room"],
+        template: "large_modern",
+      });
+      assert.equal(editor._getEffectiveTemplate(), "large_modern");
+    });
+
+    it("normalizes alias names to dedicated_grouping", () => {
+      const aliases = [
+        "group_players",
+        "players",
+        "dedicated_players",
+        "dedicated_grouping",
+        "transfer_queue",
+        "dedicated_transfer_queue",
+      ];
+      for (const alias of aliases) {
+        editor.setConfig({
+          entities: ["media_player.living_room"],
+          template: alias,
+        });
+        assert.equal(
+          editor._getEffectiveTemplate(),
+          "dedicated_grouping",
+          `Expected alias ${alias} to normalize to dedicated_grouping`
+        );
+      }
+    });
+  });
+
+  describe("_isTemplateAdjusted", () => {
+    it("returns false for all keys when template is custom", () => {
+      editor.setConfig({
+        entities: ["media_player.living_room"],
+        template: "custom",
+      });
+      assert.equal(editor._isTemplateAdjusted("control_layout"), false);
+      assert.equal(editor._isTemplateAdjusted("adaptive_text_targets"), false);
+      assert.equal(editor._isTemplateAdjusted("adaptive_text"), false);
+      assert.equal(editor._isTemplateAdjusted("artwork_object_fit"), false);
+      assert.equal(editor._isTemplateAdjusted("progress_bar_height"), false);
+      assert.equal(editor._isTemplateAdjusted("match_theme"), false);
+      assert.equal(editor._isTemplateAdjusted("idle_timeout_ms"), false);
+      assert.equal(editor._isTemplateAdjusted("volume_mode"), false);
+    });
+
+    it("returns true for template-provided keys under large_modern", () => {
+      editor.setConfig({
+        entities: ["media_player.living_room"],
+        template: "large_modern",
+      });
+      assert.equal(editor._isTemplateAdjusted("adaptive_text_targets"), true);
+      assert.equal(editor._isTemplateAdjusted("adaptive_text"), true);
+      assert.equal(editor._isTemplateAdjusted("control_layout"), true);
+      assert.equal(editor._isTemplateAdjusted("artwork_object_fit"), true);
+      assert.equal(editor._isTemplateAdjusted("progress_bar_height"), true);
+      assert.equal(editor._isTemplateAdjusted("match_theme"), true);
+    });
+
+    it("returns false for keys not modified by large_modern preset", () => {
+      editor.setConfig({
+        entities: ["media_player.living_room"],
+        template: "large_modern",
+      });
+      assert.equal(editor._isTemplateAdjusted("idle_timeout_ms"), false);
+      assert.equal(editor._isTemplateAdjusted("volume_mode"), false);
+    });
+  });
+
+  describe("_isTemplateOverridden", () => {
+    it("returns false when key is provided by large_modern and yamlConfig has no override", () => {
+      editor.setConfig({
+        entities: ["media_player.living_room"],
+        template: "large_modern",
+      });
+      assert.equal(editor._isTemplateOverridden("control_layout"), false);
+      assert.equal(editor._isTemplateOverridden("progress_bar_height"), false);
+      assert.equal(editor._isTemplateOverridden("artwork_object_fit"), false);
+      assert.equal(editor._isTemplateOverridden("adaptive_text_targets"), false);
+    });
+
+    it("returns true when yamlConfig overrides a template value", () => {
+      editor.setConfig({
+        entities: ["media_player.living_room"],
+        template: "large_modern",
+        control_layout: "classic",
+      });
+      assert.equal(editor._isTemplateOverridden("control_layout"), true);
+    });
+
+    it("returns true for adaptive_text_targets when either adaptive_text_targets or adaptive_text is defined in yamlConfig", () => {
+      editor.setConfig({
+        entities: ["media_player.living_room"],
+        template: "large_modern",
+        adaptive_text_targets: ["details"],
+      });
+      assert.equal(editor._isTemplateOverridden("adaptive_text_targets"), true);
+      assert.equal(editor._isTemplateOverridden("adaptive_text"), true);
+
+      editor.setConfig({
+        entities: ["media_player.living_room"],
+        template: "large_modern",
+        adaptive_text: false,
+      });
+      assert.equal(editor._isTemplateOverridden("adaptive_text_targets"), true);
+      assert.equal(editor._isTemplateOverridden("adaptive_text"), true);
+    });
+
+    it("returns false when key is not adjusted by template", () => {
+      editor.setConfig({
+        entities: ["media_player.living_room"],
+        template: "large_modern",
+        idle_timeout_ms: 120000,
+      });
+      assert.equal(editor._isTemplateOverridden("idle_timeout_ms"), false);
+    });
+  });
+
+  describe("_resetToTemplate", () => {
+    it("deletes scalar key from yamlConfig and restores effective config to template preset default", () => {
+      editor.setConfig({
+        entities: ["media_player.living_room"],
+        template: "large_modern",
+        progress_bar_height: 32,
+      });
+
+      assert.equal(editor._isTemplateOverridden("progress_bar_height"), true);
+      assert.equal(editor._yamlConfig.progress_bar_height, 32);
+      assert.equal(editor._config.progress_bar_height, 32);
+
+      let dispatchedConfig = null;
+      editor.dispatchEvent = (event) => {
+        if (event.type === "config-changed") {
+          dispatchedConfig = event.detail.config;
+        }
+        return true;
+      };
+
+      editor._resetToTemplate("progress_bar_height");
+
+      assert.equal(editor._yamlConfig.progress_bar_height, undefined);
+      assert.equal("progress_bar_height" in editor._yamlConfig, false);
+      assert.equal(editor._config.progress_bar_height, 16);
+      assert.equal(editor._isTemplateOverridden("progress_bar_height"), false);
+      assert.ok(dispatchedConfig);
+      assert.equal("progress_bar_height" in dispatchedConfig, false);
+    });
+
+    it("resets adaptive_text_targets by deleting both adaptive_text and adaptive_text_targets from yamlConfig", () => {
+      editor.setConfig({
+        entities: ["media_player.living_room"],
+        template: "large_modern",
+        adaptive_text_targets: ["details"],
+        adaptive_text: false,
+      });
+
+      assert.equal(editor._isTemplateOverridden("adaptive_text_targets"), true);
+
+      let dispatchedConfig = null;
+      editor.dispatchEvent = (event) => {
+        if (event.type === "config-changed") {
+          dispatchedConfig = event.detail.config;
+        }
+        return true;
+      };
+
+      editor._resetToTemplate("adaptive_text_targets");
+
+      assert.equal(editor._yamlConfig.adaptive_text_targets, undefined);
+      assert.equal(editor._yamlConfig.adaptive_text, undefined);
+      assert.equal("adaptive_text_targets" in editor._yamlConfig, false);
+      assert.equal("adaptive_text" in editor._yamlConfig, false);
+      assert.deepEqual(editor._config.adaptive_text_targets, [
+        "details",
+        "menu",
+        "action_chips",
+        "lyrics",
+      ]);
+      assert.equal(editor._isTemplateOverridden("adaptive_text_targets"), false);
+      assert.ok(dispatchedConfig);
+      assert.equal("adaptive_text_targets" in dispatchedConfig, false);
+      assert.equal("adaptive_text" in dispatchedConfig, false);
+    });
+
+    it("resets adaptive_text by deleting both adaptive_text and adaptive_text_targets from yamlConfig", () => {
+      editor.setConfig({
+        entities: ["media_player.living_room"],
+        template: "large_modern",
+        adaptive_text_targets: ["details"],
+        adaptive_text: false,
+      });
+
+      editor._resetToTemplate("adaptive_text");
+
+      assert.equal(editor._yamlConfig.adaptive_text_targets, undefined);
+      assert.equal(editor._yamlConfig.adaptive_text, undefined);
+      assert.equal("adaptive_text_targets" in editor._yamlConfig, false);
+      assert.equal("adaptive_text" in editor._yamlConfig, false);
+      assert.deepEqual(editor._config.adaptive_text_targets, [
+        "details",
+        "menu",
+        "action_chips",
+        "lyrics",
+      ]);
+    });
+  });
+
+  describe("_renderTemplateIndicator and _renderTemplateDropdownIndicator", () => {
+    it("returns nothing when template is custom", () => {
+      editor.setConfig({
+        entities: ["media_player.living_room"],
+        template: "custom",
+      });
+      assert.equal(editor._renderTemplateIndicator("control_layout"), nothing);
+      assert.equal(editor._renderTemplateDropdownIndicator("custom"), nothing);
+    });
+
+    it("returns nothing for keys not adjusted by template", () => {
+      editor.setConfig({
+        entities: ["media_player.living_room"],
+        template: "large_modern",
+      });
+      assert.equal(editor._renderTemplateIndicator("idle_timeout_ms"), nothing);
+    });
+
+    it("returns active template indicator for template-adjusted key", () => {
+      editor.setConfig({
+        entities: ["media_player.living_room"],
+        template: "large_modern",
+      });
+      const result = editor._renderTemplateIndicator("control_layout");
+      assert.notEqual(result, nothing);
+      assert.ok(result);
+    });
+
+    it("returns overridden template indicator with click handler when key is overridden", () => {
+      editor.setConfig({
+        entities: ["media_player.living_room"],
+        template: "large_modern",
+        control_layout: "classic",
+      });
+      const result = editor._renderTemplateIndicator("control_layout");
+      assert.notEqual(result, nothing);
+      assert.ok(result);
+
+      if (result && Array.isArray(result.values)) {
+        const clickHandler = result.values.find((v) => typeof v === "function");
+        if (clickHandler) {
+          clickHandler(new Event("click"));
+          assert.equal(editor._yamlConfig.control_layout, undefined);
+          assert.equal(editor._config.control_layout, "modern");
+        }
+      }
+    });
+
+    it("returns dropdown indicator for active template and nothing for custom", () => {
+      editor.setConfig({
+        entities: ["media_player.living_room"],
+        template: "large_modern",
+      });
+      const activeResult = editor._renderTemplateDropdownIndicator("large_modern");
+      assert.notEqual(activeResult, nothing);
+      assert.ok(activeResult);
+
+      const customResult = editor._renderTemplateDropdownIndicator("custom");
+      assert.equal(customResult, nothing);
+    });
   });
 });

@@ -36,6 +36,10 @@ export default {
     },
     search_placeholder: "Konfigurationsoptionen suchen...",
     template_label: "Karten-Vorlage",
+    template_adjusted: "Angepasst durch Karten-Vorlage: {template}",
+    template_overridden: "Vorlagen-Standard ({template}) überschrieben – zum Zurücksetzen klicken",
+    template_dropdown_info:
+      "Vorlage aktiv: {template}. Optionen mit diesem Symbol werden durch diese Vorlage angepasst.",
     templates: {
       custom: {
         label: "Benutzerdefiniert (Originalkonfiguration)",

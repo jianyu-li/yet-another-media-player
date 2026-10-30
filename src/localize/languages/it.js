@@ -36,6 +36,11 @@ export default {
     },
     search_placeholder: "Cerca opzioni di configurazione...",
     template_label: "Modello di scheda",
+    template_adjusted: "Regolato dal modello di scheda: {template}",
+    template_overridden:
+      "Predefinito del modello ({template}) sovrascritto — fai clic per ripristinare",
+    template_dropdown_info:
+      "Modello attivo: {template}. Le opzioni contrassegnate da questa icona sono regolate da questo modello.",
     templates: {
       custom: {
         label: "Personalizzato (Configurazione originale)",

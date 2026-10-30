@@ -36,6 +36,10 @@ export default {
     },
     search_placeholder: "Configuratieopties zoeken...",
     template_label: "Kaartsjabloon",
+    template_adjusted: "Aangepast door kaartsjabloon: {template}",
+    template_overridden: "Sjabloonstandaard ({template}) overschreven — klik om te herstellen",
+    template_dropdown_info:
+      "Sjabloon actief: {template}. Opties gemarkeerd met dit pictogram zijn aangepast door dit sjabloon.",
     templates: {
       custom: {
         label: "Aangepast (Originele configuratie)",

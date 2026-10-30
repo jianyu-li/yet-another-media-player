@@ -36,6 +36,10 @@ export default {
     },
     search_placeholder: "Претрага опција конфигурације...",
     template_label: "Шаблон картице",
+    template_adjusted: "Прилагођено шаблоном картице: {template}",
+    template_overridden: "Подразумевано за шаблон ({template}) прегласано — кликни за ресетовање",
+    template_dropdown_info:
+      "Шаблон активан: {template}. Опције означене овом иконом су прилагођене овим шаблоном.",
     templates: {
       custom: {
         label: "Прилагођено (Оригинална конфигурација)",

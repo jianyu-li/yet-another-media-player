@@ -31,36 +31,40 @@ export function renderArtworkTab() {
 
           <div class="form-row form-row-multi-column">
             <div class="grow-children">
-              <ha-selector
-                .hass=${this.hass}
-                label="${localize("editor.fields.artwork_fit")}"
-                .selector=${{
-                  select: {
-                    mode: "dropdown",
-                    options: [
-                      { value: "cover", label: localize("editor.artwork_fit.cover") },
-                      { value: "contain", label: localize("editor.artwork_fit.contain") },
-                      { value: "fill", label: localize("editor.artwork_fit.fill") },
-                      { value: "scale-down", label: localize("editor.artwork_fit.scale-down") },
-                      {
-                        value: "scaled-contain",
-                        label: localize("editor.artwork_fit.scaled-contain"),
-                      },
-                      {
-                        value: "scaled-contain-alternate",
-                        label: localize("editor.artwork_fit.scaled-contain-alternate"),
-                      },
-                      { value: "none", label: localize("editor.artwork_fit.none") },
-                      { value: "no_artwork", label: localize("editor.fields.no_artwork_option") },
-                    ],
-                  },
-                }}
-                .value=${this._config.artwork_object_fit ?? "cover"}
-                @value-changed=${(e) => {
-                  const value = e.detail.value;
-                  this._updateConfig("artwork_object_fit", value);
-                }}
-              ></ha-selector>
+              <div style="display: flex; align-items: center; gap: 8px; width: 100%;">
+                <ha-selector
+                  style="flex: 1;"
+                  .hass=${this.hass}
+                  label="${localize("editor.fields.artwork_fit")}"
+                  .selector=${{
+                    select: {
+                      mode: "dropdown",
+                      options: [
+                        { value: "cover", label: localize("editor.artwork_fit.cover") },
+                        { value: "contain", label: localize("editor.artwork_fit.contain") },
+                        { value: "fill", label: localize("editor.artwork_fit.fill") },
+                        { value: "scale-down", label: localize("editor.artwork_fit.scale-down") },
+                        {
+                          value: "scaled-contain",
+                          label: localize("editor.artwork_fit.scaled-contain"),
+                        },
+                        {
+                          value: "scaled-contain-alternate",
+                          label: localize("editor.artwork_fit.scaled-contain-alternate"),
+                        },
+                        { value: "none", label: localize("editor.artwork_fit.none") },
+                        { value: "no_artwork", label: localize("editor.fields.no_artwork_option") },
+                      ],
+                    },
+                  }}
+                  .value=${this._config.artwork_object_fit ?? "cover"}
+                  @value-changed=${(e) => {
+                    const value = e.detail.value;
+                    this._updateConfig("artwork_object_fit", value);
+                  }}
+                ></ha-selector>
+                ${this._renderTemplateIndicator("artwork_object_fit")}
+              </div>
             </div>
             <div class="grow-children">
               <ha-selector
@@ -104,6 +108,7 @@ export function renderArtworkTab() {
                 <label for="extend-artwork-toggle" style="font-weight: 500;">${localize("editor.subtitles.artwork_extend_label")}</label>
                 <div style="font-size: 0.85em; opacity: 0.7;">${localize("editor.subtitles.artwork_extend")}</div>
               </div>
+              ${this._renderTemplateIndicator("extend_artwork")}
             </div>
           </div>
           <div class="form-row form-row-multi-column">
@@ -117,6 +122,7 @@ export function renderArtworkTab() {
                 <label for="blurred-artwork-toggle" style="font-weight: 500;">${localize("editor.labels.blurred_artwork")}</label>
                 <div style="font-size: 0.85em; opacity: 0.7;">${localize("editor.subtitles.blurred_artwork")}</div>
               </div>
+              ${this._renderTemplateIndicator("blurred_artwork")}
             </div>
           </div>
           <div class="form-row form-row-multi-column">
@@ -130,6 +136,7 @@ export function renderArtworkTab() {
                 <label for="hide-collapsed-artwork-toggle" style="font-weight: 500;">${localize("editor.labels.hide_collapsed_artwork")}</label>
                 <div style="font-size: 0.85em; opacity: 0.7;">${localize("editor.subtitles.hide_collapsed_artwork")}</div>
               </div>
+              ${this._renderTemplateIndicator("hide_collapsed_artwork")}
             </div>
           </div>
           <div class="form-row form-row-multi-column">

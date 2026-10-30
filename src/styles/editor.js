@@ -392,6 +392,46 @@ export const editorStyles = css`
           color: var(--custom-accent, var(--accent-color, #ff9800));
           opacity: 1;
         }
+        .template-indicator {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          --mdc-icon-size: 16px;
+          width: 16px;
+          height: 16px;
+          flex-shrink: 0;
+          transition: color 0.2s ease, opacity 0.2s ease, transform 0.2s ease;
+        }
+        .template-indicator ha-icon {
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          width: 16px;
+          height: 16px;
+        }
+        .template-indicator.active {
+          color: var(--primary-color, #2196f3);
+          opacity: 0.9;
+        }
+        .template-indicator.overridden {
+          color: var(--secondary-text-color, #888);
+          opacity: 0.6;
+          cursor: pointer;
+        }
+        .template-indicator.overridden:hover {
+          color: var(--primary-color, #2196f3);
+          opacity: 1;
+          transform: scale(1.15);
+        }
+        .template-indicator.template-indicator-dropdown {
+          --mdc-icon-size: 20px;
+          width: 20px;
+          height: 20px;
+        }
+        .template-indicator.template-indicator-dropdown ha-icon {
+          width: 20px;
+          height: 20px;
+        }
         .help-text {
           padding: 12px 25px;
         }

@@ -9,45 +9,49 @@ export function renderBehaviorTab() {
   return html`
     <div class="config-section">
       <div class="form-row">
-        <ha-selector
-          .hass=${this.hass}
-          .selector=${{
-            select: {
-              mode: "dropdown",
-              options: [
-                { value: "default", label: localize("editor.card_type_options.default") },
-                { value: "search", label: localize("editor.card_type_options.search") },
-                {
-                  value: "group_players",
-                  label:
-                    localize("editor.card_type_options.players") ||
-                    localize("editor.card_type_options.group_players") ||
-                    "Players",
-                },
-                { value: "up_next", label: localize("editor.card_type_options.up_next") },
-                {
-                  value: "remote_control",
-                  label: localize("editor.card_type_options.remote_control"),
-                },
-              ],
-            },
-          }}
-          .value=${
-            this._config.card_type === "players" ||
-            this._config.card_type === "group_players" ||
-            this._config.card_type === "group-players" ||
-            this._config.card_type === "dedicated_players" ||
-            this._config.card_type === "dedicated-players" ||
-            this._config.card_type === "dedicated_grouping" ||
-            this._config.card_type === "dedicated-grouping" ||
-            this._config.card_type === "transfer_queue" ||
-            this._config.card_type === "transfer-queue"
-              ? "group_players"
-              : (this._config.card_type ?? "default")
-          }
-          label="${localize("editor.fields.card_type")}"
-          @value-changed=${(e) => this._updateConfig("card_type", e.detail.value)}
-        ></ha-selector>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <ha-selector
+            style="flex: 1;"
+            .hass=${this.hass}
+            .selector=${{
+              select: {
+                mode: "dropdown",
+                options: [
+                  { value: "default", label: localize("editor.card_type_options.default") },
+                  { value: "search", label: localize("editor.card_type_options.search") },
+                  {
+                    value: "group_players",
+                    label:
+                      localize("editor.card_type_options.players") ||
+                      localize("editor.card_type_options.group_players") ||
+                      "Players",
+                  },
+                  { value: "up_next", label: localize("editor.card_type_options.up_next") },
+                  {
+                    value: "remote_control",
+                    label: localize("editor.card_type_options.remote_control"),
+                  },
+                ],
+              },
+            }}
+            .value=${
+              this._config.card_type === "players" ||
+              this._config.card_type === "group_players" ||
+              this._config.card_type === "group-players" ||
+              this._config.card_type === "dedicated_players" ||
+              this._config.card_type === "dedicated-players" ||
+              this._config.card_type === "dedicated_grouping" ||
+              this._config.card_type === "dedicated-grouping" ||
+              this._config.card_type === "transfer_queue" ||
+              this._config.card_type === "transfer-queue"
+                ? "group_players"
+                : (this._config.card_type ?? "default")
+            }
+            label="${localize("editor.fields.card_type")}"
+            @value-changed=${(e) => this._updateConfig("card_type", e.detail.value)}
+          ></ha-selector>
+          ${this._renderTemplateIndicator("card_type")}
+        </div>
         <div class="config-subtitle">${localize("editor.subtitles.card_type")}</div>
       </div>
     </div>
@@ -101,6 +105,7 @@ export function renderBehaviorTab() {
                     ></ha-code-editor>
                   </div>
                   <div class="field-actions">
+                    ${this._renderTemplateIndicator("show_chip_row")}
                     ${this._renderTemplateToggle("show_chip_row", this._config.show_chip_row, (v) =>
                       this._updateConfig("show_chip_row", v)
                     )}
@@ -128,6 +133,7 @@ export function renderBehaviorTab() {
                     ></ha-selector>
                   </div>
                   <div class="field-actions">
+                    ${this._renderTemplateIndicator("show_chip_row")}
                     ${this._renderTemplateToggle("show_chip_row", this._config.show_chip_row, (v) =>
                       this._updateConfig("show_chip_row", v)
                     )}
@@ -169,6 +175,7 @@ export function renderBehaviorTab() {
           <label for="always-show-quick-group-toggle"
             >${localize("editor.labels.always_show_group")}</label
           >
+          ${this._renderTemplateIndicator("always_show_quick_group")}
         </div>
         <div class="config-subtitle">${localize("editor.subtitles.always_show_group")}</div>
       </div>
@@ -180,6 +187,7 @@ export function renderBehaviorTab() {
             @change=${(e) => this._updateConfig("hold_to_pin", e.target.checked)}
           ></ha-switch>
           <label for="hold-to-pin-toggle">${localize("editor.labels.hold_to_pin")}</label>
+          ${this._renderTemplateIndicator("hold_to_pin")}
         </div>
         <div class="config-subtitle">${localize("editor.subtitles.hold_to_pin")}</div>
       </div>
@@ -193,6 +201,7 @@ export function renderBehaviorTab() {
           <label for="show-volume-overlay-toggle"
             >${localize("editor.labels.show_volume_overlay")}</label
           >
+          ${this._renderTemplateIndicator("show_volume_overlay")}
         </div>
         <div class="config-subtitle">${localize("editor.subtitles.show_volume_overlay")}</div>
       </div>
@@ -216,6 +225,7 @@ export function renderBehaviorTab() {
             @change=${(e) => this._updateConfig("disable_autofocus", e.target.checked)}
           ></ha-switch>
           <span>${localize("editor.labels.disable_autofocus")}</span>
+          ${this._renderTemplateIndicator("disable_autofocus")}
         </div>
         <div class="config-subtitle">${localize("editor.subtitles.disable_autofocus")}</div>
       </div>
@@ -227,6 +237,7 @@ export function renderBehaviorTab() {
             @change=${(e) => this._updateConfig("default_search_favorites", e.target.checked)}
           ></ha-switch>
           <span>${localize("editor.labels.default_search_favorites")}</span>
+          ${this._renderTemplateIndicator("default_search_favorites")}
         </div>
         <div class="config-subtitle">${localize("editor.subtitles.default_search_favorites")}</div>
       </div>
@@ -238,6 +249,7 @@ export function renderBehaviorTab() {
             @change=${(e) => this._updateConfig("keep_filters_on_search", e.target.checked)}
           ></ha-switch>
           <span>${localize("editor.labels.keep_filters")}</span>
+          ${this._renderTemplateIndicator("keep_filters_on_search")}
         </div>
         <div class="config-subtitle">${localize("editor.subtitles.search_within_filter")}</div>
       </div>
@@ -250,6 +262,7 @@ export function renderBehaviorTab() {
             @change=${(e) => this._updateConfig("dismiss_search_on_play", e.target.checked)}
           ></ha-switch>
           <span>${localize("editor.labels.dismiss_on_play")}</span>
+          ${this._renderTemplateIndicator("dismiss_search_on_play")}
         </div>
         <div class="config-subtitle">${localize("editor.subtitles.close_search_on_play")}</div>
       </div>
@@ -285,6 +298,7 @@ export function renderBehaviorTab() {
             }
           ></ha-switch>
           <span>${localize("editor.labels.pin_headers")}</span>
+          ${this._renderTemplateIndicator("pin_search_headers")}
         </div>
         <div class="config-subtitle">${localize("editor.subtitles.pin_search_headers")}</div>
       </div>
@@ -348,64 +362,72 @@ export function renderBehaviorTab() {
       </div>
 
       <div class="form-row">
-        <ha-selector
-          .hass=${this.hass}
-          .selector=${{
-            select: {
-              mode: "dropdown",
-              options: [
-                { value: "all", label: localize("search.filters.all") },
-                { value: "artist", label: localize("search.filters.artist") },
-                { value: "album", label: localize("search.filters.album") },
-                { value: "track", label: localize("search.filters.track") },
-                { value: "playlist", label: localize("search.filters.playlist") },
-                { value: "radio", label: localize("search.filters.radio") },
-                { value: "podcast", label: localize("search.filters.podcast") },
-                { value: "audiobook", label: localize("search.filters.audiobook") },
-              ],
-            },
-          }}
-          .value=${this._config.default_search_filter ?? "all"}
-          label="${localize("editor.labels.default_search_filter")}"
-          helper="${localize("editor.subtitles.default_search_filter_full")}"
-          @value-changed=${(e) => this._updateConfig("default_search_filter", e.detail.value)}
-        ></ha-selector>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <ha-selector
+            style="flex: 1;"
+            .hass=${this.hass}
+            .selector=${{
+              select: {
+                mode: "dropdown",
+                options: [
+                  { value: "all", label: localize("search.filters.all") },
+                  { value: "artist", label: localize("search.filters.artist") },
+                  { value: "album", label: localize("search.filters.album") },
+                  { value: "track", label: localize("search.filters.track") },
+                  { value: "playlist", label: localize("search.filters.playlist") },
+                  { value: "radio", label: localize("search.filters.radio") },
+                  { value: "podcast", label: localize("search.filters.podcast") },
+                  { value: "audiobook", label: localize("search.filters.audiobook") },
+                ],
+              },
+            }}
+            .value=${this._config.default_search_filter ?? "all"}
+            label="${localize("editor.labels.default_search_filter")}"
+            helper="${localize("editor.subtitles.default_search_filter_full")}"
+            @value-changed=${(e) => this._updateConfig("default_search_filter", e.detail.value)}
+          ></ha-selector>
+          ${this._renderTemplateIndicator("default_search_filter")}
+        </div>
       </div>
 
       <div class="form-row">
-        <ha-selector
-          .hass=${this.hass}
-          .selector=${{
-            select: {
-              mode: "dropdown",
-              options: [
-                { value: "default", label: "Default" },
-                { value: "name", label: "Name (A→Z)" },
-                { value: "name_desc", label: "Name (Z→A)" },
-                { value: "sort_name", label: "Sort Name (A→Z)" },
-                { value: "sort_name_desc", label: "Sort Name (Z→A)" },
-                { value: "timestamp_added", label: "Date Added (Oldest)" },
-                { value: "timestamp_added_desc", label: "Date Added (Newest)" },
-                { value: "last_played", label: "Last Played (Oldest)" },
-                { value: "last_played_desc", label: "Last Played (Recent)" },
-                { value: "play_count", label: "Play Count (Low→High)" },
-                { value: "play_count_desc", label: "Play Count (High→Low)" },
-                { value: "year", label: "Year (Oldest)" },
-                { value: "year_desc", label: "Year (Newest)" },
-                { value: "position", label: "Position (Asc)" },
-                { value: "position_desc", label: "Position (Desc)" },
-                { value: "artist_name", label: "Artist (A→Z)" },
-                { value: "artist_name_desc", label: "Artist (Z→A)" },
-                { value: "random", label: "Random" },
-                { value: "random_play_count", label: "Random + Least Played" },
-              ],
-            },
-          }}
-          .value=${this._config.search_results_sort ?? "default"}
-          label="${localize("editor.fields.result_sorting")}"
-          helper="${localize("editor.subtitles.result_sorting_full")}"
-          @value-changed=${(e) => this._updateConfig("search_results_sort", e.detail.value)}
-        ></ha-selector>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <ha-selector
+            style="flex: 1;"
+            .hass=${this.hass}
+            .selector=${{
+              select: {
+                mode: "dropdown",
+                options: [
+                  { value: "default", label: "Default" },
+                  { value: "name", label: "Name (A→Z)" },
+                  { value: "name_desc", label: "Name (Z→A)" },
+                  { value: "sort_name", label: "Sort Name (A→Z)" },
+                  { value: "sort_name_desc", label: "Sort Name (Z→A)" },
+                  { value: "timestamp_added", label: "Date Added (Oldest)" },
+                  { value: "timestamp_added_desc", label: "Date Added (Newest)" },
+                  { value: "last_played", label: "Last Played (Oldest)" },
+                  { value: "last_played_desc", label: "Last Played (Recent)" },
+                  { value: "play_count", label: "Play Count (Low→High)" },
+                  { value: "play_count_desc", label: "Play Count (High→Low)" },
+                  { value: "year", label: "Year (Oldest)" },
+                  { value: "year_desc", label: "Year (Newest)" },
+                  { value: "position", label: "Position (Asc)" },
+                  { value: "position_desc", label: "Position (Desc)" },
+                  { value: "artist_name", label: "Artist (A→Z)" },
+                  { value: "artist_name_desc", label: "Artist (Z→A)" },
+                  { value: "random", label: "Random" },
+                  { value: "random_play_count", label: "Random + Least Played" },
+                ],
+              },
+            }}
+            .value=${this._config.search_results_sort ?? "default"}
+            label="${localize("editor.fields.result_sorting")}"
+            helper="${localize("editor.subtitles.result_sorting_full")}"
+            @value-changed=${(e) => this._updateConfig("search_results_sort", e.detail.value)}
+          ></ha-selector>
+          ${this._renderTemplateIndicator("search_results_sort")}
+        </div>
       </div>
     </div>
 

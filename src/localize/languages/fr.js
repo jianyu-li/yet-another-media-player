@@ -36,6 +36,11 @@ export default {
     },
     search_placeholder: "Rechercher des options de configuration...",
     template_label: "Modèle de carte",
+    template_adjusted: "Ajusté par le modèle de carte : {template}",
+    template_overridden:
+      "Valeur par défaut du modèle ({template}) remplacée — cliquer pour réinitialiser",
+    template_dropdown_info:
+      "Modèle actif : {template}. Les options marquées de cette icône sont ajustées par ce modèle.",
     templates: {
       custom: {
         label: "Personnalisé (Configuration d'origine)",

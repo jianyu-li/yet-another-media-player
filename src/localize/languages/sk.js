@@ -36,6 +36,10 @@ export default {
     },
     search_placeholder: "Vyhľadať možnosti konfigurácie...",
     template_label: "Šablóna karty",
+    template_adjusted: "Upravené šablónou karty: {template}",
+    template_overridden: "Predvolená hodnota šablóny ({template}) prepísaná — kliknutím obnovíte",
+    template_dropdown_info:
+      "Aktívna šablóna: {template}. Možnosti označené touto ikonou sú upravené touto šablónou.",
     templates: {
       custom: {
         label: "Vlastné (Pôvodná konfigurácia)",

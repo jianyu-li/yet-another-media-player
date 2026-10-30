@@ -36,6 +36,10 @@ export default {
     },
     search_placeholder: "Search configuration options...",
     template_label: "Card Template",
+    template_adjusted: "Adjusted by card template: {template}",
+    template_overridden: "Template default ({template}) overridden — click to reset",
+    template_dropdown_info:
+      "Template active: {template}. Options marked with this icon are adjusted by this template.",
     templates: {
       custom: {
         label: "Custom (Original Config)",

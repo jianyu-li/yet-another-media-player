@@ -36,6 +36,10 @@ export default {
     },
     search_placeholder: "Pretraga opcija konfiguracije...",
     template_label: "Šablon kartice",
+    template_adjusted: "Prilagođeno šablonom kartice: {template}",
+    template_overridden: "Podrazumevano za šablon ({template}) preglasano — klikni za resetovanje",
+    template_dropdown_info:
+      "Šablon aktivan: {template}. Opcije označene ovom ikonom su prilagođene ovim šablonom.",
     templates: {
       custom: {
         label: "Prilagođeno (Originalna konfiguracija)",

@@ -719,6 +719,145 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     );
   }
 
+  /**
+   * @returns {string}
+   */
+  _getEffectiveTemplate() {
+    const raw = this._yamlConfig?.template || "custom";
+    if (
+      raw === "group_players" ||
+      raw === "players" ||
+      raw === "dedicated_players" ||
+      raw === "dedicated_grouping" ||
+      raw === "transfer_queue" ||
+      raw === "dedicated_transfer_queue"
+    ) {
+      return "dedicated_grouping";
+    }
+    return raw;
+  }
+
+  /**
+   * @param {string} key
+   * @returns {boolean}
+   */
+  _isTemplateAdjusted(key) {
+    const templateBase = getTemplatePresetDefaults(this._getEffectiveTemplate());
+    if (!templateBase || Object.keys(templateBase).length === 0) return false;
+    if (key === "adaptive_text_targets" || key === "adaptive_text") {
+      return "adaptive_text" in templateBase || "adaptive_text_targets" in templateBase;
+    }
+    return key in templateBase;
+  }
+
+  /**
+   * @param {string} key
+   * @returns {boolean}
+   */
+  _isTemplateOverridden(key) {
+    if (!this._isTemplateAdjusted(key)) return false;
+    if (!this._yamlConfig) return false;
+    if (key === "adaptive_text_targets" || key === "adaptive_text") {
+      return (
+        (this._yamlConfig.adaptive_text_targets !== undefined &&
+          this._yamlConfig.adaptive_text_targets !== null) ||
+        (this._yamlConfig.adaptive_text !== undefined && this._yamlConfig.adaptive_text !== null)
+      );
+    }
+    return this._yamlConfig[key] !== undefined && this._yamlConfig[key] !== null;
+  }
+
+  /**
+   * @param {string} key
+   */
+  _resetToTemplate(key) {
+    const newYaml = { ...this._yamlConfig };
+    if (key === "adaptive_text_targets" || key === "adaptive_text") {
+      delete newYaml.adaptive_text;
+      delete newYaml.adaptive_text_targets;
+    } else {
+      delete newYaml[key];
+    }
+    this._yamlConfig = newYaml;
+    this._config = this._buildEffectiveConfig(newYaml, this._config?.entities);
+    this._isInternalUpdate = true;
+    this.dispatchEvent(
+      new CustomEvent("config-changed", {
+        detail: { config: newYaml },
+        bubbles: true,
+        composed: true,
+      })
+    );
+    this.requestUpdate();
+  }
+
+  /**
+   * @param {string} key
+   * @returns {import("lit").TemplateResult | typeof nothing}
+   */
+  _renderTemplateIndicator(key) {
+    if (!this._isTemplateAdjusted(key)) {
+      return nothing;
+    }
+    const overridden = this._isTemplateOverridden(key);
+    const template = this._getEffectiveTemplate();
+    const templateLabel = localize(`editor.templates.${template}.label`) || template;
+    let title;
+    if (overridden) {
+      const loc = localize("editor.template_overridden", "{template}", templateLabel);
+      title =
+        !loc || loc === "editor.template_overridden"
+          ? `Overridden from template default (${templateLabel}) (click to reset)`
+          : loc;
+    } else {
+      const loc = localize("editor.template_adjusted", "{template}", templateLabel);
+      title =
+        !loc || loc === "editor.template_adjusted"
+          ? `Value adjusted by active template (${templateLabel})`
+          : loc;
+    }
+
+    return html`
+      <ha-icon
+        class="template-indicator ${overridden ? "overridden" : "active"}"
+        icon="mdi:auto-fix"
+        title=${title}
+        @click=${
+          overridden
+            ? (e) => {
+                e.stopPropagation();
+                e.preventDefault();
+                this._resetToTemplate(key);
+              }
+            : undefined
+        }
+      ></ha-icon>
+    `;
+  }
+
+  /**
+   * @param {string} [templateName]
+   * @returns {import("lit").TemplateResult | typeof nothing}
+   */
+  _renderTemplateDropdownIndicator(templateName) {
+    if (!templateName || templateName === "custom") {
+      return nothing;
+    }
+    const templateLabel = localize(`editor.templates.${templateName}.label`) || templateName;
+    const loc = localize("editor.template_dropdown_info", "{template}", templateLabel);
+    const title =
+      !loc || loc === "editor.template_dropdown_info"
+        ? "Active card template modifies default settings"
+        : loc;
+    return html`
+      <ha-icon
+        class="template-indicator template-indicator-dropdown active"
+        icon="mdi:auto-fix"
+        title=${title}
+      ></ha-icon>
+    `;
+  }
+
   _addArtworkOverride() {
     const list = [...(this._artworkOverrides ?? [])];
     list.push({
@@ -938,18 +1077,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
       }
     }
 
-    const rawTemplate = this._yamlConfig.template || "custom";
-    let currentTemplate = rawTemplate;
-    if (
-      currentTemplate === "group_players" ||
-      currentTemplate === "players" ||
-      currentTemplate === "dedicated_players" ||
-      currentTemplate === "dedicated_grouping" ||
-      currentTemplate === "transfer_queue" ||
-      currentTemplate === "dedicated_transfer_queue"
-    ) {
-      currentTemplate = "dedicated_grouping";
-    }
+    const currentTemplate = this._getEffectiveTemplate();
 
     // When editing an entity/action, keep tabs visible but show editor content
     const editingEntity = this._entityEditorIndex !== null;
@@ -962,26 +1090,32 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           style="display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 16px;"
         >
           <div>
-            <ha-selector
-              .hass=${this.hass}
-              label=${localize("editor.template_label")}
-              .selector=${{
-                select: {
-                  mode: "dropdown",
-                  options: Object.keys(TEMPLATE_CONFIGS)
-                    .filter(
-                      (key) =>
-                        key !== "group_players" && key !== "dedicated_players" && key !== "players"
-                    )
-                    .map((key) => ({
-                      value: key,
-                      label: localize(`editor.templates.${key}.label`),
-                    })),
-                },
-              }}
-              .value=${currentTemplate}
-              @value-changed=${(e) => this._updateConfig("template", e.detail.value)}
-            ></ha-selector>
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <ha-selector
+                style="flex: 1;"
+                .hass=${this.hass}
+                label=${localize("editor.template_label")}
+                .selector=${{
+                  select: {
+                    mode: "dropdown",
+                    options: Object.keys(TEMPLATE_CONFIGS)
+                      .filter(
+                        (key) =>
+                          key !== "group_players" &&
+                          key !== "dedicated_players" &&
+                          key !== "players"
+                      )
+                      .map((key) => ({
+                        value: key,
+                        label: localize(`editor.templates.${key}.label`),
+                      })),
+                  },
+                }}
+                .value=${currentTemplate}
+                @value-changed=${(e) => this._updateConfig("template", e.detail.value)}
+              ></ha-selector>
+              ${this._renderTemplateDropdownIndicator(currentTemplate)}
+            </div>
             <div class="config-subtitle small" style="margin-top: 8px;">
               ${localize(`editor.templates.${currentTemplate}.description`)}
             </div>

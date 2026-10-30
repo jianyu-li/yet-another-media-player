@@ -36,6 +36,10 @@ export default {
     },
     search_placeholder: "Pesquisar opções de configuração...",
     template_label: "Modelo de cartão",
+    template_adjusted: "Ajustado pelo modelo de cartão: {template}",
+    template_overridden: "Padrão do modelo ({template}) substituído — clique para repor",
+    template_dropdown_info:
+      "Modelo ativo: {template}. As opções marcadas com este ícone são ajustadas por este modelo.",
     templates: {
       custom: {
         label: "Personalizado (Configuração original)",

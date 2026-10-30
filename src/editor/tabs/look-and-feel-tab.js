@@ -35,6 +35,7 @@ export function renderVisualTab() {
             @change=${(e) => this._updateConfig("match_theme", e.target.checked)}
           ></ha-switch>
           <span>${localize("editor.labels.match_theme")}</span>
+          ${this._renderTemplateIndicator("match_theme")}
         </div>
         <div>
           <ha-switch
@@ -43,6 +44,7 @@ export function renderVisualTab() {
             @change=${(e) => this._updateConfig("alternate_progress_bar", e.target.checked)}
           ></ha-switch>
           <span>${localize("editor.labels.alt_progress")}</span>
+          ${this._renderTemplateIndicator("alternate_progress_bar")}
         </div>
       </div>
       <div class="form-row form-row-multi-column">
@@ -57,6 +59,7 @@ export function renderVisualTab() {
             @value-changed=${(e) => this._updateConfig("progress_bar_height", e.detail.value)}
           ></ha-selector>
         </div>
+        ${this._renderTemplateIndicator("progress_bar_height")}
         <ha-icon
           class="icon-button"
           icon="mdi:restore"
@@ -65,22 +68,26 @@ export function renderVisualTab() {
         ></ha-icon>
       </div>
       <div class="form-row">
-        <ha-selector
-          .hass=${this.hass}
-          .selector=${{
-            select: {
-              mode: "dropdown",
-              options: [
-                { value: "automatic", label: localize("editor.appearance_options.automatic") },
-                { value: "light", label: localize("editor.appearance_options.light") },
-                { value: "dark", label: localize("editor.appearance_options.dark") },
-              ],
-            },
-          }}
-          .value=${this._config.appearance ?? "automatic"}
-          label="${localize("editor.fields.appearance")}"
-          @value-changed=${(e) => this._updateConfig("appearance", e.detail.value)}
-        ></ha-selector>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <ha-selector
+            style="flex: 1;"
+            .hass=${this.hass}
+            .selector=${{
+              select: {
+                mode: "dropdown",
+                options: [
+                  { value: "automatic", label: localize("editor.appearance_options.automatic") },
+                  { value: "light", label: localize("editor.appearance_options.light") },
+                  { value: "dark", label: localize("editor.appearance_options.dark") },
+                ],
+              },
+            }}
+            .value=${this._config.appearance ?? "automatic"}
+            label="${localize("editor.fields.appearance")}"
+            @value-changed=${(e) => this._updateConfig("appearance", e.detail.value)}
+          ></ha-selector>
+          ${this._renderTemplateIndicator("appearance")}
+        </div>
       </div>
 
       <div class="form-row" data-search-keys="font_color font color appearance text_color">
@@ -163,6 +170,7 @@ export function renderVisualTab() {
             .disabled=${this._config.alternate_progress_bar || (!this._isTemplateValue(this._config.always_collapsed) && this._config.always_collapsed)}
           ></ha-switch>
           <span>${localize("editor.labels.display_timestamps")}</span>
+          ${this._renderTemplateIndicator("display_timestamps")}
         </div>
       </div>
       <div class="form-row">
@@ -335,37 +343,45 @@ export function renderVisualTab() {
         }
       </div>
       <div class="form-row">
-        <ha-selector
-          .hass=${this.hass}
-          .selector=${{
-            select: {
-              mode: "dropdown",
-              options: [
-                { value: "list", label: localize("editor.search_view_options.list") },
-                { value: "card", label: localize("editor.search_view_options.card") },
-                {
-                  value: "card_minimal",
-                  label: localize("editor.search_view_options.card_minimal"),
-                },
-              ],
-            },
-          }}
-          .value=${this._config.search_view ?? "list"}
-          label="${localize("editor.fields.search_view")}"
-          helper="${localize("editor.subtitles.search_view")}"
-          @value-changed=${(e) => this._updateConfig("search_view", e.detail.value)}
-        ></ha-selector>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <ha-selector
+            style="flex: 1;"
+            .hass=${this.hass}
+            .selector=${{
+              select: {
+                mode: "dropdown",
+                options: [
+                  { value: "list", label: localize("editor.search_view_options.list") },
+                  { value: "card", label: localize("editor.search_view_options.card") },
+                  {
+                    value: "card_minimal",
+                    label: localize("editor.search_view_options.card_minimal"),
+                  },
+                ],
+              },
+            }}
+            .value=${this._config.search_view ?? "list"}
+            label="${localize("editor.fields.search_view")}"
+            helper="${localize("editor.subtitles.search_view")}"
+            @value-changed=${(e) => this._updateConfig("search_view", e.detail.value)}
+          ></ha-selector>
+          ${this._renderTemplateIndicator("search_view")}
+        </div>
       </div>
       <div class="form-row">
-        <ha-selector
-          .hass=${this.hass}
-          .selector=${{ number: { min: 1, max: 12, step: 1, mode: "box" } }}
-          .value=${this._config.search_card_columns ?? 4}
-          .disabled=${this._config.search_view !== "card" && this._config.search_view !== "card_minimal"}
-          label="${localize("editor.fields.search_card_columns")}"
-          helper="${localize("editor.subtitles.search_card_columns")}"
-          @value-changed=${(e) => this._updateConfig("search_card_columns", e.detail.value)}
-        ></ha-selector>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <ha-selector
+            style="flex: 1;"
+            .hass=${this.hass}
+            .selector=${{ number: { min: 1, max: 12, step: 1, mode: "box" } }}
+            .value=${this._config.search_card_columns ?? 4}
+            .disabled=${this._config.search_view !== "card" && this._config.search_view !== "card_minimal"}
+            label="${localize("editor.fields.search_card_columns")}"
+            helper="${localize("editor.subtitles.search_card_columns")}"
+            @value-changed=${(e) => this._updateConfig("search_card_columns", e.detail.value)}
+          ></ha-selector>
+          ${this._renderTemplateIndicator("search_card_columns")}
+        </div>
       </div>
       <div class="form-row">
         <ha-selector
@@ -420,6 +436,7 @@ export function renderVisualTab() {
                     ></ha-code-editor>
                   </div>
                   <div class="field-actions">
+                    ${this._renderTemplateIndicator("control_layout")}
                     ${this._renderTemplateToggle(
                       "control_layout",
                       this._config.control_layout,
@@ -448,6 +465,7 @@ export function renderVisualTab() {
                     ></ha-selector>
                   </div>
                   <div class="field-actions">
+                    ${this._renderTemplateIndicator("control_layout")}
                     ${this._renderTemplateToggle(
                       "control_layout",
                       this._config.control_layout,
@@ -486,6 +504,7 @@ export function renderVisualTab() {
             @change=${(e) => this._updateConfig("adaptive_controls", e.target.checked)}
           ></ha-switch>
           <span>${localize("editor.labels.adaptive_controls")}</span>
+          ${this._renderTemplateIndicator("adaptive_controls")}
         </div>
         <div class="config-subtitle">${localize("editor.subtitles.adaptive_controls")}</div>
       </div>
@@ -645,7 +664,10 @@ export function renderVisualTab() {
         data-search-keys="adaptive_text adaptive_text_targets lyrics details menu action_chips"
       >
         <div class="full-width">
-          <span class="form-label">${localize("editor.labels.adaptive_text_elements")}</span>
+          <div style="display: flex; align-items: center; justify-content: space-between;">
+            <span class="form-label">${localize("editor.labels.adaptive_text_elements")}</span>
+            ${this._renderTemplateIndicator("adaptive_text_targets")}
+          </div>
           <div class="config-subtitle">${localize("editor.subtitles.adaptive_text")}</div>
           <ha-selector
             .hass=${this.hass}
@@ -661,32 +683,40 @@ export function renderVisualTab() {
         </div>
       </div>
       <div class="form-row">
-        <ha-selector
-          .hass=${this.hass}
-          .selector=${{
-            select: {
-              mode: "dropdown",
-              options: [
-                { value: "left", label: "Left" },
-                { value: "center", label: "Center" },
-                { value: "right", label: "Right" },
-                { value: "none", label: "None" },
-              ],
-            },
-          }}
-          .value=${this._config.details_alignment ?? "left"}
-          label="${localize("editor.fields.details_alignment")}"
-          @value-changed=${(e) => this._updateConfig("details_alignment", e.detail.value)}
-        ></ha-selector>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <ha-selector
+            style="flex: 1;"
+            .hass=${this.hass}
+            .selector=${{
+              select: {
+                mode: "dropdown",
+                options: [
+                  { value: "left", label: "Left" },
+                  { value: "center", label: "Center" },
+                  { value: "right", label: "Right" },
+                  { value: "none", label: "None" },
+                ],
+              },
+            }}
+            .value=${this._config.details_alignment ?? "left"}
+            label="${localize("editor.fields.details_alignment")}"
+            @value-changed=${(e) => this._updateConfig("details_alignment", e.detail.value)}
+          ></ha-selector>
+          ${this._renderTemplateIndicator("details_alignment")}
+        </div>
       </div>
       <div class="form-row">
-        <ha-selector
-          .hass=${this.hass}
-          .selector=${VOLUME_MODE_SELECTOR}
-          .value=${this._config.volume_mode ?? "slider"}
-          label="${localize("editor.fields.volume_mode")}"
-          @value-changed=${(e) => this._updateConfig("volume_mode", e.detail.value)}
-        ></ha-selector>
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <ha-selector
+            style="flex: 1;"
+            .hass=${this.hass}
+            .selector=${VOLUME_MODE_SELECTOR}
+            .value=${this._config.volume_mode ?? "slider"}
+            label="${localize("editor.fields.volume_mode")}"
+            @value-changed=${(e) => this._updateConfig("volume_mode", e.detail.value)}
+          ></ha-selector>
+          ${this._renderTemplateIndicator("volume_mode")}
+        </div>
       </div>
       ${html`
         <div class="form-row form-row-multi-column">
@@ -700,6 +730,7 @@ export function renderVisualTab() {
               @value-changed=${(e) => this._updateConfig("volume_step", e.detail.value)}
             ></ha-selector>
           </div>
+          ${this._renderTemplateIndicator("volume_step")}
           <ha-icon
             class="icon-button"
             icon="mdi:restore"
@@ -753,6 +784,7 @@ export function renderVisualTab() {
             }
           ></ha-switch>
           <span>${localize("editor.labels.hide_menu_player_toggle")}</span>
+          ${this._renderTemplateIndicator("hide_menu_player")}
         </div>
       </div>
       ${
@@ -779,6 +811,7 @@ export function renderVisualTab() {
                     ></ha-code-editor>
                   </div>
                   <div class="field-actions">
+                    ${this._renderTemplateIndicator("always_collapsed")}
                     ${this._renderTemplateToggle(
                       "always_collapsed",
                       this._config.always_collapsed,
@@ -800,6 +833,7 @@ export function renderVisualTab() {
                     @change=${(e) => this._updateConfig("always_collapsed", e.target.checked)}
                   ></ha-switch>
                   <span>${localize("editor.labels.always_collapsed")}</span>
+                  ${this._renderTemplateIndicator("always_collapsed")}
                   ${this._renderTemplateToggle(
                     "always_collapsed",
                     this._config.always_collapsed,
