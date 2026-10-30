@@ -2711,7 +2711,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
   _calculateDetailsScale(width, height) {
     const targetSet = this._adaptiveTextTargets;
-    if (!targetSet?.has("details")) return 1;
+    if (!targetSet?.has("details") && !targetSet?.has("lyrics")) return 1;
 
     // Width is the primary driver of text size because text expands horizontally.
     const widthFactor = width / 360;
@@ -2954,7 +2954,13 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const oldConfig = this.config;
     const templateName = rawConfig.template || "custom";
     const templateBase = getTemplatePresetDefaults(templateName);
-    const config = { ...templateBase, ...rawConfig };
+    const definedRaw = Object.fromEntries(
+      Object.entries(rawConfig).filter(([, v]) => v !== undefined)
+    );
+    const config = /** @type {any} */ ({ ...templateBase, ...definedRaw });
+    if (definedRaw.adaptive_text === false && !Array.isArray(definedRaw.adaptive_text_targets)) {
+      config.adaptive_text_targets = [];
+    }
     if (
       templateBase.card_type &&
       (!rawConfig.card_type ||

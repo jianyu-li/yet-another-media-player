@@ -412,6 +412,10 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     const list = Array.isArray(value)
       ? value.filter((item) => ADAPTIVE_TEXT_SELECTOR_VALUES.includes(item))
       : [];
+    const current = this._getAdaptiveTextTargetsValue();
+    if (list.length === current.length && list.every((item, idx) => item === current[idx])) {
+      return;
+    }
     this._updateConfig("adaptive_text_targets", list);
   }
 
@@ -499,6 +503,45 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     return "#ffffff";
   }
 
+  /**
+   * @param {any} yamlConfig
+   * @param {any} [normalizedEntities]
+   * @returns {any}
+   */
+  _buildEffectiveConfig(yamlConfig = {}, normalizedEntities = this._config?.entities) {
+    const templateName = yamlConfig.template || "custom";
+    const templateBase = getTemplatePresetDefaults(templateName);
+    const definedYaml = Object.fromEntries(
+      Object.entries(yamlConfig).filter(([, v]) => v !== undefined)
+    );
+    const merged = /** @type {any} */ ({
+      ...templateBase,
+      ...definedYaml,
+      entities: normalizedEntities,
+    });
+
+    if (
+      templateBase.card_type &&
+      (!definedYaml.card_type ||
+        definedYaml.card_type === "default" ||
+        definedYaml.card_type === "standard")
+    ) {
+      merged.card_type = templateBase.card_type;
+    }
+
+    if (!Array.isArray(definedYaml.adaptive_text_targets)) {
+      if (definedYaml.adaptive_text === false) {
+        merged.adaptive_text_targets = [];
+      } else if (merged.adaptive_text === true) {
+        merged.adaptive_text_targets = [...ADAPTIVE_TEXT_SELECTOR_VALUES];
+      } else {
+        merged.adaptive_text_targets = [];
+      }
+    }
+
+    return merged;
+  }
+
   setConfig(config) {
     this._yamlConfig = { ...config };
     const rawEntities = config.entities ?? [];
@@ -506,20 +549,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
       typeof e === "string" ? { entity_id: e } : e
     );
 
-    const templateName = config.template || "custom";
-    const templateBase = getTemplatePresetDefaults(templateName);
-
-    this._config = {
-      ...templateBase,
-      ...config,
-      entities: normalizedEntities,
-    };
-    if (
-      templateBase.card_type &&
-      (!config.card_type || config.card_type === "default" || config.card_type === "standard")
-    ) {
-      this._config.card_type = templateBase.card_type;
-    }
+    this._config = this._buildEffectiveConfig(config, normalizedEntities);
     if (this._isInternalUpdate) {
       this._isInternalUpdate = false;
     }
@@ -620,11 +650,18 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
       return;
     }
 
-    const newYaml = { ...this._yamlConfig, [key]: value };
+    const newYaml = { ...this._yamlConfig };
+    if (value === undefined) {
+      delete newYaml[key];
+    } else {
+      newYaml[key] = value;
+    }
     this._yamlConfig = newYaml;
 
-    const newConfig = { ...this._config, [key]: value };
-    this._config = newConfig;
+    this._config = this._buildEffectiveConfig(
+      newYaml,
+      key === "entities" ? value : this._config?.entities
+    );
     this._isInternalUpdate = true;
     this.dispatchEvent(
       new CustomEvent("config-changed", {
@@ -658,6 +695,10 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
       for (const k of Object.keys(templateBase)) {
         delete newYaml[k];
       }
+      if ("adaptive_text" in templateBase || "adaptive_text_targets" in templateBase) {
+        delete newYaml.adaptive_text;
+        delete newYaml.adaptive_text_targets;
+      }
       if (newYaml.card_type === "default" || newYaml.card_type === "standard") {
         delete newYaml.card_type;
       }
@@ -666,19 +707,7 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
 
     this._yamlConfig = newYaml;
 
-    // Compute the new merged UI config
-    const activeTemplateBase = getTemplatePresetDefaults(templateName);
-    this._config = {
-      ...activeTemplateBase,
-      ...newYaml,
-      entities: this._config.entities, // preserve normalized entities
-    };
-    if (
-      activeTemplateBase.card_type &&
-      (!newYaml.card_type || newYaml.card_type === "default" || newYaml.card_type === "standard")
-    ) {
-      this._config.card_type = activeTemplateBase.card_type;
-    }
+    this._config = this._buildEffectiveConfig(newYaml, this._config?.entities);
 
     this._isInternalUpdate = true;
     this.dispatchEvent(

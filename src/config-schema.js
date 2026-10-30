@@ -10,6 +10,12 @@ export const DEFAULT_IDLE_TIMEOUT_MS = 60000;
 export const DEFAULT_VOLUME_STEP = 0.05;
 export const DEFAULT_BACKGROUND_FADE = 75;
 export const DEFAULT_LYRICS_BACKGROUND_FADE = DEFAULT_BACKGROUND_FADE;
+export const DEFAULT_ADAPTIVE_TEXT_TARGETS = Object.freeze([
+  "details",
+  "menu",
+  "action_chips",
+  "lyrics",
+]);
 
 /**
  * Predefined card configuration presets
@@ -22,6 +28,7 @@ export const TEMPLATE_CONFIGS = Object.freeze({
     control_layout: "modern",
     adaptive_controls: true,
     adaptive_text: true,
+    adaptive_text_targets: DEFAULT_ADAPTIVE_TEXT_TARGETS,
     artwork_object_fit: "cover",
     extend_artwork: true,
     show_chip_row: "in_menu_on_idle",
@@ -132,6 +139,7 @@ export const TEMPLATE_CONFIGS = Object.freeze({
     control_layout: "modern",
     adaptive_controls: true,
     adaptive_text: true,
+    adaptive_text_targets: DEFAULT_ADAPTIVE_TEXT_TARGETS,
     progress_bar_height: 48,
     display_timestamps: true,
     artwork_object_fit: "cover",
@@ -292,26 +300,35 @@ export function getTemplatePresetDefaults(templateName = "custom") {
 export function normalizeCardConfig(rawConfig = {}) {
   const templateName = rawConfig.template || "custom";
   const templateBase = getTemplatePresetDefaults(templateName);
-  const normalized = {
+  const definedRaw = Object.fromEntries(
+    Object.entries(rawConfig).filter(([, v]) => v !== undefined)
+  );
+  const normalized = /** @type {Record<string, any>} */ ({
     ...CARD_CONFIG_DEFAULTS,
     ...templateBase,
-    ...rawConfig,
-  };
-  if (rawConfig.lyrics_background_fade !== undefined && rawConfig.background_fade === undefined) {
-    normalized.background_fade = rawConfig.lyrics_background_fade;
+    ...definedRaw,
+  });
+  if (definedRaw.lyrics_background_fade !== undefined && definedRaw.background_fade === undefined) {
+    normalized.background_fade = definedRaw.lyrics_background_fade;
   } else if (
-    rawConfig.background_fade !== undefined &&
-    rawConfig.lyrics_background_fade === undefined
+    definedRaw.background_fade !== undefined &&
+    definedRaw.lyrics_background_fade === undefined
   ) {
-    normalized.lyrics_background_fade = rawConfig.background_fade;
+    normalized.lyrics_background_fade = definedRaw.background_fade;
   }
   if (
     templateBase.card_type &&
-    (!rawConfig.card_type ||
-      rawConfig.card_type === "default" ||
-      rawConfig.card_type === "standard")
+    (!definedRaw.card_type ||
+      definedRaw.card_type === "default" ||
+      definedRaw.card_type === "standard")
   ) {
     normalized.card_type = templateBase.card_type;
+  }
+  if (definedRaw.adaptive_text === false && !Array.isArray(definedRaw.adaptive_text_targets)) {
+    normalized.adaptive_text_targets = [];
+  } else if (!Array.isArray(definedRaw.adaptive_text_targets)) {
+    normalized.adaptive_text_targets =
+      normalized.adaptive_text === true ? [...DEFAULT_ADAPTIVE_TEXT_TARGETS] : [];
   }
   return normalized;
 }

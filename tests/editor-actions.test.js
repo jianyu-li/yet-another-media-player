@@ -258,3 +258,161 @@ describe("YetAnotherMediaPlayerEditor - Entity Row Rendering", () => {
     }
   });
 });
+
+describe("YetAnotherMediaPlayerEditor - Template Preset Population & Overrides", () => {
+  let editor;
+
+  beforeEach(() => {
+    editor = new YetAnotherMediaPlayerEditor();
+    editor.dispatchEvent = () => true;
+  });
+
+  it("populates adaptive_text_targets in _config without polluting _yamlConfig when using large_modern preset", () => {
+    editor.setConfig({
+      entities: ["media_player.living_room"],
+      template: "large_modern",
+    });
+
+    assert.deepEqual(editor._config.adaptive_text_targets, [
+      "details",
+      "menu",
+      "action_chips",
+      "lyrics",
+    ]);
+    assert.deepEqual(editor._getAdaptiveTextTargetsValue(), [
+      "details",
+      "menu",
+      "action_chips",
+      "lyrics",
+    ]);
+    assert.equal(editor._yamlConfig.adaptive_text_targets, undefined);
+  });
+
+  it("allows user to uncheck lyrics and stores override in _yamlConfig", () => {
+    editor.setConfig({
+      entities: ["media_player.living_room"],
+      template: "large_modern",
+    });
+
+    /** @type {any} */
+    let lastDispatchedConfig = null;
+    editor.dispatchEvent = (event) => {
+      if (event.type === "config-changed") {
+        lastDispatchedConfig = /** @type {CustomEvent} */ (event).detail?.config;
+      }
+      return true;
+    };
+
+    editor._onAdaptiveTextTargetsChanged(["details", "menu", "action_chips"]);
+
+    assert.deepEqual(editor._yamlConfig.adaptive_text_targets, ["details", "menu", "action_chips"]);
+    assert.deepEqual(editor._getAdaptiveTextTargetsValue(), ["details", "menu", "action_chips"]);
+    assert.deepEqual(editor._config.adaptive_text_targets, ["details", "menu", "action_chips"]);
+    assert.ok(lastDispatchedConfig);
+    assert.deepEqual(lastDispatchedConfig.adaptive_text_targets, [
+      "details",
+      "menu",
+      "action_chips",
+    ]);
+  });
+
+  it("allows user to uncheck all items and stores empty array in _yamlConfig", () => {
+    editor.setConfig({
+      entities: ["media_player.living_room"],
+      template: "large_modern",
+    });
+
+    /** @type {any} */
+    let lastDispatchedConfig = null;
+    editor.dispatchEvent = (event) => {
+      if (event.type === "config-changed") {
+        lastDispatchedConfig = /** @type {CustomEvent} */ (event).detail?.config;
+      }
+      return true;
+    };
+
+    editor._onAdaptiveTextTargetsChanged([]);
+
+    assert.deepEqual(editor._yamlConfig.adaptive_text_targets, []);
+    assert.deepEqual(editor._getAdaptiveTextTargetsValue(), []);
+    assert.deepEqual(editor._config.adaptive_text_targets, []);
+    assert.ok(lastDispatchedConfig);
+    assert.deepEqual(lastDispatchedConfig.adaptive_text_targets, []);
+  });
+
+  it("does not dispatch config-changed or pollute _yamlConfig when adaptive_text_targets matches preset default", () => {
+    editor.setConfig({
+      entities: ["media_player.living_room"],
+      template: "large_modern",
+    });
+
+    let dispatchCalled = false;
+    editor.dispatchEvent = () => {
+      dispatchCalled = true;
+      return true;
+    };
+
+    editor._onAdaptiveTextTargetsChanged(["details", "menu", "action_chips", "lyrics"]);
+
+    assert.equal(dispatchCalled, false);
+    assert.equal(editor._yamlConfig.adaptive_text_targets, undefined);
+  });
+
+  it("clears prior manual adaptive_text_targets override when changing template to large_modern", () => {
+    editor.setConfig({
+      entities: ["media_player.living_room"],
+      template: "crisp_clean",
+      adaptive_text_targets: [],
+    });
+
+    assert.deepEqual(editor._yamlConfig.adaptive_text_targets, []);
+
+    editor._changeTemplate("large_modern");
+
+    assert.equal(editor._yamlConfig.adaptive_text_targets, undefined);
+    assert.deepEqual(editor._getAdaptiveTextTargetsValue(), [
+      "details",
+      "menu",
+      "action_chips",
+      "lyrics",
+    ]);
+    assert.deepEqual(editor._config.adaptive_text_targets, [
+      "details",
+      "menu",
+      "action_chips",
+      "lyrics",
+    ]);
+  });
+
+  it("restores preset default value when resetting property with undefined via _updateConfig", () => {
+    editor.setConfig({
+      entities: ["media_player.living_room"],
+      template: "large_modern",
+      progress_bar_height: 24,
+    });
+
+    assert.equal(editor._yamlConfig.progress_bar_height, 24);
+    assert.equal(editor._config.progress_bar_height, 24);
+
+    editor._updateConfig("progress_bar_height", undefined);
+
+    assert.equal(editor._yamlConfig.progress_bar_height, undefined);
+    assert.equal("progress_bar_height" in editor._yamlConfig, false);
+    assert.equal(editor._config.progress_bar_height, 16);
+  });
+
+  it("overrides crisp_clean artwork_object_fit preset default with user selection", () => {
+    editor.setConfig({
+      entities: ["media_player.living_room"],
+      template: "crisp_clean",
+    });
+
+    assert.equal(editor._config.artwork_object_fit, "scaled-contain-alternate");
+    assert.equal(editor._yamlConfig.artwork_object_fit, undefined);
+
+    editor._updateConfig("artwork_object_fit", "cover");
+
+    assert.equal(editor._yamlConfig.artwork_object_fit, "cover");
+    assert.equal(editor._config.artwork_object_fit, "cover");
+  });
+});

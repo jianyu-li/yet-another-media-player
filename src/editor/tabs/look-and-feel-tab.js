@@ -640,7 +640,10 @@ export function renderVisualTab() {
           ${localize("editor.subtitles.hide_active_entity_on_idle")}
         </div>
       </div>
-      <div class="form-row">
+      <div
+        class="form-row"
+        data-search-keys="adaptive_text adaptive_text_targets lyrics details menu action_chips"
+      >
         <div class="full-width">
           <span class="form-label">${localize("editor.labels.adaptive_text_elements")}</span>
           <div class="config-subtitle">${localize("editor.subtitles.adaptive_text")}</div>

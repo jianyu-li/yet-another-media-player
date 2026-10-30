@@ -58,7 +58,7 @@ export function renderArtworkTab() {
                 .value=${this._config.artwork_object_fit ?? "cover"}
                 @value-changed=${(e) => {
                   const value = e.detail.value;
-                  this._updateConfig("artwork_object_fit", value === "cover" ? undefined : value);
+                  this._updateConfig("artwork_object_fit", value);
                 }}
               ></ha-selector>
             </div>
@@ -88,10 +88,7 @@ export function renderArtworkTab() {
                 .value=${this._config.artwork_position ?? "top center"}
                 @value-changed=${(e) => {
                   const value = e.detail.value;
-                  this._updateConfig(
-                    "artwork_position",
-                    value === "top center" ? undefined : value
-                  );
+                  this._updateConfig("artwork_position", value);
                 }}
               ></ha-selector>
             </div>
