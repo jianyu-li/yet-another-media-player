@@ -72,7 +72,9 @@ import {
   getEntityName,
   areEntitiesPlayingSameMedia,
   isPlaceholderMediaTitle,
-  findPlayingUnconfiguredPlayers
+  findPlayingUnconfiguredPlayers,
+  isKioskSatellite,
+  getMediaPlayerEntityIds,
 } from "./yamp-utils.js";
 import { localize, setHassLanguage } from "./localize/localize.js";
 
@@ -108,6 +110,13 @@ const GESTURE_DOUBLE_TAP_MAX_DELAY = 300;
 const GESTURE_DOUBLE_TAP_IGNORE_NATIVE_DELAY = 500;
 const GESTURE_TAP_DELAY = 300;
 const GESTURE_SWIPE_THRESHOLD = 50;
+
+let cachedKioskDeviceName = "";
+let kioskDeviceInfoPromise = null;
+export function _resetKioskSatelliteCacheForTests() {
+  cachedKioskDeviceName = "";
+  kioskDeviceInfoPromise = null;
+}
 
 window.customCards = window.customCards || [];
 if (!window.customCards.some(card => card.type === "yet-another-media-player")) {
@@ -419,6 +428,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
   connectedCallback() {
     super.connectedCallback();
+    this._initKioskSatellite();
     this._isEditorPreviewCached = undefined;
     this._initialAutoDiscoveryDone = false;
     if (this.config) {
@@ -984,6 +994,9 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     if (this._mediaSessionOverride !== null) {
       return this._mediaSessionOverride;
     }
+    if (isKioskSatellite()) {
+      return false;
+    }
     return this._lockScreenControls;
   }
 
@@ -1121,6 +1134,10 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     // Search sheet state variables
     this._searchQuery = "";
     this._searchLoading = false;
+    this._kioskObscured = false;
+    this._kioskInteractionActive = false;
+    this._kioskDeviceName = "";
+    this._kioskListenersAttached = false;
     this._searchResults = [];
     this._searchDisplaySortOverride = null;
     this._searchError = "";
@@ -1599,6 +1616,11 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       return;
     }
     const target = path.trim();
+
+    if (/^(?:ks|app):\/\//i.test(target)) {
+      window.location.assign(target);
+      return;
+    }
 
     const navEvent = new CustomEvent("hass-navigate", {
       detail: { path: target },
@@ -2841,6 +2863,8 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       is_mobile: this._isMobile,
       is_music_assistant: this._isMusicAssistantEntity(),
       is_music: this._isMusicContentType(),
+      is_kiosk: isKioskSatellite(),
+      kiosk_name: this._kioskDeviceName || cachedKioskDeviceName || "",
       current: this.currentActivePlaybackEntityId || this.currentEntityId || '',
     };
   }
@@ -4051,8 +4075,10 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
     if (oldStates) {
       let anyChanged = false;
-      for (const id in currentStates) {
-        if (id.startsWith("media_player.") && currentStates[id] !== oldStates[id]) {
+      const mediaIds = getMediaPlayerEntityIds(currentStates, this.hass?.entities);
+      for (let i = 0; i < mediaIds.length; i++) {
+        const id = mediaIds[i];
+        if (currentStates[id] !== oldStates[id]) {
           anyChanged = true;
           break;
         }
@@ -4070,7 +4096,12 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
     const covered = this._getCoveredEntityIds();
     const excludePatterns = this.config?.auto_add_exclude || [];
-    const playingNew = findPlayingUnconfiguredPlayers(currentStates, covered, excludePatterns);
+    const playingNew = findPlayingUnconfiguredPlayers(
+      currentStates,
+      covered,
+      excludePatterns,
+      this.hass?.entities
+    );
 
     let changed = false;
     const currentAuto = [...(this._autoEntities || [])];
@@ -5188,12 +5219,13 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     }
     const playbackState = this.currentActivePlaybackStateObj || this.currentPlaybackStateObj || this.currentStateObj;
     if (this._isEntityPlaying(playbackState) && playbackState.attributes.media_duration) {
-      if (typeof document === "undefined" || !document.hidden) {
+      if ((typeof document === "undefined" || !document.hidden) && !this._kioskObscured) {
         this._progressTimer = setInterval(() => {
           this.requestUpdate();
         }, 500);
       }
     }
+    this._syncKioskInteractionHold();
 
     // Sync lock screen media controls (Web Media Session API)
     if (this._mediaSessionManager) {
@@ -8618,6 +8650,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   disconnectedCallback() {
+    this._cleanupKioskSatellite();
     this._isEditorPreviewCached = undefined;
     if (this._activeDragCleanup) {
       this._activeDragCleanup();
@@ -8741,6 +8774,118 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     // Clear tracking properties
     this._lastPlayingEntityId = null;
     this._controlFocusEntityId = null;
+  }
+
+  _initKioskSatellite() {
+    this._kioskObscured = false;
+    this._kioskInteractionActive = false;
+
+    if (!isKioskSatellite()) return;
+
+    if (cachedKioskDeviceName) {
+      this._kioskDeviceName = cachedKioskDeviceName;
+    } else {
+      const ks = /** @type {any} */ (window).kioskSatellite;
+      if (!kioskDeviceInfoPromise && typeof ks?.getDeviceInfo === "function") {
+        kioskDeviceInfoPromise = Promise.resolve(ks.getDeviceInfo());
+      }
+      if (kioskDeviceInfoPromise) {
+        kioskDeviceInfoPromise
+          .then((info) => {
+            if (info?.name) {
+              cachedKioskDeviceName = String(info.name).trim();
+              this._kioskDeviceName = cachedKioskDeviceName;
+              this.requestUpdate();
+            }
+          })
+          .catch(() => {});
+      }
+    }
+
+    const ks = /** @type {any} */ (window).kioskSatellite;
+    if (typeof ks?.getKioskState === "function") {
+      try {
+        const state = ks.getKioskState();
+        if (state && typeof state.then === "function") {
+          state.then((s) => this._applyKioskState(s)).catch(() => {});
+        } else {
+          this._applyKioskState(state);
+        }
+      } catch {
+        // Ignore errors during initial state probe
+      }
+    }
+
+    if (!this._kioskListenersAttached && typeof window !== "undefined") {
+      this._handleKioskScreensaverStart = () => this._setKioskObscured(true);
+      this._handleKioskScreensaverStop = () => this._setKioskObscured(false);
+      this._handleKioskScreenOff = () => this._setKioskObscured(true);
+      this._handleKioskScreenOn = () => this._setKioskObscured(false);
+      this._handleKioskState = (e) => this._applyKioskState(/** @type {CustomEvent} */ (e)?.detail);
+
+      window.addEventListener("kiosksatellite:screensaverstart", this._handleKioskScreensaverStart);
+      window.addEventListener("kiosksatellite:screensaverstop", this._handleKioskScreensaverStop);
+      window.addEventListener("kiosksatellite:screenoff", this._handleKioskScreenOff);
+      window.addEventListener("kiosksatellite:screenon", this._handleKioskScreenOn);
+      window.addEventListener("kiosksatellite:kiosk-state", this._handleKioskState);
+      this._kioskListenersAttached = true;
+    }
+  }
+
+  _applyKioskState(state) {
+    if (!state || typeof state !== "object") return;
+    const isScreenOff = state.screenOn === false;
+    const isOpaqueScreensaver = Boolean(state.screensaver?.active && state.screensaver?.view !== "dim");
+    const isCameraOrNowPlaying = Boolean(state.cameraView || state.mediaPlayer?.nowPlayingShown);
+    this._setKioskObscured(isScreenOff || isOpaqueScreensaver || isCameraOrNowPlaying);
+  }
+
+  _setKioskObscured(obscured) {
+    const next = Boolean(obscured);
+    if (this._kioskObscured === next) return;
+    this._kioskObscured = next;
+    if (next) {
+      if (this._progressTimer) {
+        clearInterval(this._progressTimer);
+        this._progressTimer = null;
+      }
+    } else {
+      this.requestUpdate();
+    }
+  }
+
+  _syncKioskInteractionHold() {
+    if (!isKioskSatellite() || this._isEditorPreview) return;
+    const shouldHold = Boolean(this.isAnyMenuOpen || this._isFullScreen);
+    if (Boolean(this._kioskInteractionActive) === shouldHold) return;
+    this._kioskInteractionActive = shouldHold;
+    const ks = /** @type {any} */ (window).kioskSatellite;
+    if (typeof ks?.setInteractionActive === "function") {
+      ks.setInteractionActive(shouldHold, "yamp");
+    } else if (typeof ks?.pauseScreensaver === "function") {
+      ks.pauseScreensaver(shouldHold);
+    }
+  }
+
+  _cleanupKioskSatellite() {
+    if (this._kioskListenersAttached && typeof window !== "undefined") {
+      window.removeEventListener("kiosksatellite:screensaverstart", this._handleKioskScreensaverStart);
+      window.removeEventListener("kiosksatellite:screensaverstop", this._handleKioskScreensaverStop);
+      window.removeEventListener("kiosksatellite:screenoff", this._handleKioskScreenOff);
+      window.removeEventListener("kiosksatellite:screenon", this._handleKioskScreenOn);
+      window.removeEventListener("kiosksatellite:kiosk-state", this._handleKioskState);
+      this._kioskListenersAttached = false;
+    }
+
+    if (this._kioskInteractionActive) {
+      this._kioskInteractionActive = false;
+      const ks = typeof window !== "undefined" ? /** @type {any} */ (window).kioskSatellite : null;
+      if (typeof ks?.setInteractionActive === "function") {
+        ks.setInteractionActive(false, "yamp");
+      } else if (typeof ks?.pauseScreensaver === "function") {
+        ks.pauseScreensaver(false);
+      }
+    }
   }
 
   // Helper method to apply closing animations

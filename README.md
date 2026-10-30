@@ -135,7 +135,7 @@ Below you will find a list of all configuration options.
 | `service`                  | string       | No           | —           | Home Assistant service to call (e.g., `media_player.play_media`)                                |
 | `service_data`             | object       | No           | —           | Data to send with the service call                                                              |
 | `action`                   | string       | No           | —           | Set to `navigate` for navigation shortcuts, `sync_selected_entity` to sync the active entity to a helper, `select_entity` to read a helper and activate the matching chip, `prev_entity`/`next_entity` to navigate chips, `toggle_lock_screen_controls` to toggle lock screen controls *(Experimental)*, or `full_screen` / `toggle_full_screen` to toggle full-screen overlay mode |
-| `navigation_path`          | string       | No           | —           | Destination for navigation shortcuts (supports anchors like `#pop-up-menu`, relative paths, or full URLs) |
+| `navigation_path`          | string       | No           | —           | Destination for navigation shortcuts (supports anchors like `#pop-up-menu`, relative paths, full URLs, or Kiosk Satellite schemes `ks://` and `app://`) |
 | `navigation_new_tab`       | boolean      | No           | `false`     | When `true`, external URLs open in a new browser tab instead of replacing the current view      |
 | `menu_item`                | string       | No           | —           | Opens a card menu by type: `search`, `search-recently-played`, `search-next-up`, `source`, `more-info`, `group-players`, `transfer-queue`, `main-menu`, `full-screen` |
 | `placement`                | choice       | No           | `chip`      | Placement of the action: `chip` (Action Chip), `menu` (In Menu), `hidden` (Hidden - only triggerable via gestures), `replace_search`, `replace_power`, `replace_mute`, or `replace_favorite` ([Supports Templates](#template-support)) |
@@ -873,6 +873,8 @@ All templates have access to standard Home Assistant template functions (`states
 | `is_mobile` | `boolean` | `true` if the user is on a mobile device or mobile viewport (width &le; 768px). |
 | `is_music_assistant` | `boolean` | `true` if the active player is a Music Assistant entity. |
 | `is_music` | `boolean` | `true` if `media_content_type` is `music`. |
+| `is_kiosk` | `boolean` | `true` when the dashboard is running inside the [Kiosk Satellite](https://kiosksatellite.com/) Android app (`window.kioskSatellite`). |
+| `kiosk_name` | `string` | The device name configured in Kiosk Satellite (e.g., `"Kitchen"`, `"Office"`), or `""` outside Kiosk Satellite. |
 
 ## Examples
 
@@ -1003,6 +1005,15 @@ full_screen: "{{ is_state('input_boolean.theater_mode', 'on') }}"
 ```yaml
 full_screen: "[[[ return is_state('input_boolean.theater_mode', 'on'); ]]]"
 ```
+
+### Kiosk Satellite Optimizations
+
+When running inside the [Kiosk Satellite](https://kiosksatellite.com/) Android app on wall tablets and smart displays, YAMP automatically provides `is_kiosk` and `kiosk_name` in its template context, alongside native runtime integration enhancements:
+
+- **Filter Dashboard Updates Compliance**: YAMP preserves Kiosk Satellite's *Filter dashboard updates* optimization by avoiding whole-state enumerations (`hass.states`), instead leveraging `hass.entities` registry to track and discover media players without generating unnecessary WebSocket bandwidth or render churn.
+- **Interaction Hold (`setInteractionActive`)**: Opening any YAMP sheet, menu, or overlay (search, grouping, transfer queue, source selector, or options) signals Kiosk Satellite to pause the screensaver and prevent view rotation so your browsing flow is never interrupted.
+- **Display Power & Screensaver Pausing**: When the kiosk screen turns off or enters an opaque screensaver, YAMP automatically pauses playback progress timers and background scrubbers to conserve tablet CPU and battery.
+- **Mobile Audio Loop Suppression**: YAMP automatically suppresses the silent background audio loop used by `lock_screen_controls` on mobile phones, preventing audio channel contention with Kiosk Satellite's native Sendspin or chime players.
 
 ## Controls & Typography
 > Tune button sizing, entity labels, and adaptive text.
@@ -1201,6 +1212,38 @@ actions:
     navigation_path: "https://example.com/docs"
     navigation_new_tab: true
 ```
+
+#### Kiosk Satellite Shortcuts & App Launches
+
+When running inside [Kiosk Satellite](https://kiosksatellite.com/), `navigation_path` supports native `ks://` navigation schemes and external Android `app://` package intents:
+
+```yaml
+actions:
+  - name: Music Assistant
+    icon: mdi:music-box-multiple
+    action: navigate
+    navigation_path: ks://music-assistant
+  - name: Spotify App
+    icon: mdi:spotify
+    action: navigate
+    navigation_path: app://com.spotify.music
+```
+
+Supported Kiosk Satellite schemes include:
+
+- `ks://screensaver` — Start the screensaver immediately (`ks://screensaver/stop` to wake).
+- `ks://now-playing` — Open the full-screen Now Playing display.
+- `ks://player` — Open the floating media player card.
+- `ks://music-assistant` — Open the native Music Assistant overlay.
+- `ks://music-library` — Jump directly to Kiosk Satellite's native music library.
+- `ks://voice` — Activate the voice satellite assistant (`ks://voice/mute` to toggle mute, `ks://voice/stop` to dismiss).
+- `ks://alarms` — Open clock, timer, and alarm management.
+- `ks://calendar` — Open the family calendar view.
+- `ks://camera` — Open the camera stream overlay (`ks://camera/close` to dismiss).
+- `ks://apps` — Open the Kiosk Satellite app launcher overlay.
+- `app://<package.name>` — Launch any installed Android application by package identifier (e.g., `app://com.spotify.music`).
+
+For the complete list and behavior details, see the official [Kiosk Satellite Dashboard Links](https://github.com/jxlarrea/kiosk-satellite/blob/main/docs/dashboard-links.md) specification. Note that `ks://settings`, restart, and exit commands are deliberately not exposed to dashboard links for security.
 
 ### Dynamic Navigation
 

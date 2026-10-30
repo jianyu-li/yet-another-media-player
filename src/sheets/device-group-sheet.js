@@ -151,7 +151,14 @@ export function renderGroupingSheet() {
         ? this._getCoveredEntityIds()
         : new Set(this.entityIds || []);
     const exclude = this.config?.auto_add_exclude || [];
-    const searchResults = searchMediaPlayers(this.hass?.states, query, covered, exclude);
+    const searchResults = searchMediaPlayers(
+      this.hass?.states,
+      query,
+      covered,
+      exclude,
+      8,
+      this.hass?.entities
+    );
 
     return html`
       <div style="margin-bottom: 12px; display: flex; flex-direction: column; gap: 4px;">

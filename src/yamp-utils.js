@@ -6,6 +6,46 @@ import { ARTWORK_OVERRIDE_MATCH_KEYS } from "./constants.js";
 const overrideRegexCache = new WeakMap();
 
 /**
+ * Check if running inside Kiosk Satellite runtime environment.
+ * @returns {boolean}
+ */
+export function isKioskSatellite() {
+  return Boolean(
+    typeof window !== "undefined" &&
+    /** @type {any} */ (window).kioskSatellite?.platform === "kiosksatellite"
+  );
+}
+
+/**
+ * Return media player entity IDs without enumerating hass.states if entitiesRegistry is provided.
+ * Keeps Kiosk Satellite's 'Filter dashboard updates' optimization active.
+ * @param {Record<string, any>|null|undefined} states - hass.states object
+ * @param {Record<string, any>|null} [entitiesRegistry=null] - hass.entities registry
+ * @returns {string[]} Array of media_player entity IDs
+ */
+export function getMediaPlayerEntityIds(states, entitiesRegistry = null) {
+  if (entitiesRegistry && typeof entitiesRegistry === "object") {
+    const registryKeys = Object.keys(entitiesRegistry);
+    if (registryKeys.length > 0) {
+      const ids = [];
+      for (let i = 0; i < registryKeys.length; i++) {
+        const id = registryKeys[i];
+        if (id.startsWith("media_player.") && !entitiesRegistry[id]?.disabled_by) {
+          ids.push(id);
+        }
+      }
+      return ids;
+    }
+  }
+
+  if (states && typeof states === "object") {
+    return Object.keys(states).filter((id) => id.startsWith("media_player."));
+  }
+
+  return [];
+}
+
+/**
  * Get a valid artwork attribute value (non-empty string with content)
  * @param {Object} attrs - Entity attributes object
  * @param {string} key - Attribute key to check
@@ -320,6 +360,8 @@ export function evaluateJsTemplate(templateStr, hass, context = {}, compiledCach
         "is_mobile",
         "is_music_assistant",
         "is_music",
+        "is_kiosk",
+        "kiosk_name",
         body
       );
     }
@@ -347,7 +389,9 @@ export function evaluateJsTemplate(templateStr, hass, context = {}, compiledCach
       context?.is_dark_mode,
       context?.is_mobile,
       context?.is_music_assistant,
-      context?.is_music
+      context?.is_music,
+      context?.is_kiosk,
+      context?.kiosk_name
     );
   } catch (err) {
     console.warn("yamp: failed to evaluate JS template:", templateStr, err);
@@ -1395,16 +1439,22 @@ export function matchesEntityPattern(entityId, patterns, friendlyName = "") {
  * @param {Record<string, any>} states - hass.states object
  * @param {Set<string> | string[]} coveredIds - IDs already configured, resolved, or grouped
  * @param {string[] | string} [excludePatterns] - IDs or wildcard patterns to exclude
+ * @param {Record<string, any>|null} [entitiesRegistry=null] - Optional entity registry map
  * @returns {string[]} Array of playing entity IDs
  */
-export function findPlayingUnconfiguredPlayers(states, coveredIds, excludePatterns) {
+export function findPlayingUnconfiguredPlayers(
+  states,
+  coveredIds,
+  excludePatterns,
+  entitiesRegistry = null
+) {
   if (!states || typeof states !== "object") return [];
   const coveredSet = coveredIds instanceof Set ? coveredIds : new Set(coveredIds || []);
 
   const candidates = [];
-  for (const [id, st] of Object.entries(states)) {
-    if (!id.startsWith("media_player.")) continue;
+  for (const id of getMediaPlayerEntityIds(states, entitiesRegistry)) {
     if (coveredSet.has(id)) continue;
+    const st = states[id];
     if (!st || st.state !== "playing") continue;
     if (matchesEntityPattern(id, excludePatterns, st.attributes?.friendly_name)) continue;
     candidates.push({ id, st });
@@ -1493,17 +1543,25 @@ export function findPlayingUnconfiguredPlayers(states, coveredIds, excludePatter
  * @param {Set<string> | string[]} coveredIds
  * @param {string[] | string} [excludePatterns]
  * @param {number} [limit=8]
+ * @param {Record<string, any>|null} [entitiesRegistry=null]
  * @returns {Array<{ id: string, name: string, state: string, icon: string, isPlaying: boolean }>}
  */
-export function searchMediaPlayers(states, query, coveredIds, excludePatterns, limit = 8) {
+export function searchMediaPlayers(
+  states,
+  query,
+  coveredIds,
+  excludePatterns,
+  limit = 8,
+  entitiesRegistry = null
+) {
   if (!states || typeof states !== "object") return [];
   const coveredSet = coveredIds instanceof Set ? coveredIds : new Set(coveredIds || []);
   const q = (query || "").trim().toLowerCase();
 
   const results = [];
-  for (const [id, st] of Object.entries(states)) {
-    if (!id.startsWith("media_player.")) continue;
+  for (const id of getMediaPlayerEntityIds(states, entitiesRegistry)) {
     if (coveredSet.has(id)) continue;
+    const st = states[id];
     if (!st || st.state === "unavailable" || st.state === "unknown") continue;
 
     const friendlyName = st.attributes?.friendly_name || id;
