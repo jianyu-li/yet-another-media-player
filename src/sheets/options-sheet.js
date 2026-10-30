@@ -77,15 +77,15 @@ export function renderMainMenu(sourceList, menuOnlyActions, showChipsInMenu) {
               localize(this._lyricsActive ? "card.menu.hide_lyrics" : "card.menu.show_lyrics"),
               "mdi:script-text-outline",
               () => {
-                this._lyricsActive = !this._lyricsActive;
-                if (!this._lyricsActive) {
-                  this._lastLyricsTrackId = null;
-                  this._lastLyricsEntityId = null;
-                  this._lastLyricsArtist = null;
-                  this._lastLyricsTitle = null;
+                if (this._lyricsController?.toggle) {
+                  this._lyricsController.toggle();
+                } else {
+                  this._lyricsActive = !this._lyricsActive;
+                  if (this._lyricsActive) {
+                    this._fetchLyrics();
+                  }
                 }
-                this._showEntityOptions = false;
-                this.requestUpdate();
+                this._dismissWithAnimation();
               }
             )
           : nothing

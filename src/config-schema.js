@@ -239,6 +239,11 @@ export const TEMPLATE_SUPPORTED_FIELDS = Object.freeze(
     "lock_screen_controls",
     "full_screen",
     "show_chip_row",
+    "always_collapsed",
+    "control_layout",
+    "music_assistant_entity",
+    "volume_entity",
+    "remote_entity",
   ])
 );
 

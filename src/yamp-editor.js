@@ -1005,8 +1005,6 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
                                   // Exit any sub-editor when switching tabs
                                   this._entityEditorIndex = null;
                                   this._actionEditorIndex = null;
-                                  this._useTemplate = null;
-                                  this._useVolTemplate = null;
                                 }}
                                 ?selected=${this._activeTab === key}
                               >
@@ -1413,15 +1411,6 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     delete newAction.placement;
     actions[index] = newAction;
     this._updateConfig("actions", actions);
-  }
-
-  _onToggleChanged(e) {
-    const newConfig = {
-      ...this._config,
-      always_collapsed: e.target.checked,
-    };
-    this._config = newConfig;
-    this.dispatchEvent(new CustomEvent("config-changed", { detail: { config: newConfig } }));
   }
 
   _looksLikeUrlOrPath(value) {
