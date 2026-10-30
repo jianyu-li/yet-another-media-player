@@ -4,6 +4,7 @@ import {
   applyHostnameToUrl,
   isValidArtworkUrl,
   getCachedSecureThumbnail,
+  getMediaPlayerEntityIds,
 } from "./yamp-utils.js";
 import { localize } from "./localize/localize.js";
 import { playMedia } from "./services/ha-media-services.js";
@@ -1576,13 +1577,15 @@ export async function isTrackFavorited(
     // Use the provided entityId or try to find a Music Assistant entity
     let targetEntityId = entityId;
     if (!targetEntityId) {
-      const states = Object.values(hass.states);
-      const maEntity = states.find(
-        (state) => isMusicAssistantEntity(state) && state.entity_id.startsWith("media_player.")
-      );
-      if (maEntity) {
-        targetEntityId = maEntity.entity_id;
-      } else {
+      const mediaIds = getMediaPlayerEntityIds(hass.states, hass.entities);
+      for (const id of mediaIds) {
+        const state = hass.states?.[id];
+        if (state && isMusicAssistantEntity(state)) {
+          targetEntityId = state.entity_id || id;
+          break;
+        }
+      }
+      if (!targetEntityId) {
         return false;
       }
     }

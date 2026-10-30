@@ -351,6 +351,8 @@ export interface TemplateContext {
   is_mobile: boolean;
   is_music_assistant: boolean;
   is_music: boolean;
+  is_kiosk: boolean;
+  kiosk_name: string;
   entity?: string;
   current: HassEntity | string | null;
   current_entity?: HassEntity | null;
@@ -928,17 +930,24 @@ export function matchesEntityPattern(
   patterns?: string[] | string | null,
   friendlyName?: string
 ): boolean;
+export function isKioskSatellite(): boolean;
+export function getMediaPlayerEntityIds(
+  states: Record<string, any> | null | undefined,
+  entitiesRegistry?: Record<string, any> | null
+): string[];
 export function findPlayingUnconfiguredPlayers(
-  states?: Record<string, any>,
-  coveredIds?: Set<string> | string[],
-  excludePatterns?: string[] | string | null
+  states: Record<string, any>,
+  coveredIds: Set<string> | string[],
+  excludePatterns?: string[] | string,
+  entitiesRegistry?: Record<string, any> | null
 ): string[];
 export function searchMediaPlayers(
-  states?: Record<string, any>,
-  query?: string,
-  coveredIds?: Set<string> | string[],
-  excludePatterns?: string[] | string | null,
-  limit?: number
+  states: Record<string, any>,
+  query: string,
+  coveredIds: Set<string> | string[],
+  excludePatterns?: string[] | string,
+  limit?: number,
+  entitiesRegistry?: Record<string, any> | null
 ): Array<{ id: string; name: string; state: string; icon: string; isPlaying: boolean }>;
 
 export interface GroupPlayerState {

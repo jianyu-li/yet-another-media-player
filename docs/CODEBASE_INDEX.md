@@ -82,3 +82,9 @@ flowchart TD
    Shared search result items are rendered via `renderSearchResultItem` in [`src/search-sheet.js`](../src/search-sheet.js).
 4. **Automated Unit Testing & Pre-Flight Validation:**
    Pure logic additions or refactors (parsers, utility functions, template evaluation, state algorithms) must be accompanied by unit tests in `tests/`. All pre-flight checks (`npm run validate`) run the full unit test suite (`npm test`) alongside linting, formatting, type checking, and bundling.
+5. **Kiosk Satellite Integration & Optimization Invariants:**
+   When running inside Kiosk Satellite (`isKioskSatellite()`), YAMP must:
+   - Preserve Kiosk Satellite's *Filter dashboard updates* optimization by discovering media players via `getMediaPlayerEntityIds()` (inspecting `hass.entities` registry before falling back to `hass.states` iteration).
+   - Bracket all open sheets, menus, and overlays (search, grouping, queue, source, options) via `_syncKioskInteractionHold` to call `window.kioskSatellite.setInteractionActive(true/false)`, preventing screensavers or view cycling while the user is actively interacting.
+   - Pause progress scrub timers when the display is powered off or covered by an opaque screensaver.
+   - Suppress the mobile `lock_screen_controls` background audio loop to prevent audio focus contention with native Kiosk Satellite sound engines.
