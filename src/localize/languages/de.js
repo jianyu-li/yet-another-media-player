@@ -265,7 +265,7 @@ export default {
       lyrics_pre_roll:
         "Passen Sie das Timing der Songtext-Hervorhebung an. Positive Werte beschleunigen sie, negative verzögern sie (Standard: 0).",
       lrclib_url:
-        "Benutzerdefinierte LRCLIB-API-Basis-URL (Standard: https://lrclib.net). Nützlich für selbst gehostete Instanzen.",
+        "Benutzerdefinierte LRCLIB-Songtext-API-Basis-URL (Standard: https://lrclib.net). Nützlich für selbst gehostete Instanzen.",
       background_fade:
         "Hintergrundüberblendung und Dimm-Deckkraft des Overlays anpassen (0% für transparentes Artwork, 100% für durchgehenden Hintergrund).",
       lyrics_background_fade:

@@ -258,7 +258,7 @@ export default {
       lyrics_pre_roll:
         "Ajuste le timing de mise en évidence des paroles. Les valeurs positives l'accélèrent, les négatives le ralentissent (par défaut : 0).",
       lrclib_url:
-        "URL de base personnalisée de l'API LRCLIB (par défaut https://lrclib.net). Utile pour les instances auto-hébergées.",
+        "URL de base personnalisée de l'API de paroles LRCLIB (par défaut https://lrclib.net). Utile pour les instances auto-hébergées.",
       lyrics_background_fade:
         "Ajuster le fondu d'arrière-plan et l'opacité d'assombrissement de la superposition des paroles (0% pour une illustration transparente, 100% pour un arrière-plan plein).",
       background_fade:

@@ -251,7 +251,7 @@ export default {
       lyrics_pre_roll:
         "Sposta il tempismo dell'evidenziazione dei testi. I valori positivi lo accelerano, quelli negativi lo ritardano (predefinito: 0).",
       lrclib_url:
-        "URL di base personalizzato dell'API LRCLIB (predefinito https://lrclib.net). Utile per le istanze self-hosted.",
+        "URL di base personalizzato dell'API dei testi LRCLIB (predefinito https://lrclib.net). Utile per le istanze self-hosted.",
       lyrics_background_fade:
         "Regola la dissolvenza dello sfondo e l'opacità di attenuazione della sovrapposizione dei testi (0% per grafica trasparente, 100% per sfondo solido).",
       background_fade:

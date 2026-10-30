@@ -261,7 +261,7 @@ export default {
       lyrics_pre_roll:
         "Podesi tajming isticanja teksta pesme. Pozitivne vrednosti ubrzavaju, negativne usporavaju (podrazumevano: 0).",
       lrclib_url:
-        "Prilagođeni osnovni URL za LRCLIB API (podrazumevano https://lrclib.net). Korisno za samohostovane instance.",
+        "Prilagođeni osnovni URL za LRCLIB API tekstova (podrazumevano https://lrclib.net). Korisno za samohostovane instance.",
       lyrics_background_fade:
         "Podesi zatamnjenje pozadine i neprozirnost sloja teksta pesme (0% za providan omot, 100% za punu pozadinu).",
       background_fade: "Prilagodite neprozirnost prekrivanja pozadine i preliva omota (0-100%).",

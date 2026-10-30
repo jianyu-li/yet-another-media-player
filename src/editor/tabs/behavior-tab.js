@@ -487,7 +487,10 @@ export function renderBehaviorTab() {
         ></ha-selector>
         <div class="config-subtitle">${localize("editor.subtitles.lyrics_source")}</div>
       </div>
-      <div data-search-keys="lrclib_url" class="form-row">
+      <div
+        data-search-keys="lrclib_url lrclib url lyrics lyrics_url custom_lyrics"
+        class="form-row"
+      >
         <ha-selector
           .hass=${this.hass}
           class="full-width"

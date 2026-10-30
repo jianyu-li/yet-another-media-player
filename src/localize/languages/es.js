@@ -253,7 +253,7 @@ export default {
       lyrics_pre_roll:
         "Ajusta el tiempo de resaltado de la letra. Los valores positivos lo aceleran, los negativos lo retrasan (por defecto: 0).",
       lrclib_url:
-        "URL base personalizada de la API de LRCLIB (por defecto https://lrclib.net). Útil para instancias autohospedadas.",
+        "URL base personalizada de la API de letras de LRCLIB (por defecto https://lrclib.net). Útil para instancias autohospedadas.",
       lyrics_background_fade:
         "Ajustar el desvanecimiento de fondo y la opacidad de atenuación de la superposición de letras (0% para arte transparente, 100% para fondo sólido).",
       background_fade:

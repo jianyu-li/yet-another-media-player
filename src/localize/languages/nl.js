@@ -274,7 +274,7 @@ export default {
       lyrics_pre_roll:
         "Verschuif de timing van de songtekstmarkering. Positieve waarden versnellen het, negatieve waarden vertragen het (standaard: 0).",
       lrclib_url:
-        "Aangepaste basis-URL voor de LRCLIB-API (standaard https://lrclib.net). Handig voor zelf-gehoste instanties.",
+        "Aangepaste basis-URL voor de LRCLIB-songteksten-API (standaard https://lrclib.net). Handig voor zelf-gehoste instanties.",
       lyrics_background_fade:
         "Pas de achtergrondvervaging en dim-dekking van de songtekst-overlay aan (0% voor transparant artwork, 100% voor een effen achtergrond).",
       background_fade:

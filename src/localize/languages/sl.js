@@ -248,7 +248,7 @@ export default {
       lyrics_pre_roll:
         "Zamaknite časovno uskladitev označevanja besedila. Pozitivne vrednosti ga pospešijo, negativne pa upočasnijo (privzeto: 0).",
       lrclib_url:
-        "Lastni osnovni URL naslov API LRCLIB (privzeto https://lrclib.net). Uporabno za lastno gostovane primerke.",
+        "Lastni osnovni URL naslov API LRCLIB za besedila (privzeto https://lrclib.net). Uporabno za lastno gostovane primerke.",
       lyrics_background_fade:
         "Prilagodite prelivanje ozadja in motnost zatemnitve prekrivne plošče z besedilom (0% za prosojno grafiko, 100% za enobarvno ozadje).",
       background_fade: "Prilagodite motnost prekrivanja ozadja in preliva ovitka (0-100%).",
