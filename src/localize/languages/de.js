@@ -70,6 +70,16 @@ export default {
         description:
           "Eine eigenständige Player-Gruppierungskarte. Erfordert mehrere konfigurierte Entitäten.",
       },
+      players: {
+        label: "Gruppentherapie",
+        description:
+          "Eine eigenständige Player-Gruppierungskarte. Erfordert mehrere konfigurierte Entitäten.",
+      },
+      group_players: {
+        label: "Gruppentherapie",
+        description:
+          "Eine eigenständige Player-Gruppierungskarte. Erfordert mehrere konfigurierte Entitäten.",
+      },
       huge_yamp: {
         label: "Das ist ein riesiges YAMP!",
         description:
@@ -105,6 +115,11 @@ export default {
         title: "Entitäten*",
         description:
           "Fügen Sie die zu steuernden Mediaplayer hinzu. Entitäten ziehen, um sie neu anzuordnen.",
+      },
+      transient_players: {
+        title: "Dynamische & Sitzungs-Player",
+        description:
+          "Optionen für die Suche und dynamische Einbindung von Mediaplayern zur Laufzeit.",
       },
       behavior: {
         idle_chips: {
@@ -155,6 +170,12 @@ export default {
         "Schnellgruppierungs-Steuerelemente (+/-/Stern) sind standardmäßig beim Laden der Seite sichtbar. Sie können sie weiterhin manuell per Doppeltipp umschalten.",
       disable_autofocus:
         "Suchfeld-Autofokus deaktivieren, damit Bildschirmtastaturen ausgeblendet bleiben.",
+      show_player_search:
+        "Suche und Hinzufügen nicht konfigurierter Mediaplayer zur Karte für die Sitzung erlauben.",
+      auto_add_playing_entities:
+        "Nicht konfigurierte Player anzeigen, wenn sie die Wiedergabe starten, und entfernen, sobald die Karte in den Leerlauf wechselt.",
+      auto_add_exclude:
+        "Kommagetrennte Entitäts-IDs oder Glob-Muster (z. B. media_player.*_tv), die von Suche und automatischem Hinzufügen ausgeschlossen werden sollen.",
       search_within_filter:
         "Innerhalb des aktiven Filters suchen (Favoriten, etc.), anstatt ihn zu löschen.",
       close_search_on_play: "Suchbildschirm beim Abspielen automatisch schließen.",
@@ -165,6 +186,7 @@ export default {
       show_album: "Den Albumnamen neben dem Interpreten in den Player-Details anzeigen.",
       lock_screen_controls:
         "Halte Steuerelemente und Titel-Metadaten auf dem Sperrbildschirm deines Geräts (iOS / Android / macOS) aktiv, wenn die App in den Hintergrund tritt. Hinweis: Diese Funktion ist experimentell.",
+      full_screen: "Karte als Vollbild-Dashboard-Overlay anzeigen.",
       toggle_media_session:
         "Hinweis: Sperrbildschirm- und Mediensitzungssteuerung sind experimentell.",
       adaptive_controls: "Wiedergabetasten an verfügbaren Platz anpassen.",
@@ -182,6 +204,7 @@ export default {
         "Wählen Sie Steuerelemente aus, die für diese Entität ausgeblendet werden sollen.",
       hide_remote_buttons:
         "Wählen Sie die Tasten aus, die im Fernbedienungs-Overlay ausgeblendet werden sollen.",
+      hide_menu_options: "Wählen Sie Optionen aus, die im Optionsmenü ausgeblendet werden sollen.",
       hide_search_chips: "Bestimmte Suchfilter-Chips für diese Entität ausblenden.",
       hide_active_entity_on_idle:
         "Blendet die Entitätsbeschriftung am unteren Rand der Karte nur aus, wenn der Player im Leerlauf ist.",
@@ -233,6 +256,8 @@ export default {
         "Music Assistant benötigt die mass_queue-Integration, um Liedtexte von seiner internen Metadaten-Engine abzurufen.",
       lyrics_pre_roll:
         "Passen Sie das Timing der Songtext-Hervorhebung an. Positive Werte beschleunigen sie, negative verzögern sie (Standard: 0).",
+      background_fade:
+        "Hintergrundüberblendung und Dimm-Deckkraft des Overlays anpassen (0% für transparentes Artwork, 100% für durchgehenden Hintergrund).",
       lyrics_background_fade:
         "Hintergrundüberblendung und Dimm-Deckkraft des Liedtext-Overlays anpassen (0% für transparentes Artwork, 100% für durchgehenden Hintergrund).",
       blurred_artwork: "Hintergrundbild immer weichzeichnen",
@@ -245,6 +270,8 @@ export default {
         "Verwenden Sie immer die gekoppelte Music Assistant-Entität für Titel, Künstler und Artwork, auch wenn die primäre Entität gerade spielt.",
       show_volume_overlay:
         "Zeige kurz eine große Lautstärkeanzeige über dem Cover an, wenn sich die Lautstärke ändert.",
+      hold_title_for_volume:
+        "Titel gedrückt halten, um das Lautstärke-Overlay zu öffnen und die Lautstärke anzupassen.",
       font_color_helper:
         "Text- und Symbolfarben anpassen. Akzeptiert Hex, CSS-Namen, RGBA oder Vorlagen (Standard: Theme-Farbe).",
       queue_controls_style:
@@ -262,6 +289,9 @@ export default {
       hold_to_pin: "Gedrückt halten zum Anpinnen",
       always_show_group: "Schnellgruppierung standardmäßig aktivieren",
       disable_autofocus: "Such-Autofocus deaktivieren",
+      show_player_search: "Suche im Spieler-Menü anzeigen",
+      auto_add_playing_entities: "Wiedergebende Player automatisch hinzufügen bis Leerlauf",
+      auto_add_exclude: "Von Suche und automatischem Hinzufügen ausschließen",
       keep_filters: "Filter bei Suche beibehalten",
       dismiss_on_play: "Suche beim Abspielen beenden",
       pin_headers: "Such-Header fixieren",
@@ -276,6 +306,7 @@ export default {
       swap_pause_stop: "Pause durch Stop ersetzen",
       show_album: "Albumname anzeigen",
       lock_screen_controls: "Sperrbildschirm-Mediensteuerung (Experimentell)",
+      full_screen: "Vollbild-Overlay",
       adaptive_controls: "Adaptive Tastengröße",
       hide_active_entity: "Aktives Entitäts-Label ausblenden",
       hide_active_entity_on_idle: "Aktive Entitätsbeschriftung im Leerlauf ausblenden",
@@ -296,6 +327,7 @@ export default {
       lyrics_mode: "Liedtext-Modus",
       lyrics_source: "Liedtext-Quelle",
       lyrics_pre_roll: "Liedtext Pre-Roll (Sekunden)",
+      background_fade: "Hintergrundüberblendung",
       lyrics_background_fade: "Liedtext Hintergrundüberblendung",
       blurred_artwork: "Verschwommenes Artwork",
       hide_collapsed_artwork: "Verkleinertes Artwork ausblenden",
@@ -303,6 +335,7 @@ export default {
       show_idle_artwork_when_not_playing: "Ruhebild anzeigen, wenn nicht abgespielt wird",
       prefer_ma_metadata: "Music Assistant Metadaten bevorzugen",
       show_volume_overlay: "Lautstärke-Overlay anzeigen",
+      hold_title_for_volume: "Titel für Lautstärke gedrückt halten",
     },
     fields: {
       artwork_fit: "Artwork-Anpassung",
@@ -331,11 +364,13 @@ export default {
       move_to_main: "Aktion in Haupt-Chips verschieben",
       move_to_menu: "Aktion ins Menü verschieben",
       delete_action: "Aktion löschen",
+      add_action: "Aktion hinzufügen",
       volume_mode: "Lautstärke-Modus",
       idle_screen: "Leerlauf-Bildschirm",
       name: "Name",
       hidden_controls: "Ausgeblendete Steuerungen",
       hide_remote_buttons: "Ausgeblendete Fernbedienungstasten",
+      hidden_menu_options: "Ausgeblendete Menüoptionen",
       ma_template: "Music Assistant Entitäts-Template (Jinja)",
       hidden_chips: "Ausgeblendete Suchfilter-Chips",
       vol_template: "Lautstärke-Entitäts-Template (Jinja)",
@@ -361,6 +396,7 @@ export default {
       appearance: "Erscheinungsbild",
       no_artwork_option: "Kein Artwork",
       details_alignment: "Detail-Ausrichtung",
+      background_fade: "Hintergrundüberblendung (%)",
       lyrics_background_fade: "Liedtext Hintergrundüberblendung (%)",
       queue_controls_style: "Warteschlangen-Steuerungsstil",
     },
@@ -375,6 +411,7 @@ export default {
       toggle_lyrics: "Liedtext-Overlay ein-/ausschalten",
       remote_control: "Fernbedienungs-Overlay öffnen",
       toggle_media_session: "Mediensitzung / Sperrbildschirm-Steuerung umschalten (Experimentell)",
+      full_screen: "Vollbild-Overlay umschalten",
     },
     action_helpers: {
       sync_selected_entity: "Entität synchronisieren →",
@@ -416,7 +453,8 @@ export default {
     card_type_options: {
       default: "Standard",
       search: "Suche",
-      group_players: "Player gruppieren",
+      group_players: "Player",
+      players: "Player",
       up_next: "Als Nächstes",
       remote_control: "Fernbedienung",
     },
@@ -482,16 +520,22 @@ export default {
       search: "Suche",
       source: "Quelle",
       remote_controls: "Fernbedienung",
-      show_lyrics: "Songtext anzeigen",
+      show_lyrics: "Songtext",
       hide_lyrics: "Songtext ausblenden",
+      full_screen: "Vollbild",
+      exit_full_screen: "Vollbild beenden",
       transfer_queue: "Warteschlange übertragen",
       main_menu: "Hauptmenü",
-      group_players: "Player gruppieren",
+      group_players: "Player",
+      players: "Player",
       up_next: "Als Nächstes",
       remote_control: "Fernbedienung",
       select_entity: "Entität für mehr Info wählen",
       transfer_to: "Warteschlange übertragen zu",
       no_players: "Keine anderen Music Assistant Player verfügbar.",
+      active: "(Aktiv)",
+      set_active_entity: "Als aktive Entität festlegen",
+      active_entity: "Aktive Entität",
     },
     remote: {
       title: "Fernbedienung",
@@ -506,7 +550,7 @@ export default {
       power: "Ein/Aus",
     },
     grouping: {
-      title: "Player gruppieren",
+      title: "Player",
       sync_volume: "Lautstärke synchronisieren",
       group_all: "Alle gruppieren",
       ungroup_all: "Alle trennen",
@@ -516,8 +560,30 @@ export default {
       joined: "Verbunden",
       available: "Verfügbar",
       current: "Aktuell",
+      group_label: "Gruppe {master}",
+      unjoin: "Trennen",
+      join: "Beitreten",
+      join_with_group: "Gruppe beitreten",
       unjoin_from: "Von {master} trennen",
       join_with: "Mit {master} gruppieren",
+      transfer_to_player: "Warteschlange an {player} übertragen",
+      transfer_to_group: "Warteschlange an Gruppe {master} übertragen",
+      transfer_current_player: "Wiedergabe läuft hier",
+      transfer_no_queue: "Keine aktive Warteschlange zum Übertragen",
+      transfer_not_ma: "Music Assistant Player erforderlich",
+      transferring_to: "Warteschlange wird an {player} übertragen...",
+      transferring_coordinator: "Wiedergabe wird an {player} übertragen...",
+      regrouping: "Lautsprecher werden mit {player} gruppiert...",
+      transfer_success: "Warteschlange an {player} gesendet.",
+      standalone: "Eigenständig",
+      search_players: "Player zum Hinzufügen suchen...",
+      add_player: "Zur Sitzung hinzufügen",
+      add: "Hinzufügen",
+      remove_player: "Aus Sitzung entfernen",
+      keep_player: "In Sitzung behalten",
+      no_search_results: "Keine passenden Player gefunden",
+      transient_session: "Sitzungs-Player",
+      transient_auto: "Wiedergebender Player",
     },
   },
   search: {
@@ -564,6 +630,8 @@ export default {
       station: "Station",
       podcast: "Podcast",
       audiobook: "Hörbuch",
+      shows: "Sendungen",
+      show: "Sendung",
     },
     search_artist: "Alben dieses Künstlers durchsuchen",
     browse_artist: "Alben von {artist} durchsuchen",

@@ -70,6 +70,16 @@ export default {
         description:
           "Samostojna kartica za združevanje predvajalnikov. Zahteva več konfiguriranih entitet.",
       },
+      players: {
+        label: "Skupinska terapija",
+        description:
+          "Samostojna kartica za združevanje predvajalnikov. Zahteva več konfiguriranih entitet.",
+      },
+      group_players: {
+        label: "Skupinska terapija",
+        description:
+          "Samostojna kartica za združevanje predvajalnikov. Zahteva več konfiguriranih entitet.",
+      },
       huge_yamp: {
         label: "To je ogromen YAMP!",
         description:
@@ -103,6 +113,11 @@ export default {
         title: "Entitete*",
         description:
           "Dodajte predvajalnike, ki jih želite upravljati. Povlecite entitete za spremembo vrstnega reda.",
+      },
+      transient_players: {
+        title: "Dinamični in sejni predvajalniki",
+        description:
+          "Možnosti za iskanje in dinamično vključevanje predstavnostnih predvajalnikov med sejo.",
       },
       behavior: {
         idle_chips: {
@@ -148,6 +163,12 @@ export default {
       always_show_group:
         "Kontrolni elementi za hitro združevanje (+/-/zvezda) bodo privzeto vidni ob nalaganju strani. Še vedno jih lahko ročno preklopite z dvojnim tapom.",
       disable_autofocus: "Prepreči samodejni fokus iskalnega polja.",
+      show_player_search:
+        "Dovoli iskanje in dodajanje nenastavljenih predvajalnikov na kartico za trenutno sejo.",
+      auto_add_playing_entities:
+        "Prikaži nenastavljene predvajalnike, ko začnejo predvajati, in jih odstrani, ko kartica preide v mirovanje.",
+      auto_add_exclude:
+        "Z vejico ločeni ID-ji entitet ali vzorci z nadomestnimi znaki (npr. media_player.*_tv) za izključitev iz iskanja in samodejnega dodajanja.",
       search_within_filter: "Išči znotraj trenutnega filtra.",
       close_search_on_play: "Samodejno zapri iskanje ob predvajanju.",
       pin_search_headers: "Pripni iskalno polje in filtre na vrh.",
@@ -157,6 +178,7 @@ export default {
       show_album: "Prikaži ime albuma zraven izvajalca v podrobnostih predvajalnika.",
       lock_screen_controls:
         "Ohranite kontrolnike in metapodatke skladbe aktivne na zaklenjenem zaslonu vaše naprave (iOS / Android / macOS), ko je aplikacija v ozadju. Opomba: Ta funkcija je eksperimentalna.",
+      full_screen: "Prikaži kartico kot celozaslonsko prekrivanje nadzorne plošče.",
       toggle_media_session:
         "Opomba: Kontrolniki zaklenjenega zaslona in seje predstavnosti so eksperimentalni.",
       adaptive_controls: "Prilagodi velikost gumbov glede na prostor.",
@@ -170,6 +192,7 @@ export default {
       idle_screen: "Izberi zaslon, prikazan v mirovanju.",
       hide_controls: "Izberi kontrolnike za skrivanje.",
       hide_remote_buttons: "Izberite gumbe za skrivanje na daljinskem upravljalniku.",
+      hide_menu_options: "Izberite možnosti za skrivanje v meniju z možnostmi.",
       hide_search_chips: "Skrij določene iskalne filtre.",
       hide_active_entity_on_idle:
         "Skrije oznako entitete na dnu kartice le, ko je predvajalnik v stanju mirovanja.",
@@ -217,6 +240,7 @@ export default {
         "Zamaknite časovno uskladitev označevanja besedila. Pozitivne vrednosti ga pospešijo, negativne pa upočasnijo (privzeto: 0).",
       lyrics_background_fade:
         "Prilagodite prelivanje ozadja in motnost zatemnitve prekrivne plošče z besedilom (0% za prosojno grafiko, 100% za enobarvno ozadje).",
+      background_fade: "Prilagodite motnost prekrivanja ozadja in preliva ovitka (0-100%).",
       blurred_artwork: "Vedno zamegli ozadje",
       hide_collapsed_artwork: "Skrij majhno sliko na desni, ko je kartica strnjena",
       disable_artwork_gradient: "Onemogoči spodnji barvni prehod na grafiki",
@@ -226,6 +250,8 @@ export default {
         "Za naslov skladbe, izvajalca in grafiko vedno uporabi seznanjeno entiteto Music Assistant, tudi če se predvaja primarna entiteta.",
       show_volume_overlay:
         "Ob spremembi glasnosti za kratek čas prikaže velik indikator glasnosti čez naslovnico.",
+      hold_title_for_volume:
+        "Pritisnite in pridržite naslov skladbe, da odprete prekrivno ploščo za glasnost in prilagodite glasnost.",
       font_color_helper:
         "Prilagodite barve besedila in ikon. Sprejema šestnajstiško, imena CSS, rgba ali predloge (privzeto: barva teme).",
       queue_controls_style:
@@ -243,6 +269,9 @@ export default {
       hold_to_pin: "Drži za pripenjanje",
       always_show_group: "Hitro združevanje kot privzeto",
       disable_autofocus: "Onemogoči samodejni fokus",
+      show_player_search: "Prikaži iskanje v meniju Predvajalniki",
+      auto_add_playing_entities: "Samodejno dodaj predvajajoče predvajalnike do mirovanja",
+      auto_add_exclude: "Izključi iz iskanja in samodejnega dodajanja",
       keep_filters: "Ohrani filtre",
       dismiss_on_play: "Zapri iskanje ob predvajanju",
       pin_headers: "Pripni glave iskanja",
@@ -257,6 +286,7 @@ export default {
       swap_pause_stop: "Zamenjaj pavzo z zaustavitvijo",
       show_album: "Prikaži ime albuma",
       lock_screen_controls: "Predstavnostni kontrolniki na zaklenjenem zaslonu (Eksperimentalno)",
+      full_screen: "Celozaslonsko prekrivanje",
       adaptive_controls: "Prilagodljiva velikost gumbov",
       hide_active_entity: "Skrij oznako aktivne entitete",
       hide_active_entity_on_idle: "Skrij oznako aktivne entitete ob mirovanju",
@@ -278,12 +308,14 @@ export default {
       lyrics_source: "Vir besedil",
       lyrics_pre_roll: "Pre-roll besedila (sekunde)",
       lyrics_background_fade: "Prelivanje ozadja besedila",
+      background_fade: "Prelivanje ozadja",
       blurred_artwork: "Zamegljena grafika",
       hide_collapsed_artwork: "Skrij skrčeno grafika",
       disable_artwork_gradient: "Onemogoči prehod grafike",
       show_idle_artwork_when_not_playing: "Prikaži sliko za nedejavnost, ko se ne predvaja",
       prefer_ma_metadata: "Prednost metapodatkom Music Assistant",
       show_volume_overlay: "Prikaži prekrivno ploščo za glasnost",
+      hold_title_for_volume: "Pridrži naslov skladbe za glasnost",
     },
     fields: {
       artwork_fit: "Prileganje grafike",
@@ -312,11 +344,13 @@ export default {
       move_to_main: "Premakni dejanje na glavno vrstico",
       move_to_menu: "Premakni dejanje v meni",
       delete_action: "Izbriši dejanje",
+      add_action: "Dodaj dejanje",
       volume_mode: "Način glasnosti",
       idle_screen: "Zaslon v mirovanju",
       name: "Ime",
       hidden_controls: "Skriti kontrolniki",
       hide_remote_buttons: "Skriti gumbi daljinskega upravljalnika",
+      hidden_menu_options: "Skrite možnosti menija",
       ma_template: "Predloga Music Assistant (Jinja)",
       hidden_chips: "Skriti iskalni čipi",
       vol_template: "Predloga entitete glasnosti (Jinja)",
@@ -343,6 +377,7 @@ export default {
       no_artwork_option: "Brez grafike",
       details_alignment: "Poravnava podrobnosti",
       lyrics_background_fade: "Prelivanje ozadja besedila (%)",
+      background_fade: "Prelivanje ozadja (%)",
       queue_controls_style: "Slog kontrol čakalne vrste",
     },
     action_types: {
@@ -357,6 +392,7 @@ export default {
       remote_control: "Odpri prekrivanje daljinskega upravljalnika",
       toggle_media_session:
         "Preklopi sejo predstavnosti / kontrole zaklenjenega zaslona (Eksperimentalno)",
+      full_screen: "Preklopi celozaslonsko prekrivanje",
     },
     action_helpers: {
       sync_selected_entity: "Sinhroniziraj izbrano entiteto →",
@@ -398,7 +434,8 @@ export default {
     card_type_options: {
       default: "Privzeto",
       search: "Iskanje",
-      group_players: "Zoskupi predvajalnike",
+      group_players: "Predvajalniki",
+      players: "Predvajalniki",
       up_next: "Sledi",
       remote_control: "Daljinski upravljalnik",
     },
@@ -464,16 +501,22 @@ export default {
       search: "Išči",
       source: "Vir",
       remote_controls: "Daljinski upravljalnik",
-      show_lyrics: "Pokaži besedilo",
+      show_lyrics: "Besedilo",
       hide_lyrics: "Skrij besedilo",
+      full_screen: "Celozaslonski način",
+      exit_full_screen: "Izhod iz celozaslonskega načina",
       transfer_queue: "Prenesi čakalno vrsto",
       main_menu: "Glavni meni",
-      group_players: "Združi predvajalnike",
+      group_players: "Predvajalniki",
+      players: "Predvajalniki",
       up_next: "Sledi",
       remote_control: "Daljinski upravljalnik",
       select_entity: "Izberi entiteto za več informacij",
       transfer_to: "Prenesi čakalno vrsto na",
       no_players: "Ni drugih razpoložljivih predvajalnikov Music Assistant.",
+      active: "(Aktivno)",
+      set_active_entity: "Nastavi kot aktivno entiteto",
+      active_entity: "Aktivna entiteta",
     },
     remote: {
       title: "Daljinski upravljalnik",
@@ -488,7 +531,7 @@ export default {
       power: "Vklop/Izklop",
     },
     grouping: {
-      title: "Združi predvajalnike",
+      title: "Predvajalniki",
       sync_volume: "Sinhroniziraj glasnost",
       group_all: "Združi vse",
       ungroup_all: "Razdruži vse",
@@ -498,8 +541,30 @@ export default {
       joined: "Pridružen",
       available: "Na voljo",
       current: "Trenutni",
+      group_label: "Skupina {master}",
+      unjoin: "Odklopi",
+      join: "Pridruži se",
+      join_with_group: "Pridruži se skupini",
       unjoin_from: "Odslopi od {master}",
       join_with: "Pridruži se {master}",
+      transfer_to_player: "Prenesi čakalno vrsto v {player}",
+      transfer_to_group: "Prenesi čakalno vrsto v skupino {master}",
+      transfer_current_player: "Trenutno se predvaja tukaj",
+      transfer_no_queue: "Ni aktivne čakalne vrste za prenos",
+      transfer_not_ma: "Zahtevan predvajalnik Music Assistant",
+      transferring_to: "Prenašanje čakalne vrste v {player}...",
+      transferring_coordinator: "Prenašanje predvajanja v {player}...",
+      regrouping: "Združevanje zvočnikov z {player}...",
+      transfer_success: "Čakalna vrsta poslana v {player}.",
+      standalone: "Samostojen",
+      search_players: "Poišči predvajalnike za dodajanje...",
+      add_player: "Dodaj v sejo",
+      add: "Dodaj",
+      remove_player: "Odstrani iz seje",
+      keep_player: "Obdrži v seji",
+      no_search_results: "Ni ujemajočih se predvajalnikov",
+      transient_session: "Sejni predvajalnik",
+      transient_auto: "Predvajajoči predvajalnik",
     },
   },
   search: {
@@ -546,6 +611,8 @@ export default {
       station: "Postaja",
       podcast: "Podcast",
       audiobook: "Zvočna knjiga",
+      shows: "Oddaje",
+      show: "Oddaja",
     },
     search_artist: "Prebrskaj albume tega izvajalca",
     browse_artist: "Prebrskaj albume izvajalca {artist}",

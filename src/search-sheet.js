@@ -1,6 +1,12 @@
 import { html, nothing } from "lit";
-import { isMusicAssistantEntity, applyHostnameToUrl } from "./yamp-utils.js";
+import {
+  isMusicAssistantEntity,
+  applyHostnameToUrl,
+  isValidArtworkUrl,
+  getCachedSecureThumbnail,
+} from "./yamp-utils.js";
 import { localize } from "./localize/localize.js";
+import { playMedia } from "./services/ha-media-services.js";
 
 const getPlayOptions = () => [
   { mode: "replace", icon: "mdi:playlist-remove", label: localize("search.replace") },
@@ -28,6 +34,13 @@ export function isRadio(item) {
   return item && (item.media_class === "radio" || item.media_content_type === "radio");
 }
 
+export function isShow(item) {
+  return Boolean(
+    item &&
+    (item.media_class === "show" || item.media_content_type === "show" || item.is_ai_radio === true)
+  );
+}
+
 export function isCardView(searchView) {
   return searchView === "card" || searchView === "card_minimal";
 }
@@ -41,6 +54,12 @@ export function getSearchResultSubtitle(
     recommendationsFilterActive = false,
   } = {}
 ) {
+  if (item?.subtitle) {
+    return item.subtitle;
+  }
+  if (isShow(item)) {
+    return item.artist || localize("search.filters.show") || "Show";
+  }
   const isTrackItem = isTrack(item);
   const isTrackOrAlbum = searchMediaClassFilter === "track" || searchMediaClassFilter === "album";
 
@@ -128,6 +147,12 @@ export function _resolveIntegrationId(hass, targetEntityId, platforms) {
   return resolvedId;
 }
 
+/**
+ * Resolves the Music Assistant config entry ID for a target entity or globally.
+ * @param {any} hass
+ * @param {string | null} [targetEntityId]
+ * @returns {Promise<string | null>}
+ */
 export async function getMusicAssistantConfigEntryId(hass, targetEntityId = null) {
   if (!hass) return null;
   const now = Date.now();
@@ -204,6 +229,187 @@ export async function getMassQueueConfigEntryId(hass, targetEntityId = null) {
   }
 }
 
+let cachedAiRadioAvailable = null;
+let cachedAiRadioAvailableTs = 0;
+const AI_RADIO_TTL_MS = 30000;
+
+export function _resetAiRadioCache() {
+  cachedAiRadioAvailable = null;
+  cachedAiRadioAvailableTs = 0;
+}
+
+export async function isAiRadioAvailable(hass, entityId = null) {
+  if (!hass) return false;
+  const services = hass.services || {};
+  if (!services.mass_queue) {
+    return false;
+  }
+  const now = Date.now();
+  if (cachedAiRadioAvailable !== null && now - cachedAiRadioAvailableTs < AI_RADIO_TTL_MS) {
+    return cachedAiRadioAvailable;
+  }
+  try {
+    const mqConfigEntryId = await getMassQueueConfigEntryId(hass, entityId);
+    if (!mqConfigEntryId) {
+      cachedAiRadioAvailable = false;
+      cachedAiRadioAvailableTs = now;
+      return false;
+    }
+    const message = {
+      type: "call_service",
+      domain: "mass_queue",
+      service: "send_command",
+      service_data: {
+        command: "ai_radio/stations/list",
+        ...(mqConfigEntryId && mqConfigEntryId !== "auto" && { config_entry_id: mqConfigEntryId }),
+      },
+      return_response: true,
+    };
+    const res = await hass.connection.sendMessagePromise(message);
+    const stations = res?.response?.response || res?.response || res?.result;
+    cachedAiRadioAvailable = Array.isArray(stations);
+    cachedAiRadioAvailableTs = now;
+    return cachedAiRadioAvailable;
+  } catch {
+    cachedAiRadioAvailable = false;
+    cachedAiRadioAvailableTs = now;
+    return false;
+  }
+}
+
+export async function getAiRadioShows(hass, entityId = null, query = "") {
+  if (!hass) return [];
+  const mqConfigEntryId = await getMassQueueConfigEntryId(hass, entityId);
+  if (!mqConfigEntryId) return [];
+
+  try {
+    const [stationsRes, hostsRes] = await Promise.all([
+      hass.connection
+        .sendMessagePromise({
+          type: "call_service",
+          domain: "mass_queue",
+          service: "send_command",
+          service_data: {
+            command: "ai_radio/stations/list",
+            ...(mqConfigEntryId &&
+              mqConfigEntryId !== "auto" && { config_entry_id: mqConfigEntryId }),
+          },
+          return_response: true,
+        })
+        .catch(() => null),
+      hass.connection
+        .sendMessagePromise({
+          type: "call_service",
+          domain: "mass_queue",
+          service: "send_command",
+          service_data: {
+            command: "ai_radio/hosts/list",
+            ...(mqConfigEntryId &&
+              mqConfigEntryId !== "auto" && { config_entry_id: mqConfigEntryId }),
+          },
+          return_response: true,
+        })
+        .catch(() => null),
+    ]);
+
+    const rawStations =
+      stationsRes?.response?.response || stationsRes?.response || stationsRes?.result;
+    const rawHosts = hostsRes?.response?.response || hostsRes?.response || hostsRes?.result;
+
+    if (!Array.isArray(rawStations)) return [];
+
+    const hostMap = new Map();
+    if (Array.isArray(rawHosts)) {
+      for (const host of rawHosts) {
+        if (host && host.id) {
+          hostMap.set(host.id, host.name || host.id);
+        }
+      }
+    }
+
+    const shows = rawStations.map((station) => {
+      const hostName = station.host_id ? hostMap.get(station.host_id) || station.host_id : "";
+      const subtitle = hostName ? `Host: ${hostName}` : "AI Radio Show";
+      return {
+        title: station.name,
+        media_content_id: `ai_radio://station/${station.id}`,
+        media_content_type: "show",
+        media_class: "show",
+        station_id: station.id,
+        item_id: station.id,
+        is_ai_radio: true,
+        artist: hostName ? `Host: ${hostName}` : "AI Radio",
+        subtitle,
+        thumbnail: null,
+        is_browsable: false,
+        is_editable: false,
+      };
+    });
+
+    if (query && query.trim() !== "") {
+      const q = query.trim().toLowerCase();
+      return shows.filter((s) => {
+        const titleMatch = s.title && s.title.toLowerCase().includes(q);
+        const hostMatch = s.artist && s.artist.toLowerCase().includes(q);
+        return titleMatch || hostMatch;
+      });
+    }
+
+    return shows;
+  } catch (error) {
+    console.error("yamp: Error getting AI radio shows:", error);
+    return [];
+  }
+}
+
+export async function playAiRadioStation(hass, entityId, stationId) {
+  if (!hass || !stationId) return false;
+  try {
+    const mqConfigEntryId = await getMassQueueConfigEntryId(hass, entityId);
+    let playerId = hass.states?.[entityId]?.attributes?.mass_player_id || null;
+
+    if (!playerId && entityId) {
+      try {
+        const info = await hass.connection.sendMessagePromise({
+          type: "mass_queue/get_info",
+          entity_id: entityId,
+        });
+        playerId = info?.player_id || info?.result?.player_id || null;
+      } catch {
+        // Fallback: playerId remains null
+      }
+    }
+
+    const commandPayload = {
+      station_id: stationId,
+    };
+    if (playerId) {
+      commandPayload.player_id_override = playerId;
+    }
+
+    const serviceData = {
+      command: "ai_radio/start",
+      data: commandPayload,
+      ...(mqConfigEntryId && mqConfigEntryId !== "auto" && { config_entry_id: mqConfigEntryId }),
+    };
+
+    if (hass.callService) {
+      await hass.callService("mass_queue", "send_command", serviceData);
+    } else {
+      await hass.connection.sendMessagePromise({
+        type: "call_service",
+        domain: "mass_queue",
+        service: "send_command",
+        service_data: serviceData,
+      });
+    }
+    return true;
+  } catch (error) {
+    console.error("yamp: Error playing AI radio station:", error);
+    return false;
+  }
+}
+
 export function transformMusicAssistantItem(item) {
   if (!item) return null;
   return {
@@ -212,7 +418,7 @@ export function transformMusicAssistantItem(item) {
     media_content_type: item.media_type,
     media_class: item.media_type,
     item_id: item.item_id,
-    thumbnail: item.image,
+    thumbnail: item.local_image_encoded || getCachedSecureThumbnail(item.image) || item.image,
     ...(item.artists && { artist: item.artists.map((a) => a.name).join(", ") }),
     ...(item.album && { album: item.album.name, album_uri: item.album.uri }),
     is_browsable:
@@ -242,6 +448,7 @@ export function transformMusicAssistantItem(item) {
  * @param {Function} [opts.onRemove]
  * @param {boolean} [opts.minimal]
  * @param {boolean} [opts.hideActions]
+ * @param {string|null} [opts.loadingSearchRowMenuId]
  */
 export function renderSearchResultActions({
   item,
@@ -259,6 +466,7 @@ export function renderSearchResultActions({
   onRemove,
   minimal = false,
   hideActions = false,
+  loadingSearchRowMenuId = null,
 }) {
   if (hideActions) return nothing;
   const isQueueItem = !!(
@@ -284,6 +492,11 @@ export function renderSearchResultActions({
     : isCard
       ? "search-sheet-queue icon-only"
       : "search-sheet-queue";
+
+  const isLoading =
+    loadingSearchRowMenuId != null &&
+    item?.media_content_id != null &&
+    loadingSearchRowMenuId === item.media_content_id;
 
   return html`
     <div class="${containerClass}">
@@ -352,14 +565,20 @@ export function renderSearchResultActions({
         class="${playClass}"
         @click=${(e) => {
           e.stopPropagation();
-          onPlay(item);
+          if (!isLoading) {
+            onPlay(item);
+          }
         }}
+        ?disabled=${isLoading}
         title="${localize("search.play_item", "{item}", item.title)}"
       >
-        <ha-icon icon="mdi:play"></ha-icon>
+        <ha-icon
+          icon="${isLoading ? "mdi:loading" : "mdi:play"}"
+          class="${isLoading ? "spin" : ""}"
+        ></ha-icon>
       </button>
       ${
-        !isQueueItem && !isRadio(item) && !minimal
+        !isQueueItem && !isRadio(item) && !isShow(item) && !minimal
           ? html`
               <button
                 class="${queueClass}"
@@ -533,6 +752,38 @@ export function renderSearchResultSlideOut({
   `;
 }
 
+/**
+ * Renders a single search result item row or card.
+ * @param {Object} opts
+ * @param {any} [opts.item]
+ * @param {boolean} [opts.isCard]
+ * @param {boolean} [opts.isMinimal]
+ * @param {boolean} [opts.isGridMode]
+ * @param {string|null} [opts.activeSearchRowMenuId]
+ * @param {string|null} [opts.loadingSearchRowMenuId]
+ * @param {string|null} [opts.errorSearchRowMenuId]
+ * @param {string|null} [opts.successSearchRowMenuId]
+ * @param {string|null} [opts.successSearchRowType]
+ * @param {boolean} [opts.isSelectionFlow]
+ * @param {boolean} [opts.massQueueAvailable]
+ * @param {boolean} [opts.upcomingFilterActive]
+ * @param {boolean} [opts.recentlyPlayedFilterActive]
+ * @param {boolean} [opts.recommendationsFilterActive]
+ * @param {string} [opts.searchMediaClassFilter]
+ * @param {string} [opts.queueControlsStyle]
+ * @param {Function} [opts.onPlay]
+ * @param {Function} [opts.onResultClick]
+ * @param {Function} [opts.onOptionsToggle]
+ * @param {Function} [opts.onPlayOption]
+ * @param {Function} [opts.onMoveUp]
+ * @param {Function} [opts.onMoveDown]
+ * @param {Function} [opts.onMoveNext]
+ * @param {Function} [opts.onRemove]
+ * @param {boolean} [opts.isMusicAssistant]
+ * @param {Function} [opts.isValidArtwork]
+ * @param {Function} [opts.getClickTitle]
+ * @param {string} [opts.artworkHostname]
+ */
 export function renderSearchResultItem({
   item,
   isCard,
@@ -559,7 +810,7 @@ export function renderSearchResultItem({
   onMoveNext,
   onRemove,
   isMusicAssistant = false,
-  isValidArtwork = (url) => !!url,
+  isValidArtwork = (url) => isValidArtworkUrl(url),
   getClickTitle = (item) => "",
   artworkHostname = "",
 }) {
@@ -577,6 +828,11 @@ export function renderSearchResultItem({
   const hideActions = isSelectionFlow;
 
   if (isGridMode) {
+    const isLoading =
+      loadingSearchRowMenuId != null &&
+      item.media_content_id != null &&
+      loadingSearchRowMenuId === item.media_content_id;
+
     return html`
       <button
         class="entity-options-item menu-action-item search-result-grid-mode ${
@@ -585,12 +841,14 @@ export function renderSearchResultItem({
             : "nodrag no-drag ignore-drag"
         } ${item._justMoved ? "just-moved" : ""} ${isActive ? "menu-active" : ""}"
         @click=${(e) => {
+          if (isLoading) return;
           if (!isSelectionFlow) {
             onPlay?.(item, e);
           } else {
             onResultClick?.(item, e);
           }
         }}
+        ?disabled=${isLoading}
         title=${getClickTitle(item) || item.title}
       >
         ${
@@ -605,11 +863,23 @@ export function renderSearchResultItem({
               `
             : html`
                 <div class="yamp-search-result-thumb-placeholder">
-                  <ha-icon icon="mdi:music"></ha-icon>
+                  <ha-icon
+                    icon="${isShow(item) ? "mdi:radio-tower" : isRadio(item) ? "mdi:radio" : "mdi:music"}"
+                  ></ha-icon>
                 </div>
               `
         }
         <span class="menu-action-label">${item.title}</span>
+        ${
+          isSelectionFlow && isLoading
+            ? html`
+                <div class="search-row-loading-overlay">
+                  <ha-icon icon="mdi:loading" class="spin"></ha-icon>
+                  <span>${localize("common.loading")}</span>
+                </div>
+              `
+            : nothing
+        }
       </button>
     `;
   }
@@ -622,9 +892,16 @@ export function renderSearchResultItem({
         isActive ? "menu-active" : ""
       } ${isClickable ? "clickable" : ""}"
       @click=${(e) => {
+        if (
+          loadingSearchRowMenuId != null &&
+          item.media_content_id != null &&
+          loadingSearchRowMenuId === item.media_content_id
+        ) {
+          return;
+        }
         if (isSelectionFlow || (!isCard && isClickable)) {
           onResultClick?.(item, e);
-        } else if (isCard) {
+        } else {
           onPlay?.(item, e);
         }
       }}
@@ -642,7 +919,9 @@ export function renderSearchResultItem({
               `
             : html`
                 <div class="yamp-search-result-thumb-placeholder">
-                  <ha-icon icon="mdi:music"></ha-icon>
+                  <ha-icon
+                    icon="${isShow(item) ? "mdi:radio-tower" : isRadio(item) ? "mdi:radio" : "mdi:music"}"
+                  ></ha-icon>
                 </div>
               `
         }
@@ -663,6 +942,7 @@ export function renderSearchResultItem({
                 onRemove,
                 minimal: isMinimal,
                 hideActions,
+                loadingSearchRowMenuId,
               })
             : nothing
         }
@@ -701,7 +981,7 @@ export function renderSearchResultItem({
                   })}
                 </span>
                 ${
-                  isCard && !isRadio(item) && !hideActions
+                  isCard && !isRadio(item) && !isShow(item) && !hideActions
                     ? html`
                         <div
                           class="card-menu-button ${
@@ -743,6 +1023,7 @@ export function renderSearchResultItem({
               onMoveNext,
               onRemove,
               hideActions,
+              loadingSearchRowMenuId,
             })
           : nothing
       }
@@ -761,6 +1042,7 @@ export function renderSearchResultItem({
         hideActions,
       })}
       ${
+        isSelectionFlow &&
         loadingSearchRowMenuId != null &&
         item.media_content_id != null &&
         loadingSearchRowMenuId === item.media_content_id
@@ -806,16 +1088,32 @@ export function renderSearchResultItem({
   `;
 }
 
+/**
+ * Render the search options overlay sheet for a media item
+ * @param {object} props
+ * @param {any} props.item - Media item for which options are displayed
+ * @param {(e?: Event) => void} props.onClose - Callback to close overlay
+ * @param {(mode: string, item: any) => void} props.onPlayOption - Callback to handle selected playback option
+ * @param {boolean} [props.massQueueAvailable=false] - Whether Music Assistant queue is available
+ * @param {number} [props.backgroundFade] - Effective background fade percentage
+ * @returns {import("lit").TemplateResult | typeof import("lit").nothing}
+ */
 export function renderSearchOptionsOverlay({
   item,
   onClose,
   onPlayOption,
   massQueueAvailable = false,
+  backgroundFade,
 }) {
   if (!item) return nothing;
+  const effectiveFade = backgroundFade ?? 75;
 
   return html`
-    <div class="entity-options-overlay entity-options-overlay-opening" @click=${onClose}>
+    <div
+      class="entity-options-overlay entity-options-overlay-opening"
+      style="--yamp-background-fade: ${effectiveFade}%; background: color-mix(in srgb, var(--yamp-overlay-base, #000) ${effectiveFade}%, transparent);"
+      @click=${onClose}
+    >
       <div
         class="entity-options-container entity-options-sheet-opening"
         @click=${(e) => e.stopPropagation()}
@@ -853,7 +1151,16 @@ export function renderSearchOptionsOverlay({
   `;
 }
 
-// Service helpers to keep search-related logic colocated with the search UI module
+/**
+ * Searches media across Music Assistant or Home Assistant entities.
+ * @param {any} hass
+ * @param {string | null} entityId
+ * @param {string} query
+ * @param {string | null} [mediaType]
+ * @param {Record<string, any>} [searchParams]
+ * @param {number} [searchResultsLimit]
+ * @returns {Promise<{ results: any[]; usedMusicAssistant: boolean }>}
+ */
 export async function searchMedia(
   hass,
   entityId,
@@ -862,6 +1169,11 @@ export async function searchMedia(
   searchParams = {},
   searchResultsLimit = 20
 ) {
+  if (mediaType === "shows") {
+    const shows = await getAiRadioShows(hass, entityId, query);
+    return { results: shows, usedMusicAssistant: true };
+  }
+
   const configEntryId = await getMusicAssistantConfigEntryId(hass, entityId);
   // Try Music Assistant search if we have a config entry
   if (configEntryId) {
@@ -1020,6 +1332,17 @@ export async function searchMedia(
           }
         });
 
+        if (mediaType === "all" && query && query.trim() !== "" && !searchParams.favorites) {
+          try {
+            const shows = await getAiRadioShows(hass, entityId, query);
+            if (shows && shows.length > 0) {
+              flatResults.push(...shows);
+            }
+          } catch {
+            // Non-critical: continue without shows
+          }
+        }
+
         return { results: flatResults, usedMusicAssistant: true };
       }
     } catch (error) {
@@ -1038,7 +1361,15 @@ export async function searchMedia(
   return { results: fallbackResults, usedMusicAssistant: false };
 }
 
-// Get favorites from Music Assistant
+/**
+ * Retrieves recently played items from Music Assistant.
+ * @param {any} hass
+ * @param {string | null} entityId
+ * @param {string | null} [mediaType]
+ * @param {number} [searchResultsLimit]
+ * @param {Record<string, any>} [options]
+ * @returns {Promise<{ results: any[]; usedMusicAssistant: boolean }>}
+ */
 export async function getRecentlyPlayed(
   hass,
   entityId,
@@ -1100,6 +1431,15 @@ export async function getRecentlyPlayed(
   }
 }
 
+/**
+ * Retrieves favorites from Music Assistant.
+ * @param {any} hass
+ * @param {string | null} entityId
+ * @param {string | null} [mediaType]
+ * @param {number} [searchResultsLimit]
+ * @param {Record<string, any>} [options]
+ * @returns {Promise<{ results: any[]; usedMusicAssistant: boolean }>}
+ */
 export async function getFavorites(
   hass,
   entityId,
@@ -1205,11 +1545,13 @@ async function fallbackToMediaPlayerSearch(hass, entityId, query, mediaType, sea
 }
 
 export function playSearchedMedia(hass, entityId, item) {
-  return hass.callService("media_player", "play_media", {
-    entity_id: entityId,
-    media_content_type: item.media_content_type,
-    media_content_id: item.media_content_id,
-  });
+  if (
+    item &&
+    (item.is_ai_radio || item.media_content_type === "show" || item.media_class === "show")
+  ) {
+    return playAiRadioStation(hass, entityId, item.station_id || item.item_id);
+  }
+  return playMedia(hass, entityId, item.media_content_id, item.media_content_type);
 }
 
 // Check if a track is favorited in Music Assistant

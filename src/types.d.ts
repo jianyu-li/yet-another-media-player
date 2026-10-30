@@ -133,7 +133,12 @@ export interface HomeAssistant {
       callback: (msg: T) => void,
       params: Record<string, any>
     ): Promise<() => Promise<void>>;
+    subscribeEvents<T = any>(
+      callback: (event: T) => void,
+      eventType?: string
+    ): Promise<() => Promise<void> | void>;
     sendMessagePromise<T = any>(message: Record<string, any>): Promise<T>;
+    [key: string]: any;
   };
   localize(key: string, ...args: any[]): string;
   formatEntityName?: (
@@ -146,6 +151,13 @@ export interface HomeAssistant {
           | { type: "text"; text: string }
         >
   ) => string | undefined;
+}
+
+export interface ArtworkObject {
+  url?: string | null;
+  sizePercentage?: number | null;
+  objectFit?: string | null;
+  objectPosition?: string | null;
 }
 
 export interface ArtworkOverrideRule {
@@ -172,6 +184,8 @@ export interface ActionConfig {
     | "sync_selected_entity"
     | "toggle_media_session"
     | "toggle_lock_screen_controls"
+    | "full_screen"
+    | "toggle_full_screen"
     | string;
   service?: string;
   service_data?: Record<string, any>;
@@ -228,25 +242,34 @@ export interface YampEntityConfig {
   custom_chips?: CustomChipConfig[];
   shortcuts?: ShortcutConfig[];
   show_idle_artwork_when_not_playing?: boolean;
-  volume_mode?: "slider" | "stepper" | "buttons" | "none";
+  volume_mode?: "slider" | "stepper" | "buttons" | "none" | "hidden";
   volume_step?: number;
   control_layout?: "classic" | "modern" | "stacked";
   progress_bar_height?: number;
   lyrics?: boolean | string;
+  hidden_controls?: string[] | string;
+  hidden_filter_chips?: string[];
+  hide_remote_buttons?: string[] | string;
+  hidden_menu_options?: string[] | string;
+  hide_menu_options?: string[] | string;
+  transient?: "session" | "auto";
 }
 
 export type YampEntityEntry = string | YampEntityConfig;
 
 export interface YampCardConfig {
+  card_id?: string;
   type: "custom:yet-another-media-player";
+  hidden_menu_options?: string[] | string;
+  hide_menu_options?: string[] | string;
   template?: string;
   entities: YampEntityEntry[];
   card_height?: string;
   appearance?:
     "automatic" | "glassmorphism" | "minimal" | "flat" | "transparent" | "custom" | string;
-  card_type?: "standard" | "search" | "group_players" | string;
+  card_type?: "standard" | "search" | "group_players" | "players" | string;
   control_layout?: "classic" | "modern" | "stacked" | string;
-  volume_mode?: "slider" | "stepper" | "buttons" | "none" | string;
+  volume_mode?: "slider" | "stepper" | "buttons" | "none" | "hidden" | string;
   volume_step?: number;
   hold_to_pin?: boolean;
   show_chip_row?: "always" | "in_menu" | "in_menu_on_idle" | "never" | "auto" | string;
@@ -289,6 +312,8 @@ export interface YampCardConfig {
   dismiss_search_on_play?: boolean;
   disable_autofocus?: boolean;
   show_volume_overlay?: boolean;
+  hold_title_for_volume?: boolean;
+  hold_track_title_for_volume?: boolean;
   always_show_quick_group?: boolean;
   always_collapsed?: boolean;
   hide_menu_player?: boolean;
@@ -296,8 +321,13 @@ export interface YampCardConfig {
   hide_active_entity_label_on_idle?: boolean;
   swap_pause_for_stop?: boolean;
   show_album?: boolean;
+  background_fade?: number | string;
   lyrics_background_fade?: number | string;
   lock_screen_controls?: boolean | string;
+  full_screen?: boolean | string;
+  show_player_search?: boolean;
+  auto_add_playing_entities?: boolean;
+  auto_add_exclude?: string[];
   [key: string]: any;
 }
 
@@ -308,11 +338,15 @@ export interface TemplateContext {
   is_off?: boolean;
   is_search?: boolean;
   is_grouping?: boolean;
+  is_players?: boolean;
+  is_group_players?: boolean;
   is_source?: boolean;
   is_lyrics?: boolean;
   is_options?: boolean;
   is_transfer_queue?: boolean;
   is_any_menu_open?: boolean;
+  is_fullscreen?: boolean;
+  is_full_screen?: boolean;
   is_dark_mode: boolean;
   is_mobile: boolean;
   is_music_assistant: boolean;
@@ -350,6 +384,670 @@ export function getEntityName(
   hass?: HomeAssistant | null,
   stateOrEntityId?: HassEntity | string | null
 ): string;
+export function getValidArtworkAttr(attrs: any, key: string): string | null;
+export function isValidArtworkUrl(url?: string | null): boolean;
+export function isInsecureHttpUrlOnHttps(url?: string | null): boolean;
+export function getCachedSecureThumbnail(url?: string | null): string | null;
+export function clearSecureThumbnailCache(url?: string): void;
+export function resolveSecureThumbnailUrl(hass?: any, url?: string | null): Promise<string | null>;
+export function applyHostnameToUrl(url?: string | null, hostname?: string): string | null;
+export function resolveTemplateAtActionTime(
+  hass?: any,
+  templateString?: string,
+  fallbackEntityId?: string,
+  context?: Record<string, any>
+): Promise<string>;
+
+export interface TemplateResolveCacheEntry<T = string> {
+  id?: string;
+  value?: T;
+  ts: number;
+}
+
+export interface TemplateValueEntry<T = string> {
+  template: string;
+  resolved: T | null;
+}
+
+export declare class TemplateController {
+  constructor(host: any);
+  host: any;
+  templateSubscriptions: Record<string, Function | symbol>;
+  activeSubscriptionTokens: Record<string, symbol>;
+  compiledJsTemplates: Record<string, Function>;
+  maTemplateValues: Record<string | number, TemplateValueEntry>;
+  maResolveCache: Record<number, TemplateResolveCacheEntry>;
+  volTemplateValues: Record<string | number, TemplateValueEntry>;
+  volResolveCache: Record<number, TemplateResolveCacheEntry>;
+  remoteTemplateValues: Record<string | number, TemplateValueEntry>;
+  remoteResolveCache: Record<number, TemplateResolveCacheEntry>;
+  hiddenControlsTemplateValues: Record<string | number, TemplateValueEntry<any>>;
+  hiddenControlsResolveCache: Record<number, TemplateResolveCacheEntry<any>>;
+  actionInMenuTemplateValues: Record<string | number, TemplateValueEntry>;
+  actionInMenuResolveCache: Record<number, TemplateResolveCacheEntry>;
+  alwaysCollapsedTemplateValue: Record<string, TemplateValueEntry>;
+  alwaysCollapsedResolveCache: Record<string, TemplateResolveCacheEntry<string | boolean>>;
+  controlLayoutTemplateValue: Record<string, TemplateValueEntry>;
+  controlLayoutResolveCache: Record<string, TemplateResolveCacheEntry>;
+  cardHeightTemplateValue: Record<string, TemplateValueEntry>;
+  cardHeightResolveCache: Record<string, TemplateResolveCacheEntry<string | number>>;
+  backgroundFadeTemplateValue: Record<string, TemplateValueEntry>;
+  backgroundFadeResolveCache: Record<string, TemplateResolveCacheEntry<string | number>>;
+  lyricsBackgroundFadeTemplateValue: Record<string, TemplateValueEntry>;
+  lyricsBackgroundFadeResolveCache: Record<string, TemplateResolveCacheEntry<string | number>>;
+  lockScreenControlsTemplateValue: Record<string, TemplateValueEntry>;
+  lockScreenControlsResolveCache: Record<string, TemplateResolveCacheEntry<string | boolean>>;
+  fullScreenTemplateValue: Record<string, TemplateValueEntry>;
+  fullScreenResolveCache: Record<string, TemplateResolveCacheEntry<string | boolean>>;
+  showChipRowTemplateValue: Record<string, TemplateValueEntry>;
+  showChipRowResolveCache: Record<string, TemplateResolveCacheEntry>;
+  contextKeyMap: Record<string, string>;
+  hostConnected(): void;
+  hostDisconnected(): void;
+  subscribeToTemplate(idx: number | string, type: string, templateString: string): void;
+  unsubscribeFromTemplate(idx: number | string, type: string): void;
+  unsubscribeAll(): void;
+  evaluateJsTemplate(templateStr: string): any;
+  ensureResolvedTemplateForIndex(
+    idx: number,
+    typeKey: string,
+    rawValue: any,
+    options?: { allowObject?: boolean; cacheStaticString?: boolean },
+    customCacheObj?: Record<string | number, any> | null,
+    customTemplateValsObj?: Record<string | number, any> | null
+  ): Promise<void>;
+  ensureResolvedMaForIndex(idx: number): Promise<void>;
+  ensureResolvedVolForIndex(idx: number): Promise<void>;
+  ensureResolvedRemoteForIndex(idx: number): Promise<void>;
+  ensureResolvedHiddenControlsForIndex(idx: number): Promise<void>;
+  syncTemplateSubscriptions(type: string, currentContext: string, rawConfigData: any): void;
+  syncEntityTemplateSubscriptions(
+    typeKey: string,
+    currentContext: string,
+    customEntityObjs?: any[]
+  ): void;
+  resolveEntity(
+    entityTemplate?: string | null,
+    fallbackEntityId?: string | null,
+    idx?: number,
+    cacheType?: string
+  ): string | null;
+  resolveTemplateAtActionTime(
+    templateString: string,
+    fallbackEntityId?: string,
+    context?: Record<string, any>
+  ): Promise<string>;
+}
+
+export declare function cleanTrackMetadata(text?: any): string;
+
+export declare function getActiveLyricIndex(
+  lyrics: LyricsLine[] | null | undefined,
+  position: number,
+  preRoll?: number,
+  mode?: string
+): number;
+
+export declare class VolumeHoldController {
+  constructor(host: any);
+  host: any;
+  active: boolean;
+  releasing: boolean;
+  value: number;
+  cancel(): void;
+  onPointerDown(e: PointerEvent): void;
+  onPointerMove(e: PointerEvent): void;
+  onPointerUp(e: PointerEvent): void;
+  onPointerCancel(e: PointerEvent): void;
+  onLostPointerCapture(e: PointerEvent): void;
+  onContextMenu(e: Event): void;
+  clickCapture: { capture: boolean; handleEvent(e: Event): void };
+  hostDisconnected(): void;
+}
+
+export declare class LyricsController {
+  constructor(host: any);
+  host: any;
+  lyrics: LyricsLine[];
+  loading: boolean;
+  error: boolean;
+  active: boolean;
+  cache: Map<string, LyricsLine[]>;
+  lastTrackId: string | null;
+  lastArtist: string | null;
+  lastTitle: string | null;
+  lastEntityId: string | null;
+  fetchTimeout: any;
+  currentFetchToken: symbol | null;
+  fetchingCacheKey: string | null;
+  get fetching(): boolean;
+  set fetching(val: boolean);
+  hostConnected(): void;
+  hostDisconnected(): void;
+  toggle(forceState?: boolean): boolean;
+  checkTrackLyrics(): void;
+  fetchLyrics(): Promise<void>;
+  getMassLyrics(activeState: any, fetchToken: symbol): Promise<LyricsLine[]>;
+  getLrclibLyrics(
+    artist?: string | null,
+    title?: string | null,
+    album?: string | null,
+    duration?: number | null,
+    fetchToken?: symbol
+  ): Promise<LyricsLine[]>;
+}
+
+export declare const MAX_ASPECT_RATIO_CACHE_SIZE: number;
+
+export declare class ArtworkController {
+  host: YetAnotherMediaPlayerCard;
+  aspectRatioCache: Record<string, number | null>;
+  artworkOverrideIndexMap: WeakMap<object, number> | null;
+  artworkOverrideTemplateCache: Record<string, { value: string | null; resolving: boolean }>;
+  lastArtworkUrl: string | null;
+  constructor(host: YetAnotherMediaPlayerCard);
+  hostConnected(): void;
+  hostDisconnected(): void;
+  resetCaches(): void;
+  ensureArtworkOverrideIndexMap(): void;
+  _setAspectRatio(url: string, ratio: number | null): void;
+  getArtworkOverrideCacheKey(override: any, type?: string, stateObj?: HassEntity | null): string;
+  getResolvedArtworkOverrideSource(
+    override: any,
+    sourceValue: string,
+    type?: string,
+    stateObj?: HassEntity | null
+  ): string | null;
+  getCollapsedArtworkStyle(): string;
+  getArtworkUrl(
+    state?: HassEntity | null,
+    forceIdleImage?: boolean,
+    ignoreIdleImage?: boolean
+  ): ArtworkObject | null;
+  resolveSelectedArtwork(options: any): ArtworkObject | null;
+  getBackgroundSizeForFit(fit?: string): string;
+  isExternalImageUrl(url?: string): boolean;
+  extractDominantColor(imgUrl: string): Promise<string>;
+  updateArtworkAspectRatios(): void;
+  calculateAspectRatio(url?: string): void;
+  normalizeImageSourceValue(value: any): string;
+  resolveImageUrlFromInput(input: string): string | null;
+  updateHostArtworkStyles(
+    host: HTMLElement,
+    playbackStateObj?: HassEntity | null,
+    forceIdleImage?: boolean
+  ): void;
+  getMaxCollapsedArtworkWidth(cardWidth: number): number;
+  compileArtworkOverrides(overrides?: any): any[];
+}
+
+export function getMaxCollapsedArtworkWidth(cardWidth: number): number;
+export function getBackgroundSizeForFit(fit?: string): string;
+export function isExternalImageUrl(url?: string): boolean;
+export function normalizeImageSourceValue(value: any): string;
+export function resolveImageUrlFromInput(input: string, hass?: any): string | null;
+export function compileArtworkOverrides(overrides?: any): any[];
+
+export declare class QueueController {
+  host: YetAnotherMediaPlayerCard;
+  massQueueAvailable: boolean;
+  hasMassQueueIntegration: boolean | null;
+  checkingMassQueueIntegration: boolean;
+  queueOperationPromise: Promise<void>;
+  queueOpsTotal: number;
+  queueOpsCompleted: number;
+  queueOpsTimeout: any;
+  queueRefreshTimer: any;
+  queueEventSubscription: any;
+  showTransferQueue: boolean;
+  transferQueuePendingTarget: string | null;
+  transferQueueStatus: { type: string; message: string } | null;
+  hasTransferQueueForCurrent: boolean;
+  transferQueueAutoCloseTimer: any;
+  constructor(host: YetAnotherMediaPlayerCard);
+  hostConnected(): void;
+  hostDisconnected(): void;
+  isMassQueueIntegrationAvailable(hass?: HomeAssistant): Promise<boolean>;
+  getUpcomingQueue(hass?: HomeAssistant, entityId?: string, limit?: number): Promise<any>;
+  getUpcomingQueueWithMassQueue(
+    hass?: HomeAssistant,
+    entityId?: string,
+    limit?: number
+  ): Promise<any>;
+  getUpcomingQueueOriginal(hass?: HomeAssistant, entityId?: string, limit?: number): Promise<any>;
+  getRecommendations(
+    hass?: HomeAssistant,
+    entityId?: string,
+    mediaType?: string | null,
+    limit?: number
+  ): Promise<any>;
+  fetchMassQueueTracks(uri: string, serviceName: string): Promise<any[] | null>;
+  setSearchResultsFromMassQueue(tracks: any[], queryName: string): void;
+  enqueueQueueOperation(operationFn: () => Promise<void>): void;
+  moveQueueItemUp(queueItemId: string): Promise<void>;
+  moveQueueItemDown(queueItemId: string): Promise<void>;
+  moveQueueItemNext(queueItemId: string): Promise<void>;
+  removeQueueItem(queueItemId: string): Promise<void>;
+  onQueueItemMoved(e: { detail: { oldIndex: number; newIndex: number } }): Promise<void>;
+  moveQueueItemInUI(queueItemId: string, direction: string): void;
+  moveQueueItemInUIByIndex(oldIndex: number, newIndex: number): void;
+  advanceQueueInUI(queueItemId?: string | null, isManual?: boolean): void;
+  removeQueueItemFromUI(queueItemId: string): void;
+  showQueueError(message: string): void;
+  refreshQueue(options?: { delayMs?: number }): void;
+  subscribeToQueueUpdates(): Promise<void>;
+  unsubscribeFromQueueUpdates(): void;
+  hasQueueInState(maState: any): boolean;
+  getTransferQueueTargets(): any[];
+  updateTransferQueueAvailability(options?: { refresh?: boolean }): Promise<boolean>;
+  canShowTransferQueueOption(): boolean;
+  openTransferQueue(): void;
+  closeTransferQueue(): void;
+  isTargetMusicAssistant(target?: any): boolean;
+  transferQueueTo(target: any): Promise<void>;
+  buildTransferQueuePayload(sourceId: string, targetId: string): Record<string, string>;
+  isMusicAssistantEntity(): boolean;
+  queueMediaFromSearch(item: any): Promise<void>;
+}
+
+export function checkMassQueueServices(services: any): boolean;
+export function calculateQueueMovePlan(
+  oldIndex: number,
+  newIndex: number
+): { strategy: string; steps: Array<{ service: string }> };
+export function transformMassQueueItems(
+  queueItems: any[],
+  currentTrackId?: string | null,
+  limitAfter?: number
+): any[];
+export function transformQueueNextItem(queueData: any): any[];
+export function normalizeRecommendations(
+  payload: any,
+  entityId?: string,
+  mediaType?: string | null,
+  maxItems?: number
+): any[];
+export function buildTransferQueuePayload(
+  sourceId: string,
+  targetId: string,
+  serviceMeta?: any
+): Record<string, string>;
+export function hasQueueInState(maState: any, cachedUpcoming?: any[] | null): boolean;
+
+export function getMusicAssistantConfigEntryId(
+  hass?: any,
+  targetEntityId?: string | null
+): Promise<string | null>;
+export function getMassQueueConfigEntryId(
+  hass?: any,
+  targetEntityId?: string | null
+): Promise<string | null>;
+export function searchMedia(
+  hass?: any,
+  entityId?: string | null,
+  query?: string,
+  mediaType?: string | null,
+  searchParams?: any,
+  searchResultsLimit?: number
+): Promise<{ results: any[]; usedMusicAssistant: boolean }>;
+export function getRecentlyPlayed(
+  hass?: any,
+  entityId?: string | null,
+  mediaType?: string | null,
+  limit?: number,
+  options?: any
+): Promise<{ results: any[]; usedMusicAssistant: boolean }>;
+export function getFavorites(
+  hass?: any,
+  entityId?: string | null,
+  mediaType?: string | null,
+  limit?: number,
+  options?: any
+): Promise<{ results: any[]; usedMusicAssistant: boolean }>;
+
+export function mapLegacySortOption(sort?: string | null): string;
+export function isSortableSearchMode(mode?: string | null): boolean;
+export function getOppositeSearchSortMode(mode?: string | null): string | null;
+export function sortSearchResultsList(
+  results?: any[] | null,
+  sortMode?: string,
+  skipSort?: boolean
+): any[];
+export function filterHierarchySearchResults(
+  results?: any[] | null,
+  hierarchy?: Array<{ type?: string; name?: string }> | null,
+  query?: string
+): any[];
+export function matchResolvedMediaUri(
+  items?: any[] | null,
+  mediaType?: string,
+  name?: string,
+  artist?: string
+): string | null;
+export function normalizeBrowseMediaChild(
+  child: any,
+  context?: { fallbackArtist?: string | null; fallbackAlbum?: string | null }
+): any;
+export function snapshotPlaybackStateMap(
+  states?: any,
+  entityIds?: string[] | null
+): Record<string, any>;
+export function hasPlaybackStateChanged(
+  snapshot: Record<string, any>,
+  states?: any,
+  entityIds?: string[] | null,
+  isEntityPlayingFn?: (stateObj: any) => boolean,
+  options?: { requireMediaChange?: boolean }
+): boolean;
+
+export declare class SearchController {
+  host: any;
+  [key: string]: any;
+  constructor(host: any);
+  hostConnected(): void;
+  hostDisconnected(): void;
+  resolveInsecureResultThumbnails(results?: any[]): Promise<void>;
+  attachSearchSwipe(): void;
+  removeSearchSwipeHandlers(): void;
+  getMockItemFromCurrentTrack(): any;
+  isCurrentlyPlayingRadio(): boolean;
+  handlePlaySimilar(): void;
+  handleAddCurrentToPlaylist(): Promise<void>;
+  searchArtistFromNowPlaying(): Promise<void>;
+  resolveMediaUri(
+    mediaType: string,
+    name: string,
+    extraParams?: Record<string, any>,
+    entityId?: string
+  ): Promise<string | null>;
+  resolveAlbumUri(
+    albumName: string,
+    artistName?: string | null,
+    entityId?: string
+  ): Promise<string | null>;
+  resolveArtistUri(artistName: string, entityId?: string): Promise<string | null>;
+  resolvePlaylistUri(playlistName: string, entityId?: string): Promise<string | null>;
+  searchAlbumFromNowPlaying(): Promise<void>;
+  showSearchSheetInOptions(mode?: string): void;
+  openQuickSearchOverlay(mode?: string): void;
+  hideSearchSheetInOptions(): void;
+  closeMenuIfOpen(): void;
+  sortSearchResults(results: any[], sortModeOverride?: string | null): any[];
+  getConfiguredSearchResultsSortMode(): string;
+  mapLegacySortOption(mode?: string | null): string;
+  isSortableSearchMode(mode?: string | null): boolean;
+  getOppositeSearchSortMode(mode?: string | null): string;
+  shouldShowSearchSortToggle(): boolean;
+  toggleSearchResultsSortDirection(): void;
+  getActiveSearchDisplaySortMode(): string;
+  getSearchSortToggleIcon(): string;
+  getSearchSortToggleTitle(): string;
+  getDisplaySearchResults(): any[];
+  getSearchResultsLimit(): number;
+  getSearchResultsCount(): number;
+  shouldShowSearchResultsCount(): boolean;
+  getSearchResultsCountLabel(): string;
+  doSearch(mediaType?: string | null, searchParams?: Record<string, any>): Promise<void>;
+  playCurrentCollection(): Promise<void>;
+  handleSearchSubmit(): void;
+  handleProgressiveSearchResults(
+    chunk: any[],
+    cacheKey: string,
+    searchToken: string | number
+  ): void;
+  getVisibleSearchFilterClasses(): string[];
+  playMediaFromSearch(item: any, event?: Event): Promise<void>;
+  performSearchPlayback(item: any, targetEntityId: string): Promise<boolean>;
+  collectPlaybackMonitorIds(targetEntityId: string): string[];
+  snapshotPlaybackState(entityIds: string[]): Record<string, any>;
+  waitForPlaybackChange(
+    snapshot: Record<string, any>,
+    entityIds: string[],
+    timeout?: number,
+    options?: { requireMediaChange?: boolean }
+  ): Promise<boolean>;
+  performSearchOptionAction(item: any, mode: string): Promise<void>;
+  invokePlayMedia(targetEntityId: string, item: any): Promise<boolean>;
+  delay(ms: number): Promise<void>;
+  loadArtistAlbums(artistUri: string | null, artistName: string): Promise<void>;
+  searchArtistAlbums(artistName: string, artistUri?: string | null): Promise<void>;
+  goBackInSearch(): void;
+  scrollToTop(): void;
+  getSearchHeaderHeight(): number;
+  updateSearchHeaderPosition(offset: number, animated?: boolean): void;
+  getSearchResultsElement(): Element | null;
+  applySearchHeaderDelta(delta: number): void;
+  setSearchHeadersRetracted(retracted: boolean, animated?: boolean): void;
+  handleSearchResultsScroll(e: Event, pinSearchHeaders?: boolean): void;
+  handleFilterChipsWheel(e: WheelEvent): void;
+  handleHeaderWheel(e: WheelEvent, pinSearchHeaders?: boolean): void;
+  handleHeaderTouchStart(e: TouchEvent): void;
+  handleHeaderTouchMove(e: TouchEvent, pinSearchHeaders?: boolean): void;
+  handleHeaderTouchEnd(): void;
+  handleSearchContainerWheel(e: WheelEvent, pinSearchHeaders?: boolean): void;
+  handleSearchResultsWheel(e: WheelEvent, pinSearchHeaders?: boolean): void;
+  handleResultsTouchStart(e: TouchEvent): void;
+  handleResultsTouchMove(e: TouchEvent, pinSearchHeaders?: boolean): void;
+  handleResultsTouchEnd(): void;
+  isClickableSearchResult(item: any): boolean;
+  getSearchResultClickTitle(item: any): string;
+  invalidateUpcomingCache(): void;
+  toggleRadioMode(): void;
+  toggleFavoritesFilter(): Promise<void>;
+  toggleRecentlyPlayedFilter(forceState?: boolean | null): Promise<void>;
+  toggleUpcomingFilter(forceState?: boolean | null): Promise<void>;
+  toggleRecommendationsFilter(forceState?: boolean | null): Promise<void>;
+  restoreSearchResultsFromCache(currentMediaType: string): boolean;
+  checkAiRadioAvailability(): Promise<void>;
+  applyLocalFavoritesFilter(results?: any[]): Promise<any[]>;
+  handleSearchResultClick(item: any, event?: Event): Promise<void>;
+  loadAlbumTracks(
+    albumUri: string | null,
+    albumName: string,
+    artistName?: string | null
+  ): Promise<void>;
+  searchAlbumTracks(
+    albumName: string,
+    artistName?: string | null,
+    albumUri?: string | null
+  ): Promise<void>;
+  loadPlaylistTracks(playlistUri: string | null, playlistName: string): Promise<boolean>;
+  searchPlaylistTracks(playlistName: string, playlistUri?: string | null): Promise<void>;
+  resetSearchContext(): void;
+  showSearchSuccessToast(menuId?: string | null, type?: string | null): void;
+}
+
+export function mediaPlay(hass?: HomeAssistant, entityId?: string): Promise<any>;
+export function mediaPause(hass?: HomeAssistant, entityId?: string): Promise<any>;
+export function mediaPlayPause(hass?: HomeAssistant, entityId?: string): Promise<any>;
+export function mediaStop(hass?: HomeAssistant, entityId?: string): Promise<any>;
+export function mediaNextTrack(hass?: HomeAssistant, entityId?: string): Promise<any>;
+export function mediaPreviousTrack(hass?: HomeAssistant, entityId?: string): Promise<any>;
+export function mediaSeek(
+  hass?: HomeAssistant,
+  entityId?: string,
+  seekPosition?: number
+): Promise<any>;
+export function setShuffle(hass?: HomeAssistant, entityId?: string, shuffle?: any): Promise<any>;
+export function setRepeat(hass?: HomeAssistant, entityId?: string, repeat?: string): Promise<any>;
+export function selectSource(
+  hass?: HomeAssistant,
+  entityId?: string,
+  source?: string
+): Promise<any>;
+export function selectSoundMode(
+  hass?: HomeAssistant,
+  entityId?: string,
+  soundMode?: string
+): Promise<any>;
+export function playMedia(
+  hass?: HomeAssistant,
+  entityId?: string,
+  mediaContentId?: string,
+  mediaContentType?: string,
+  enqueue?: string
+): Promise<any>;
+export function turnOn(hass?: HomeAssistant, entityId?: string): Promise<any>;
+export function turnOff(hass?: HomeAssistant, entityId?: string): Promise<any>;
+export function togglePower(
+  hass?: HomeAssistant,
+  entityId?: string,
+  currentState?: string
+): Promise<any>;
+export function mediaToggle(hass?: HomeAssistant, entityId?: string): Promise<any>;
+export function setVolume(
+  hass?: HomeAssistant,
+  entityId?: string,
+  volumeLevel?: number | string
+): Promise<any>;
+export function stepVolume(
+  hass?: HomeAssistant,
+  entityId?: string,
+  currentVolume?: number | string,
+  step?: number | string
+): Promise<any>;
+export function setMute(hass?: HomeAssistant, entityId?: string, isVolumeMuted?: any): Promise<any>;
+export function sendRemoteCommand(
+  hass?: HomeAssistant,
+  entityId?: string,
+  command?: string | string[]
+): Promise<any>;
+export function sendRemoteVolumeStep(
+  hass?: HomeAssistant,
+  entityId?: string,
+  direction?: number
+): Promise<any>;
+export function joinPlayers(
+  hass?: HomeAssistant,
+  masterEntityId?: string,
+  groupMembers?: string | string[]
+): Promise<any>;
+export function unjoinPlayer(hass?: HomeAssistant, entityId?: string): Promise<any>;
+export function matchesEntityPattern(
+  entityId: string,
+  patterns?: string[] | string | null,
+  friendlyName?: string
+): boolean;
+export function findPlayingUnconfiguredPlayers(
+  states?: Record<string, any>,
+  coveredIds?: Set<string> | string[],
+  excludePatterns?: string[] | string | null
+): string[];
+export function searchMediaPlayers(
+  states?: Record<string, any>,
+  query?: string,
+  coveredIds?: Set<string> | string[],
+  excludePatterns?: string[] | string | null,
+  limit?: number
+): Array<{ id: string; name: string; state: string; icon: string; isPlaying: boolean }>;
+
+export interface GroupPlayerState {
+  isGroupable: boolean;
+  isBusy: boolean;
+  busyLabel: string;
+  grouped: boolean;
+  isPrimary?: boolean;
+  disabled?: boolean;
+  entityToCheck?: string | null;
+  tooltip?: string;
+}
+
+export interface YetAnotherMediaPlayerCard {
+  hass?: HomeAssistant;
+  entityIds?: string[];
+  currentEntityId?: string;
+  config?: YampCardConfig;
+  _config?: YampCardConfig;
+  templateController?: TemplateController;
+  lyricsController?: LyricsController;
+  artworkController?: ArtworkController;
+  _artworkController?: ArtworkController;
+  queueController?: QueueController;
+  _queueController?: QueueController;
+  searchController?: SearchController;
+  _searchController?: SearchController;
+  _volumeHoldController?: VolumeHoldController;
+  _canUseVolumeHold?: (allowMenuMode?: boolean, isTitle?: boolean) => boolean;
+  _holdTitleForVolume?: boolean;
+  _getEffectiveHoldTitleForVolume?: () => boolean;
+  _applyVolumeLevel?: (newVol: number) => void;
+  _backgroundFade?: number;
+  _getBackgroundFade?: () => number;
+  _lyricsBackgroundFade?: number;
+  _getLyricsBackgroundFade?: () => number;
+  _backgroundFadeTemplateValue?: Record<string, TemplateValueEntry>;
+  _backgroundFadeResolveCache?: Record<string, TemplateResolveCacheEntry<string | number>>;
+  _lyricsBackgroundFadeTemplateValue?: Record<string, TemplateValueEntry>;
+  _lyricsBackgroundFadeResolveCache?: Record<string, TemplateResolveCacheEntry<string | number>>;
+  _aiRadioShowsAvailable?: boolean;
+  _isFullScreen?: boolean;
+  _fullScreenOverride?: boolean | null;
+  _toggleFullScreen?: () => void;
+  _enterFullScreen?: () => void;
+  _exitFullScreen?: () => void;
+  _cachedEntityIds?: string[] | null;
+  _cachedEntityObjs?: any[] | null;
+  _sessionEntities?: string[];
+  _autoEntities?: string[];
+  _initialAutoDiscoveryDone?: boolean;
+  _playerSearchQuery?: string;
+  _setTransientEntities?: (options?: {
+    session?: string[];
+    auto?: string[];
+    selectedId?: string;
+  }) => void;
+  _addSessionEntity?: (id: string, makeActive?: boolean) => void;
+  _removeSessionEntity?: (id: string) => void;
+  _getSessionStorageKey?: (cfg?: any) => string;
+  _loadStoredSessionEntities?: (customKey?: string | null) => string[];
+  _saveStoredSessionEntities?: (entities?: string[]) => void;
+  _pruneOrphanStorageKeys?: () => void;
+  _pruneMissingSessionEntities?: () => void;
+  _actionHelperEntities?: string[] | null;
+  _jsTemplateEntities?: string[] | null;
+  _favoriteButtonCache?: Map<string, string | null> | null;
+  _lastEntitiesRef?: Record<string, EntityRegistryEntry> | null;
+  _handleVisibilityChangeBound?: () => void;
+  _getHiddenMenuOptions?: (idx?: number) => string[];
+  _isMenuOptionHidden?: (optionKey: string, idx?: number) => boolean;
+  _isMenuActionHidden?: (action: any, idx?: number) => boolean;
+  _getGroupPlayerState?: (
+    targetId: string,
+    activeId?: string | null,
+    activeGroupKey?: string | null,
+    masterState?: any,
+    myGroupKey?: string | null
+  ) => GroupPlayerState;
+  shouldUpdate?: (changedProps: Map<string | number | symbol, unknown>) => boolean;
+  requestUpdate?: (name?: PropertyKey, oldValue?: unknown) => Promise<unknown>;
+  _scrollGroupingListToTop?: () => void;
+  _selectEntityFromGrouping?: (idx: number) => void;
+  _justSelectedGroupingEntityId?: string | null;
+  _justSelectedGroupingTimeout?: any;
+  _ungroupAll?: (targetMasterId?: string | null) => Promise<void>;
+  _groupAll?: () => Promise<void>;
+  _unjoinGroupMember?: (targetId: string) => Promise<void>;
+  _handoffCoordinator?: (options: {
+    remainingMembers: string[];
+    sourceMaId: string;
+    preventAutoSelect?: boolean;
+  }) => Promise<void>;
+  [key: string]: any;
+}
+
+export interface YetAnotherMediaPlayerEditor {
+  hass?: HomeAssistant;
+  _config?: YampCardConfig;
+  _yamlConfig?: any;
+  _actionEditorIndex?: number | null;
+  _entityEditorIndex?: number | null;
+  _actionMode?: string | null;
+  _addAction?: () => void;
+  _onEditAction?: (index: number) => void;
+  _onBackFromActionEditor?: () => void;
+  requestUpdate?: (name?: PropertyKey, oldValue?: unknown) => Promise<unknown>;
+  [key: string]: any;
+}
 
 declare global {
   const __VERSION__: string;

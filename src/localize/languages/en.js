@@ -69,6 +69,14 @@ export default {
         label: "Group Therapy",
         description: "A standalone player grouping card. Requires multiple entities configured.",
       },
+      players: {
+        label: "Group Therapy",
+        description: "A standalone player grouping card. Requires multiple entities configured.",
+      },
+      group_players: {
+        label: "Group Therapy",
+        description: "A standalone player grouping card. Requires multiple entities configured.",
+      },
       huge_yamp: {
         label: "That's a Huge YAMP!",
         description:
@@ -102,6 +110,10 @@ export default {
         title: "Entities*",
         description:
           "Add the media players you want to control. Drag entities to reorder the chip row.",
+      },
+      transient_players: {
+        title: "Dynamic & Session Players",
+        description: "Options for searching and dynamically including media players at runtime.",
       },
       behavior: {
         idle_chips: {
@@ -150,6 +162,12 @@ export default {
         "Quick grouping controls (+/-/star) will be visible by default on page load. You can still toggle it manually via double-tap.",
       disable_autofocus:
         "Keep the search box from stealing focus so on-screen keyboards stay hidden.",
+      show_player_search:
+        "Allow searching and adding unconfigured media players to the card for the session.",
+      auto_add_playing_entities:
+        "Display unconfigured players when they begin playing, and remove them once the card goes idle.",
+      auto_add_exclude:
+        "Comma-separated entity IDs or glob patterns (e.g. media_player.*_tv) to exclude from search and auto-add.",
       search_within_filter:
         "Enable this to search within the current active filter (Favorites, Recently Played, etc) instead of clearing it.",
       close_search_on_play: "Automatically close the search screen when a track is played.",
@@ -160,6 +178,7 @@ export default {
       show_album: "Display the album name next to the artist in the player details.",
       lock_screen_controls:
         "Keep controls and track metadata active on your device lock screen (iOS / Android / macOS) when backgrounding the app. Note: This feature is experimental.",
+      full_screen: "Display card as a full-screen dashboard overlay.",
       toggle_media_session: "Note: Lock screen and media session controls are experimental.",
       adaptive_controls: "Let the playback buttons grow or shrink to fit the available space.",
       hide_menu_player:
@@ -175,6 +194,7 @@ export default {
       idle_screen: "Choose which screen to display automatically when the card becomes idle.",
       hide_controls: "Select buttons to hide from the persistent playback controls row.",
       hide_remote_buttons: "Select buttons to hide from the Remote Control overlay.",
+      hide_menu_options: "Select options to hide from the options menu.",
       hide_search_chips: "Hide specific search filter chips for this entity",
       hide_active_entity_on_idle:
         "Hide the entity label at the bottom of the card only when the player is idle.",
@@ -230,6 +250,8 @@ export default {
         "Music Assistant requires the mass_queue integration to fetch lyrics from its internal metadata engine.",
       lyrics_pre_roll:
         "Shift the lyrics highlight timing. Positive values speed it up, negative values slow it down (default: 0).",
+      background_fade:
+        "Adjust the background fade and dimming opacity of the overlay (0% for transparent artwork, 100% for solid background).",
       lyrics_background_fade:
         "Adjust the background fade and dimming opacity of the lyrics overlay (0% for transparent artwork, 100% for solid background).",
       blurred_artwork: "Always blur the background artwork",
@@ -241,6 +263,8 @@ export default {
         "Always use the paired Music Assistant entity for track title, artist, and artwork, even if the primary entity is playing.",
       show_volume_overlay:
         "Briefly display a large volume indicator over the artwork when the volume level changes.",
+      hold_title_for_volume:
+        "Press and hold the track title to open the volume overlay and adjust the volume.",
       font_color_helper:
         "Customize text and icon colors. Accepts hex, CSS names, rgba, or templates (default: theme color).",
     },
@@ -256,6 +280,9 @@ export default {
       hold_to_pin: "Hold to Pin",
       always_show_group: "Quick Group by Default",
       disable_autofocus: "Disable Search Autofocus",
+      show_player_search: "Show search in Players menu",
+      auto_add_playing_entities: "Auto-add playing players until idle",
+      auto_add_exclude: "Exclude from search and auto-add",
       keep_filters: "Keep Filters on Search",
       dismiss_on_play: "Dismiss search on play",
       pin_headers: "Pin search headers",
@@ -270,6 +297,7 @@ export default {
       swap_pause_stop: "Swap Pause with Stop",
       show_album: "Show Album Name",
       lock_screen_controls: "Lock Screen Media Controls (Experimental)",
+      full_screen: "Full Screen Overlay",
       adaptive_controls: "Adaptive Control Size",
       hide_active_entity: "Hide Active Entity Label",
       hide_active_entity_on_idle: "Hide Active Entity Label on Idle",
@@ -290,6 +318,7 @@ export default {
       lyrics_mode: "Lyrics Mode",
       lyrics_source: "Lyrics Source",
       lyrics_pre_roll: "Lyrics Pre-Roll (seconds)",
+      background_fade: "Background Fade",
       lyrics_background_fade: "Lyrics Background Fade",
       blurred_artwork: "Blurred Artwork",
       hide_collapsed_artwork: "Hide Collapsed Artwork",
@@ -297,6 +326,7 @@ export default {
       show_idle_artwork_when_not_playing: "Show Idle Image When Not Playing",
       prefer_ma_metadata: "Prefer Music Assistant Metadata",
       show_volume_overlay: "Show Volume Overlay",
+      hold_title_for_volume: "Hold Track Title for Volume",
     },
     fields: {
       artwork_fit: "Artwork Fit",
@@ -325,11 +355,13 @@ export default {
       move_to_main: "Move action to main chips",
       move_to_menu: "Move action into menu",
       delete_action: "Delete Action",
+      add_action: "Add Action",
       volume_mode: "Volume Mode",
       idle_screen: "Idle Screen",
       name: "Name",
       hidden_controls: "Hidden Controls",
       hide_remote_buttons: "Hidden Remote Buttons",
+      hidden_menu_options: "Hidden Menu Options",
       ma_template: "Music Assistant Entity Template (Jinja)",
       hidden_chips: "Hidden Search Filter Chips",
       vol_template: "Volume Entity Template (Jinja)",
@@ -356,6 +388,7 @@ export default {
       appearance: "Appearance",
       no_artwork_option: "No Artwork",
       details_alignment: "Details Alignment",
+      background_fade: "Background Fade (%)",
       lyrics_background_fade: "Lyrics Background Fade (%)",
     },
     action_types: {
@@ -369,6 +402,7 @@ export default {
       toggle_lyrics: "Toggle Lyrics Overlay",
       remote_control: "Open Remote Controls Overlay",
       toggle_media_session: "Toggle Media Session Controls (Experimental)",
+      full_screen: "Toggle Full Screen Overlay",
     },
     action_helpers: {
       sync_selected_entity: "Sync Selected Entity →",
@@ -406,7 +440,8 @@ export default {
     card_type_options: {
       default: "Default",
       search: "Search",
-      group_players: "Group Players",
+      group_players: "Players",
+      players: "Players",
       up_next: "Up Next",
       remote_control: "Remote Control",
     },
@@ -475,17 +510,23 @@ export default {
       more_info: "More Info",
       search: "Search",
       source: "Source",
-      remote_controls: "Remote Control",
-      show_lyrics: "Show Lyrics",
+      remote_controls: "Remote",
+      show_lyrics: "Lyrics",
       hide_lyrics: "Hide Lyrics",
+      full_screen: "Full Screen",
+      exit_full_screen: "Exit Full Screen",
       transfer_queue: "Transfer Queue",
       main_menu: "Main Menu",
-      group_players: "Group Players",
+      group_players: "Players",
+      players: "Players",
       up_next: "Up Next",
-      remote_control: "Remote Control",
+      remote_control: "Remote",
       select_entity: "Select Entity for More Info",
       transfer_to: "Transfer Queue To",
       no_players: "No other Music Assistant players available.",
+      active: "(Active)",
+      set_active_entity: "Set as active entity",
+      active_entity: "Active entity",
     },
     remote: {
       title: "Remote Control",
@@ -500,7 +541,7 @@ export default {
       power: "Power",
     },
     grouping: {
-      title: "Group Players",
+      title: "Players",
       sync_volume: "Sync Volume",
       group_all: "Group All",
       ungroup_all: "Ungroup All",
@@ -510,8 +551,30 @@ export default {
       joined: "Joined",
       available: "Available",
       current: "Current",
+      group_label: "{master} Group",
+      unjoin: "Unjoin",
+      join: "Join",
+      join_with_group: "Join With Group",
       unjoin_from: "Unjoin from {master}",
       join_with: "Join with {master}",
+      transfer_to_player: "Transfer queue to {player}",
+      transfer_to_group: "Transfer queue to {master} group",
+      transfer_current_player: "Currently playing here",
+      transfer_no_queue: "No active queue to transfer",
+      transfer_not_ma: "Music Assistant player required",
+      transferring_to: "Transferring queue to {player}...",
+      transferring_coordinator: "Transferring playback to {player}...",
+      regrouping: "Regrouping speakers with {player}...",
+      transfer_success: "Queue sent to {player}.",
+      standalone: "Standalone",
+      search_players: "Search players to add...",
+      add_player: "Add to session",
+      add: "Add",
+      remove_player: "Remove from session",
+      keep_player: "Keep in session",
+      no_search_results: "No matching players found",
+      transient_session: "Session Player",
+      transient_auto: "Playing Player",
     },
   },
   search: {
@@ -558,6 +621,8 @@ export default {
       station: "Station",
       podcast: "Podcast",
       audiobook: "Audiobook",
+      shows: "Shows",
+      show: "Show",
     },
     search_artist: "Browse albums by this artist",
     browse_artist: "Browse albums by {artist}",

@@ -8,7 +8,8 @@
 export const DEFAULT_PROGRESS_BAR_HEIGHT = 6;
 export const DEFAULT_IDLE_TIMEOUT_MS = 60000;
 export const DEFAULT_VOLUME_STEP = 0.05;
-export const DEFAULT_LYRICS_BACKGROUND_FADE = 75;
+export const DEFAULT_BACKGROUND_FADE = 75;
+export const DEFAULT_LYRICS_BACKGROUND_FADE = DEFAULT_BACKGROUND_FADE;
 
 /**
  * Predefined card configuration presets
@@ -94,6 +95,27 @@ export const TEMPLATE_CONFIGS = Object.freeze({
     hide_menu_player: true,
     show_chip_row: "in_menu",
   },
+  dedicated_players: {
+    match_theme: true,
+    appearance: "automatic",
+    card_type: "group_players",
+    hide_menu_player: true,
+    show_chip_row: "in_menu",
+  },
+  players: {
+    match_theme: true,
+    appearance: "automatic",
+    card_type: "group_players",
+    hide_menu_player: true,
+    show_chip_row: "in_menu",
+  },
+  group_players: {
+    match_theme: true,
+    appearance: "automatic",
+    card_type: "group_players",
+    hide_menu_player: true,
+    show_chip_row: "in_menu",
+  },
   quick_and_easy: {
     match_theme: true,
     appearance: "automatic",
@@ -124,6 +146,7 @@ export const TEMPLATE_CONFIGS = Object.freeze({
  * Card-level default values
  */
 export const CARD_CONFIG_DEFAULTS = Object.freeze({
+  card_id: "",
   template: "custom",
   appearance: "automatic",
   card_type: "standard",
@@ -161,6 +184,7 @@ export const CARD_CONFIG_DEFAULTS = Object.freeze({
   dismiss_search_on_play: false,
   disable_autofocus: false,
   show_volume_overlay: false,
+  hold_title_for_volume: false,
   always_show_quick_group: false,
   always_collapsed: false,
   hide_menu_player: false,
@@ -168,8 +192,13 @@ export const CARD_CONFIG_DEFAULTS = Object.freeze({
   hide_active_entity_label_on_idle: false,
   swap_pause_for_stop: false,
   show_album: true,
+  background_fade: DEFAULT_BACKGROUND_FADE,
   lyrics_background_fade: DEFAULT_LYRICS_BACKGROUND_FADE,
   lock_screen_controls: false,
+  full_screen: false,
+  show_player_search: true,
+  auto_add_playing_entities: false,
+  auto_add_exclude: [],
 });
 
 /**
@@ -205,8 +234,16 @@ export const TEMPLATE_SUPPORTED_FIELDS = Object.freeze(
     "idle_image",
     "background_image",
     "font_color",
+    "background_fade",
     "lyrics_background_fade",
     "lock_screen_controls",
+    "full_screen",
+    "show_chip_row",
+    "always_collapsed",
+    "control_layout",
+    "music_assistant_entity",
+    "volume_entity",
+    "remote_entity",
   ])
 );
 
@@ -225,7 +262,26 @@ export function isFieldTemplateSupported(fieldName) {
  * @returns {Record<string, any>}
  */
 export function getTemplatePresetDefaults(templateName = "custom") {
-  return TEMPLATE_CONFIGS[templateName] || {};
+  if (!templateName || typeof templateName !== "string") return {};
+  const norm = templateName
+    .toLowerCase()
+    .trim()
+    .replace(/[-\s]+/g, "_");
+  if (
+    norm === "players" ||
+    norm === "player" ||
+    norm === "dedicated_players" ||
+    norm === "group_players" ||
+    norm === "dedicated_grouping" ||
+    norm === "transfer_queue" ||
+    norm === "dedicated_transfer_queue"
+  ) {
+    return TEMPLATE_CONFIGS.dedicated_grouping;
+  }
+  if (norm === "search" || norm === "dedicated_search") {
+    return TEMPLATE_CONFIGS.dedicated_search;
+  }
+  return TEMPLATE_CONFIGS[norm] || TEMPLATE_CONFIGS[templateName] || {};
 }
 
 /**
@@ -236,11 +292,28 @@ export function getTemplatePresetDefaults(templateName = "custom") {
 export function normalizeCardConfig(rawConfig = {}) {
   const templateName = rawConfig.template || "custom";
   const templateBase = getTemplatePresetDefaults(templateName);
-  return {
+  const normalized = {
     ...CARD_CONFIG_DEFAULTS,
     ...templateBase,
     ...rawConfig,
   };
+  if (rawConfig.lyrics_background_fade !== undefined && rawConfig.background_fade === undefined) {
+    normalized.background_fade = rawConfig.lyrics_background_fade;
+  } else if (
+    rawConfig.background_fade !== undefined &&
+    rawConfig.lyrics_background_fade === undefined
+  ) {
+    normalized.lyrics_background_fade = rawConfig.background_fade;
+  }
+  if (
+    templateBase.card_type &&
+    (!rawConfig.card_type ||
+      rawConfig.card_type === "default" ||
+      rawConfig.card_type === "standard")
+  ) {
+    normalized.card_type = templateBase.card_type;
+  }
+  return normalized;
 }
 
 /**

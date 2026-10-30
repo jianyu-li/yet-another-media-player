@@ -70,6 +70,16 @@ export default {
         description:
           "Samostatná karta na zoskupovanie prehrávačov. Vyžaduje viacero nakonfigurovaných entít.",
       },
+      players: {
+        label: "Skupinová terapia",
+        description:
+          "Samostatná karta na zoskupovanie prehrávačov. Vyžaduje viacero nakonfigurovaných entít.",
+      },
+      group_players: {
+        label: "Skupinová terapia",
+        description:
+          "Samostatná karta na zoskupovanie prehrávačov. Vyžaduje viacero nakonfigurovaných entít.",
+      },
       huge_yamp: {
         label: "To je poriadny YAMP!",
         description:
@@ -102,6 +112,11 @@ export default {
         title: "Entity*",
         description:
           "Pridajte prehrávače médií, ktoré chcete ovládať. Potiahnutím entít zmeníte poradie v riadku čipov.",
+      },
+      transient_players: {
+        title: "Dynamické a relačné prehrávače",
+        description:
+          "Možnosti vyhľadávania a dynamického zahrnutia prehrávačov médií počas relácie.",
       },
       behavior: {
         idle_chips: {
@@ -151,6 +166,12 @@ export default {
         "Ovládacie prvky rýchleho zoskupovania (+/-/hviezdička) budú predvolene viditeľné pri načítaní stránky. Stále ich môžete manuálne prepínať dvojitým klepnutím.",
       disable_autofocus:
         "Zabráni vyhľadávaciemu poľu prebrať zameranie, aby zostali klávesnice na obrazovke skryté.",
+      show_player_search:
+        "Povoliť vyhľadávanie a pridávanie nenakonfigurovaných prehrávačov na kartu pre reláciu.",
+      auto_add_playing_entities:
+        "Zobraziť nenakonfigurované prehrávače, keď začnú hrať, a odstrániť ich, keď karta prejde do nečinnosti.",
+      auto_add_exclude:
+        "Čiarkami oddelené ID entít alebo vzory so zástupnými znakmi (napr. media_player.*_tv) na vylúčenie z vyhľadávania a automatického pridávania.",
       search_within_filter:
         "Povoliť vyhľadávanie v rámci aktuálneho aktívneho filtra (Obľúbené, Nedávno prehrávané atď.) namiesto jeho vymazania.",
       close_search_on_play: "Automaticky zatvoriť obrazovku vyhľadávania po spustení skladby.",
@@ -163,6 +184,7 @@ export default {
       show_album: "Zobraziť názov albumu vedľa interpreta v podrobnostiach prehrávača.",
       lock_screen_controls:
         "Ponechajte ovládacie prvky a metadáta stopy aktívne na uzamknutej obrazovke vášho zariadenia (iOS / Android / macOS), keď je aplikácia na pozadí. Poznámka: Táto funkcia je experimentálna.",
+      full_screen: "Zobraziť kartu ako prekrytie celého panela na celú obrazovku.",
       toggle_media_session:
         "Poznámka: Ovládacie prvky uzamknutej obrazovky a relácie médií sú experimentálne.",
       adaptive_controls: "Umožniť tlačidlám prehrávania meniť veľkosť podľa dostupného priestoru.",
@@ -179,6 +201,7 @@ export default {
       hide_controls:
         "Vyberte ovládacie prvky, ktoré chcete pre túto entitu skryť (štandardne sú zobrazené všetky).",
       hide_remote_buttons: "Vyberte tlačidlá, ktoré chcete skryť v prekrytí diaľkového ovládania.",
+      hide_menu_options: "Vyberte možnosti, ktoré chcete skryť v ponuke možností.",
       hide_search_chips: "Skryť konkrétne čipy filtra vyhľadávania pre túto entitu.",
       hide_active_entity_on_idle:
         "Skryje štítok entity v dolnej časti karty iba vtedy, keď je prehrávač nečinný.",
@@ -236,6 +259,7 @@ export default {
         "Posunutie načasovania zvýraznenia textu piesne. Kladné hodnoty ho zrýchľujú, záporné spomaľujú (predvolené: 0).",
       lyrics_background_fade:
         "Upravte prelínanie pozadia a nepriehľadnosť stmavenia prekrytia textu piesne (0% pre priehľadný obrázok, 100% pre plné pozadie).",
+      background_fade: "Upravte nepriehľadnosť prekrytia pozadia a prechodu obalu (0-100%).",
       blurred_artwork: "Vždy rozmazať obrázok na pozadí",
       hide_collapsed_artwork: "Skryť malý obrázok vpravo, keď je karta zbalená",
       disable_artwork_gradient: "Zakázať prekrytie spodného prechodu na obrázku",
@@ -245,6 +269,8 @@ export default {
         "Vždy používajte spárovanú entitu Music Assistant pre názov skladby, interpreta a grafiku, aj keď sa prehráva primárna entita.",
       show_volume_overlay:
         "Pri zmene úrovne hlasitosti nakrátko zobrazí veľký ukazovateľ hlasitosti cez grafiku albumu.",
+      hold_title_for_volume:
+        "Podržaním názvu skladby otvoríte prekrytie hlasitosti a upravíte hlasitosť.",
       font_color_helper:
         "Prispôsobte farby textu a ikon. Prijíma hex, názvy CSS, rgba alebo šablóny (predvolené: farba motívu).",
       queue_controls_style:
@@ -262,6 +288,9 @@ export default {
       hold_to_pin: "Podržať pre pripnutie",
       always_show_group: "Rýchle zoskupovanie ako predvolené",
       disable_autofocus: "Vypnúť automatické zameranie hľadania",
+      show_player_search: "Zobraziť vyhľadávanie v ponuke Prehrávače",
+      auto_add_playing_entities: "Automaticky pridať hrajúce prehrávače do nečinnosti",
+      auto_add_exclude: "Vylúčiť z vyhľadávania a automatického pridávania",
       keep_filters: "Zachovať filtre pri hľadaní",
       dismiss_on_play: "Zavrieť hľadanie po spustení",
       pin_headers: "Pripnúť hlavičky hľadania",
@@ -276,6 +305,7 @@ export default {
       swap_pause_stop: "Vymeniť pauzu za stop",
       show_album: "Zobraziť názov albumu",
       lock_screen_controls: "Ovládacie prvky médií na uzamknutej obrazovke (Experimentálne)",
+      full_screen: "Prekrytie celej obrazovky",
       adaptive_controls: "Adaptívna veľkosť ovládania",
       hide_active_entity: "Skryť štítok aktívnej entity",
       hide_active_entity_on_idle: "Skryť štítok aktívnej entity pri nečinnosti",
@@ -297,12 +327,14 @@ export default {
       lyrics_source: "Zdroj textov",
       lyrics_pre_roll: "Pre-roll textu piesne (sekundy)",
       lyrics_background_fade: "Prelínanie pozadia textu piesne",
+      background_fade: "Prelínanie pozadia",
       blurred_artwork: "Rozmazaný obrázok",
       hide_collapsed_artwork: "Skryť zmenšený obrázok",
       disable_artwork_gradient: "Zakázať prechod obrázka",
       show_idle_artwork_when_not_playing: "Zobraziť obrázok nečinnosti, keď sa neprehráva",
       prefer_ma_metadata: "Uprednostniť metadáta z Music Assistant",
       show_volume_overlay: "Zobraziť prekrytie hlasitosti",
+      hold_title_for_volume: "Podržať názov skladby pre hlasitosť",
     },
     fields: {
       artwork_fit: "Prispôsobenie grafiky",
@@ -331,11 +363,13 @@ export default {
       move_to_main: "Presunúť do hlavných čipov",
       move_to_menu: "Presunúť do menu",
       delete_action: "Vymazať akciu",
+      add_action: "Pridať akciu",
       volume_mode: "Režim hlasitosti",
       idle_screen: "Obrazovka pri nečinnosti",
       name: "Názov",
       hidden_controls: "Skryté ovládacie prvky",
       hide_remote_buttons: "Skryté tlačidlá diaľkového ovládania",
+      hidden_menu_options: "Skryté možnosti ponuky",
       ma_template: "Jinja šablóna pre Music Assistant",
       hidden_chips: "Skryté čipy filtrov hľadania",
       vol_template: "Jinja šablóna pre hlasitosť",
@@ -362,6 +396,7 @@ export default {
       no_artwork_option: "Žiadny obrázok",
       details_alignment: "Zarovnanie detailov",
       lyrics_background_fade: "Prelínanie pozadia textu piesne (%)",
+      background_fade: "Prelínanie pozadia (%)",
       queue_controls_style: "Štýl ovládacích prvkov fronty",
     },
     action_types: {
@@ -376,6 +411,7 @@ export default {
       remote_control: "Otvoriť prekrývanie diaľkového ovládania",
       toggle_media_session:
         "Prepnúť ovládacie prvky relácie médií / uzamknutej obrazovky (Experimentálne)",
+      full_screen: "Prepnúť prekrytie celej obrazovky",
     },
     action_helpers: {
       sync_selected_entity: "Synchronizovať vybranú entitu →",
@@ -417,7 +453,8 @@ export default {
     card_type_options: {
       default: "Predvolené",
       search: "Hľadať",
-      group_players: "Zoskupiť prehrávače",
+      group_players: "Prehrávače",
+      players: "Prehrávače",
       up_next: "Nasleduje",
       remote_control: "Diaľkové ovládanie",
     },
@@ -483,16 +520,22 @@ export default {
       search: "Hľadať",
       source: "Zdroj",
       remote_controls: "Diaľkové ovládanie",
-      show_lyrics: "Zobraziť text piesne",
+      show_lyrics: "Texty piesní",
       hide_lyrics: "Skryť text piesne",
+      full_screen: "Celá obrazovka",
+      exit_full_screen: "Ukončiť celú obrazovku",
       transfer_queue: "Presunúť frontu",
       main_menu: "Hlavné menu",
-      group_players: "Zoskupiť prehrávače",
+      group_players: "Prehrávače",
+      players: "Prehrávače",
       up_next: "Nasleduje",
       remote_control: "Diaľkové ovládanie",
       select_entity: "Vyberte entitu pre viac info",
       transfer_to: "Presunúť frontu do",
       no_players: "Žiadne iné prehrávače Music Assistant nie sú k dispozícii.",
+      active: "(Aktívne)",
+      set_active_entity: "Nastaviť ako aktívnu entitu",
+      active_entity: "Aktívna entita",
     },
     remote: {
       title: "Diaľkové ovládanie",
@@ -507,7 +550,7 @@ export default {
       power: "Napájanie",
     },
     grouping: {
-      title: "Zoskupiť prehrávače",
+      title: "Prehrávače",
       sync_volume: "Synchronizovať hlasitosť",
       group_all: "Zoskupiť všetko",
       ungroup_all: "Zrušiť zoskupenie všetkého",
@@ -517,8 +560,30 @@ export default {
       joined: "Pripojený",
       available: "Dostupný",
       current: "Aktuálny",
+      group_label: "Skupina {master}",
+      unjoin: "Odpojiť",
+      join: "Pripojiť",
+      join_with_group: "Pripojiť k skupine",
       unjoin_from: "Odpojiť od {master}",
       join_with: "Pripojiť k {master}",
+      transfer_to_player: "Preniesť rad do {player}",
+      transfer_to_group: "Preniesť rad do skupiny {master}",
+      transfer_current_player: "Práve hrá tu",
+      transfer_no_queue: "Žiadny aktívny rad na prenos",
+      transfer_not_ma: "Vyžaduje sa prehrávač Music Assistant",
+      transferring_to: "Prenáša sa rad do {player}...",
+      transferring_coordinator: "Prenáša sa prehrávanie do {player}...",
+      regrouping: "Preoskupujú sa reproduktory s {player}...",
+      transfer_success: "Rad bol odoslaný do {player}.",
+      standalone: "Samostatný",
+      search_players: "Hľadať prehrávače na pridanie...",
+      add_player: "Pridať do relácie",
+      add: "Pridať",
+      remove_player: "Odstrániť z relácie",
+      keep_player: "Ponechať v relácii",
+      no_search_results: "Nenašli sa žiadne zhodné prehrávače",
+      transient_session: "Relačný prehrávač",
+      transient_auto: "Hrajúci prehrávač",
     },
   },
   search: {
@@ -565,6 +630,8 @@ export default {
       station: "Stanica",
       podcast: "Podcast",
       audiobook: "Audiokniha",
+      shows: "Relácie",
+      show: "Relácia",
     },
     search_artist: "Prehľadávať albumy tohto interpreta",
     browse_artist: "Prehľadávať albumy od {artist}",

@@ -10,6 +10,7 @@ YAMP is a full-featured Home Assistant media card for controlling multiple entit
 ## Features
 
 - **Multi-Player Control** — Switch between media players in a single card with chip-based selection. Control volume individually or as a group
+- **Dynamic & Session Players** — Automatically surface unconfigured players while they're actively playing, search and add players to your active session on the fly, and pin them to persist across page refreshes
 - **Lock Screen Controls (Experimental)** — Pause, skip tracks, scrub through songs, and see live album artwork right from your phone's lock screen, notification shade, or desktop media keys.
 - **Quick Grouping Mode** — Double-click any player chip to enter quick grouping mode, allowing you to quickly join or unjoin entities from the active group without opening menus.
 - **Gesture Controls** — Tap, double-tap, hold, or swipe the artwork to trigger any action. Skip tracks, play/pause, adjust volume, or launch custom scripts
@@ -28,17 +29,9 @@ YAMP is a full-featured Home Assistant media card for controlling multiple entit
 ## Screenshots
 
 ![Card overview](preview/layouts.png)
-![Lyrics view](preview/lyrics-light-mode.png)
-![Modern Controls Preview](preview/modern_controls_preview.png)
-![Collapsed card](preview/collapsed.png)
 ![Scaled Contain Preview](preview/scale-contain-artwork-preview.png)
-![Minimal layout](preview/minimal-preview.png)
 ![Chips in menu mode](preview/in-menu-mode.png)
-![Transfer queue](preview/transfer-queue.png)
-![Up next queue](preview/up-next.png)
-![Search view](preview/search.png)
 ![Search view card](preview/search_card_view.png)
-![Group players menu](preview/group-player-menu.png)
 
 ---
 
@@ -50,7 +43,7 @@ Below you will find a list of all configuration options.
 |----------------------------|--------------|--------------|-------------|-------------------------------------------------------------------------------------------------|
 | **Entities**               |              |              |             |                                                                                                 |
 | `type`                     | string       | Yes          | —           | `custom:yet-another-media-player`                                                               |
-| `card_type`               | choice       | No           | `default`   | Card interface mode: `default` for standard player, `search` for search card, `group_players` for group management, `up_next` for upcoming queue, or `remote_control` for remote pad |
+| `card_type`               | choice       | No           | `default`   | Card interface mode: `default` for standard player, `search` for search card, `players` (or `group_players`) for players management, `up_next` for upcoming queue, or `remote_control` for remote pad |
 | `entities`                 | string/array | Yes          | —           | List of your media player entities                                                              |
 | `volume_entity`            | string       | No           | —           | Separate entity for volume control ([Supports Templates](#template-support)) |
 | `remote_entity`            | string       | No           | —           | Explicit remote entity for remote controls overlay ([Supports Templates](#template-support)) |
@@ -61,8 +54,12 @@ Below you will find a list of all configuration options.
 | `sync_power`               | boolean      | No           | `false`     | Power on/off the volume entity with your main entity                                            |
 | `hidden_controls`          | array/template| No           | `[]`        | Array of control names to hide for this specific entity (Supports Templates) |
 | `hidden_remote_buttons`    | array/template| No           | `[]`        | Array of remote button names to hide for this specific entity's remote overlay (Supports Templates) |
+| `hidden_menu_options`      | array        | No           | `[]`        | Array of options sheet menu items to hide (can be set at card level or per-entity) |
 | `hidden_filter_chips`      | array        | No           | `[]`        | Hide specific search filter chips for this entity (UI only; does not change search results) |
 | `disable_auto_select`      | boolean      | No           | `false`     | Prevents the card from automatically switching to this entity when playback starts, even if it is a group master |
+| `show_player_search`       | boolean      | No           | `true`      | Allow searching and adding unconfigured media players to the card for the session in the Players menu (see [Dynamic & Session Players](#dynamic--session-players)) |
+| `auto_add_playing_entities`| boolean      | No           | `false`     | Automatically display unconfigured media players while they are actively playing, and remove them once playback goes idle |
+| `auto_add_exclude`         | array/string | No           | `[]`        | Comma-separated list or array of entity IDs, friendly names, or wildcard glob patterns (e.g. `media_player.*frame`, `*tv*`) to exclude from search and auto-discovery |
 | `entity_volume_mode`       | choice       | No           | —           | Override global `volume_mode` for this entity (`slider`, `stepper`, `hidden`) |
 | `entity_volume_step`       | number       | No           | —           | Override global `volume_step` for this entity when its volume mode is `stepper` |
 |                                                                                                 |
@@ -74,9 +71,11 @@ Below you will find a list of all configuration options.
 | `hide_menu_player`         | boolean      | No           | `false`     | Hide the persistent media controls in the bottom sheet menu to reclaim space (only available when `always_collapsed` is `false`) |
 | `hide_reorder_progress`   | boolean      | No           | `false`     | Hide the floating queue re-ordering progress indicator at the bottom (also hidden if `hide_menu_player` is `true`) |
 | `lock_screen_controls` *(Experimental)* | boolean / string | No       | `false`     | Enable lock screen and system media controls (Media Session API) *(Experimental)* for active playback on mobile and desktop devices ([Supports Templates](#template-support), see [Lock Screen Controls](#lock-screen--media-session-controls)) |
+| `full_screen`              | boolean / string | No           | `false`     | Display the card as an in-window full-screen dashboard overlay ([Supports Templates](#template-support), see [Full Screen Overlay](#full-screen-overlay)) |
 | `idle_screen`              | choice       | No           | `default`   | Choose the idle experience: `default` keeps the artwork splash, `search` opens the search sheet immediately, `search-recently-played` jumps to the Recently Played view, and `search-next-up` opens the Next Up queue |
 | `dim_chips_on_idle`        | boolean      | No           | `true`      | Dim entity and action chips when the media player is idle                                       |
 | `always_show_quick_group` | boolean      | No           | `false`     | When `true`, Quick Grouping Mode will be active by default. You can still toggle it manually via double-tap. |
+| `hold_title_for_volume`    | boolean      | No           | `false`     | Allow pressing and holding the track title to open the full-card volume overlay and adjust volume |
 | `always_show_lyrics`      | boolean      | No           | `false`     | Automatically open the lyrics view when the page is refreshed |
 | `lyrics_mode`             | choice       | No           | `default`   | Choose the lyrics display mode: `default` (sync + highlight), `scroll` (sync + no highlight), or `text` (plain text) |
 | `lyrics_source`           | choice       | No           | `mass_lrclib` | Choose where to fetch lyrics: `mass_lrclib` (MA with LRCLIB fallback), `mass` (MA only), `lrclib` (LRCLIB only), or `lrclib_mass` (LRCLIB with MA fallback). Note: MA sources require [mass_queue](#native-synced-lyrics-mass_queue) |
@@ -99,7 +98,7 @@ Below you will find a list of all configuration options.
 | `match_theme`              | boolean      | No           | `false`     | Updates card accent colors to match your Home Assistant theme                                   |
 | `appearance`               | choice       | No           | `automatic` | Force the card into `light` or `dark` mode, or use `automatic` to follow system/theme settings |
 | `display_timestamps`       | boolean      | No           | `false`     | Display timestamps on the progress bar                                                          |
-| `show_chip_row`            | choice       | No           | `auto`      | `auto`: hides chip row if only one entity, `always`: always shows the chip row, `in_menu`: moves chips into the entity-options menu, `in_menu_on_idle`: shows chips inline when active but moves them to the menu when idle |
+| `show_chip_row`            | choice       | No           | `auto`      | `auto`: hides chip row if only one entity, `always`: always shows the chip row, `in_menu`: moves chips into the entity-options menu, `in_menu_on_idle`: shows chips inline when active but moves them to the menu when idle ([Supports Templates](#template-support)) |
 | `alternate_progress_bar`   | boolean      | No           | `false`     | Uses the collapsed progress bar when expanded                                                   |
 | `adaptive_controls`        | boolean      | No           | `false`     | Control buttons expand to fill extra horizontal space, giving you larger tap targets when there’s room |
 | `control_layout`           | choice       | No           | `classic`   | `classic` keeps the legacy evenly sized controls, while `modern` adopts Home Assistant’s more-info layout (shuffle/prev/play/next/repeat) and moves the favorite and power buttons along the bottom of the card ([Supports Templates](#template-support)) |
@@ -110,7 +109,7 @@ Below you will find a list of all configuration options.
 | `details_alignment`        | choice       | No           | `left`      | Align the track title and artist (`left`, `center`, `right`). Set to `none` to completely hide the details section. |
 | `font_color`               | color/string | No           | —           | Custom color for text and icons (hex, rgba, named, or template) ([Supports Templates](#template-support)) |
 | `card_height`              | number/string| No           | —           | Override the card height (in px) ([Supports Templates](#template-support)) |
-| `lyrics_background_fade`   | number/string| No           | `80`        | Opacity percentage (0–100%) for the lyrics overlay background and artwork gradient ([Supports Templates](#template-support)) |
+| `background_fade`          | number/string| No           | `75`        | Opacity percentage (0–100%) for overlay backgrounds (lyrics and menu sheets) ([Supports Templates](#template-support)). Also accepts legacy `lyrics_background_fade`. |
 | `search_view`              | choice       | No           | `list`      | Choose the default layout for search results: `list`, `card`, or `card_minimal` |
 | `search_card_columns`      | number       | No           | `4`         | Number of columns for search results when `search_view` is set to `card` or `card_minimal` |
 | `queue_controls_style`     | choice       | No           | `drag_handle` | Style of queue controls: `drag_handle` replaces movement buttons with a single drag handle, `icons` shows classic up/down/next buttons |
@@ -135,10 +134,10 @@ Below you will find a list of all configuration options.
 | `icon`                     | string       | No           | —           | MDI or custom icon for the action chip                                                          |
 | `service`                  | string       | No           | —           | Home Assistant service to call (e.g., `media_player.play_media`)                                |
 | `service_data`             | object       | No           | —           | Data to send with the service call                                                              |
-| `action`                   | string       | No           | —           | Set to `navigate` for navigation shortcuts, `sync_selected_entity` to sync the active entity to a helper, `select_entity` to read a helper and activate the matching chip, `prev_entity`/`next_entity` to navigate chips, or `toggle_lock_screen_controls` to toggle lock screen controls *(Experimental)* |
+| `action`                   | string       | No           | —           | Set to `navigate` for navigation shortcuts, `sync_selected_entity` to sync the active entity to a helper, `select_entity` to read a helper and activate the matching chip, `prev_entity`/`next_entity` to navigate chips, `toggle_lock_screen_controls` to toggle lock screen controls *(Experimental)*, or `full_screen` / `toggle_full_screen` to toggle full-screen overlay mode |
 | `navigation_path`          | string       | No           | —           | Destination for navigation shortcuts (supports anchors like `#pop-up-menu`, relative paths, or full URLs) |
 | `navigation_new_tab`       | boolean      | No           | `false`     | When `true`, external URLs open in a new browser tab instead of replacing the current view      |
-| `menu_item`                | string       | No           | —           | Opens a card menu by type: `search`, `search-recently-played`, `search-next-up`, `source`, `more-info`, `group-players`, `transfer-queue`, `main-menu` |
+| `menu_item`                | string       | No           | —           | Opens a card menu by type: `search`, `search-recently-played`, `search-next-up`, `source`, `more-info`, `group-players`, `transfer-queue`, `main-menu`, `full-screen` |
 | `placement`                | choice       | No           | `chip`      | Placement of the action: `chip` (Action Chip), `menu` (In Menu), `hidden` (Hidden - only triggerable via gestures), `replace_search`, `replace_power`, `replace_mute`, or `replace_favorite` ([Supports Templates](#template-support)) |
 | `card_trigger`             | choice       | No           | `none`      | Assign action to a card-level gesture: `none`, `tap`, `hold`, `double_tap`, `swipe_left`, or `swipe_right` (only for `hidden` actions) |
 | `script_variable`          | boolean      | No           | `false`     | Pass the currently selected entity as `yamp_entity` to a script                                 |
@@ -223,6 +222,7 @@ You can hide specific search filter chips on a per-entity basis using `hidden_fi
 - `radio`
 - `podcast`
 - `episode`
+- `shows`
 
 #### Example Configuration
 ```yaml
@@ -269,8 +269,9 @@ entities:
 
 You can override the global `volume_mode` and `volume_step` settings for specific entities using `entity_volume_mode` and `entity_volume_step`.
 
-- `entity_volume_mode`: Can be set to `slider`, `stepper`, or `hidden`. If omitted, it falls back to the global `volume_mode`.
+- `entity_volume_mode`: Can be set to `slider`, `stepper`, or `hidden`. If omitted, it falls back to the global `volume_mode`. In `stepper` mode, press and hold the stepper to open a full-card volume overlay, then drag up or down to adjust the volume.
 - `entity_volume_step`: The step size for the stepper (e.g., `0.05`). This is only applicable when the entity's effective volume mode is `stepper`. If omitted, it falls back to the global `volume_step`.
+- `hold_title_for_volume`: Can be set at the card level or per-entity (`true` or `false`, default: `false`). When enabled, press and hold the track title to open the full-card volume overlay and adjust the volume.
 
 ```yaml
 type: custom:yet-another-media-player
@@ -308,6 +309,46 @@ You can use **Quick Grouping Mode** to manage your group directly from the chip 
 ### Transfer Queue
 
 The card can surface a **Transfer Queue** menu option for Music Assistant players. When the active entity supports queue transfers, selecting *Transfer Queue* opens a list of compatible targets and the queue moves instantly to the chosen player. The option only appears when a Music Assistant entity with a queue is selected.
+
+### Dynamic & Session Players
+
+YAMP can dynamically discover unconfigured media players and allow you to search and temporarily add players to your card without permanently editing your card configuration.
+
+#### Auto-Add Playing Entities (`auto_add_playing_entities`)
+When `auto_add_playing_entities: true` is enabled, any media player in Home Assistant that begins playing will automatically appear on your card with a dashed chip border. Once playback stops and the player goes idle, it will automatically disappear from the card.
+- **Twin Player Deduplication**: If an entity is playing via Music Assistant, YAMP automatically prevents duplicate chips for the underlying physical device.
+- **Initial Discovery**: When the page loads or when returning to the browser tab, any currently playing players across your home are surfaced immediately.
+
+#### Search & Add Players for the Session (`show_player_search`)
+By default (`show_player_search: true`), opening the **Players** sheet menu displays a real-time search box at the top (set to `false` to hide the search bar).
+- **Search Any Player**: Filter through all available `media_player` entities in Home Assistant by name or entity ID.
+- **Add to Session**: Tap the plus (`+`) button or "Add to session" on any search result to immediately insert it into the card's chip row.
+- **Dashed Border Indicator**: Transient session players are visually distinguished by a dashed chip border.
+
+#### Pinning & Session Persistence
+- **Hold to Pin / Keep in Session**: If you want a temporary or auto-discovered player to stick around even after playback pauses or you refresh your browser, tap "Keep in session" in the Players menu or hold the chip.
+- **Zero-Setup Persistence**: Pinned players are automatically remembered in your browser's local storage and persist across page refreshes, tab switching, and card reconfigurations without requiring any manual setup.
+- **Remove from Session**: Tap the remove button in the Players menu to dismiss a temporary player at any time.
+
+#### Exclude Patterns (`auto_add_exclude`)
+Use `auto_add_exclude` to specify devices that should never appear in player search or auto-discovery (such as TVs, cast dongles, or background devices):
+- Supports exact entity IDs (e.g. `media_player.living_room_tv`), friendly names (e.g. `Office Frame`), or wildcard glob patterns (e.g. `media_player.*frame`, `*tv*`).
+
+#### Example Configuration
+```yaml
+type: custom:yet-another-media-player
+entities:
+  - entity_id: media_player.living_room_speaker
+    name: Living Room
+  - entity_id: media_player.kitchen_speaker
+    name: Kitchen
+show_player_search: true
+auto_add_playing_entities: true
+auto_add_exclude:
+  - media_player.*_tv
+  - media_player.bedroom_frame
+  - "*soundbar*"
+```
 
 ### Volume Entity Configuration
 
@@ -435,6 +476,37 @@ entities:
       - menu
 ```
 
+### Hidden Menu Options Configuration
+
+You can hide specific options from the options sheet menu globally at the card level or on a per-entity basis using the `hidden_menu_options` (or `hide_menu_options`) option.
+
+#### Available Menu Option Names
+- `more_info` - More info entity dialog
+- `search` - Music search sheet
+- `source` - Input source selector
+- `transfer_queue` - Transfer queue sheet
+- `group_players` - Group players sheet
+- `remote_controls` - Remote control sheet
+- `lyrics` - Lyrics sheet toggle
+- `full_screen` - Full screen toggle
+- *Custom actions* - Can also be hidden by matching their `id`, `name`, or `action` key.
+
+#### Example Configuration
+```yaml
+type: custom:yet-another-media-player
+# Card-level defaults for all entities
+hidden_menu_options:
+  - full_screen
+entities:
+  - entity_id: media_player.living_room
+    name: Living Room
+    # Per-entity override
+    hidden_menu_options:
+      - remote_controls
+      - lyrics
+  - entity_id: media_player.kitchen
+    name: Kitchen
+```
 
 # Behavior
 
@@ -497,6 +569,43 @@ actions:
   - name: Lock Screen
     icon: mdi:cellphone-lock
     action: toggle_lock_screen_controls
+```
+
+---
+
+## Full Screen Overlay
+> Display the card as an in-window overlay covering the entire dashboard.
+
+When enabled (`full_screen: true`), YAMP expands to an in-window full-screen overlay with a high z-index that covers the entire dashboard and fills the screen. Even if `always_collapsed` or a fixed `card_height` is configured, the card seamlessly expands to its full view to take advantage of the entire display.
+
+### Exiting Full Screen
+You can exit full screen mode at any time using any of the following methods:
+- Pressing the **Escape** key (`Esc`) on your keyboard (any open sheets like search or options will close first).
+- Selecting **Exit Full Screen** from the entity options menu (`...` / hamburger).
+- Tapping a custom action chip or gesture assigned to the `full_screen` or `toggle_full_screen` action.
+
+### Configuration
+```yaml
+type: custom:yet-another-media-player
+full_screen: false # Set to true or use a template
+entities:
+  - media_player.living_room_speaker
+```
+
+`full_screen` also [supports templates](#template-support) (Jinja2 and JavaScript). For example, turn on full screen when a Home Assistant input boolean is enabled:
+
+```yaml
+full_screen: "{{ is_state('input_boolean.theater_mode', 'on') }}"
+```
+
+### Action Chip & Menu Shortcuts
+Add a custom action button to toggle full screen on demand:
+
+```yaml
+actions:
+  - name: Full Screen
+    icon: mdi:fullscreen
+    action: toggle_full_screen
 ```
 
 ---
@@ -628,7 +737,7 @@ Experience synchronized, real-time lyrics directly within the card. YAMP support
     - `scroll`: Synchronized auto-scrolling without line highlighting.
     - `text`: Displays the full lyrics as plain text. No auto-scrolling or highlighting.
   - `lyrics_pre_roll`: Fine-tune the highlighting sync. A value of `1.5` will highlight the line 1.5 seconds before the vocal starts, while `-0.5` will delay it.
-  - `lyrics_background_fade`: Adjust the background fade opacity percentage (`0` to `100`, default `80`). Supports templates for dynamic transparency based on player state or theme.
+  - `background_fade`: Adjust the overlay background fade opacity percentage (`0` to `100`, default `75`). Controls lyrics and menu overlays. Supports templates for dynamic transparency based on player state or theme (legacy alias: `lyrics_background_fade`).
 - **Toggle Action**: You can assign the `toggle_lyrics` action to a chip or gesture to quickly show/hide the lyrics without opening the menu.
 - **Constraints**: The lyrics viewer is automatically disabled when the card is in `always_collapsed: true` mode to maintain layout performance.
 
@@ -654,13 +763,14 @@ Set `card_type: search` to turn YAMP into a permanent search interface for your 
 - **Permanent View**: The search interface is always visible and cannot be dismissed.
 - **Persistent Controls**: The bottom playback/volume bar respects the `hide_menu_player` setting, allowing for browse only or browse and control experiences.
 
-### Dedicated Group Players Mode
+### Dedicated Players Mode
 
-Set `card_type: group_players` to lock YAMP to the group players menu. 
+Set `template: players` (or `template: group_players` / `template: dedicated_grouping`), or `card_type: players` (or `card_type: group_players`) to lock YAMP to the Players menu. 
 
 **Dedicated Mode Behavior:**
-- **Permanent View**: The Group Players menu is always visible as the primary view.
-- **Auto-Sync**: Quickly join or unjoin players and adjust individual volumes from a single, persistent screen.
+- **Permanent View**: The Players menu is always visible as the primary view.
+- **Auto-Sync**: Quickly join or unjoin players, transfer queues, and adjust individual volumes from a single, persistent screen.
+- **Live Search**: By default, the dedicated players view includes the search bar at the top to find and add unconfigured players on the fly (set `show_player_search: false` to disable).
 
 ### Dedicated Up Next Mode
 
@@ -692,7 +802,7 @@ entities:
 - **`minimal_mini`**: A compact mini card with no visible artwork, stepper volume control, and clean text alignment.
 - **`normal_mini`**: The standard compact mini player card with a blurred background artwork effect.
 - **`dedicated_search`**: A standalone search and library browsing card without the main media player interface (forces `card_type: search`).
-- **`dedicated_grouping`**: A standalone player grouping card (forces `card_type: group_players`).
+- **`dedicated_grouping`** (or **`players`**, **`group_players`**): A standalone player grouping card (forces `card_type: group_players`).
 - **`quick_and_easy`**: Designed for high accessibility and fast control, featuring a persistent entity chip row, volume overlays, and always-active quick grouping mode.
 - **`huge_yamp`**: Maximized controls, large text, and a massive progress bar designed for across-the-room viewing.
 
@@ -725,7 +835,7 @@ YAMP supports two distinct template engines:
 The following configuration keys support templates:
 
 - **`card_height`**: Dynamically adjust the total height of the card.
-- **`lyrics_background_fade`**: Dynamically control the lyrics overlay background opacity percentage (0-100%).
+- **`background_fade`**: Dynamically control the overlay background opacity percentage (0-100%) across lyrics and menu overlays (legacy alias: `lyrics_background_fade`).
 - **`idle_image`**: Change the background image shown when the player is idle.
 - **`background_image`**: Set a persistent card background image URL, gradient, or color.
 - **`font_color`**: Dynamically control text and icon color across the card.
@@ -734,7 +844,9 @@ The following configuration keys support templates:
 - **`music_assistant_entity`**: Dynamically select the companion Music Assistant entity.
 - **`always_collapsed`**: Dynamically determine if the card should be fully collapsed.
 - **`lock_screen_controls`**: Dynamically enable or disable lock screen controls.
+- **`full_screen`**: Dynamically toggle full-screen dashboard overlay mode.
 - **`control_layout`**: Dynamically select the control layout style (`classic` or `modern`).
+- **`show_chip_row`**: Dynamically control chip row visibility mode (`auto`, `always`, `in_menu`, or `in_menu_on_idle`).
 - **`in_menu`**: Dynamically determine where an action is placed (`true`, `false`, or `hidden`).
 - **`image_url` / `missing_art_url`**: (Inside `media_artwork_overrides`) Dynamically determine artwork.
 
@@ -750,10 +862,13 @@ All templates have access to standard Home Assistant template functions (`states
 | `is_search` | `boolean` | `true` if the search overlay is open. |
 | `is_lyrics` | `boolean` | `true` if the lyrics view is active. |
 | `is_any_menu_open` | `boolean` | `true` if search, grouping, or options menus are open. |
-| `is_grouping` | `boolean` | `true` if the group players menu is open. |
+| `is_grouping` | `boolean` | `true` if the Players menu is open (alias for `is_players`). |
+| `is_players` | `boolean` | `true` if the Players menu is open (`is_group_players` is also supported as an alias). |
+| `is_group_players` | `boolean` | `true` if the Players menu is open (alias for `is_players`). |
 | `is_source` | `boolean` | `true` if the source selection list is open. |
 | `is_options` | `boolean` | `true` if the entity options menu is open. |
-| `is_transfer_queue` | `boolean` | `true` if the transfer queue menu is open. |
+| `is_transfer_queue` | `boolean` | `true` if the Players menu is open (legacy alias). |
+| `is_full_screen` | `boolean` | `true` if the card is currently in full-screen overlay mode (`is_fullscreen` is also supported as an alias). |
 | `is_dark_mode` | `boolean` | `true` if Home Assistant is currently in dark mode. |
 | `is_mobile` | `boolean` | `true` if the user is on a mobile device or mobile viewport (width &le; 768px). |
 | `is_music_assistant` | `boolean` | `true` if the active player is a Music Assistant entity. |
@@ -874,6 +989,19 @@ lock_screen_controls: "{{ is_mobile }}"
 **JavaScript (Client-Side)**
 ```yaml
 lock_screen_controls: "[[[ return is_mobile; ]]]"
+```
+
+### Conditional Full Screen Overlay
+Trigger full-screen dashboard overlay mode based on entity states or conditions.
+
+**Jinja2 (Server-Side)**
+```yaml
+full_screen: "{{ is_state('input_boolean.theater_mode', 'on') }}"
+```
+
+**JavaScript (Client-Side)**
+```yaml
+full_screen: "[[[ return is_state('input_boolean.theater_mode', 'on'); ]]]"
 ```
 
 ## Controls & Typography
@@ -1519,19 +1647,22 @@ YAMP is built using the following core dependencies:
 - [SortableJS](https://sortablejs.github.io/Sortable/) - For drag-and-drop interactions
 
 ### Development Dependencies
-The following dependencies are used for static analysis and formatting during development. These are checked manually using the code review workflow:
+The following dependencies and tools are used for static analysis, type checking, testing, and formatting during development:
 - [ESLint](https://eslint.org/) - For static code analysis and identifying problematic patterns
 - [Prettier](https://prettier.io/) - For code formatting
 - [eslint-plugin-lit](https://www.npmjs.com/package/eslint-plugin-lit) - Lit-specific linting rules
+- [TypeScript](https://www.typescriptlang.org/) - For strict type contract checking (`npm run typecheck`)
+- [Node.js Test Runner](https://nodejs.org/api/test.html) (`node:test` + `node:assert/strict`) - Built-in native ESM unit test suite (`npm test`)
 
 ## Contributing
 
 Contributions are welcome! Please follow these steps so reviews go smoothly:
 
-1. **Fork and branch** – Fork the repo on GitHub, clone your fork, then work off a feature branch.
+1. **Fork and branch** – Fork the repo on GitHub, clone your fork, then work off a feature branch branched off `beta`.
 2. **Install dependencies** – Run `npm install` (or `npm ci` if you need an exact lockfile sync) in the project root before touching the sources.
 3. **Develop in `src/`** – Only edit files under `src/`. 
-4. **Commit + PR** – Use concise, imperative commit messages. Rebase on `main` if needed, push your branch to your fork, then open a pull request against `main` that explains the change, shows any relevant screenshots, and notes how you tested.
+4. **Test & Validate** – Run `npm test` to execute automated unit tests. Run the full pre-flight validation pipeline via `npm run validate` (linting, formatting, type checking, unit tests, and production build) to ensure zero errors.
+5. **Commit + PR** – Use concise, imperative commit messages. Push your branch to your fork, then open a pull request against `beta` explaining the change, detailing any user-facing impacts, and providing verification results.
 
 ### Adding Translations
 

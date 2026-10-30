@@ -20,6 +20,7 @@ export function renderChip({
   onPointerMove,
   onPointerUp,
   objectFit,
+  transient,
   quickGroupingState,
   onQuickGroupClick,
   onDoubleClick,
@@ -31,6 +32,8 @@ export function renderChip({
       ?selected=${selected}
       ?playing=${playing}
       ?ma-active=${maActive}
+      ?transient=${!!transient}
+      title="${transient ? (transient === "session" ? localize("card.grouping.transient_session") || "Session Player" : localize("card.grouping.transient_auto") || "Playing Player") : ""}"
       @dblclick=${onDoubleClick}
       @click=${() => onChipClick(idx)}
       @pointerdown=${onPointerDown}
@@ -107,6 +110,7 @@ export function renderGroupChip({
   onPointerMove,
   onPointerUp,
   objectFit,
+  transient,
   quickGroupingState,
   onQuickGroupClick,
   onDoubleClick,
@@ -117,6 +121,8 @@ export function renderGroupChip({
       class="chip group"
       ?selected=${selected}
       ?ma-active=${maActive}
+      ?transient=${!!transient}
+      title="${transient ? (transient === "session" ? localize("card.grouping.transient_session") || "Session Player" : localize("card.grouping.transient_auto") || "Playing Player") : ""}"
       @dblclick=${onDoubleClick}
       @click=${() => onChipClick(idx)}
       @pointerdown=${onPointerDown}
@@ -199,26 +205,24 @@ export function renderGroupChip({
   `;
 }
 
-// Helper to render the quick grouping icon (+/-/star) used by both renderChip and renderGroupChip
+// Helper to render the quick grouping icon (+/-) used by both renderChip and renderGroupChip
 export function renderQuickGroupIcon({ idx, quickGroupingState, onQuickGroupClick }) {
   if (!quickGroupingState || !quickGroupingState.isGroupable) return nothing;
 
-  const { isPrimary, isBusy, grouped, tooltip } = quickGroupingState;
-  const title =
-    tooltip || (isPrimary ? "Primary" : isBusy ? "Unavailable" : grouped ? "Unjoin" : "Join");
-  const icon = isPrimary ? "mdi:star-circle-outline" : grouped ? "mdi:minus" : "mdi:plus";
+  const { isBusy, grouped, tooltip, disabled } = quickGroupingState;
+  const isActionDisabled = Boolean(disabled || isBusy);
+  const title = tooltip || (isActionDisabled ? "Unavailable" : grouped ? "Unjoin" : "Join");
+  const icon = grouped ? "mdi:minus" : "mdi:plus";
 
   return html`
     <span
       class="chip-quick-group"
       @click=${(e) => {
         e.stopPropagation();
-        if (onQuickGroupClick && !isBusy && !isPrimary) onQuickGroupClick(idx, e);
+        if (onQuickGroupClick && !isActionDisabled) onQuickGroupClick(idx, e);
       }}
       title=${title}
-      style="${
-        isPrimary ? "cursor:default;opacity:0.7;" : isBusy ? "opacity:0.5;cursor:not-allowed;" : ""
-      }"
+      style="${isActionDisabled ? "cursor:not-allowed;opacity:0.35;" : ""}"
     >
       <ha-icon .icon=${icon}></ha-icon>
     </span>
@@ -277,6 +281,7 @@ export function renderChipRow({
   getIsChipPlaying,
   getChipArt,
   getIsMaActive,
+  getChipTransient,
   isIdle,
   hass,
   artworkHostname = "",
@@ -321,6 +326,8 @@ export function renderChipRow({
 
         const icon = state?.attributes?.icon || "mdi:cast";
         const isMaActive = typeof getIsMaActive === "function" ? getIsMaActive(id) : false;
+        const transient =
+          typeof getChipTransient === "function" ? getChipTransient(id, idx) : undefined;
         return renderGroupChip({
           idx,
           selected: selectedEntityId === id,
@@ -331,6 +338,7 @@ export function renderChipRow({
           pinned: pinnedIndex === idx,
           holdToPin,
           maActive: isMaActive,
+          transient,
           onChipClick,
           onIconClick,
           onPinClick,
@@ -369,6 +377,8 @@ export function renderChipRow({
         const art = selectedEntityId === id ? !isIdle && artSource : isChipPlaying && artSource;
         const icon = state?.attributes?.icon || "mdi:cast";
         const isMaActive = typeof getIsMaActive === "function" ? getIsMaActive(id) : false;
+        const transient =
+          typeof getChipTransient === "function" ? getChipTransient(id, idx) : undefined;
         return renderChip({
           idx,
           selected: selectedEntityId === id,
@@ -379,6 +389,7 @@ export function renderChipRow({
           pinned: pinnedIndex === idx,
           holdToPin,
           maActive: isMaActive,
+          transient,
           onChipClick,
           onPinClick,
           onPointerDown: (e) => onPointerDown(e, idx),

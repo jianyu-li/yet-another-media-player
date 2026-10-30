@@ -71,6 +71,16 @@ export default {
         description:
           "Um cartão autónomo de agrupamento de leitores. Requer várias entidades configuradas.",
       },
+      players: {
+        label: "Terapia de grupo",
+        description:
+          "Um cartão autónomo de agrupamento de leitores. Requer várias entidades configuradas.",
+      },
+      group_players: {
+        label: "Terapia de grupo",
+        description:
+          "Um cartão autónomo de agrupamento de leitores. Requer várias entidades configuradas.",
+      },
       huge_yamp: {
         label: "Isto é um enorme YAMP!",
         description:
@@ -103,6 +113,11 @@ export default {
       entities: {
         title: "Entidades*",
         description: "Adicione os leitores a controlar.",
+      },
+      transient_players: {
+        title: "Reprodutores dinâmicos e de sessão",
+        description:
+          "Opções para pesquisar e incluir dinamicamente reprodutores multimédia durante a sessão.",
       },
       behavior: {
         idle_chips: {
@@ -146,6 +161,12 @@ export default {
       always_show_group:
         "Os controles de agrupamento rápido (+/-/estrela) estarão visíveis por padrão ao carregar a página. Você ainda pode alterná-los manualmente através de um toque duplo.",
       disable_autofocus: "Evitar que a procura tome o foco automaticamente.",
+      show_player_search:
+        "Permitir pesquisar e adicionar reprodutores não configurados ao cartão para a sessão.",
+      auto_add_playing_entities:
+        "Mostrar reprodutores não configurados quando começam a reproduzir e removê-los assim que o cartão fica inativo.",
+      auto_add_exclude:
+        "IDs de entidade separados por vírgula ou padrões glob (ex. media_player.*_tv) para excluir da pesquisa e adição automática.",
       search_within_filter: "Procurar no filtro ativo (Favoritos, etc.).",
       close_search_on_play: "Fechar procura ao reproduzir.",
       pin_search_headers: "Fixar cabeçalhos de procura ao fazer scroll.",
@@ -155,6 +176,7 @@ export default {
       show_album: "Exibir o nome do álbum ao lado do artista nos detalhes do reprodutor.",
       lock_screen_controls:
         "Mantenha os controles e os metadados da faixa ativos na tela de bloqueio do seu dispositivo (iOS / Android / macOS) quando o aplicativo estiver em segundo plano. Nota: Esta funcionalidade é experimental.",
+      full_screen: "Apresentar o cartão como uma sobreposição de ecrã inteiro no painel.",
       toggle_media_session:
         "Nota: Os controlos de ecrã de bloqueio e sessão multimédia são experimentais.",
       adaptive_controls: "Permitir que os botões se adaptem ao espaço.",
@@ -169,6 +191,7 @@ export default {
       idle_screen: "Escolher ecrã a mostrar em repouso.",
       hide_controls: "Selecionar controlos a ocultar.",
       hide_remote_buttons: "Selecione botões para ocultar do controle remoto.",
+      hide_menu_options: "Selecione as opções a ocultar do menu de opções.",
       hide_search_chips: "Ocultar chips de filtro de procura.",
       hide_active_entity_on_idle:
         "Oculta a etiqueta da entidade na parte inferior do cartão apenas quando o reprodutor está inativo.",
@@ -220,6 +243,8 @@ export default {
         "Ajuste o tempo de destaque da letra. Valores positivos aceleram, valores negativos atrasam (padrão: 0).",
       lyrics_background_fade:
         "Ajuste o desvanecimento do fundo e a opacidade de atenuação da sobreposição de letras (0% para arte transparente, 100% para fundo sólido).",
+      background_fade:
+        "Ajuste a opacidade da sobreposição de fundo e do gradiente da capa (0-100%).",
       blurred_artwork: "Sempre desfocar a imagem de fundo",
       hide_collapsed_artwork:
         "Ocultar a imagem pequena à direita quando o cartão estiver recolhido",
@@ -230,6 +255,8 @@ export default {
         "Utilizar sempre a entidade Music Assistant emparelhada para o título da faixa, artista e arte, mesmo que a entidade primária esteja a ser reproduzida.",
       show_volume_overlay:
         "Exibe brevemente um indicador de volume grande sobre a arte quando o nível de volume muda.",
+      hold_title_for_volume:
+        "Mantenha pressionado o título da faixa para abrir a sobreposição de volume e ajustá-lo.",
       font_color_helper:
         "Personalize as cores do texto e dos ícones. Aceita hexadecimal, nomes CSS, rgba ou modelos (padrão: cor do tema).",
       queue_controls_style:
@@ -247,6 +274,9 @@ export default {
       hold_to_pin: "Manter para fixar",
       always_show_group: "Grupo rápido por padrão",
       disable_autofocus: "Desativar autofoco",
+      show_player_search: "Mostrar pesquisa no menu de reprodutores",
+      auto_add_playing_entities: "Auto-adicionar reprodutores em reprodução até inatividade",
+      auto_add_exclude: "Excluir da pesquisa e adição automática",
       keep_filters: "Manter filtros",
       dismiss_on_play: "Fechar ao reproduzir",
       pin_headers: "Fixar cabeçalhos",
@@ -261,6 +291,7 @@ export default {
       swap_pause_stop: "Substituir Pausa por Stop",
       show_album: "Mostrar nome do álbum",
       lock_screen_controls: "Controles de mídia na tela de bloqueio (Experimental)",
+      full_screen: "Sobreposição de ecrã inteiro",
       adaptive_controls: "Tamanho adaptativo",
       hide_active_entity: "Ocultar nome da entidade ativa",
       hide_active_entity_on_idle: "Ocultar etiqueta de entidade ativa quando inativo",
@@ -282,12 +313,14 @@ export default {
       lyrics_source: "Fonte das letras",
       lyrics_pre_roll: "Antecipação de letra (segundos)",
       lyrics_background_fade: "Desvanecimento de fundo de letras",
+      background_fade: "Desvanecimento de fundo",
       blurred_artwork: "Imagem desfocada",
       hide_collapsed_artwork: "Ocultar imagem reduzida",
       disable_artwork_gradient: "Desativar gradiente da capa",
       show_idle_artwork_when_not_playing: "Mostrar imagem de repouso quando não reproduzindo",
       prefer_ma_metadata: "Preferir metadados do Music Assistant",
       show_volume_overlay: "Mostrar sobreposição de volume",
+      hold_title_for_volume: "Manter título pressionado para volume",
     },
     fields: {
       artwork_fit: "Ajuste",
@@ -316,11 +349,13 @@ export default {
       move_to_main: "Mover para chips principais",
       move_to_menu: "Mover para o menu",
       delete_action: "Eliminar ação",
+      add_action: "Adicionar ação",
       volume_mode: "Modo volume",
       idle_screen: "Ecrã de repouso",
       name: "Nome",
       hidden_controls: "Controlos ocultos",
       hide_remote_buttons: "Botões do controle remoto ocultos",
+      hidden_menu_options: "Opções de menu ocultas",
       ma_template: "Modelo MA (Jinja)",
       hidden_chips: "Chips ocultos",
       vol_template: "Modelo Volume (Jinja)",
@@ -347,6 +382,7 @@ export default {
       no_artwork_option: "Sem imagem",
       details_alignment: "Alinhamento de detalhes",
       lyrics_background_fade: "Desvanecimento de fundo de letras (%)",
+      background_fade: "Desvanecimento de fundo (%)",
       queue_controls_style: "Estilo de controles de fila",
     },
     action_types: {
@@ -361,6 +397,7 @@ export default {
       remote_control: "Abrir sobreposição do controlo remoto",
       toggle_media_session:
         "Alternar sessão de multimédia / controlos de ecrã de bloqueio (Experimental)",
+      full_screen: "Alternar sobreposição de ecrã inteiro",
     },
     action_helpers: {
       sync_selected_entity: "Sincronizar entidade selecionada →",
@@ -402,7 +439,8 @@ export default {
     card_type_options: {
       default: "Padrão",
       search: "Procurar",
-      group_players: "Agrupar",
+      group_players: "Leitores",
+      players: "Leitores",
       up_next: "A seguir",
       remote_control: "Controle Remoto",
     },
@@ -468,16 +506,22 @@ export default {
       search: "Procurar",
       source: "Fonte",
       remote_controls: "Controlo remoto",
-      show_lyrics: "Mostrar letras",
+      show_lyrics: "Letras",
       hide_lyrics: "Ocultar letras",
+      full_screen: "Ecrã inteiro",
+      exit_full_screen: "Sair do ecrã inteiro",
       transfer_queue: "Transferir fila",
       main_menu: "Menu Principal",
-      group_players: "Agrupar",
+      group_players: "Leitores",
+      players: "Leitores",
       up_next: "A seguir",
       remote_control: "Controle Remoto",
       select_entity: "Selecionar",
       transfer_to: "Transferir para",
       no_players: "Sem leitores MA.",
+      active: "(Ativo)",
+      set_active_entity: "Definir como entidade ativa",
+      active_entity: "Entidade ativa",
     },
     remote: {
       title: "Controlo remoto",
@@ -492,7 +536,7 @@ export default {
       power: "Ligar/Desligar",
     },
     grouping: {
-      title: "Agrupar",
+      title: "Leitores",
       sync_volume: "Sincronizar volume",
       group_all: "Agrupar todos",
       ungroup_all: "Separar todos",
@@ -502,8 +546,30 @@ export default {
       joined: "Unido",
       available: "Disponível",
       current: "Atual",
+      group_label: "Grupo {master}",
+      unjoin: "Desvincular",
+      join: "Unir",
+      join_with_group: "Unir ao grupo",
       unjoin_from: "Desvincular de {master}",
       join_with: "Juntar-se a {master}",
+      transfer_to_player: "Transferir fila para {player}",
+      transfer_to_group: "Transferir fila para o grupo {master}",
+      transfer_current_player: "A reproduzir aqui",
+      transfer_no_queue: "Sem fila ativa para transferir",
+      transfer_not_ma: "Reprodutor Music Assistant necessário",
+      transferring_to: "Transferindo fila para {player}...",
+      transferring_coordinator: "Transferindo reprodução para {player}...",
+      regrouping: "Reagrupando alto-falantes com {player}...",
+      transfer_success: "Fila enviada para {player}.",
+      standalone: "Independente",
+      search_players: "Pesquisar reprodutores para adicionar...",
+      add_player: "Adicionar à sessão",
+      add: "Adicionar",
+      remove_player: "Remover da sessão",
+      keep_player: "Manter na sessão",
+      no_search_results: "Nenhum reprodutor correspondente encontrado",
+      transient_session: "Reprodutor de sessão",
+      transient_auto: "Reprodutor em reprodução",
     },
   },
   search: {
@@ -550,6 +616,8 @@ export default {
       station: "Estação",
       podcast: "Podcast",
       audiobook: "Audiolivro",
+      shows: "Programas",
+      show: "Programa",
     },
     search_artist: "Navegar pelos álbuns deste artista",
     browse_artist: "Explorar álbuns de {artist}",

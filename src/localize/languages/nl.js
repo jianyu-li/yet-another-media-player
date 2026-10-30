@@ -70,6 +70,16 @@ export default {
         description:
           "Een zelfstandige spelers-groeperingskaart. Vereist meerdere geconfigureerde entiteiten.",
       },
+      players: {
+        label: "Groepstherapie",
+        description:
+          "Een zelfstandige spelers-groeperingskaart. Vereist meerdere geconfigureerde entiteiten.",
+      },
+      group_players: {
+        label: "Groepstherapie",
+        description:
+          "Een zelfstandige spelers-groeperingskaart. Vereist meerdere geconfigureerde entiteiten.",
+      },
       huge_yamp: {
         label: "Dat is een enorme YAMP!",
         description:
@@ -105,6 +115,11 @@ export default {
         title: "Entiteiten*",
         description:
           "Voeg de mediaspelers toe die je wilt bedienen. Sleep entiteiten om de volgorde te wijzigen.",
+      },
+      transient_players: {
+        title: "Dynamische & sessiespelers",
+        description:
+          "Opties voor het zoeken en dynamisch toevoegen van mediaspelers tijdens de sessie.",
       },
       behavior: {
         idle_chips: {
@@ -155,6 +170,12 @@ export default {
         "Snelgroeperingsknoppen (+/-/ster) zijn standaard zichtbaar bij het laden van de pagina. Je kunt ze nog steeds handmatig in- of uitschakelen via dubbeltikken.",
       disable_autofocus:
         "Voorkom dat het zoekveld de focus steelt, zodat onscreen toetsenborden verborgen blijven.",
+      show_player_search:
+        "Zoeken en toevoegen van niet-geconfigureerde mediaspelers aan de kaart voor de sessie toestaan.",
+      auto_add_playing_entities:
+        "Geef niet-geconfigureerde spelers weer wanneer ze beginnen met afspelen en verwijder ze zodra de kaart inactief wordt.",
+      auto_add_exclude:
+        "Kommagescheiden entiteits-ID's of wildcardpatronen (bijv. media_player.*_tv) om uit te sluiten van zoeken en automatisch toevoegen.",
       search_within_filter:
         "Schakel dit in om te zoeken binnen het huidige actieve filter (Favorieten, Recent Afgespeeld, etc) in plaats van dit te wissen.",
       close_search_on_play: "Sluit het zoekscherm automatisch wanneer een nummer wordt afgespeeld.",
@@ -167,6 +188,7 @@ export default {
       show_album: "Toon de albumnaam naast de artiest in de spelerdetails.",
       lock_screen_controls:
         "Houd bedieningselementen en trackmetagegevens actief op het vergrendelingsscherm van je apparaat (iOS / Android / macOS) wanneer de app op de achtergrond wordt uitgevoerd. Let op: deze functie is experimenteel.",
+      full_screen: "Kaart weergeven als dashboard-overlay over het volledige scherm.",
       toggle_media_session: "Let op: vergrendelscherm- en mediasessiebediening zijn experimenteel.",
       adaptive_controls:
         "Laat de afspeelknoppen groeien of krimpen om in de beschikbare ruimte te passen.",
@@ -185,6 +207,7 @@ export default {
       hide_controls:
         "Selecteer welke knoppen je wilt verbergen voor deze entiteit (standaard worden ze allemaal getoond)",
       hide_remote_buttons: "Selecteer knoppen om te verbergen in de afstandsbediening-overlay.",
+      hide_menu_options: "Selecteer opties om te verbergen in het optiemenu.",
       hide_search_chips: "Verberg specifieke zoekfilterchips voor deze entiteit",
       hide_active_entity_on_idle:
         "Verbergt het entiteitslabel onderaan de kaart alleen wanneer de speler inactief is.",
@@ -244,6 +267,8 @@ export default {
         "Verschuif de timing van de songtekstmarkering. Positieve waarden versnellen het, negatieve waarden vertragen het (standaard: 0).",
       lyrics_background_fade:
         "Pas de achtergrondvervaging en dim-dekking van de songtekst-overlay aan (0% voor transparant artwork, 100% voor een effen achtergrond).",
+      background_fade:
+        "Pas de dekking van de achtergrondoverlay en het albumhoesverloop aan (0-100%).",
       blurred_artwork: "Achtergrondafbeelding altijd vervagen",
       hide_collapsed_artwork:
         "Verberg de kleine afbeelding aan de rechterkant wanneer de kaart is ingeklapt",
@@ -254,6 +279,8 @@ export default {
         "Gebruik altijd de gekoppelde Music Assistant-entiteit voor de tracktitel, artiest en artwork, zelfs als de primaire entiteit wordt afgespeeld.",
       show_volume_overlay:
         "Geef kort een grote volume-indicator weer over het artwork wanneer het volumeniveau verandert.",
+      hold_title_for_volume:
+        "Houd de titel van het nummer ingedrukt om de volume-overlay te openen en het volume aan te passen.",
       font_color_helper:
         "Pas tekst- en pictogramkleuren aan. Accepteert hex, CSS-namen, rgba of sjablonen (standaard: themakleur).",
       queue_controls_style:
@@ -271,6 +298,9 @@ export default {
       hold_to_pin: "Ingedrukt houden om vast te zetten",
       always_show_group: "Snelgroepering standaard aan",
       disable_autofocus: "Zoek-autofocus uitschakelen",
+      show_player_search: "Zoeken weergeven in Spelers-menu",
+      auto_add_playing_entities: "Spelende spelers automatisch toevoegen tot inactiviteit",
+      auto_add_exclude: "Uitsluiten van zoeken en automatisch toevoegen",
       keep_filters: "Filters behouden bij zoeken",
       dismiss_on_play: "Zoeken sluiten bij afspelen",
       pin_headers: "Zoekkoppen vastzetten",
@@ -285,6 +315,7 @@ export default {
       swap_pause_stop: "Pauze vervangen door Stop",
       show_album: "Toon albumnaam",
       lock_screen_controls: "Mediabediening vergrendelscherm (Experimenteel)",
+      full_screen: "Volledig scherm overlay",
       adaptive_controls: "Adaptieve Knoppen Grootte",
       hide_active_entity: "Label van Actieve Entiteit verbergen",
       hide_active_entity_on_idle: "Actieve entiteitslabel verbergen bij inactiviteit",
@@ -306,12 +337,14 @@ export default {
       lyrics_source: "Songtekstbron",
       lyrics_pre_roll: "Songtekst Pre-Roll (seconden)",
       lyrics_background_fade: "Songtekst achtergrondvervaging",
+      background_fade: "Achtergrondvervaging",
       blurred_artwork: "Vervaagde afbeelding",
       hide_collapsed_artwork: "Verkleinde afbeelding verbergen",
       disable_artwork_gradient: "Kleurverloop van hoes uitschakelen",
       show_idle_artwork_when_not_playing: "Toon stand-by afbeelding wanneer niet afgespeeld",
       prefer_ma_metadata: "Voorkeur voor Music Assistant-metadata",
       show_volume_overlay: "Volume-overlay weergeven",
+      hold_title_for_volume: "Nummertitel ingedrukt houden voor volume",
     },
     fields: {
       artwork_fit: "Artwork Passend Maken",
@@ -340,11 +373,13 @@ export default {
       move_to_main: "Verplaats actie naar hoofdchips",
       move_to_menu: "Verplaats actie naar menu",
       delete_action: "Actie Verwijderen",
+      add_action: "Actie toevoegen",
       volume_mode: "Volume Modus",
       idle_screen: "Inactief Scherm",
       name: "Naam",
       hidden_controls: "Verborgen Knoppen",
       hide_remote_buttons: "Verborgen afstandsbediening knoppen",
+      hidden_menu_options: "Verborgen Menu-opties",
       ma_template: "Music Assistant Entiteit Sjabloon (Jinja)",
       hidden_chips: "Verborgen Zoekfilterchips",
       vol_template: "Volume Entiteit Sjabloon (Jinja)",
@@ -371,6 +406,7 @@ export default {
       no_artwork_option: "Geen afbeelding",
       details_alignment: "Details uitlijning",
       lyrics_background_fade: "Songtekst achtergrondvervaging (%)",
+      background_fade: "Achtergrondvervaging (%)",
       queue_controls_style: "Wachtrijbesturingsstijl",
     },
     action_types: {
@@ -384,6 +420,7 @@ export default {
       toggle_lyrics: "Wisselen tussen songtekst-overlay",
       remote_control: "Afstandsbediening overlay openen",
       toggle_media_session: "Wisselen van mediasessie / vergrendelschermbediening (Experimenteel)",
+      full_screen: "Volledig scherm overlay in-/uitschakelen",
     },
     action_helpers: {
       sync_selected_entity: "Geselecteerde entiteit synchroniseren",
@@ -425,7 +462,8 @@ export default {
     card_type_options: {
       default: "Standaard",
       search: "Zoeken",
-      group_players: "Spelers groeperen",
+      group_players: "Spelers",
+      players: "Spelers",
       up_next: "Hierna",
       remote_control: "Afstandsbediening",
     },
@@ -491,16 +529,22 @@ export default {
       search: "Zoeken",
       source: "Bron",
       remote_controls: "Afstandsbediening",
-      show_lyrics: "Songtekst weergeven",
+      show_lyrics: "Songtekst",
       hide_lyrics: "Songtekst verbergen",
+      full_screen: "Volledig scherm",
+      exit_full_screen: "Volledig scherm verlaten",
       transfer_queue: "Wachtrij Overdragen",
       main_menu: "Hoofdmenu",
-      group_players: "Spelers Groeperen",
+      group_players: "Spelers",
+      players: "Spelers",
       up_next: "Hierna",
       remote_control: "Afstandsbediening",
       select_entity: "Selecteer Entiteit voor Meer Info",
       transfer_to: "Wachtrij Overdragen Naar",
       no_players: "Geen andere Music Assistant spelers beschikbaar.",
+      active: "(Actief)",
+      set_active_entity: "Instellen als actieve entiteit",
+      active_entity: "Actieve entiteit",
     },
     remote: {
       title: "Afstandsbediening",
@@ -515,7 +559,7 @@ export default {
       power: "AAN/UIT",
     },
     grouping: {
-      title: "Spelers Groeperen",
+      title: "Spelers",
       sync_volume: "Volume Synchroniseren",
       group_all: "Alles Groeperen",
       ungroup_all: "Alles Loskoppelen",
@@ -525,8 +569,30 @@ export default {
       joined: "Gekoppeld",
       available: "Beschikbaar",
       current: "Huidig",
+      group_label: "{master}-groep",
+      unjoin: "Loskoppelen",
+      join: "Koppelen",
+      join_with_group: "Koppelen met groep",
       unjoin_from: "Loskoppelen van {master}",
       join_with: "Koppelen met {master}",
+      transfer_to_player: "Wachtrij overdragen naar {player}",
+      transfer_to_group: "Wachtrij overdragen naar {master}-groep",
+      transfer_current_player: "Speelt momenteel hier af",
+      transfer_no_queue: "Geen actieve wachtrij om over te dragen",
+      transfer_not_ma: "Music Assistant-speler vereist",
+      transferring_to: "Wachtrij overdragen naar {player}...",
+      transferring_coordinator: "Afspelen overdragen naar {player}...",
+      regrouping: "Luidsprekers opnieuw groeperen met {player}...",
+      transfer_success: "Wachtrij verzonden naar {player}.",
+      standalone: "Vrijstaand",
+      search_players: "Zoek spelers om toe te voegen...",
+      add_player: "Toevoegen aan sessie",
+      add: "Toevoegen",
+      remove_player: "Verwijderen uit sessie",
+      keep_player: "Behouden in sessie",
+      no_search_results: "Geen overeenkomende spelers gevonden",
+      transient_session: "Sessiespeler",
+      transient_auto: "Afspelende speler",
     },
   },
   search: {
@@ -573,6 +639,8 @@ export default {
       station: "Zender",
       podcast: "Podcast",
       audiobook: "Luisterboek",
+      shows: "Shows",
+      show: "Show",
     },
     search_artist: "Blader door albums van deze artiest",
     browse_artist: "Albums van {artist} doorzoeken",

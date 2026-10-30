@@ -7,6 +7,8 @@ import nl from "./languages/nl.js";
 import pt from "./languages/pt.js";
 import sk from "./languages/sk.js";
 import sl from "./languages/sl.js";
+import sr from "./languages/sr.js";
+import sr_Latn from "./languages/sr-Latn.js";
 
 const languages = {
   en,
@@ -18,6 +20,9 @@ const languages = {
   pt,
   sk,
   sl,
+  sr,
+  sr_Latn,
+  sr_latn: sr_Latn,
 };
 
 let activeHassLanguage = null;
@@ -36,7 +41,7 @@ export function setHassLanguage(lang) {
 }
 
 function getStoredLanguage() {
-  if (typeof localStorage === "undefined") return "";
+  if (typeof window === "undefined" || typeof localStorage === "undefined") return "";
   try {
     const raw = localStorage.getItem("selectedLanguage");
     if (!raw) return "";
@@ -143,7 +148,7 @@ export function localize(string, search = "", replace = "") {
     for (const [s, r] of Object.entries(search)) {
       translated = translated.replaceAll(s, r);
     }
-  } else if (search !== "" && replace !== "") {
+  } else if (typeof search === "string" && search !== "" && replace !== "") {
     translated = translated.replaceAll(search, replace);
   }
   return translated;

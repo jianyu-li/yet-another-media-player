@@ -2,8 +2,6 @@
 import { LitElement, html, nothing } from "lit";
 import { classMap } from "lit/directives/class-map.js";
 import { styleMap } from "lit/directives/style-map.js";
-import { virtualize } from "@lit-labs/virtualizer/virtualize.js";
-import { yampGrid } from "./yamp-grid-layout.js";
 
 import { createHoldToPinHandler, renderChipRow } from "./chip-row.js";
 import { renderActionChipRow } from "./action-chip-row.js";
@@ -12,23 +10,54 @@ import { renderVolumeRow } from "./volume-row.js";
 import { renderProgressBar } from "./progress-bar.js";
 import { yampCardStyles } from "./yamp-card-styles.js";
 import { QueueDragMixin } from "./yamp-queue-drag.js";
-import { parseLrc } from "./lyrics-parser.js";
 import "./lyrics-view.js";
 import { YampMediaSessionManager } from "./yamp-media-session.js";
 import {
   renderSearchOptionsOverlay,
-  searchMedia,
-  playSearchedMedia,
-  getFavorites,
-  getRecentlyPlayed,
   isTrackFavorited,
-  getMassQueueConfigEntryId,
-  getMusicAssistantConfigEntryId,
-  renderSearchResultItem,
-  ALLOWED_MEDIA_TYPES,
-  transformMusicAssistantItem
 } from "./search-sheet.js";
 import "./yamp-editor.js";
+
+import { renderSourceListSheet } from "./sheets/source-selector-sheet.js";
+import { renderRemoteControlSheet } from "./sheets/remote-control-sheet.js";
+import {
+  renderGroupingSheet,
+  renderTransferQueueSheet,
+  renderResolvedEntitiesSheet,
+} from "./sheets/device-group-sheet.js";
+import {
+  renderSearchInOptions,
+  renderSearchSubFilters,
+} from "./sheets/options-search-sheet.js";
+import {
+  renderMainMenu,
+  renderGroupingMenuOption,
+  renderOptionsOverlay,
+} from "./sheets/options-sheet.js";
+import { TemplateController } from "./controllers/template-controller.js";
+import { LyricsController, cleanTrackMetadata } from "./controllers/lyrics-controller.js";
+import { ArtworkController } from "./controllers/artwork-controller.js";
+import { QueueController } from "./controllers/queue-controller.js";
+import { VolumeHoldController, getVolumeIconForPercent } from "./controllers/volume-hold-controller.js";
+import { SearchController } from "./controllers/search-controller.js";
+import {
+  mediaPlay,
+  mediaPause,
+  mediaStop,
+  mediaNextTrack,
+  mediaPreviousTrack,
+  mediaSeek,
+  setShuffle,
+  setRepeat,
+  selectSource,
+  togglePower,
+  setVolume,
+  setMute,
+  sendRemoteCommand,
+  sendRemoteVolumeStep,
+  joinPlayers,
+  unjoinPlayer,
+} from "./services/ha-media-services.js";
 
 
 import {
@@ -38,33 +67,31 @@ import {
   getActionPlacement,
   findAssociatedButtonEntities,
   getMusicAssistantState,
-  getSearchResultClickTitle,
   isMusicAssistantEntity,
-  getArtworkUrl,
   isValidArtworkUrl,
-  getValidArtworkAttr,
   getEntityName,
   areEntitiesPlayingSameMedia,
-  isPlaceholderMediaTitle
+  isPlaceholderMediaTitle,
+  findPlayingUnconfiguredPlayers
 } from "./yamp-utils.js";
 import { localize, setHassLanguage } from "./localize/localize.js";
 
 
 import {
+  SUPPORT_VOLUME_SET,
   SUPPORT_VOLUME_MUTE,
   SUPPORT_TURN_ON,
   SUPPORT_TURN_OFF,
   SUPPORT_STOP,
   SUPPORT_GROUPING,
-  ARTWORK_OVERRIDE_MATCH_KEYS,
   DEFAULT_PROGRESS_BAR_HEIGHT,
-  DEFAULT_LYRICS_BACKGROUND_FADE,
-  TEMPLATE_CONFIGS
+  DEFAULT_BACKGROUND_FADE,
+  GROUP_SELECTION_FEEDBACK_DURATION_MS,
+  getTemplatePresetDefaults,
+  CANONICAL_MENU_OPTION_MAP,
+  SESSION_STORAGE_PREFIX,
+  SESSION_STORAGE_TTL_MS,
 } from "./constants.js";
-
-const PLAYLIST_FETCH_LIMIT = 500;
-const SUCCESS_MESSAGE_TIMEOUT_MS = 3000;
-const MAX_LYRICS_CACHE_SIZE = 30;
 
 const ADAPTIVE_TEXT_TARGETS = Object.freeze(["details", "menu", "action_chips", "lyrics"]);
 const DEFAULT_ADAPTIVE_TEXT_TARGETS = Object.freeze([...ADAPTIVE_TEXT_TARGETS]);
@@ -107,7 +134,7 @@ console.info(
   "color: #ff9800; background: white; font-weight: bold; border-radius: 0 4px 4px 0; padding: 1px 5px; border: 1px solid #ff9800; border-left: none;"
 );
 
-class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
+export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
   _handleChipPointerDown(e, idx) {
     this._chipGestureStartX = e.clientX;
@@ -119,6 +146,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _applyIdleScreen() {
+    if (this._cardType === "group_players") return;
     if (this._idleScreenApplied) return;
     const mode = this._idleScreen || "default";
     switch (mode) {
@@ -254,17 +282,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
    * Strips common suffixes like "- Remastered", "(feat. ...)", etc.
    */
   _cleanTrackMetadata(text) {
-    if (!text || typeof text !== 'string') return '';
-    return text
-      .split(" - ")[0] // Often "Track Name - Extra Info"
-      .replace(/\(feat\..*?\)/gi, "")
-      .replace(/\(with.*?\)/gi, "")
-      .replace(/\[.*?\]/g, "")
-      .replace(/\(.*?\)/g, "")
-      .replace(/- \d{4} Remaster.*/gi, "")
-      .replace(/- Remastered.*/gi, "")
-      .replace(/- Single.*/gi, "")
-      .trim();
+    return cleanTrackMetadata(text);
   }
 
   // Get the favorite button entity for the current Music Assistant entity
@@ -282,6 +300,23 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       return null;
     }
 
+    if (!this._favoriteButtonCache) {
+      this._favoriteButtonCache = new Map();
+    }
+    const currentEntities = this.hass?.entities ?? null;
+    if (this._lastEntitiesRef !== currentEntities) {
+      this._favoriteButtonCache.clear();
+      this._lastEntitiesRef = currentEntities;
+    }
+
+    if (this._favoriteButtonCache.has(activeEntityId)) {
+      const cachedId = this._favoriteButtonCache.get(activeEntityId);
+      if (!cachedId || this.hass?.states?.[cachedId]) {
+        return cachedId;
+      }
+      this._favoriteButtonCache.delete(activeEntityId);
+    }
+
     // Find a favorite button associated with this entity
     const buttonEntities = this._findAssociatedButtonEntities(activeEntityId);
     const favoriteButton = buttonEntities.find(btn =>
@@ -290,7 +325,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       btn.device_class === 'favorite' ||
       btn.entity_id.toLowerCase().includes('favorite')
     );
-    return favoriteButton?.entity_id || null;
+    const result = favoriteButton?.entity_id || null;
+    if (result || !/** @type {any} */ (buttonEntities)._incomplete) {
+      this._favoriteButtonCache.set(activeEntityId, result);
+    }
+    return result;
   }
 
   // Get the current Music Assistant state
@@ -381,8 +420,35 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   connectedCallback() {
     super.connectedCallback();
     this._isEditorPreviewCached = undefined;
+    this._initialAutoDiscoveryDone = false;
+    if (this.config) {
+      const stored = this._loadStoredSessionEntities();
+      if (stored.length > 0) {
+        const configuredSet = new Set(
+          (this.config.entities || [])
+            .map((e) => (typeof e === "string" ? e : e?.entity_id || e?.entity))
+            .filter(Boolean)
+        );
+        const currentSession = this._sessionEntities || [];
+        const merged = Array.from(new Set([...stored, ...currentSession])).filter(
+          (id) => !configuredSet.has(id)
+        );
+        if (merged.length !== this._sessionEntities?.length) {
+          this._sessionEntities = merged;
+          this._cachedEffectiveEntities = null;
+          this._cachedEntityIds = null;
+          this._cachedEntityObjs = null;
+        }
+      }
+    }
     window.addEventListener("scroll", this._handleGlobalScroll, { passive: true });
     window.addEventListener("resize", this._handleViewportResize, { passive: true });
+    if (this._handleKeyDownBound) {
+      window.addEventListener("keydown", this._handleKeyDownBound);
+    }
+    if (this._handleVisibilityChangeBound) {
+      document.addEventListener("visibilitychange", this._handleVisibilityChangeBound);
+    }
     this._updateViewportFlags();
     this._updateAdaptiveTextObserverState();
     if (this._mediaSessionManager && this._isMediaSessionEnabled) {
@@ -409,12 +475,13 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const row = this.renderRoot?.querySelector('.controls-row');
     if (!row) return true; // Default to show if can't measure
     const minWide = row.offsetWidth > 480;
-    const showFavorite = !!this._getFavoriteButtonEntity() && !this._getHiddenControlsForCurrentEntity().favorite;
+    const hiddenControls = this._getHiddenControlsForCurrentEntity();
+    const showFavorite = !hiddenControls.favorite && !!this._getFavoriteButtonEntity();
     const controls = countMainControls(
       stateObj,
       (s, f) => this._supportsFeature(s, f),
       showFavorite,
-      this._getHiddenControlsForCurrentEntity(),
+      hiddenControls,
       true,
       this._controlLayout
     );
@@ -422,8 +489,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     return minWide || controls <= 5;
   }
   _isAutoSelectDisabled(idx) {
-    const conf = this.config.entities[idx];
-    return typeof conf === "string" ? false : !!conf.disable_auto_select;
+    const conf = this._effectiveEntities[idx];
+    return typeof conf === "string" ? false : !!conf?.disable_auto_select;
   }
 
   get sortedEntityIds() {
@@ -438,7 +505,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     return meta
       .sort((a, b) => {
         // Disabled entities always sort to the end
-        if (a.disabled !== b.disabled) return a.disabled - b.disabled;
+        if (a.disabled !== b.disabled) return a.disabled ? 1 : -1;
         if (a.ts === b.ts) return a.idx - b.idx;
         return b.ts - a.ts;
       })
@@ -518,10 +585,190 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     _showSourceMenu: { state: true },
     _volumeDraggingEntity: { state: true },
     _dragVolume: { state: true },
-    _mediaSessionOverride: { state: true }
+    _mediaSessionOverride: { state: true },
+    _fullScreenOverride: { state: true },
+    _sessionEntities: { state: true },
+    _autoEntities: { state: true },
+    _playerSearchQuery: { state: true },
+    _renderTick: { state: true }
   };
 
   static styles = yampCardStyles;
+
+  /**
+   * Handles tab/browser visibility changes to pause background timers when hidden.
+   */
+  _handleVisibilityChange() {
+    if (typeof document !== "undefined" && document.hidden) {
+      if (this._progressTimer) {
+        clearInterval(this._progressTimer);
+        this._progressTimer = null;
+      }
+    } else {
+      if (this.config?.auto_add_playing_entities && !this._isEditorPreview) {
+        this._discoverAutoEntities(null);
+      }
+      this.requestUpdate();
+    }
+  }
+
+  /**
+   * Forces a re-render safely, ensuring it isn't swallowed by shouldUpdate
+   * if batched in the same microtask as an irrelevant 'hass' update.
+   */
+  triggerRender() {
+    this._renderTick = Date.now();
+  }
+
+  /**
+   * Lit lifecycle hook: determines whether the element should re-render.
+   * Filters out high-frequency Home Assistant entity updates unrelated to YAMP.
+   * @param {Map<string | number | symbol, unknown>} changedProps
+   * @returns {boolean}
+   */
+  shouldUpdate(changedProps) {
+    // If the document is completely hidden (e.g. tablet screen off, background tab),
+    // skip DOM re-renders to save RAM and CPU.
+    if (typeof document !== "undefined" && document.hidden) {
+      return false;
+    }
+
+    // Always update if anything other than 'hass' changed
+    if (!changedProps.has("hass") || changedProps.size > 1) {
+      return true;
+    }
+
+    const oldHass = /** @type {any} */ (changedProps.get("hass"));
+    if (!oldHass || !this.hass) {
+      return true;
+    }
+
+    // Always update in editor preview for maximum responsiveness
+    if (this._isEditorPreview) {
+      return true;
+    }
+
+    // Check themes, dark mode, language, locale
+    if (
+      this.hass.themes !== oldHass.themes ||
+      this.hass.darkMode !== oldHass.darkMode ||
+      this.hass.language !== oldHass.language ||
+      this.hass.selectedLanguage !== oldHass.selectedLanguage ||
+      this.hass.locale !== oldHass.locale
+    ) {
+      return true;
+    }
+
+    // Check if any overlay, sheet, or menu is active
+    if (
+      this._showEntityOptions ||
+      this._showSearchInSheet ||
+      this._showTransferQueue ||
+      this._showGrouping ||
+      this._showRemoteControl ||
+      this._showSourceList ||
+      this._lyricsActive
+    ) {
+      return true;
+    }
+
+    const currentStates = this.hass.states;
+    const oldStates = oldHass.states;
+    if (!currentStates || !oldStates) {
+      return true;
+    }
+
+    // Check all configured media player entities
+    const entityIds = this.entityIds;
+    for (let i = 0; i < entityIds.length; i++) {
+      const id = entityIds[i];
+      if (currentStates[id] !== oldStates[id]) {
+        this._cachedEntityObjs = null;
+        return true;
+      }
+      // Check group members if present
+      const members = currentStates[id]?.attributes?.group_members;
+      if (Array.isArray(members)) {
+        for (let j = 0; j < members.length; j++) {
+          const mId = members[j];
+          if (currentStates[mId] !== oldStates[mId]) {
+            this._cachedEntityObjs = null;
+            return true;
+          }
+        }
+      }
+    }
+
+    // Check resolved companion entities (MA, Volume, Remote)
+    if (this._templateController) {
+      const checkCache = (cache) => {
+        if (!cache) return false;
+        for (const k in cache) {
+          const id = cache[k]?.value || cache[k]?.id;
+          if (typeof id === "string" && id.includes(".") && currentStates[id] !== oldStates[id]) {
+            return true;
+          }
+        }
+        return false;
+      };
+
+      if (
+        checkCache(this._maResolveCache) ||
+        checkCache(this._volResolveCache) ||
+        checkCache(this._remoteResolveCache)
+      ) {
+        return true;
+      }
+    }
+
+    // Check action helper entities (sync_selected_entity, select_entity, etc.)
+    if (this._actionHelperEntities) {
+      for (let i = 0; i < this._actionHelperEntities.length; i++) {
+        const id = this._actionHelperEntities[i];
+        if (currentStates[id] !== oldStates[id]) {
+          return true;
+        }
+      }
+    }
+
+    // Check external entities referenced in client-side JS templates
+    if (this._jsTemplateEntities) {
+      for (let i = 0; i < this._jsTemplateEntities.length; i++) {
+        const id = this._jsTemplateEntities[i];
+        if (currentStates[id] !== oldStates[id]) {
+          return true;
+        }
+      }
+    }
+
+    // Check auto-added playing entities if feature is enabled
+    if (this.config?.auto_add_playing_entities && !this._isEditorPreview) {
+      if (!this._initialAutoDiscoveryDone && this.hass?.states) {
+        this._initialAutoDiscoveryDone = true;
+        if (this._discoverAutoEntities(null)) {
+          return true;
+        }
+      } else if (this._discoverAutoEntities(oldHass)) {
+        return true;
+      }
+    }
+
+    // No relevant entities or settings changed - skip re-render!
+    return false;
+  }
+
+  willUpdate(changedProps) {
+    super.willUpdate?.(changedProps);
+    if (this._sessionEntities?.length) {
+      this._pruneMissingSessionEntities();
+    }
+    if (this.config?.auto_add_playing_entities && !this._isEditorPreview) {
+      if (!this._initialAutoDiscoveryDone && this.hass?.states) {
+        this._initialAutoDiscoveryDone = true;
+        this._discoverAutoEntities(null);
+      }
+    }
+  }
 
   get _controlLayout() {
     const raw = this.config?.control_layout;
@@ -561,6 +808,9 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   get _alwaysCollapsed() {
+    if (this._isFullScreen) {
+      return false;
+    }
     const raw = this.config?.always_collapsed;
     if (typeof raw === 'string' && (raw.includes('{{') || raw.includes('{%') || raw.trim().startsWith('[[['))) {
       const resolved = this._alwaysCollapsedResolveCache?.['card']?.value;
@@ -576,10 +826,12 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     return !!raw;
   }
 
-  get _lyricsBackgroundFade() {
-    const raw = this.config?.lyrics_background_fade;
+  get _backgroundFade() {
+    const raw = this.config?.background_fade ?? this.config?.lyrics_background_fade;
     if (typeof raw === "string" && (raw.includes("{{") || raw.includes("{%") || raw.trim().startsWith("[[["))) {
-      let resolved = this._lyricsBackgroundFadeResolveCache?.["card"]?.value;
+      let resolved =
+        this._backgroundFadeResolveCache?.["card"]?.value ??
+        this._lyricsBackgroundFadeResolveCache?.["card"]?.value;
       if (resolved === undefined && raw.trim().startsWith("[[[")) {
         try {
           resolved = resolveStringTemplateSync(this.hass, raw, this._getTemplateContext());
@@ -589,17 +841,50 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       }
       if (resolved !== undefined && resolved !== null && resolved !== "") {
         const num = Number(resolved);
-        return Number.isFinite(num) ? Math.max(0, Math.min(100, num)) : DEFAULT_LYRICS_BACKGROUND_FADE;
+        return Number.isFinite(num) ? Math.max(0, Math.min(100, num)) : DEFAULT_BACKGROUND_FADE;
       }
-      return DEFAULT_LYRICS_BACKGROUND_FADE;
+      return DEFAULT_BACKGROUND_FADE;
     }
-    if (raw === undefined || raw === null || raw === "") return DEFAULT_LYRICS_BACKGROUND_FADE;
+    if (raw === undefined || raw === null || raw === "") return DEFAULT_BACKGROUND_FADE;
     const num = Number(raw);
-    return Number.isFinite(num) ? Math.max(0, Math.min(100, num)) : DEFAULT_LYRICS_BACKGROUND_FADE;
+    return Number.isFinite(num) ? Math.max(0, Math.min(100, num)) : DEFAULT_BACKGROUND_FADE;
+  }
+
+  _getBackgroundFade() {
+    return this._backgroundFade;
+  }
+
+  get _lyricsBackgroundFade() {
+    return this._backgroundFade;
   }
 
   _getLyricsBackgroundFade() {
-    return this._lyricsBackgroundFade;
+    return this._backgroundFade;
+  }
+
+  get _showChipRow() {
+    const raw = this.config?.show_chip_row;
+    let val = raw;
+    if (typeof raw === "string" && (raw.includes("{{") || raw.includes("{%") || raw.trim().startsWith("[[["))) {
+      let resolved = this._showChipRowResolveCache?.["card"]?.value;
+      if (resolved === undefined && raw.trim().startsWith("[[[")) {
+        try {
+          resolved = resolveStringTemplateSync(this.hass, raw, this._getTemplateContext());
+        } catch (e) {
+          // Ignore sync evaluation error
+        }
+      }
+      if (resolved !== undefined && resolved !== null && resolved !== "") {
+        val = resolved;
+      } else {
+        return "auto"; // Default until template resolves
+      }
+    }
+    return typeof val === "string" ? val.trim() : (val || "auto");
+  }
+
+  _getShowChipRow() {
+    return this._showChipRow;
   }
 
   get _artworkGradientDisabled() {
@@ -615,7 +900,31 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   get _cardType() {
-    return this.config?.card_type || "default";
+    let type = this.config?.card_type;
+    const templateCardType = this.config?.template
+      ? getTemplatePresetDefaults(this.config.template)?.card_type
+      : null;
+    if ((!type || type === "default" || type === "standard") && templateCardType) {
+      type = templateCardType;
+    }
+    type = type || "default";
+    if (
+      type === "group_players" ||
+      type === "group-players" ||
+      type === "players" ||
+      type === "dedicated_players" ||
+      type === "dedicated-players" ||
+      type === "dedicated_grouping" ||
+      type === "dedicated-grouping" ||
+      type === "transfer_queue" ||
+      type === "transfer-queue"
+    ) {
+      return "group_players";
+    }
+    if (type === "dedicated_search") {
+      return "search";
+    }
+    return type;
   }
 
   get _isSpecializedCard() {
@@ -626,20 +935,32 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     if (this._isEditorPreviewCached !== undefined) {
       return this._isEditorPreviewCached;
     }
-    if (this.preview === true) {
+    if (this.preview === true || (this.hasAttribute && this.hasAttribute("preview"))) {
       return (this._isEditorPreviewCached = true);
     }
-    if (!this.isConnected) {
-      return false;
+    // Traverse upwards across all shadow DOM and light DOM boundaries
+    let node = this;
+    while (node) {
+      if (
+        node.preview === true ||
+        (node.hasAttribute && node.hasAttribute("preview")) ||
+        (node.tagName && (
+          node.tagName.toLowerCase() === "hui-card-preview" ||
+          node.tagName.toLowerCase() === "hui-dialog-edit-card" ||
+          node.tagName.toLowerCase() === "hui-card-element-editor" ||
+          node.tagName.toLowerCase() === "ha-dialog" ||
+          node.tagName.toLowerCase().includes("editor") ||
+          node.tagName.toLowerCase().includes("preview")
+        ))
+      ) {
+        return (this._isEditorPreviewCached = true);
+      }
+      node = node.parentElement || node.parentNode || (node.getRootNode && node.getRootNode()?.host);
     }
-    const isPreview = Boolean(
-      (typeof this.closest === "function" && this.closest("hui-card-preview")) ||
-      (this.parentElement && this.parentElement.tagName && this.parentElement.tagName.toLowerCase() === "hui-card-preview") ||
-      (this.getRootNode && this.getRootNode()?.host?.closest?.("hui-card-preview")) ||
-      (this.getRootNode && this.getRootNode()?.host?.parentElement?.tagName?.toLowerCase() === "hui-card-preview")
-    );
-    this._isEditorPreviewCached = isPreview;
-    return isPreview;
+    if (this.isConnected) {
+      this._isEditorPreviewCached = false;
+    }
+    return false;
   }
 
   get _lockScreenControls() {
@@ -666,8 +987,58 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     return this._lockScreenControls;
   }
 
+  get _fullScreenConfig() {
+    const raw = this.config?.full_screen;
+    if (typeof raw === "string" && (raw.includes("{{") || raw.includes("{%") || raw.trim().startsWith("[[["))) {
+      const resolved = this._fullScreenResolveCache?.["card"]?.value;
+      if (resolved !== undefined && resolved !== null && resolved !== "") {
+        if (typeof resolved === "boolean") return resolved;
+        const lower = String(resolved).trim().toLowerCase();
+        return lower === "true" || lower === "1" || lower === "on" || lower === "yes";
+      }
+      return false; // Default until template resolves
+    }
+    return raw === true;
+  }
+
+  get _isFullScreen() {
+    if (this._isEditorPreview) {
+      return false;
+    }
+    if (this._fullScreenOverride !== null) {
+      return this._fullScreenOverride;
+    }
+    return this._fullScreenConfig;
+  }
+
   constructor() {
     super();
+    /** @type {boolean | null} */
+    this._fullScreenOverride = null;
+    this._handleKeyDownBound = this._handleKeyDown.bind(this);
+    this._handleVisibilityChangeBound = this._handleVisibilityChange.bind(this);
+    /** @type {any[] | null} */
+    this._cachedEffectiveEntities = null;
+    /** @type {string[] | null} */
+    this._cachedEntityIds = null;
+    /** @type {any[] | null} */
+    this._cachedEntityObjs = null;
+    /** @type {string[]} */
+    this._sessionEntities = [];
+    /** @type {string[]} */
+    this._autoEntities = [];
+    /** @type {boolean} */
+    this._initialAutoDiscoveryDone = false;
+    /** @type {string} */
+    this._playerSearchQuery = "";
+    /** @type {string[] | null} */
+    this._actionHelperEntities = null;
+    /** @type {string[] | null} */
+    this._jsTemplateEntities = null;
+    /** @type {Map<string, string | null> | null} */
+    this._favoriteButtonCache = null;
+    /** @type {Record<string, any> | null} */
+    this._lastEntitiesRef = null;
     this._mediaSessionOverride = null;
     this._mediaSessionUpdatePending = false;
     this._mediaSessionManager = new YampMediaSessionManager(this);
@@ -716,18 +1087,24 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._showGrouping = false;
     // Overlay state for source list sheet
     this._showSourceList = false;
+    // Queue state & controller
+    /** @type {QueueController} */
+    this._queueController = new QueueController(this);
     // Overlay state for transfer queue sheet
     this._showTransferQueue = false;
     this._showRemoteControl = false;
     this._cardHeightTemplateValue = {};
     this._cardHeightResolveCache = {};
-    this._lastCardHeightContextKey = null;
-    this._lyricsBackgroundFadeTemplateValue = {};
-    this._lyricsBackgroundFadeResolveCache = {};
-    this._lastLyricsBackgroundFadeContextKey = null;
+    this._backgroundFadeTemplateValue = {};
+    this._backgroundFadeResolveCache = {};
+    this._lyricsBackgroundFadeTemplateValue = this._backgroundFadeTemplateValue;
+    this._lyricsBackgroundFadeResolveCache = this._backgroundFadeResolveCache;
     this._lockScreenControlsTemplateValue = {};
     this._lockScreenControlsResolveCache = {};
-    this._lastLockScreenControlsContextKey = null;
+    this._fullScreenTemplateValue = {};
+    this._fullScreenResolveCache = {};
+    this._showChipRowTemplateValue = {};
+    this._showChipRowResolveCache = {};
     this._transferQueuePendingTarget = null;
     this._transferQueueStatus = null;
     this._hasTransferQueueForCurrent = false;
@@ -738,6 +1115,9 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._lastVolumeRendered = true;
     // Group base volume for group gain logic
     this._groupBaseVolume = null;
+    // Search controller
+    /** @type {SearchController} */
+    this._searchController = new SearchController(this);
     // Search sheet state variables
     this._searchQuery = "";
     this._searchLoading = false;
@@ -762,6 +1142,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._playbackLingerByIdx = {};
     // Track the last resolved entity for each chip to provide "sticky" selection and prevent flickers
     this._lastResolvedEntityIdByChip = {};
+    // Track manual active entity overrides selected via More Info sheet
+    this._manualActiveEntityByChip = {};
     // Show search-in-sheet flag for entity options sheet
     this._showSearchInSheet = false;
     this._searchHeadersRetracted = false;
@@ -789,7 +1171,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._massQueueAvailable = false;
     this._hasMassQueueIntegration = null;
     this._checkingMassQueueIntegration = false;
-    this._lyricsCache = new Map();
+    this._aiRadioShowsAvailable = false;
     // Quick-dismiss mode for action-triggered menu items
     this._quickMenuInvoke = false;
     // Track collapsed layout height for idle mode
@@ -816,15 +1198,21 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._fontColorTemplateResult = "";
     this._resolvingFontColorTemplate = false;
     this._fontColorTemplateNeedsResolve = false;
-    this._artworkOverrideTemplateCache = {};
-    this._artworkOverrideIndexMap = null;
+    // Artwork controller
+    /** @type {ArtworkController} */
+    this._artworkController = new ArtworkController(this);
+    this._artworkOverrideTemplateCache = this._artworkController.artworkOverrideTemplateCache;
+    this._artworkOverrideIndexMap = this._artworkController.artworkOverrideIndexMap;
     this._hideActiveEntityLabel = false;
     this._hideActiveEntityLabelOnIdle = false;
     this._currentDetailsScale = null;
     this._lastNonLyricsLowerContentHeight = null;
     this._lowerControlsHeight = null;
 
-    // Lyrics state
+    // Lyrics state & controller
+    /** @type {LyricsController} */
+    this._lyricsController = new LyricsController(this);
+    this._lyricsCache = this._lyricsController.cache;
     this._massLyrics = []; // Array of parsed lyric objects { time, text }
     this._lastLyricsTrackId = null; // Track ID of currently loaded lyrics
     this._lastLyricsArtist = null; // Artist of currently loaded lyrics
@@ -931,28 +1319,48 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     // Track previous states to detect transitions
     this._lastMainState = null;
     this._lastMaState = null;
-    // Cache resolved MA entity per index to use during render without switching chips
-    this._maResolveCache = {}; // { [idx:number]: { id: string, ts: number } }
+    this._lastMainStateByChip = {};
+    this._lastMaStateByChip = {};
+    this._lastLingerRenderIdx = null;
+    // Initialize TemplateController for Jinja WS subscriptions and JS template evaluation
+    /** @type {TemplateController} */
+    this._templateController = new TemplateController(this);
+    /** @type {VolumeHoldController} */
+    this._volumeHoldController = new VolumeHoldController(this);
+    this._templateSubscriptions = this._templateController.templateSubscriptions;
+    this._activeSubscriptionTokens = this._templateController.activeSubscriptionTokens;
+    this._maTemplateValues = this._templateController.maTemplateValues;
+    this._volTemplateValues = this._templateController.volTemplateValues;
+    this._remoteTemplateValues = this._templateController.remoteTemplateValues;
+    this._actionInMenuTemplateValues = this._templateController.actionInMenuTemplateValues;
+    this._actionInMenuResolveCache = this._templateController.actionInMenuResolveCache;
+    this._alwaysCollapsedTemplateValue = this._templateController.alwaysCollapsedTemplateValue;
+    this._alwaysCollapsedResolveCache = this._templateController.alwaysCollapsedResolveCache;
+    this._hiddenControlsTemplateValues = this._templateController.hiddenControlsTemplateValues;
+    this._hiddenControlsResolveCache = this._templateController.hiddenControlsResolveCache;
+    this._controlLayoutTemplateValue = this._templateController.controlLayoutTemplateValue;
+    this._controlLayoutResolveCache = this._templateController.controlLayoutResolveCache;
+    this._cardHeightTemplateValue = this._templateController.cardHeightTemplateValue;
+    this._cardHeightResolveCache = this._templateController.cardHeightResolveCache;
+    this._backgroundFadeTemplateValue = this._templateController.backgroundFadeTemplateValue;
+    this._backgroundFadeResolveCache = this._templateController.backgroundFadeResolveCache;
+    this._lyricsBackgroundFadeTemplateValue = this._backgroundFadeTemplateValue;
+    this._lyricsBackgroundFadeResolveCache = this._backgroundFadeResolveCache;
+    this._lockScreenControlsTemplateValue = this._templateController.lockScreenControlsTemplateValue;
+    this._lockScreenControlsResolveCache = this._templateController.lockScreenControlsResolveCache;
+    this._fullScreenTemplateValue = this._templateController.fullScreenTemplateValue;
+    this._fullScreenResolveCache = this._templateController.fullScreenResolveCache;
+    this._showChipRowTemplateValue = this._templateController.showChipRowTemplateValue;
+    this._showChipRowResolveCache = this._templateController.showChipRowResolveCache;
+    this._maResolveCache = this._templateController.maResolveCache;
+    this._volResolveCache = this._templateController.volResolveCache;
+    this._remoteResolveCache = this._templateController.remoteResolveCache;
+    this._compiledJsTemplates = this._templateController.compiledJsTemplates;
     this._maResolveTtlMs = 7000; // refresh every ~7s
     // Manual select timeout for hold-to-pin functionality
     this._manualSelectTimeout = null;
-    // Track active websocket template subscriptions
-    this._templateSubscriptions = {}; // { [idx_type]: unsubscribeFunction }
-    this._activeSubscriptionTokens = {}; // { [idx_type]: Symbol }
-    this._maTemplateValues = {}; // { [idx]: { template: string, resolved: string } }
-    this._volTemplateValues = {}; // { [idx]: { template: string, resolved: string } }
-    this._actionInMenuTemplateValues = {}; // { [idx]: { template: string, resolved: string } }
-    this._actionInMenuResolveCache = {}; // { [idx]: { value: string, ts: number } }
-    this._alwaysCollapsedTemplateValue = {}; // { card: { template: string, resolved: string } }
-    this._alwaysCollapsedResolveCache = {}; // { card: { value: string, ts: number } }
-    this._hiddenControlsTemplateValues = {}; // { [idx]: { template: string, resolved: string } }
-    this._hiddenControlsResolveCache = {}; // { [idx]: { value: string, ts: number } }
     this._lastActionEntityId = null;
-    // Cache resolved Volume entity per index (template or static)
-    this._volResolveCache = {}; // { [idx:number]: { id: string, ts: number } }
     this._volResolveTtlMs = 7000; // Used for static caching now
-    this._remoteResolveCache = {}; // { [idx:number]: { id: string, ts: number } }
-    this._remoteTemplateValues = {}; // { [idx]: { template: string, resolved: string } }
     // Track the last entity that was playing for better pause/resume behavior
     this._lastPlayingEntityId = null;
     // Control focus lock to prefer most-recently controlled entity in brief paused window
@@ -970,414 +1378,59 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._volumeOverlayMuted = false;
     this._internalVolumeChangeFlag = false;
     this._showVolumeOverlay = false;
+    this._holdTitleForVolume = false;
     this._queueOperationPromise = Promise.resolve();
     this._queueOpsTotal = 0;
     this._queueOpsCompleted = 0;
     this._queueOpsTimeout = null;
   }
 
-  // Subscribe to a template and update properties reactively
+  // Template Controller Delegations
   _subscribeToTemplate(idx, type, templateString) {
-    if (!this.hass || !this.hass.connection) return;
-
-    const subKey = `${idx}_${type}`;
-
-    let currentCache;
-    let templateVals;
-    let cache;
-    if (type === 'ma') {
-      currentCache = this._maTemplateValues[idx];
-      templateVals = this._maTemplateValues;
-      cache = this._maResolveCache;
-    } else if (type === 'vol') {
-      currentCache = this._volTemplateValues[idx];
-      templateVals = this._volTemplateValues;
-      cache = this._volResolveCache;
-    } else if (type === 'remote') {
-      currentCache = this._remoteTemplateValues[idx];
-      templateVals = this._remoteTemplateValues;
-      cache = this._remoteResolveCache;
-    } else if (type === 'action_in_menu') {
-      currentCache = this._actionInMenuTemplateValues[idx];
-      templateVals = this._actionInMenuTemplateValues;
-      cache = this._actionInMenuResolveCache;
-    } else if (type === 'always_collapsed') {
-      currentCache = this._alwaysCollapsedTemplateValue[idx];
-      templateVals = this._alwaysCollapsedTemplateValue;
-      cache = this._alwaysCollapsedResolveCache;
-    } else if (type === 'hidden_controls') {
-      currentCache = this._hiddenControlsTemplateValues[idx];
-      templateVals = this._hiddenControlsTemplateValues;
-      cache = this._hiddenControlsResolveCache;
-    } else if (type === 'control_layout') {
-      currentCache = this._controlLayoutTemplateValue[idx];
-      templateVals = this._controlLayoutTemplateValue;
-      cache = this._controlLayoutResolveCache;
-    } else if (type === 'card_height') {
-      currentCache = this._cardHeightTemplateValue[idx];
-      templateVals = this._cardHeightTemplateValue;
-      cache = this._cardHeightResolveCache;
-    } else if (type === 'lyrics_background_fade') {
-      currentCache = this._lyricsBackgroundFadeTemplateValue[idx];
-      templateVals = this._lyricsBackgroundFadeTemplateValue;
-      cache = this._lyricsBackgroundFadeResolveCache;
-    } else if (type === 'lock_screen_controls') {
-      currentCache = this._lockScreenControlsTemplateValue[idx];
-      templateVals = this._lockScreenControlsTemplateValue;
-      cache = this._lockScreenControlsResolveCache;
-    }
-
-    // Check if there's already an active subscription for this exact template
-    if (this._templateSubscriptions[subKey] && currentCache?.template === templateString) {
-      return;
-    }
-
-    // Unsubscribe from old template if it changed
-    this._unsubscribeFromTemplate(idx, type);
-
-    // Save current template to state
-    templateVals[idx] = { template: templateString, resolved: null };
-
-    // Generate a unique token for this subscription request to prevent race conditions
-    const subToken = Symbol('subToken');
-    this._activeSubscriptionTokens[subKey] = subToken;
-    this._templateSubscriptions[subKey] = subToken;
-
-    // Subscribe to template rendering
-    try {
-      const context = this._getTemplateContext();
-      const setStatements = Object.entries(context)
-        .map(([key, value]) => `{% set ${key} = ${JSON.stringify(value)} %}`)
-        .join(' ');
-      const finalTemplate = `${setStatements} ${templateString}`;
-
-      this.hass.connection.subscribeMessage((msg) => {
-        // If we have unsubscribed or started a new subscription since, ignore message
-        if (this._activeSubscriptionTokens[subKey] !== subToken) {
-          return;
-        }
-
-        const resolved = (msg.result || '').toString().trim();
-        let isValid = false;
-
-        if (type === 'ma' || type === 'vol' || type === 'remote') {
-          isValid = resolved && /^([a-z0-9_]+)\.[a-zA-Z0-9_]+$/.test(resolved);
-        } else if (type === 'action_in_menu' || type === 'always_collapsed' || type === 'control_layout' || type === 'card_height' || type === 'lyrics_background_fade' || type === 'lock_screen_controls' || type === 'hidden_controls') {
-          isValid = true; // Any string result is valid
-        }
-
-        let shouldUpdate = false;
-
-        if (templateVals[idx]) {
-          templateVals[idx].resolved = isValid ? resolved : null;
-        }
-
-        if (type === 'ma' || type === 'vol' || type === 'remote') {
-          const currentCached = cache[idx]?.id;
-          if (isValid && currentCached !== resolved) {
-            cache[idx] = { id: resolved, ts: Date.now() };
-            shouldUpdate = true;
-          }
-        } else if (type === 'action_in_menu' || type === 'always_collapsed' || type === 'control_layout' || type === 'card_height' || type === 'lyrics_background_fade' || type === 'lock_screen_controls' || type === 'hidden_controls') {
-          const currentCached = cache[idx]?.value;
-          if (isValid && currentCached !== resolved) {
-            cache[idx] = { value: resolved, ts: Date.now() };
-            shouldUpdate = true;
-          }
-        }
-
-        if (shouldUpdate) {
-          this.requestUpdate();
-        }
-      }, {
-        type: 'render_template',
-        template: finalTemplate
-      }).then((unsub) => {
-        // If it was cancelled while subscribing, call unsub immediately to avoid resource leak
-        if (this._activeSubscriptionTokens[subKey] !== subToken) {
-          try {
-            unsub();
-          } catch (e) { /* ignore */ }
-        } else {
-          this._templateSubscriptions[subKey] = unsub;
-        }
-      });
-    } catch (err) {
-      console.warn('yamp: failed to subscribe to template:', err);
-    }
+    return this._templateController.subscribeToTemplate(idx, type, templateString);
   }
 
   _unsubscribeFromTemplate(idx, type) {
-    const subKey = `${idx}_${type}`;
-    const unsub = this._templateSubscriptions[subKey];
-    if (unsub) {
-      if (typeof unsub === 'function') {
-        try {
-          unsub();
-        } catch (e) { /* ignore */ }
-      }
-      delete this._templateSubscriptions[subKey];
-      delete this._activeSubscriptionTokens[subKey];
-    }
+    return this._templateController.unsubscribeFromTemplate(idx, type);
   }
 
-  async _ensureResolvedTemplateForIndex(idx, typeKey, rawValue, cacheObj, templateValsObj, options = {}) {
-    const { allowObject = false, cacheStaticString = false } = options;
-
-    if (!rawValue || (typeof rawValue !== 'string' && !(allowObject && typeof rawValue === 'object'))) {
-      delete cacheObj[idx];
-      this._unsubscribeFromTemplate(idx, typeKey);
-      if (templateValsObj[idx]) delete templateValsObj[idx];
-      return;
-    }
-
-    if (typeof rawValue === 'string') {
-      const isJsTemplate = rawValue.trim().startsWith('[[[');
-      if (isJsTemplate) {
-        this._unsubscribeFromTemplate(idx, typeKey);
-        if (templateValsObj[idx]) delete templateValsObj[idx];
-
-        const resolvedValue = this._evaluateJsTemplate(rawValue);
-
-        const currentCached = allowObject ? cacheObj[idx]?.value : cacheObj[idx]?.id;
-
-        let changed;
-        if (typeof resolvedValue === 'object' && resolvedValue !== null) {
-          changed = JSON.stringify(currentCached) !== JSON.stringify(resolvedValue);
-        } else if (Number.isNaN(resolvedValue) && Number.isNaN(currentCached)) {
-          changed = false;
-        } else {
-          changed = currentCached !== resolvedValue;
-        }
-
-        if (changed) {
-          if (allowObject) {
-            cacheObj[idx] = { value: resolvedValue, ts: Date.now() };
-          } else {
-            cacheObj[idx] = { id: resolvedValue, ts: Date.now() };
-          }
-          this.requestUpdate();
-        }
-        return;
-      }
-
-      const looksTemplate = rawValue.includes('{{') || rawValue.includes('{%');
-      if (!looksTemplate) {
-        this._unsubscribeFromTemplate(idx, typeKey);
-        if (templateValsObj[idx]) delete templateValsObj[idx];
-
-        if (cacheStaticString) {
-          cacheObj[idx] = { id: rawValue, ts: Date.now() };
-        } else {
-          delete cacheObj[idx];
-        }
-        return;
-      }
-
-      // Setup subscription for reactivity
-      this._subscribeToTemplate(idx, typeKey, rawValue);
-    } else if (allowObject && typeof rawValue === 'object') {
-      // It's a raw array/object, not a string template. Clear template caches.
-      delete cacheObj[idx];
-      this._unsubscribeFromTemplate(idx, typeKey);
-      if (templateValsObj[idx]) delete templateValsObj[idx];
-    }
+  _ensureResolvedTemplateForIndex(idx, typeKey, rawValue, cacheObj, templateValsObj, options = {}) {
+    return this._templateController.ensureResolvedTemplateForIndex(
+      idx,
+      typeKey,
+      rawValue,
+      options,
+      cacheObj,
+      templateValsObj
+    );
   }
 
-  // Resolve and cache the MA entity for a given chip index (template or static)
-  async _ensureResolvedMaForIndex(idx) {
-    const obj = this.entityObjs?.[idx];
-    if (!obj) return;
-    return this._ensureResolvedTemplateForIndex(idx, 'ma', obj.music_assistant_entity, this._maResolveCache, this._maTemplateValues, { cacheStaticString: true });
+  _ensureResolvedMaForIndex(idx) {
+    return this._templateController.ensureResolvedMaForIndex(idx);
   }
 
-  // Resolve and cache the Volume entity for a given chip index (template or static)
-  async _ensureResolvedVolForIndex(idx) {
-    const obj = this.entityObjs?.[idx];
-    if (!obj) return;
-
-    // If follow_active_volume is enabled, we don't need to cache a specific volume entity
-    // as it will be determined dynamically based on the active entity
-    if (obj.follow_active_volume) {
-      delete this._volResolveCache[idx];
-      this._unsubscribeFromTemplate(idx, 'vol');
-      if (this._volTemplateValues[idx]) delete this._volTemplateValues[idx];
-      return;
-    }
-
-    return this._ensureResolvedTemplateForIndex(idx, 'vol', obj.volume_entity, this._volResolveCache, this._volTemplateValues, { cacheStaticString: true });
+  _ensureResolvedVolForIndex(idx) {
+    return this._templateController.ensureResolvedVolForIndex(idx);
   }
 
-  async _ensureResolvedRemoteForIndex(idx) {
-    const obj = this.entityObjs?.[idx];
-    if (!obj) return;
-    return this._ensureResolvedTemplateForIndex(idx, 'remote', obj.remote_entity, this._remoteResolveCache, this._remoteTemplateValues, { cacheStaticString: true });
+  _ensureResolvedRemoteForIndex(idx) {
+    return this._templateController.ensureResolvedRemoteForIndex(idx);
   }
 
-  // Resolve and cache the hidden_controls array for a given chip index
-  async _ensureResolvedHiddenControlsForIndex(idx) {
-    const obj = this.entityObjs?.[idx];
-    if (!obj) return;
-    return this._ensureResolvedTemplateForIndex(idx, 'hidden_controls', obj.hidden_controls, this._hiddenControlsResolveCache, this._hiddenControlsTemplateValues, { allowObject: true });
+  _ensureResolvedHiddenControlsForIndex(idx) {
+    return this._templateController.ensureResolvedHiddenControlsForIndex(idx);
   }
 
   _evaluateJsTemplate(templateStr) {
-    if (typeof templateStr !== "string") return templateStr;
-
-    const trimmed = templateStr.trim();
-    if (!trimmed.startsWith("[[[") || !trimmed.endsWith("]]]")) {
-      return templateStr;
-    }
-
-    // Extract the JS code block
-    const code = trimmed.substring(3, trimmed.length - 3).trim();
-
-    try {
-      const hass = this.hass;
-      if (!hass) return undefined;
-
-      const states = hass.states;
-      const user = hass.user;
-      const is_state = (entity, state) => states[entity]?.state === state;
-      const state_attr = (entity, attr) => states[entity]?.attributes?.[attr];
-
-      // Compile and execute in context
-      const context = this._getTemplateContext();
-      if (!this._compiledJsTemplates) this._compiledJsTemplates = {};
-      if (!this._compiledJsTemplates[code]) {
-        const body = code.includes("return") ? code : `return (${code});`;
-        this._compiledJsTemplates[code] = new Function(
-          "hass", "states", "user", "is_state", "state_attr", "context",
-          "current", "is_idle", "is_playing", "is_search", "is_grouping",
-          "is_source", "is_lyrics", "is_options", "is_transfer_queue", "is_any_menu_open", "is_dark_mode", "is_mobile", "is_music_assistant", "is_music",
-          body
-        );
-      }
-      return this._compiledJsTemplates[code](
-        hass, states, user, is_state, state_attr, context,
-        context.current, context.is_idle, context.is_playing, context.is_search, context.is_grouping,
-        context.is_source, context.is_lyrics, context.is_options, context.is_transfer_queue, context.is_any_menu_open, context.is_dark_mode, context.is_mobile, context.is_music_assistant, context.is_music
-      );
-    } catch (err) {
-      console.warn("yamp: failed to evaluate JS template:", templateStr, err);
-      return undefined;
-    }
+    return this._templateController.evaluateJsTemplate(templateStr);
   }
 
-  // Unified helper for resolving and subscribing to UI templates
   _syncTemplateSubscriptions(type, currentContext, rawConfigData) {
-    if (!this.hass) return;
-
-    let templateVals, cache, contextKeyName;
-    if (type === 'always_collapsed') {
-      templateVals = this._alwaysCollapsedTemplateValue;
-      cache = this._alwaysCollapsedResolveCache;
-      contextKeyName = '_lastAlwaysCollapsedContextKey';
-    } else if (type === 'action_in_menu') {
-      templateVals = this._actionInMenuTemplateValues;
-      cache = this._actionInMenuResolveCache;
-      contextKeyName = '_lastActionTemplateContextKey';
-    } else if (type === 'control_layout') {
-      templateVals = this._controlLayoutTemplateValue;
-      cache = this._controlLayoutResolveCache;
-      contextKeyName = '_lastControlLayoutContextKey';
-    } else if (type === 'card_height') {
-      templateVals = this._cardHeightTemplateValue;
-      cache = this._cardHeightResolveCache;
-      contextKeyName = '_lastCardHeightContextKey';
-    } else if (type === 'lyrics_background_fade') {
-      templateVals = this._lyricsBackgroundFadeTemplateValue;
-      cache = this._lyricsBackgroundFadeResolveCache;
-      contextKeyName = '_lastLyricsBackgroundFadeContextKey';
-    } else if (type === 'lock_screen_controls') {
-      templateVals = this._lockScreenControlsTemplateValue;
-      cache = this._lockScreenControlsResolveCache;
-      contextKeyName = '_lastLockScreenControlsContextKey';
-    } else {
-      return;
-    }
-
-    const isContextChanged = this[contextKeyName] !== currentContext;
-    if (isContextChanged) {
-      this[contextKeyName] = currentContext;
-    }
-
-    const processItem = (idx, raw) => {
-      const hasJsTemplate = typeof raw === 'string' && raw.trim().startsWith('[[[');
-      if (hasJsTemplate) {
-        this._unsubscribeFromTemplate(idx, type);
-        const resolvedValue = this._evaluateJsTemplate(raw);
-
-        const currentValue = cache[idx]?.value;
-        let isChanged;
-        if (typeof resolvedValue === 'object' && resolvedValue !== null) {
-          isChanged = JSON.stringify(currentValue) !== JSON.stringify(resolvedValue);
-        } else if (Number.isNaN(resolvedValue) && Number.isNaN(currentValue)) {
-          isChanged = false;
-        } else {
-          isChanged = currentValue !== resolvedValue;
-        }
-
-        if (isChanged) {
-          cache[idx] = { value: resolvedValue, ts: Date.now() };
-          this.requestUpdate();
-        }
-      } else if (typeof raw === 'string' && (raw.includes('{{') || raw.includes('{%'))) {
-        if (isContextChanged) {
-          this._unsubscribeFromTemplate(idx, type);
-          if (templateVals[idx]) delete templateVals[idx];
-          if (cache[idx]) delete cache[idx];
-        }
-        this._subscribeToTemplate(idx, type, raw);
-      } else {
-        this._unsubscribeFromTemplate(idx, type);
-        if (templateVals[idx]) delete templateVals[idx];
-        delete cache[idx];
-      }
-    };
-
-    if (type === 'always_collapsed' || type === 'control_layout' || type === 'card_height' || type === 'lyrics_background_fade' || type === 'lock_screen_controls') {
-      processItem('card', rawConfigData);
-    } else if (type === 'action_in_menu') {
-      const actions = rawConfigData || [];
-      actions.forEach((act, idx) => processItem(idx, getActionPlacement(act, idx)));
-
-      // Clean up any stale subscriptions for indices beyond the current actions length
-      let checkIdx = actions.length;
-      while (this._templateSubscriptions[`${checkIdx}_${type}`] || templateVals[checkIdx] || cache[checkIdx]) {
-        this._unsubscribeFromTemplate(checkIdx, type);
-        delete templateVals[checkIdx];
-        delete cache[checkIdx];
-        checkIdx++;
-      }
-    }
+    return this._templateController.syncTemplateSubscriptions(type, currentContext, rawConfigData);
   }
 
   _syncEntityTemplateSubscriptions(typeKey, currentContext) {
-    if (!this.hass || !this.entityObjs) return;
-
-    const contextKeyName = `_lastEntity_${typeKey}ContextKey`;
-    const isContextChanged = this[contextKeyName] !== currentContext;
-    if (!isContextChanged) return;
-
-    this[contextKeyName] = currentContext;
-
-    this.entityObjs.forEach((_, idx) => {
-      // Force cache clearing for Jinja templates so they re-subscribe with new context
-      if (this._templateSubscriptions[`${idx}_${typeKey}`]) {
-        this._unsubscribeFromTemplate(idx, typeKey);
-      }
-
-      if (typeKey === 'ma') {
-        this._ensureResolvedMaForIndex(idx);
-      } else if (typeKey === 'vol') {
-        this._ensureResolvedVolForIndex(idx);
-      } else if (typeKey === 'remote') {
-        this._ensureResolvedRemoteForIndex(idx);
-      } else if (typeKey === 'hidden_controls') {
-        this._ensureResolvedHiddenControlsForIndex(idx);
-      }
-    });
+    return this._templateController.syncEntityTemplateSubscriptions(typeKey, currentContext);
   }
 
   // Get the resolved playback entity id for a chip index, preferring cache
@@ -1410,20 +1463,57 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const obj = this.entityObjs[idx];
     if (!obj) return null;
 
+    let candidateMaId = null;
     const cached = this._maResolveCache?.[idx]?.id;
     if (cached && typeof cached === 'string') {
-      return cached;
+      candidateMaId = cached;
+    } else {
+      // No cache - check if we have a static MA entity
+      const rawMaEntity = obj.music_assistant_entity;
+      if (
+        rawMaEntity &&
+        typeof rawMaEntity === 'string' &&
+        !rawMaEntity.includes('{{') &&
+        !rawMaEntity.includes('{%') &&
+        !rawMaEntity.trim().startsWith('[[[')
+      ) {
+        candidateMaId = rawMaEntity;
+      }
     }
 
-    // No cache - check if we have a static MA entity
-    const rawMaEntity = obj.music_assistant_entity;
-    if (rawMaEntity && typeof rawMaEntity === 'string' &&
-      !rawMaEntity.includes('{{') && !rawMaEntity.includes('{%') && !rawMaEntity.trim().startsWith('[[[')) {
-      return rawMaEntity;
+    const mainId = obj.entity_id;
+    if (!candidateMaId || candidateMaId === mainId) {
+      return mainId;
     }
 
-    // No MA entity or template - use main entity
-    return obj.entity_id;
+    const mainState = mainId ? this.hass?.states?.[mainId] : null;
+    const candidateState = candidateMaId ? this.hass?.states?.[candidateMaId] : null;
+
+    const mainIsMa = mainState ? isMusicAssistantEntity(mainState) : false;
+    const candidateIsMa = candidateState ? isMusicAssistantEntity(candidateState) : false;
+
+    // If main entity is a Music Assistant player, but configured candidate is NOT,
+    // prefer the actual Music Assistant player (mainId).
+    if (mainIsMa && !candidateIsMa) {
+      return mainId;
+    }
+
+    // If both are Music Assistant entities, prioritize the one with an active queue or playing
+    if (mainIsMa && candidateIsMa) {
+      const mainHasQueue = Boolean(mainState?.attributes?.active_queue);
+      const candHasQueue = Boolean(candidateState?.attributes?.active_queue);
+      if (mainHasQueue && !candHasQueue) {
+        return mainId;
+      }
+      if (candHasQueue && !mainHasQueue) {
+        return candidateMaId;
+      }
+      if (this._isEntityPlaying?.(mainState) && !this._isEntityPlaying?.(candidateState)) {
+        return mainId;
+      }
+    }
+
+    return candidateMaId;
   }
 
   _isEntityPlaying(stateObj) {
@@ -1444,403 +1534,64 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
   // Resolve template at action time with fallback to main entity (async)
   async _resolveTemplateAtActionTime(templateString, fallbackEntityId) {
-    return resolveTemplateAtActionTime(this.hass, templateString, fallbackEntityId);
+    return resolveTemplateAtActionTime(
+      this.hass,
+      templateString,
+      fallbackEntityId,
+      this._getTemplateContext?.() || {}
+    );
   }
 
-  /**
-   * Attach horizontal swipe on the search‑results area to cycle media‑class filters.
-   */
   _attachSearchSwipe() {
-    if (this._searchSwipeAttached) return;
-    const area = this.renderRoot.querySelector('.entity-options-search-results');
-    if (!area) return;
-
-    // Disable swipe-to-filter when in a hierarchy (artist -> albums -> tracks)
-    if (this._searchHierarchy.length > 0) {
-      return;
-    }
-
-    this._searchSwipeAttached = true;
-
-    const threshold = 40;  // px needed to trigger change
-
-    const touchstartHandler = e => {
-      if (e.touches.length === 1) {
-        this._swipeStartX = e.touches[0].clientX;
-      }
-    };
-
-    const touchendHandler = e => {
-      if (this._swipeStartX === null) return;
-      const endX = (e.changedTouches && e.changedTouches[0].clientX) || null;
-      if (endX === null) { this._swipeStartX = null; return; }
-      const dx = endX - this._swipeStartX;
-      if (Math.abs(dx) > threshold) {
-        // Get all available media classes from cached results
-        const allClasses = new Set();
-        Object.values(this._searchResultsByType).forEach(results => {
-          results.forEach(item => {
-            if (item.media_class) allClasses.add(item.media_class);
-          });
-        });
-        const currEntityObj = this.entityObjs?.[this._selectedIndex] || null;
-        const hiddenSet = new Set(currEntityObj?.hidden_filter_chips || []);
-        const classes = Array.from(allClasses).filter(c => !hiddenSet.has(c));
-        const filterOrder = ['all', ...classes];
-        const currIdx = filterOrder.indexOf(this._searchMediaClassFilter || 'all');
-        const dir = dx < 0 ? 1 : -1;   // swipe left -> next, right -> prev
-        let nextIdx = (currIdx + dir + filterOrder.length) % filterOrder.length;
-        const nextFilter = filterOrder[nextIdx];
-        this._doSearch(nextFilter === 'all' ? null : nextFilter);
-      }
-      this._swipeStartX = null;
-    };
-
-    area.addEventListener('touchstart', touchstartHandler, { passive: true });
-    area.addEventListener('touchend', touchendHandler, { passive: true });
-
-    // Store handlers for cleanup
-    area._searchSwipeHandlers = {
-      touchstart: touchstartHandler,
-      touchend: touchendHandler
-    };
+    return this._searchController.attachSearchSwipe();
   }
 
   _getMockItemFromCurrentTrack() {
-    const stateObj = this.currentActivePlaybackStateObj || this.currentPlaybackStateObj || this.currentStateObj;
-    if (!stateObj || !stateObj.attributes || !stateObj.attributes.media_title) return null;
-
-    return {
-      title: stateObj.attributes.media_title,
-      media_title: stateObj.attributes.media_title,
-      media_content_id: stateObj.attributes.media_content_id || stateObj.attributes.media_title,
-      media_artist: stateObj.attributes.media_artist || "",
-      media_content_type: 'track',
-      media_type: 'track'
-    };
+    return this._searchController.getMockItemFromCurrentTrack();
   }
 
   _isCurrentlyPlayingRadio() {
-    const stateObj = this.currentActivePlaybackStateObj || this.currentPlaybackStateObj || this.currentStateObj;
-    if (!stateObj?.attributes) return false;
-    const ct = (stateObj.attributes.media_content_type || "").toLowerCase();
-    const cid = (stateObj.attributes.media_content_id || "").toLowerCase();
-    return ct === "radio" || cid.startsWith("library://radio/");
+    return this._searchController.isCurrentlyPlayingRadio();
   }
 
   _handlePlaySimilar() {
-    const mockItem = this._getMockItemFromCurrentTrack();
-    if (!mockItem) return;
-
-    this._showMediaTitleOptions = false;
-    this._radioModeActive = true;
-
-    this._playMediaFromSearch(mockItem);
+    return this._searchController.handlePlaySimilar();
   }
 
   async _handleAddCurrentToPlaylist() {
-    const mockItem = this._getMockItemFromCurrentTrack();
-    if (!mockItem) return;
-
-    this._showMediaTitleOptions = false;
-
-    // Open options sheet menu to show playlist search sheet
-    this._showEntityOptions = true;
-    this._showSearchInSheet = true;
-    this._dismissMenuAfterPlaylistAdd = true;
-
-    if (this._isCurrentlyPlayingRadio()) {
-      // Radio streams don't have a valid MA track URI, so we need the user
-      // to pick the correct track from a search first.
-      // Use the track title as the primary query and artist/album as filters for precision.
-      const searchTerm = mockItem.title;
-      this._addToPlaylistTarget = null; // will be set when user picks a track
-      this._searchHierarchy.push({
-        type: 'select_track_for_playlist',
-        name: localize('search.select_track_for_playlist', { '{track}': mockItem.title, '{artist}': mockItem.media_artist }),
-        query: this._searchQuery,
-        filter: this._searchMediaClassFilter
-      });
-      this._searchBreadcrumb = localize('search.select_track_for_playlist', { '{track}': mockItem.title, '{artist}': mockItem.media_artist });
-      this._searchQuery = searchTerm;
-      this._currentSearchQuery = searchTerm;
-      this._searchMediaClassFilter = 'track';
-      this._resetSearchContext();
-      this._removeSearchSwipeHandlers();
-      await this._doSearch('track', {
-        clearFilters: true,
-        artist: mockItem.media_artist
-      });
-      return;
-    }
-
-    this._performSearchOptionAction(mockItem, 'add_to_playlist');
+    return this._searchController.handleAddCurrentToPlaylist();
   }
 
-  /**
-   * Open the search sheet and navigate directly to the current artist's albums
-   * in hierarchical search view (only when media_artist is present).
-   */
   async _searchArtistFromNowPlaying() {
-    const artist = (this.currentActivePlaybackStateObj || this.currentPlaybackStateObj || this.currentStateObj)?.attributes?.media_artist || "";
-    if (!artist) return;
-
-    this._openedSearchFromNowPlaying = true;
-
-    // Open overlay + search sheet
-    this._showEntityOptions = true;
-    this._showSearchInSheet = true;
-    this._searchInputAutoFocused = false;
-
-    // Reset search state
-    this._searchError = "";
-    this._searchResults = [];
-    this._searchQuery = "";
-    this._searchAttempted = false;
-    this._searchResultsByType = {};
-    this._currentSearchQuery = "";
-    this._searchHierarchy = [];
-    this._searchBreadcrumb = "";
-    this._usingMusicAssistant = false;
-    this._favoritesFilterActive = false;
-    this._recentlyPlayedFilterActive = false;
-    this._upcomingFilterActive = false;
-    this._recommendationsFilterActive = false;
-    this._initialFavoritesLoaded = false;
-    this._lastSearchUsedServerFavorites = false;
-
-    this.requestUpdate();
-
-    let artistUri = null;
-    if (this._isMusicAssistantEntity()) {
-      try {
-        const searchEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
-        const searchEntityId = await this._resolveTemplateAtActionTime(searchEntityIdTemplate, this.currentEntityId);
-        artistUri = await this._resolveArtistUri(artist, searchEntityId);
-      } catch (e) {
-        console.warn("yamp: error resolving artist URI:", e);
-      }
-    }
-
-    this._searchArtistAlbums(artist, artistUri).catch((error) => {
-      console.error("yamp: artist quick-search failed:", error);
-    });
+    return this._searchController.searchArtistFromNowPlaying();
   }
 
-  /**
-   * Resolve a media URI (album or artist) from Music Assistant
-   * @param {"album"|"artist"|"playlist"|string} mediaType
-   * @param {string} name
-   * @param {Record<string, any>} extraParams
-   * @param {string} entityId
-   * @returns {Promise<string|null>}
-   */
   async _resolveMediaUri(mediaType, name, extraParams = {}, entityId) {
-    if (!name || !this.hass) return null;
-    try {
-      const configEntryId = await getMusicAssistantConfigEntryId(this.hass, entityId);
-      if (!configEntryId) return null;
-
-      const serviceData = {
-        name,
-        media_type: [mediaType],
-        ...(configEntryId && configEntryId !== "auto" && { config_entry_id: configEntryId }),
-        ...extraParams,
-      };
-
-      const msg = {
-        type: "call_service",
-        domain: "music_assistant",
-        service: "search",
-        service_data: serviceData,
-        return_response: true,
-      };
-
-      const res = await this.hass.connection.sendMessagePromise(msg);
-      const items = res?.response?.[`${mediaType}s`] || [];
-      if (!items.length) return null;
-
-      const normName = name.trim().toLowerCase();
-      const normArtist = (extraParams.artist || "").trim().toLowerCase();
-
-      if (mediaType === "album") {
-        // Priority 1: Match both album name and artist
-        const matchBoth = items.find((a) => {
-          const aName = (a.name || "").toLowerCase();
-          const aArtistMatch = normArtist
-            ? a.artists?.some((ar) => {
-                const arName = (ar.name || "").toLowerCase();
-                return arName.includes(normArtist) || normArtist.includes(arName);
-              })
-            : true;
-          return (
-            (aName === normName || aName.includes(normName) || normName.includes(aName)) &&
-            aArtistMatch
-          );
-        });
-        if (matchBoth?.uri) return matchBoth.uri;
-      }
-
-      // Match item name
-      const exactMatch = items.find((it) => (it.name || "").toLowerCase() === normName);
-      if (exactMatch?.uri) return exactMatch.uri;
-
-      const matchName = items.find((it) => {
-        const itName = (it.name || "").toLowerCase();
-        return itName === normName || itName.includes(normName) || normName.includes(itName);
-      });
-      if (matchName?.uri) return matchName.uri;
-
-      // Fallback: First returned item
-      return items[0]?.uri || null;
-    } catch (e) {
-      console.warn(`yamp: Failed to resolve ${mediaType} URI:`, e);
-      return null;
-    }
+    return this._searchController.resolveMediaUri(mediaType, name, extraParams, entityId);
   }
 
   _resolveAlbumUri(albumName, artistName, entityId) {
-    return this._resolveMediaUri("album", albumName, artistName ? { artist: artistName } : {}, entityId);
+    return this._searchController.resolveAlbumUri(albumName, artistName, entityId);
   }
 
   _resolveArtistUri(artistName, entityId) {
-    return this._resolveMediaUri("artist", artistName, {}, entityId);
+    return this._searchController.resolveArtistUri(artistName, entityId);
   }
 
   _resolvePlaylistUri(playlistName, entityId) {
-    return this._resolveMediaUri("playlist", playlistName, {}, entityId);
+    return this._searchController.resolvePlaylistUri(playlistName, entityId);
   }
 
-  /**
-   * Open the search sheet and navigate directly to the current album's tracks
-   * in hierarchical search view (only when media_album_name is present).
-   */
   async _searchAlbumFromNowPlaying() {
-    const activeObj = this.currentActivePlaybackStateObj || this.currentPlaybackStateObj || this.currentStateObj;
-    const album = activeObj?.attributes?.media_album_name || "";
-    const artist = activeObj?.attributes?.media_artist || "";
-    if (!album) return;
-
-    this._openedSearchFromNowPlaying = true;
-
-    // Open overlay + search sheet
-    this._showEntityOptions = true;
-    this._showSearchInSheet = true;
-    this._searchInputAutoFocused = false;
-
-    // Reset search state
-    this._searchError = "";
-    this._searchResults = [];
-    this._searchQuery = "";
-    this._searchAttempted = false;
-    this._searchResultsByType = {};
-    this._currentSearchQuery = "";
-    this._searchHierarchy = [];
-    this._searchBreadcrumb = "";
-    this._usingMusicAssistant = false;
-    this._favoritesFilterActive = false;
-    this._recentlyPlayedFilterActive = false;
-    this._upcomingFilterActive = false;
-    this._recommendationsFilterActive = false;
-    this._initialFavoritesLoaded = false;
-    this._lastSearchUsedServerFavorites = false;
-
-    this.requestUpdate();
-
-    let albumUri = null;
-    if (this._isMusicAssistantEntity()) {
-      try {
-        const searchEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
-        const searchEntityId = await this._resolveTemplateAtActionTime(searchEntityIdTemplate, this.currentEntityId);
-        albumUri = await this._resolveAlbumUri(album, artist, searchEntityId);
-      } catch (e) {
-        console.warn("yamp: error resolving album URI:", e);
-      }
-    }
-
-    this._searchAlbumTracks(album, artist, albumUri).catch((error) => {
-      console.error("yamp: album quick-search failed:", error);
-    });
+    return this._searchController.searchAlbumFromNowPlaying();
   }
-  // Show search sheet inside entity options
+
   _showSearchSheetInOptions(mode = "default") {
-    this._showSearchInSheet = true;
-    this._searchHeadersRetracted = false;
-    this._searchHeaderOffset = 0;
-    this._searchHeaderNaturalHeight = 0;
-    this._lastSearchResultsScrollTop = 0;
-    this._searchInputAutoFocused = false;
-    this._searchError = "";
-    this._searchResults = [];
-    this._searchQuery = "";
-    this._searchAttempted = false;
-    this._searchResultsByType = {}; // Clear cache when opening new search
-    this._currentSearchQuery = ""; // Reset current search query
-    this._searchHierarchy = []; // Clear search hierarchy
-    this._searchBreadcrumb = ""; // Clear breadcrumb
-    this._usingMusicAssistant = false; // Track if we're using Music Assistant search
-    this._favoritesFilterActive = this.config.default_search_favorites === true; // Track if favorites filter is active
-    this._recentlyPlayedFilterActive = false; // Track if recently played filter is active
-    this._upcomingFilterActive = false; // Track if upcoming queue filter is active
-    this._recommendationsFilterActive = false; // Track if recommendations filter is active
-    this._initialFavoritesLoaded = false; // Track if initial favorites have been loaded
-
-    this.requestUpdate();
-
-    // Trigger selected search mode after sheet opens
-    setTimeout(() => {
-      let promise;
-      switch (mode) {
-        case "recently-played":
-          promise = this._toggleRecentlyPlayedFilter(true);
-          break;
-        case "next-up":
-          promise = this._toggleUpcomingFilter(true);
-          break;
-        case "recommendations":
-          promise = this._toggleRecommendationsFilter(true);
-          break;
-        default:
-          {
-            const defaultFilter = this.config.default_search_filter === 'all' ? null : this.config.default_search_filter;
-            promise = this._doSearch(defaultFilter);
-          }
-          break;
-      }
-      if (promise?.catch) {
-        promise.catch((err) => {
-          console.error("yamp: search initialization failed:", err);
-        });
-      }
-    }, 100);
-
-    if (!this._disableSearchAutofocus) {
-      // Handle focus for expand on search
-      const focusDelay = this._alwaysCollapsed && this._expandOnSearch ? 300 : 200;
-      setTimeout(() => {
-        const inp = this.renderRoot.querySelector('#search-input-box');
-        if (inp) {
-          inp.focus();
-        } else {
-          // If input not found, try again with a longer delay
-          setTimeout(() => {
-            const retryInp = this.renderRoot.querySelector('#search-input-box');
-            if (retryInp) {
-              retryInp.focus();
-            }
-          }, 200);
-        }
-      }, focusDelay);
-    }
+    return this._searchController.showSearchSheetInOptions(mode);
   }
 
   _openQuickSearchOverlay(mode = "default") {
-    this._quickMenuInvoke = true;
-    this._showEntityOptions = true;
-    this._showSearchSheetInOptions(mode);
-    setTimeout(() => {
-      this._notifyResize();
-    }, 0);
+    return this._searchController.openQuickSearchOverlay(mode);
   }
 
   _handleNavigate(path, openInNewTab = false) {
@@ -1887,214 +1638,71 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
 
   _hideSearchSheetInOptions() {
-    // In dedicated search mode, never close the search
-    if (this._cardType === "search" || this._cardType === "up_next") return;
-    this._openedSearchFromNowPlaying = false;
-    this._showSearchInSheet = false;
-    this._searchHeadersRetracted = false;
-    this._searchHeaderOffset = 0;
-    this._searchHeaderNaturalHeight = 0;
-    this._lastSearchResultsScrollTop = 0;
-    this._searchError = "";
-    this._searchResults = [];
-    this._searchQuery = "";
-    this._searchDisplaySortOverride = null;
-    this._searchInputAutoFocused = false;
-    this._searchLoading = false;
-    this._searchAttempted = false;
-    this._searchResultsByType = {}; // Clear cache when closing
-    this._currentSearchQuery = ""; // Reset current search query
-    this._searchHierarchy = []; // Clear search hierarchy
-    this._searchBreadcrumb = ""; // Clear breadcrumb
-    this._addToPlaylistTarget = null; // Clear playlist target
-    this._dismissMenuAfterPlaylistAdd = false; // Clear dismiss flag
-    this._recommendationsFilterActive = false;
-    this._lastSearchUsedServerFavorites = false;
-    if (this._quickMenuInvoke) {
-      this._showEntityOptions = false;
-      this._quickMenuInvoke = false;
-    }
-    this.requestUpdate();
-    // Force layout update for expand on search
-    setTimeout(() => {
-      this._notifyResize();
-    }, 0);
+    return this._searchController.hideSearchSheetInOptions();
   }
-  // Search sheet methods
-
 
   _closeMenuIfOpen() {
-    if (this._queueActionsMenuOpenId) {
-      this._closeQueueActionsMenu();
-    }
+    return this._searchController.closeMenuIfOpen();
   }
 
   _sortSearchResults(results, sortModeOverride = null) {
-    // Upcoming queue items, Recently Played items, and Recommendations should never be sorted
-    if (this._upcomingFilterActive || this._recentlyPlayedFilterActive || this._recommendationsFilterActive) {
-      return Array.isArray(results) ? [...results] : [];
-    }
-    const sortMode = sortModeOverride ?? this._getConfiguredSearchResultsSortMode();
-    const list = Array.isArray(results) ? [...results] : [];
-
-    if (sortMode === "random") {
-      // Fisher-Yates shuffle for an unbiased random order
-      for (let i = list.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [list[i], list[j]] = [list[j], list[i]];
-      }
-      return list;
-    }
-
-    // All other sorting is handled server-side via order_by parameter
-    return list;
+    return this._searchController.sortSearchResults(results, sortModeOverride);
   }
 
   _getConfiguredSearchResultsSortMode() {
-    const configured = this.config?.search_results_sort;
-    const mode = typeof configured === "string" ? configured : "default";
-    return this._mapLegacySortOption(mode);
+    return this._searchController.getConfiguredSearchResultsSortMode();
   }
 
   _mapLegacySortOption(mode) {
-    if (!mode) return "default";
-    const legacyMap = {
-      "title_asc": "name",
-      "title_desc": "name_desc",
-      "artist_asc": "artist_name",
-      "artist_desc": "artist_name_desc"
-    };
-    return legacyMap[mode] || mode;
+    return this._searchController.mapLegacySortOption(mode);
   }
 
   _isSortableSearchMode(mode) {
-    if (!mode || mode === "default" || mode === "random" || mode === "random_play_count") return false;
-    return true;
+    return this._searchController.isSortableSearchMode(mode);
   }
 
   _getOppositeSearchSortMode(mode) {
-    if (!mode || mode === "default" || mode === "random" || mode === "random_play_count") return null;
-    // Toggle between asc and desc variants
-    if (mode.endsWith("_desc")) {
-      return mode.replace(/_desc$/, "");
-    }
-    return `${mode}_desc`;
+    return this._searchController.getOppositeSearchSortMode(mode);
   }
 
   _shouldShowSearchSortToggle() {
-    if (this._upcomingFilterActive || this._recentlyPlayedFilterActive || this._recommendationsFilterActive) return false;
-    return this._isSortableSearchMode(this._getConfiguredSearchResultsSortMode());
+    return this._searchController.shouldShowSearchSortToggle();
   }
 
   _toggleSearchResultsSortDirection() {
-    if (!this._shouldShowSearchSortToggle()) {
-      this._searchDisplaySortOverride = null;
-      return;
-    }
-    const configured = this._getConfiguredSearchResultsSortMode();
-    const alternate = this._getOppositeSearchSortMode(configured);
-    if (!alternate) {
-      this._searchDisplaySortOverride = null;
-      return;
-    }
-    if (this._searchDisplaySortOverride === alternate) {
-      this._searchDisplaySortOverride = null;
-    } else {
-      this._searchDisplaySortOverride = alternate;
-    }
-    // Clear cached results so _doSearch re-fetches with the new order_by
-    this._searchResultsByType = {};
-    // Re-trigger search with new sort order
-    this._doSearch(this._searchMediaClassFilter === 'all' ? null : this._searchMediaClassFilter, { orderBy: this._getActiveSearchDisplaySortMode() });
-    this.requestUpdate();
+    return this._searchController.toggleSearchResultsSortDirection();
   }
 
   _getActiveSearchDisplaySortMode() {
-    if (this._upcomingFilterActive || this._recentlyPlayedFilterActive || this._recommendationsFilterActive) {
-      return "default";
-    }
-    if (!this._shouldShowSearchSortToggle()) {
-      return this._getConfiguredSearchResultsSortMode();
-    }
-    const override = this._searchDisplaySortOverride;
-    if (override && this._isSortableSearchMode(override)) {
-      return override;
-    }
-    return this._getConfiguredSearchResultsSortMode();
+    return this._searchController.getActiveSearchDisplaySortMode();
   }
 
   _getSearchSortToggleIcon() {
-    const mode = this._getActiveSearchDisplaySortMode();
-    if (!this._isSortableSearchMode(mode)) {
-      return "mdi:sort-variant";
-    }
-    return mode.endsWith("_desc") ? "mdi:sort-descending" : "mdi:sort-ascending";
+    return this._searchController.getSearchSortToggleIcon();
   }
 
   _getSearchSortToggleTitle() {
-    const mode = this._getActiveSearchDisplaySortMode();
-    if (!this._isSortableSearchMode(mode)) {
-      return "Toggle search result order";
-    }
-    const isDesc = mode.endsWith("_desc");
-    const baseName = isDesc ? mode.replace(/_desc$/, "") : mode;
-    const label = baseName.replace(/_/g, " ");
-    return `Sort by ${label} ${isDesc ? "descending" : "ascending"}`;
+    return this._searchController.getSearchSortToggleTitle();
   }
 
   _getDisplaySearchResults() {
-    const results = Array.isArray(this._searchResults) ? this._searchResults : [];
-    const isInHierarchy = this._searchHierarchy.some(
-      (h) => h.type === "album" || h.type === "playlist" || h.type === "artist"
-    );
-    if (isInHierarchy && this._searchQuery && this._searchQuery.trim() !== "") {
-      const q = this._searchQuery.trim().toLowerCase();
-      return results.filter((item) => {
-        const title = (item.title || item.name || "").toLowerCase();
-        const artist = (item.artist || "").toLowerCase();
-        return title.includes(q) || artist.includes(q);
-      });
-    }
-    return results;
+    return this._searchController.getDisplaySearchResults();
   }
 
   _getSearchResultsLimit() {
-    const raw = Number(this.config?.search_results_limit);
-    if (Number.isFinite(raw)) {
-      if (raw === 0) {
-        return 0; // Explicitly disable limit
-      }
-      return Math.min(Math.max(raw, 1), 1000);
-    }
-    return 20;
+    return this._searchController.getSearchResultsLimit();
   }
 
   _getSearchResultsCount() {
-    return this._getDisplaySearchResults().length;
+    return this._searchController.getSearchResultsCount();
   }
 
   _shouldShowSearchResultsCount() {
-    if (this._isNarrowViewport || !this._usingMusicAssistant || this._searchLoading) {
-      return false;
-    }
-    const count = this._getSearchResultsCount();
-    if (count > 0) {
-      return true;
-    }
-    return (
-      this._searchAttempted ||
-      this._initialFavoritesLoaded ||
-      this._favoritesFilterActive ||
-      this._recentlyPlayedFilterActive ||
-      this._upcomingFilterActive ||
-      this._recommendationsFilterActive
-    );
+    return this._searchController.shouldShowSearchResultsCount();
   }
 
   _getSearchResultsCountLabel() {
-    const count = this._getSearchResultsCount();
-    const key = count === 1 ? 'search.result' : 'search.results';
-    return `${count} ${localize(key)}`;
+    return this._searchController.getSearchResultsCountLabel();
   }
 
 
@@ -2105,577 +1713,54 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
 
   async _doSearch(mediaType = null, searchParams = {}) {
-    this._searchAttempted = true;
-    this._closeMenuIfOpen();
-    this._setSearchHeadersRetracted(false);
-    this._lastSearchResultsScrollTop = 0;
-    // Set the current filter - but don't use "favorites" as a media type
-    this._searchMediaClassFilter = (mediaType && mediaType !== 'favorites') ? mediaType : 'all';
-
-    // Respect favorites toggle across chip changes, but allow explicit filter clearing
-    // FIX: Include _initialFavoritesLoaded AND _lastSearchUsedServerFavorites to persist implicit favorites state
-    const isFavorites = !!(searchParams.favorites || ((this._favoritesFilterActive || this._initialFavoritesLoaded || this._lastSearchUsedServerFavorites) && !searchParams.clearFilters));
-
-    // FIX: Explicitly persist the favorites filter state if we determined we are in favorites mode
-    if (isFavorites) {
-      this._favoritesFilterActive = true;
-    }
-
-    const isRecentlyPlayed = !!(searchParams.isRecentlyPlayed || (this._recentlyPlayedFilterActive && !searchParams.clearFilters));
-    const isUpcoming = !!(searchParams.isUpcoming || (this._upcomingFilterActive && !searchParams.clearFilters));
-    const isRecommendations = !!(searchParams.isRecommendations || (this._recommendationsFilterActive && !searchParams.clearFilters));
-
-    // Check if search query has changed - if so, clear cache
-    if (this._currentSearchQuery !== this._searchQuery) {
-      this._searchResultsByType = {};
-      this._currentSearchQuery = this._searchQuery;
-    }
-
-    // Use cached results if available for this media type and search params
-    const sortMode = this._getActiveSearchDisplaySortMode();
-    const cacheKey = `${mediaType || 'all'}${isFavorites ? '_favorites' : ''}${isRecentlyPlayed ? '_recently_played' : ''}${isUpcoming ? '_upcoming' : ''}${isRecommendations ? '_recommendations' : ''}_sort_${sortMode}`;
-    const forceFetch = !!searchParams.force;
-
-    if (this._searchResultsByType[cacheKey] && !forceFetch) {
-      if (this._searchTimeoutHandle) {
-        clearTimeout(this._searchTimeoutHandle);
-        this._searchTimeoutHandle = null;
-      }
-      this._latestSearchToken = 0;
-      this._searchResults = this._sortSearchResults(this._searchResultsByType[cacheKey]);
-      this._searchLoading = false;
-      this._searchError = "";
-      this.requestUpdate();
-      return;
-    }
-
-    const isSilent = !!searchParams.silent;
-
-    if (!isSilent) {
-      this._searchLoading = true;
-      this._searchError = "";
-      this._searchResults = [];
-      this.requestUpdate();
-    }
-    const searchToken = searchParams.token || Date.now();
-    this._latestSearchToken = searchToken;
-    const progressiveUpdate = (chunk) => this._handleProgressiveSearchResults(chunk, cacheKey, searchToken);
-    if (this._searchTimeoutHandle) {
-      clearTimeout(this._searchTimeoutHandle);
-    }
-    this._searchTimeoutHandle = window.setTimeout(() => {
-      if (this._latestSearchToken === searchToken && this._searchLoading) {
-        this._searchLoading = false;
-        this._searchError = "Search timed out. Try again.";
-        this.requestUpdate();
-      }
-    }, this.config?.search_timeout_ms ? Number(this.config.search_timeout_ms) : 15000);
-
-    try {
-      const searchEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
-      const searchEntityId = await this._resolveTemplateAtActionTime(searchEntityIdTemplate, this.currentEntityId);
-
-      let searchResponse;
-
-      // Special case: "Add to Playlist" directly reads unstripped MA library playlists with mass_queue.send_command
-      if (this._addToPlaylistTarget && mediaType === 'playlist' && this._massQueueAvailable) {
-        this._initialFavoritesLoaded = false;
-        try {
-          const mqConfigEntryId = await getMassQueueConfigEntryId(this.hass, searchEntityId);
-          if (mqConfigEntryId) {
-            // Fetch a generous amount so we don't truncate before filtering
-            const apiData = { limit: PLAYLIST_FETCH_LIMIT };
-            if (this._searchQuery && this._searchQuery.trim().length > 0) {
-              apiData.search = this._searchQuery.trim();
-            }
-            const orderBy = this._getActiveSearchDisplaySortMode();
-            if (orderBy && orderBy !== 'default') {
-              apiData.order_by = orderBy;
-            }
-
-            const message = {
-              type: "call_service",
-              domain: "mass_queue",
-              service: "send_command",
-              service_data: {
-                ...(mqConfigEntryId && mqConfigEntryId !== "auto" && { config_entry_id: mqConfigEntryId }),
-                command: "music/playlists/library_items",
-                data: apiData
-              },
-              return_response: true
-            };
-
-            const res = await this.hass.connection.sendMessagePromise(message);
-
-            let rawPlaylists = [];
-
-            // The Music Assistant API send_command wrapper wraps the response deeply.
-            // e.g. res.response = { id: "xxx", response: [...] }
-            if (Array.isArray(res?.response)) {
-              rawPlaylists = res.response;
-            } else if (Array.isArray(res?.response?.response)) {
-              rawPlaylists = res.response.response;
-            } else if (Array.isArray(res?.response?.items)) {
-              rawPlaylists = res.response.items;
-            } else if (Array.isArray(res?.response?.results)) {
-              rawPlaylists = res.response.results;
-            }
-
-            if (Array.isArray(rawPlaylists)) {
-              const displayLimit = this._getSearchResultsLimit() || 30;
-              const mappedPlaylists = rawPlaylists
-                .filter(p => p.is_editable === true)
-                .map(p => transformMusicAssistantItem(p))
-                .filter(Boolean)
-                // only return up to the configured display limit
-                .slice(0, displayLimit);
-
-              searchResponse = { results: mappedPlaylists, usedMusicAssistant: true };
-            }
-          }
-        } catch (e) {
-          console.warn("yamp: error fetching direct native playlists for add-to-target logic", e);
-        }
-
-        if (!searchResponse) {
-          searchResponse = { results: [], usedMusicAssistant: true };
-        }
-        this._lastSearchUsedServerFavorites = false;
-      } else if (isRecentlyPlayed) {
-        // Load recently played items
-        this._initialFavoritesLoaded = false;
-        searchResponse = await getRecentlyPlayed(
-          this.hass,
-          searchEntityId,
-          mediaType,
-          this._getSearchResultsLimit(),
-          { onChunk: progressiveUpdate }
-        );
-        this._lastSearchUsedServerFavorites = false;
-      } else if (isUpcoming) {
-        // Load upcoming queue items
-        this._initialFavoritesLoaded = false;
-        const upcomingLimit = Math.min(250, this._getSearchResultsLimit());
-        searchResponse = await this._getUpcomingQueue(this.hass, searchEntityId, upcomingLimit);
-        this._lastSearchUsedServerFavorites = false;
-      } else if (isRecommendations) {
-        this._initialFavoritesLoaded = false;
-        searchResponse = await this._getRecommendations(
-          this.hass,
-          searchEntityId,
-          mediaType,
-          this._getSearchResultsLimit()
-        );
-        this._lastSearchUsedServerFavorites = false;
-      } else if (isFavorites) {
-        // Ask backend (Music Assistant) to filter favorites at source with the current query
-        this._initialFavoritesLoaded = false;
-        const orderBy = this._getActiveSearchDisplaySortMode();
-        searchResponse = await searchMedia(
-          this.hass,
-          searchEntityId,
-          this._searchQuery,
-          mediaType,
-          { ...searchParams, favorites: true, orderBy: orderBy !== 'default' ? orderBy : undefined },
-          this._getSearchResultsLimit()
-        );
-        this._lastSearchUsedServerFavorites = true;
-      } else if ((!this._searchQuery || this._searchQuery.trim() === '') && !isFavorites && !isRecentlyPlayed && (mediaType === 'all' || !mediaType)) {
-        const orderBy = this._getActiveSearchDisplaySortMode();
-        searchResponse = await getFavorites(
-          this.hass,
-          searchEntityId,
-          mediaType === 'favorites' ? null : mediaType,
-          this._getSearchResultsLimit(),
-          { onChunk: progressiveUpdate, orderBy: orderBy !== 'default' ? orderBy : undefined }
-        );
-        // Mark that initial favorites have been loaded only if we're in default view
-        if (!this._searchQuery || this._searchQuery.trim() === '') {
-          this._initialFavoritesLoaded = true;
-        }
-        this._lastSearchUsedServerFavorites = true;
-      } else {
-        // Perform search - reset initial favorites flag since this is a user search
-        this._initialFavoritesLoaded = false;
-        const orderBy = this._getActiveSearchDisplaySortMode();
-        searchResponse = await searchMedia(this.hass, searchEntityId, this._searchQuery, mediaType, { ...searchParams, orderBy: orderBy !== 'default' ? orderBy : undefined }, this._getSearchResultsLimit());
-        this._lastSearchUsedServerFavorites = false;
-      }
-
-
-
-      // Handle the new response format
-      let arr = searchResponse.results || [];
-      this._usingMusicAssistant = searchResponse.usedMusicAssistant || false;
-
-      // Initialize/Reset internal states when config changes is a completely new search (not just switching filters)
-      const isNewSearch = this._currentSearchQuery !== this._searchQuery;
-      if (isNewSearch) {
-        this._favoritesFilterActive = false;
-        this._recentlyPlayedFilterActive = false;
-        this._upcomingFilterActive = false;
-        this._recommendationsFilterActive = false;
-        this._initialFavoritesLoaded = false;
-      }
-
-      let normalizedResults = Array.isArray(arr) ? arr : [];
-      // Check search token *after* await to discard stale background fetches
-      if (this._latestSearchToken !== searchToken) {
-        return;
-      }
-
-      // 1. Client-side filtering for search query (Recent, Upcoming, Recommendations)
-      if ((isRecentlyPlayed || isUpcoming || isRecommendations) && this._searchQuery && this._searchQuery.trim() !== '') {
-        const query = this._searchQuery.trim().toLowerCase();
-        normalizedResults = normalizedResults.filter(item => {
-          const title = (item.title || "").toLowerCase();
-          const artist = (item.artist || "").toLowerCase();
-          const album = (item.album || "").toLowerCase();
-          return title.includes(query) || artist.includes(query) || album.includes(query);
-        });
-      }
-
-      // 2. Apply local favorites filter ONLY when needed
-      if (!isNewSearch && this._favoritesFilterActive && !this._lastSearchUsedServerFavorites) {
-        normalizedResults = await this._applyLocalFavoritesFilter(normalizedResults);
-
-        // Check token again after await
-        if (this._latestSearchToken !== searchToken) {
-          return;
-        }
-      }
-
-      // Cache the results for this media type and search params
-      this._searchResultsByType[cacheKey] = normalizedResults;
-
-      // Update active UI results
-      this._searchResults = this._sortSearchResults(normalizedResults);
-
-      // remember how many rows exist in the full ("All") set, but keep at least 15 for layout
-      const rows = Array.isArray(this._searchResults) ? this._searchResults.length : 0;
-      this._searchTotalRows = Math.max(15, rows);   // keep at least 15
-    } catch (e) {
-      this._searchError = (e && e.message) || "Unknown error";
-      this._searchResults = [];
-      this._searchTotalRows = 0;
-    }
-    if (this._latestSearchToken === searchToken && this._searchTimeoutHandle) {
-      clearTimeout(this._searchTimeoutHandle);
-      this._searchTimeoutHandle = null;
-    }
-    if (this._latestSearchToken === searchToken) {
-      this._latestSearchToken = 0;
-    }
-    this._searchLoading = false;
-    this.requestUpdate();
-    setTimeout(() => this._notifyResize(), 0);
+    return this._searchController.doSearch(mediaType, searchParams);
   }
 
   async _playCurrentCollection() {
-    if (this._searchHierarchy.length === 0) return;
-    const currentLevel = this._searchHierarchy[this._searchHierarchy.length - 1];
-    if (!currentLevel || !currentLevel.uri) {
-      this._searchError = localize('search.play_collection_error');
-      this.requestUpdate();
-      return;
-    }
-
-    const item = {
-      media_content_id: currentLevel.uri,
-      media_content_type: currentLevel.type
-    };
-
-    await this._playMediaFromSearch(item);
+    return this._searchController.playCurrentCollection();
   }
 
   // Handle explicit search submission from UI (Enter key or Search Button)
   _handleSearchSubmit() {
-    if (this._searchHierarchy.some((h) => h.type === "album" || h.type === "playlist" || h.type === "artist")) {
-      // In hierarchy mode, filtering is already live in real-time
-      return;
-    }
-    const keepFilters = this._keepFiltersOnSearch;
-    if (!keepFilters) {
-      this._favoritesFilterActive = false;
-      this._recentlyPlayedFilterActive = false;
-      this._upcomingFilterActive = false;
-      this._recommendationsFilterActive = false;
-    }
-    const clearFilters = !keepFilters;
-    this._doSearch(
-      this._searchMediaClassFilter === 'all' ? null : this._searchMediaClassFilter,
-      { clearFilters }
-    );
+    return this._searchController.handleSearchSubmit();
   }
 
   _handleProgressiveSearchResults(chunk, cacheKey, searchToken) {
-    if (!Array.isArray(chunk) || !chunk.length) {
-      return;
-    }
-    if (this._latestSearchToken !== searchToken) {
-      return;
-    }
-    const mergedResults = (this._searchResultsByType[cacheKey] || []).concat(chunk);
-    this._searchResultsByType[cacheKey] = mergedResults;
-    this._searchResults = this._sortSearchResults(mergedResults);
-    const rows = Array.isArray(mergedResults) ? mergedResults.length : 0;
-    this._searchTotalRows = Math.max(15, rows);
-    this.requestUpdate();
+    return this._searchController.handleProgressiveSearchResults(chunk, cacheKey, searchToken);
   }
 
   // Derive the list of visible search filter chips based on cached results and entity visibility settings
   _getVisibleSearchFilterClasses() {
-    const currEntityObj = this.entityObjs?.[this._selectedIndex] || null;
-    const hiddenSet = new Set(currEntityObj?.hidden_filter_chips || []);
-
-    return ALLOWED_MEDIA_TYPES.filter(c => !hiddenSet.has(c));
+    return this._searchController.getVisibleSearchFilterClasses();
   }
 
   async _playMediaFromSearch(item, event) {
-    if (this._isDragging) {
-      if (event) {
-        event.stopPropagation();
-        event.preventDefault();
-      }
-      return;
-    }
-    const targetEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
-    const targetEntityId = await this._resolveTemplateAtActionTime(targetEntityIdTemplate, this.currentEntityId);
-    this._mediaSessionManager?.startPlaybackGesture(targetEntityId);
-    this._searchError = "";
-    const playbackStarted = await this._performSearchPlayback(item, targetEntityId);
-
-    if (!playbackStarted) {
-      this._searchError = "Unable to start playback. Please try again.";
-      this.requestUpdate();
-      return;
-    }
-
-    const { shouldDismiss, shouldReset } = this._getSearchDismissBehavior();
-
-    if (shouldDismiss) {
-      if (this._showSearchInSheet) {
-        this._closeEntityOptions();
-        this._showSearchInSheet = false;
-      }
-      this._hideSearchSheetInOptions();
-    } else if (shouldReset) {
-      this._showSearchSheetInOptions();
-    } else {
-      // If staying open, force a repaint to reflect playing state if needed
-      this.requestUpdate();
-    }
+    return this._searchController.playMediaFromSearch(item, event);
   }
 
   async _performSearchPlayback(item, targetEntityId) {
-    // Check if this is a queue item (has queue_item_id) and we're in the upcoming filter with working mass_queue
-    if (item.queue_item_id && this._upcomingFilterActive && this._isMusicAssistantEntity() && this._massQueueAvailable) {
-      // For queue items in the "Next Up" filter, play the specific queue item
-      try {
-        const maState = this._getMusicAssistantState();
-        const maEntityId = maState?.entity_id;
-
-        if (maEntityId) {
-          // Use mass_queue to play the specific queue item
-          await this.hass.callService("mass_queue", "play_queue_item", {
-            entity: maEntityId,
-            queue_item_id: item.queue_item_id
-          });
-          this._advanceQueueInUI(item.queue_item_id, true); // Manual advance
-          return true;
-        }
-      } catch (error) {
-        console.error('yamp: Error playing queue item:', error);
-        // Fallback to next track if service call fails
-        await this.hass.callService("media_player", "media_next_track", {
-          entity_id: targetEntityId
-        });
-        return true;
-      }
-    }
-
-    if (!targetEntityId) {
-      return false;
-    }
-
-    // For regular search results or fallback mode, use the normal play method with a retry guard.
-    const monitorIds = this._collectPlaybackMonitorIds(targetEntityId);
-    const firstSnapshot = this._snapshotPlaybackState(monitorIds);
-    const firstAttempt = await this._invokePlayMedia(targetEntityId, item);
-    if (!firstAttempt) {
-      return false;
-    }
-    const firstChangeDetected = await this._waitForPlaybackChange(firstSnapshot, monitorIds);
-    if (firstChangeDetected) {
-      return true;
-    }
-
-    // Retry once if we didn't observe playback starting yet.
-    const retrySnapshot = this._snapshotPlaybackState(monitorIds);
-    const retryAttempt = await this._invokePlayMedia(targetEntityId, item);
-    if (!retryAttempt) {
-      return false;
-    }
-    return await this._waitForPlaybackChange(retrySnapshot, monitorIds);
+    return this._searchController.performSearchPlayback(item, targetEntityId);
   }
 
   _collectPlaybackMonitorIds(targetEntityId) {
-    const ids = new Set();
-    if (targetEntityId) ids.add(targetEntityId);
-    const playbackEntity = this._getPlaybackEntityId(this._selectedIndex);
-    if (playbackEntity) ids.add(playbackEntity);
-    const mainEntity = this.currentEntityId;
-    if (mainEntity) ids.add(mainEntity);
-    const maEntity = this._getActualResolvedMaEntityForState(this._selectedIndex);
-    if (maEntity) ids.add(maEntity);
-    return Array.from(ids).filter(Boolean);
+    return this._searchController.collectPlaybackMonitorIds(targetEntityId);
   }
 
   _snapshotPlaybackState(entityIds) {
-    const snapshot = {};
-    if (!Array.isArray(entityIds)) {
-      return snapshot;
-    }
-    entityIds.forEach(id => {
-      const stateObj = id ? this.hass?.states?.[id] : null;
-      snapshot[id] = {
-        state: stateObj?.state ?? null,
-        mediaId: stateObj?.attributes?.media_content_id ?? null,
-        mediaTitle: stateObj?.attributes?.media_title ?? null
-      };
-    });
-    return snapshot;
+    return this._searchController.snapshotPlaybackState(entityIds);
   }
 
-  async _waitForPlaybackChange(snapshot, entityIds, timeout = 2500) {
-    if (!Array.isArray(entityIds) || entityIds.length === 0) {
-      return true;
-    }
-    const start = Date.now();
-    while (Date.now() - start < timeout) {
-      await this._delay(150);
-      for (const id of entityIds) {
-        if (!id) continue;
-        const stateObj = this.hass?.states?.[id];
-        if (!stateObj) continue;
-        if (this._isEntityPlaying(stateObj)) {
-          return true;
-        }
-        const previous = snapshot[id] || {};
-        const currentMediaId = stateObj.attributes?.media_content_id ?? null;
-        const currentTitle = stateObj.attributes?.media_title ?? null;
-        if (currentMediaId && currentMediaId !== previous.mediaId) {
-          return true;
-        }
-        if (currentTitle && currentTitle !== previous.mediaTitle) {
-          return true;
-        }
-        if (!previous.mediaId && currentMediaId) {
-          return true;
-        }
-        if (!previous.mediaTitle && currentTitle) {
-          return true;
-        }
-      }
-    }
-    return false;
+  async _waitForPlaybackChange(snapshot, entityIds, timeout = 2500, { requireMediaChange = false } = {}) {
+    const controller = this._searchController || new SearchController(this);
+    return controller.waitForPlaybackChange(snapshot, entityIds, timeout, { requireMediaChange });
   }
 
   async _performSearchOptionAction(item, mode) {
-    if (mode === 'add_to_playlist') {
-      this._addToPlaylistTarget = item;
-      this._searchHierarchy.push({
-        type: 'select_playlist',
-        name: localize('search.add_to_playlist'),
-        query: this._searchQuery,
-        filter: this._searchMediaClassFilter
-      });
-      // Set a special breadcrumb for context
-      this._searchBreadcrumb = localize('search.select_playlist').replace('{track}', item.title);
-      this._searchQuery = '';
-      this._currentSearchQuery = '';
-      this._searchMediaClassFilter = 'playlist';
-      this._resetSearchContext();
-
-      this._removeSearchSwipeHandlers();
-
-      // Fetch playlists
-      await this._doSearch('playlist', { clearFilters: true });
-      return;
-    }
-
-    const targetEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
-    const targetEntityId = await this._resolveTemplateAtActionTime(targetEntityIdTemplate, this.currentEntityId);
-
-    try {
-      const playParams = {
-        entity_id: targetEntityId,
-        media_id: item.media_content_id,
-        media_type: item.media_content_type,
-        enqueue: mode
-      };
-      if (this._radioModeActive) {
-        playParams.radio_mode = true;
-      }
-
-      await this.hass.callService("music_assistant", "play_media", playParams);
-      // Invalidate the "Next Up" cache because we've modified the queue
-      this._invalidateUpcomingCache();
-
-      // For 'replace' mode, we dismiss according to settings and don't show success overlay
-      if (mode === 'replace') {
-        const { shouldDismiss, shouldReset } = this._getSearchDismissBehavior();
-
-        if (shouldDismiss) {
-          this._closeEntityOptions();
-        } else if (shouldReset) {
-          this._showSearchSheetInOptions();
-        }
-        this._activeSearchRowMenuId = null;
-      } else {
-        // For other modes, show the localized success message overlay within the slide-out
-        this._successSearchRowMenuId = item.media_content_id;
-        this.requestUpdate();
-
-        const shouldDismissMenu = this._dismissMenuAfterPlaylistAdd && mode === 'add_to_playlist';
-
-        setTimeout(() => {
-          this._successSearchRowMenuId = null;
-          this._activeSearchRowMenuId = null; // Also dismiss the slide-out after message fades
-
-          if (shouldDismissMenu) {
-            this._closeEntityOptions();
-            this._dismissMenuAfterPlaylistAdd = false;
-          }
-
-          this.requestUpdate();
-        }, 2000);
-      }
-    } catch (e) {
-      console.error("Failed to perform search option action:", e);
-      this._searchError = "Action failed: " + e.message;
-      this.requestUpdate();
-    }
+    return this._searchController.performSearchOptionAction(item, mode);
   }
 
   async _invokePlayMedia(targetEntityId, item) {
-    try {
-      this._mediaSessionManager?.startPlaybackGesture(targetEntityId);
-      if (this._radioModeActive) {
-        await this.hass.callService("music_assistant", "play_media", {
-          entity_id: targetEntityId,
-          media_id: item.media_content_id,
-          media_type: item.media_content_type,
-          radio_mode: true
-        });
-      } else {
-        await playSearchedMedia(this.hass, targetEntityId, item);
-      }
-      return true;
-    } catch (error) {
-      console.error("yamp: Error starting playback from search:", error);
-      return false;
-    }
+    return this._searchController.invokePlayMedia(targetEntityId, item);
   }
 
   _delay(ms) {
@@ -2686,647 +1771,124 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   async _queueMediaFromSearch(item) {
-    const targetEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
-    const targetEntityId = await this._resolveTemplateAtActionTime(targetEntityIdTemplate, this.currentEntityId);
-    // Use enqueue: next to add to queue
-    if (this._radioModeActive) {
-      this.hass.callService("music_assistant", "play_media", {
-        entity_id: targetEntityId,
-        media_id: item.media_content_id,
-        media_type: item.media_content_type,
-        enqueue: "add",
-        radio_mode: true
-      });
-    } else {
-      this.hass.callService("media_player", "play_media", {
-        entity_id: targetEntityId,
-        media_content_type: item.media_content_type,
-        media_content_id: item.media_content_id,
-        enqueue: "next"
-      });
-    }
-
-    // Invalidate the "Next Up" cache
-    this._invalidateUpcomingCache();
-    this._showSearchSuccessToast();
+    return this._queueController.queueMediaFromSearch(item);
   }
 
   // Handle hierarchical search - search for albums by artist
   async _searchArtistAlbums(artistName, artistUri = null) {
-    this._searchHierarchy.push({ type: 'artist', name: artistName, query: this._searchQuery, uri: artistUri, filter: this._searchMediaClassFilter });
-    this._searchBreadcrumb = `Albums by ${artistName}`;
-    this._searchResultsByType = {}; // Clear cache for new search
-    this._currentSearchQuery = "";
-    this._searchMediaClassFilter = 'album';
-
-    // Immediate loading state
-    this._searchResults = [];
-    this._searchLoading = true;
-    this._searchQuery = "";
-    this.requestUpdate();
-
-    // Clear filter states to ensure accurate artist search results
-    this._favoritesFilterActive = false;
-    this._recentlyPlayedFilterActive = false;
-    this._upcomingFilterActive = false;
-    this._initialFavoritesLoaded = false;
-
-    // Remove swipe handlers when entering hierarchy
-    this._removeSearchSwipeHandlers();
-
-    // Priority 1: Use browse_media if artistUri is available and entity is Music Assistant
-    if (artistUri && this._isMusicAssistantEntity()) {
-      try {
-        const searchEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
-        const searchEntityId = await this._resolveTemplateAtActionTime(searchEntityIdTemplate, this.currentEntityId);
-
-        const browseMsg = {
-          type: "call_service",
-          domain: "media_player",
-          service: "browse_media",
-          service_data: {
-            entity_id: searchEntityId,
-            media_content_id: artistUri,
-          },
-          return_response: true,
-        };
-
-        const browseRes = await this.hass.connection.sendMessagePromise(browseMsg);
-        const browseResult = browseRes?.response?.[searchEntityId]?.result || browseRes?.result || {};
-        const children = browseResult.children || [];
-        const albums = children.filter(c => c.media_class === 'album' || c.media_content_type === 'album');
-
-        if (albums.length > 0) {
-          this._searchQuery = "";
-          this._searchResults = this._sortSearchResults(albums);
-          this._searchTotalRows = Math.max(15, albums.length);
-          this._searchAttempted = true;
-          this._searchLoading = false;
-          this.requestUpdate();
-          return;
-        }
-      } catch (e) {
-        // Fall back to search
-      }
-    }
-
-    // Priority 2: Use Music Assistant search with artist parameter for albums (explicitly clear filters)
-    await this._doSearch('album', { artist: artistName, clearFilters: true });
+    return this._searchController.searchArtistAlbums(artistName, artistUri);
   }
-
 
   // Go back in search hierarchy
   _goBackInSearch() {
-    if (this._dismissMenuAfterPlaylistAdd) {
-      this._closeEntityOptions();
-      this._dismissMenuAfterPlaylistAdd = false;
-      return;
-    }
-
-    if (this._searchHierarchy.length === 0) return;
-
-    // Immediate loading state
-    this._searchResults = [];
-    this._searchLoading = true;
-    this.requestUpdate();
-
-    const previousLevel = this._searchHierarchy.pop();
-    if (previousLevel.type === 'select_playlist' || previousLevel.type === 'select_track_for_playlist') {
-      this._addToPlaylistTarget = null;
-    }
-
-    this._searchQuery = previousLevel.query;
-    this._currentSearchQuery = previousLevel.query;
-    this._searchResultsByType = {}; // Clear cache for new search
-
-    // Restore filter state
-    this._searchMediaClassFilter = previousLevel.filter || 'all';
-
-    if (this._searchHierarchy.length === 0) {
-      if (this._openedSearchFromNowPlaying) {
-        this._openedSearchFromNowPlaying = false;
-        this._closeEntityOptions();
-        return;
-      }
-      this._searchBreadcrumb = "";
-      this._doSearch(this._searchMediaClassFilter === 'all' ? null : this._searchMediaClassFilter);
-    } else {
-      const currentLevel = this._searchHierarchy[this._searchHierarchy.length - 1];
-      if (currentLevel.type === 'artist') {
-        this._searchBreadcrumb = `Albums by ${currentLevel.name}`;
-        this._searchMediaClassFilter = 'album';
-        this._doSearch('album', { artist: currentLevel.name });
-      } else if (currentLevel.type === 'album') {
-        this._searchBreadcrumb = `Tracks from ${currentLevel.name}`;
-        this._searchMediaClassFilter = 'track';
-        const artistLevel = this._searchHierarchy.find(level => level.type === 'artist');
-        const artistName = artistLevel ? artistLevel.name : null;
-        if (currentLevel.uri && this._isMusicAssistantEntity()) {
-          this._searchQuery = "";
-          this._currentSearchQuery = "";
-          this._searchResults = [];
-          this._searchLoading = true;
-          this.requestUpdate();
-          this._loadAlbumTracks(currentLevel.uri, currentLevel.name, artistName).then(() => {
-            this._scrollToTop();
-          });
-          return;
-        }
-        // Fallback search
-        const searchParams = { album: currentLevel.name };
-        if (artistName) {
-          searchParams.artist = artistName;
-        }
-        this._doSearch('track', searchParams);
-      } else if (currentLevel.type === 'playlist') {
-        this._searchBreadcrumb = `Tracks from ${currentLevel.name}`;
-        this._searchMediaClassFilter = 'track';
-        if (currentLevel.uri && this._isMusicAssistantEntity()) {
-          this._searchQuery = "";
-          this._currentSearchQuery = "";
-          this._searchResults = [];
-          this._searchLoading = true;
-          this.requestUpdate();
-          this._loadPlaylistTracks(currentLevel.uri, currentLevel.name).then(() => {
-            this._scrollToTop();
-          });
-          return;
-        }
-        this._doSearch('track');
-      }
-    }
+    return this._searchController.goBackInSearch();
   }
 
   _scrollToTop() {
-    const results = this.shadowRoot?.querySelector(".search-sheet-results");
-    if (results) results.scrollTop = 0;
-    this._updateSearchHeaderPosition(0, true);
-    this._lastSearchResultsScrollTop = 0;
+    return this._searchController.scrollToTop();
   }
 
   _getSearchHeaderHeight() {
-    const panel = this.shadowRoot?.querySelector(".search-header-panel");
-    if (!panel) return this._searchHeaderNaturalHeight || 120;
-    const height = panel.offsetHeight;
-    if (height > 0) {
-      this._searchHeaderNaturalHeight = height;
-      return height;
-    }
-    return this._searchHeaderNaturalHeight || 120;
+    return this._searchController.getSearchHeaderHeight();
   }
 
   _updateSearchHeaderPosition(offset, animated = false) {
-    const headerHeight = this._getSearchHeaderHeight();
-    const clampedOffset = Math.max(0, Math.min(headerHeight, offset));
-    this._searchHeaderOffset = clampedOffset;
-    const isRetracted = clampedOffset >= headerHeight && headerHeight > 0;
-    this._searchHeadersRetracted = isRetracted;
-
-    const panel = this.shadowRoot?.querySelector(".search-header-panel");
-    if (!panel) return;
-
-    if (animated) {
-      panel.classList.add("smooth-transition");
-      clearTimeout(this._searchHeaderTransitionTimer);
-      this._searchHeaderTransitionTimer = setTimeout(() => {
-        panel.classList.remove("smooth-transition");
-      }, 280);
-    } else {
-      panel.classList.remove("smooth-transition");
-    }
-
-    panel.classList.toggle("retracted", isRetracted);
-    panel.style.marginTop = clampedOffset > 0 ? `-${clampedOffset}px` : "0px";
-
-    const progress = headerHeight > 0 ? clampedOffset / headerHeight : 0;
-    const opacity = Math.max(0, Math.min(1, 1 - progress));
-    panel.style.opacity = clampedOffset > 0 ? opacity.toFixed(3) : "";
-
-    if (isRetracted) {
-      panel.style.pointerEvents = "none";
-      const input = panel.querySelector("#search-input-box");
-      if (input && document.activeElement === input) {
-        input.blur();
-      }
-    } else {
-      panel.style.pointerEvents = "";
-    }
+    return this._searchController.updateSearchHeaderPosition(offset, animated);
   }
 
   _getSearchResultsElement() {
-    if (!this._cachedSearchResultsElement || !this._cachedSearchResultsElement.isConnected) {
-      this._cachedSearchResultsElement = this.shadowRoot?.querySelector(
-        ".virtualized-results-wrapper, .queue-results-wrapper, .search-sheet-results, .entity-options-search-results"
-      );
-    }
-    return this._cachedSearchResultsElement;
+    return this._searchController.getSearchResultsElement();
   }
 
   _applySearchHeaderDelta(delta) {
-    if (this.config?.pin_search_headers === true) return;
-    const headerHeight = this._getSearchHeaderHeight();
-    if (headerHeight <= 0) return;
-
-    const currentOffset = this._searchHeaderOffset || 0;
-    const newOffset = Math.max(0, Math.min(headerHeight, currentOffset + delta));
-    if (newOffset !== currentOffset) {
-      this._updateSearchHeaderPosition(newOffset, false);
-    }
+    return this._searchController.applySearchHeaderDelta(delta);
   }
 
   _setSearchHeadersRetracted(retracted, animated = true) {
-    const headerHeight = this._getSearchHeaderHeight();
-    const targetOffset = retracted ? headerHeight : 0;
-    this._updateSearchHeaderPosition(targetOffset, animated);
+    return this._searchController.setSearchHeadersRetracted(retracted, animated);
   }
 
   _handleSearchResultsScroll(e, pinSearchHeaders) {
-    if (pinSearchHeaders || this.config?.pin_search_headers === true || this._isDragging) return;
-    const el = e.currentTarget || e.target;
-    if (!el) return;
+    return this._searchController.handleSearchResultsScroll(e, pinSearchHeaders);
+  }
 
-    const currentScrollTop = el.scrollTop;
-    const lastScrollTop = this._lastSearchResultsScrollTop ?? currentScrollTop;
-    const delta = currentScrollTop - lastScrollTop;
-    this._lastSearchResultsScrollTop = currentScrollTop;
-
-    const maxScroll = Math.max(0, el.scrollHeight - el.clientHeight);
-    if (maxScroll <= 0) {
-      if ((this._searchHeaderOffset || 0) !== 0) {
-        this._updateSearchHeaderPosition(0, false);
-      }
-      return;
-    }
-
-    if (currentScrollTop <= 0) {
-      this._updateSearchHeaderPosition(0, false);
-      return;
-    }
-
-    if (currentScrollTop >= maxScroll - 6) {
-      return;
-    }
-
-    if (delta === 0) return;
-
-    this._applySearchHeaderDelta(delta);
+  _handleFilterChipsWheel(e) {
+    return this._searchController.handleFilterChipsWheel(e);
   }
 
   _handleHeaderWheel(e, pinSearchHeaders) {
-    if (e.cancelable) e.preventDefault();
-    e.stopPropagation();
-    if (pinSearchHeaders || this.config?.pin_search_headers === true) {
-      const results = this._getSearchResultsElement();
-      if (results) {
-        results.scrollTop += e.deltaY;
-      }
-      return;
-    }
-    this._applySearchHeaderDelta(e.deltaY);
+    return this._searchController.handleHeaderWheel(e, pinSearchHeaders);
   }
 
   _handleHeaderTouchStart(e) {
-    if (e.touches && e.touches.length === 1) {
-      this._headerTouchStartY = e.touches[0].clientY;
-      this._headerTouchStartX = e.touches[0].clientX;
-    }
+    return this._searchController.handleHeaderTouchStart(e);
   }
 
   _handleHeaderTouchMove(e, pinSearchHeaders) {
-    if (pinSearchHeaders || this.config?.pin_search_headers === true || this._headerTouchStartY == null) return;
-    if (!e.touches || e.touches.length !== 1) return;
-
-    const currentY = e.touches[0].clientY;
-    const currentX = e.touches[0].clientX;
-    const deltaY = currentY - this._headerTouchStartY;
-    const deltaX = currentX - this._headerTouchStartX;
-
-    // Discriminate vertical gesture to avoid conflicting with horizontal chip scroll
-    if (Math.abs(deltaY) > Math.abs(deltaX)) {
-      if (e.cancelable) e.preventDefault();
-      this._applySearchHeaderDelta(-deltaY);
-      this._headerTouchStartY = currentY;
-      this._headerTouchStartX = currentX;
-    }
+    return this._searchController.handleHeaderTouchMove(e, pinSearchHeaders);
   }
 
   _handleHeaderTouchEnd() {
-    this._headerTouchStartY = null;
-    this._headerTouchStartX = null;
+    return this._searchController.handleHeaderTouchEnd();
   }
 
-
   _handleSearchContainerWheel(e, pinSearchHeaders) {
-    if (pinSearchHeaders || this.config?.pin_search_headers === true) return;
-    const headerHeight = this._getSearchHeaderHeight();
-    const currentOffset = this._searchHeaderOffset || 0;
-    if (e.deltaY < 0) {
-      const results = this._getSearchResultsElement();
-      if (!results || results.scrollTop <= 5) {
-        if (e.cancelable) e.preventDefault();
-        this._applySearchHeaderDelta(e.deltaY);
-      }
-    } else if (e.deltaY > 0 && currentOffset < headerHeight) {
-      if (e.cancelable) e.preventDefault();
-      this._applySearchHeaderDelta(e.deltaY);
-    }
+    return this._searchController.handleSearchContainerWheel(e, pinSearchHeaders);
   }
 
   _handleSearchResultsWheel(e, pinSearchHeaders) {
-    if (pinSearchHeaders || this.config?.pin_search_headers === true) return;
-    const el = e.currentTarget || e.target;
-    const scrollTop = el ? el.scrollTop : 0;
-    if (e.deltaY < 0 && scrollTop <= 5) {
-      if ((this._searchHeaderOffset || 0) > 0 && e.cancelable) {
-        e.preventDefault();
-      }
-      this._applySearchHeaderDelta(e.deltaY);
-    }
+    return this._searchController.handleSearchResultsWheel(e, pinSearchHeaders);
   }
 
   _handleResultsTouchStart(e) {
-    if (e.touches && e.touches.length === 1) {
-      this._resultsTouchStartY = e.touches[0].clientY;
-      this._resultsTouchStartX = e.touches[0].clientX;
-    }
+    return this._searchController.handleResultsTouchStart(e);
   }
 
   _handleResultsTouchMove(e, pinSearchHeaders) {
-    if (pinSearchHeaders || this.config?.pin_search_headers === true || this._resultsTouchStartY == null) return;
-    if (!e.touches || e.touches.length !== 1) return;
-    const el = e.currentTarget;
-    const scrollTop = el ? el.scrollTop : 0;
-    const deltaY = e.touches[0].clientY - this._resultsTouchStartY;
-    const deltaX = e.touches[0].clientX - this._resultsTouchStartX;
-
-    if (Math.abs(deltaY) > Math.abs(deltaX) && deltaY > 0 && scrollTop <= 5) {
-      if ((this._searchHeaderOffset || 0) > 0 && e.cancelable) {
-        e.preventDefault();
-      }
-      this._applySearchHeaderDelta(-deltaY);
-      this._resultsTouchStartY = e.touches[0].clientY;
-      this._resultsTouchStartX = e.touches[0].clientX;
-    }
+    return this._searchController.handleResultsTouchMove(e, pinSearchHeaders);
   }
 
   _handleResultsTouchEnd() {
-    this._resultsTouchStartY = null;
-    this._resultsTouchStartX = null;
+    return this._searchController.handleResultsTouchEnd();
   }
 
   // Check if a search result is clickable for hierarchical navigation
   _isClickableSearchResult(item) {
-    if (!item) return false;
-    // Always clickable if we are in a selection flow
-    if (this._addToPlaylistTarget) return true;
-    const currentHierarchyLevel = this._searchHierarchy[this._searchHierarchy.length - 1];
-    if (currentHierarchyLevel?.type === 'select_track_for_playlist') return true;
-
-    return !!item.is_browsable;
+    return this._searchController.isClickableSearchResult(item);
   }
-
-
 
   // Get the tooltip title for clickable search results
   _getSearchResultClickTitle(item) {
-    if (!this._isClickableSearchResult(item)) return "";
-
-    if (this._addToPlaylistTarget && item.media_class === 'playlist') {
-      return localize('search.add_to_playlist');
-    }
-
-    // Track selection step for radio add-to-playlist
-    const currentHierarchy = this._searchHierarchy[this._searchHierarchy.length - 1];
-    if (currentHierarchy?.type === 'select_track_for_playlist' && (item.media_class === 'track' || item.media_content_type === 'track')) {
-      const mockItem = this._getMockItemFromCurrentTrack();
-      return localize('search.select_track_for_playlist', {
-        '{track}': mockItem?.title || "",
-        '{artist}': mockItem?.media_artist || ""
-      });
-    }
-
-    return getSearchResultClickTitle(item);
+    return this._searchController.getSearchResultClickTitle(item);
   }
 
   // Force-invalidate the "Next Up" results cache
   _invalidateUpcomingCache() {
-    // Force a reload of the queue to reflect server-side changes
-    if (this._upcomingFilterActive) {
-      // In strictly optimistic mode, we don't force a fetch here.
-      // The local UI is already updated. The 20s heartbeat will eventually sync.
-    } else {
-      // If not active, just clear it so its fresh next time it opens
-      const classFilter = this._searchMediaClassFilter || 'all';
-      const cacheKey = `${classFilter}_upcoming_sort_default`;
-      if (this._searchResultsByType) {
-        delete this._searchResultsByType[cacheKey];
-      }
-      this.requestUpdate();
-    }
+    return this._searchController.invalidateUpcomingCache();
   }
 
   _toggleRadioMode() {
-    this._radioModeActive = !this._radioModeActive;
-    this.requestUpdate();
+    return this._searchController.toggleRadioMode();
   }
 
   // Toggle favorites filter - use existing _doSearch method with favorites parameter
   async _toggleFavoritesFilter() {
-    const wasActive = this._favoritesFilterActive || this._initialFavoritesLoaded;
-    this._favoritesFilterActive = !wasActive;
-
-    // Make mutually exclusive with other filters
-    if (this._favoritesFilterActive) {
-      this._recentlyPlayedFilterActive = false;
-      this._upcomingFilterActive = false;
-      this._recommendationsFilterActive = false;
-    }
-
-    if (this._favoritesFilterActive) {
-      // Use the existing _doSearch method with favorites parameter
-      // This aligns with how initial favorites loading works
-      const currentMediaType = this._searchMediaClassFilter;
-
-      // FIX: Always use the structured search with favorites: true
-      // This ensures we respect the current filter (e.g., Radio) and don't pass invalid 'favorites' media type
-      try {
-        await this._doSearch(currentMediaType, { favorites: true });
-      } catch (error) {
-        console.error('yamp: Error searching favorites:', error);
-      }
-    } else {
-      // Favorites filter turned OFF:
-      // We must reload the standard items for the current filter.
-      const currentMediaType = this._searchMediaClassFilter;
-
-      // FIX: Explicitly clear the persistence flags so _doSearch doesn't immediately re-enable favorites
-      this._lastSearchUsedServerFavorites = false;
-      this._initialFavoritesLoaded = false;
-
-      // Pass clearFilters: true to ensure we don't pick up any lingering filter states from the isFavorites calculation
-      await this._doSearch(currentMediaType, { clearFilters: true });
-    }
+    return this._searchController.toggleFavoritesFilter();
   }
 
   // Toggle recently played filter
   async _toggleRecentlyPlayedFilter(forceState = null) {
-    const targetState = typeof forceState === "boolean"
-      ? forceState
-      : !this._recentlyPlayedFilterActive;
-    this._recentlyPlayedFilterActive = targetState;
-
-    // Make mutually exclusive with other filters
-    if (this._recentlyPlayedFilterActive) {
-      this._favoritesFilterActive = false;
-      this._upcomingFilterActive = false;
-      this._recommendationsFilterActive = false;
-      this._initialFavoritesLoaded = false; // Clear the initial favorites state
-    }
-
-    if (this._recentlyPlayedFilterActive) {
-      // Clear search box since it's not used in recently played mode
-      this._searchQuery = '';
-      // Load recently played items
-      try {
-        const currentMediaType = this._searchMediaClassFilter || 'all';
-        const targetFilter = this._keepFiltersOnSearch && currentMediaType !== 'favorites' ? currentMediaType : 'all';
-        await this._doSearch(targetFilter, { isRecentlyPlayed: true, clearFilters: true });
-      } catch (error) {
-        console.error('yamp: Error in _doSearch for recently played:', error);
-      }
-    } else {
-      // Restore original search results
-      if (this._searchQuery && this._searchQuery.trim() !== '') {
-        // Resubmit the original search without recently played filter
-        const currentMediaType = this._searchMediaClassFilter;
-        await this._doSearch(currentMediaType);
-      } else {
-        // Restore from cache or load favorites if no search query
-        const currentMediaType = this._searchMediaClassFilter || 'all';
-        if (this._restoreSearchResultsFromCache(currentMediaType)) {
-          // Restored from cache
-        } else if (this._keepFiltersOnSearch && currentMediaType !== 'all') {
-          await this._doSearch(currentMediaType);
-        } else {
-          // No cache, load favorites as default
-          await this._doSearch('favorites');
-        }
-      }
-    }
+    return this._searchController.toggleRecentlyPlayedFilter(forceState);
   }
 
   // Toggle upcoming queue filter
   async _toggleUpcomingFilter(forceState = null) {
-    if (!this.hass) return;
-
-    if (forceState !== null) {
-      this._upcomingFilterActive = forceState;
-    } else {
-      this._upcomingFilterActive = !this._upcomingFilterActive;
-    }
-
-    // Make mutually exclusive with other filters
-    if (this._upcomingFilterActive) {
-      this._favoritesFilterActive = false;
-      this._recentlyPlayedFilterActive = false;
-      this._recommendationsFilterActive = false;
-      this._initialFavoritesLoaded = false; // Clear the initial favorites state
-    }
-
-    if (this._upcomingFilterActive) {
-      // Clear search box since it's not used in upcoming mode
-      this._searchQuery = '';
-      // Clear cache to force fresh fetch
-      const cacheKey = `${this._searchMediaClassFilter || 'all'}_upcoming_sort_default`;
-      delete this._searchResultsByType[cacheKey];
-      // Subscribe to queue update events
-      await this._subscribeToQueueUpdates();
-      // Load upcoming queue items
-      try {
-        const currentMediaType = this._searchMediaClassFilter || 'all';
-        const targetFilter = this._keepFiltersOnSearch && currentMediaType !== 'favorites' ? currentMediaType : 'all';
-        await this._doSearch(targetFilter, { isUpcoming: true, clearFilters: true });
-      } catch (error) {
-        console.error('yamp: Error in _doSearch for upcoming queue:', error);
-      }
-    } else {
-      // Unsubscribe from queue update events
-      this._unsubscribeFromQueueUpdates();
-      // Restore original search results
-      if (this._searchQuery && this._searchQuery.trim() !== '') {
-        // Resubmit the original search without upcoming filter
-        const currentMediaType = this._searchMediaClassFilter;
-        await this._doSearch(currentMediaType);
-      } else {
-        // Restore from cache or load favorites if no search query
-        const currentMediaType = this._searchMediaClassFilter || 'all';
-        if (this._restoreSearchResultsFromCache(currentMediaType)) {
-          // Restored from cache
-        } else if (this._keepFiltersOnSearch && currentMediaType !== 'all') {
-          await this._doSearch(currentMediaType);
-        } else {
-          // No cache, load favorites as default
-          await this._doSearch('favorites');
-        }
-      }
-    }
+    return this._searchController.toggleUpcomingFilter(forceState);
   }
 
   // Toggle recommendations filter (mass_queue)
   async _toggleRecommendationsFilter(forceState = null) {
-    const targetState = typeof forceState === "boolean"
-      ? forceState
-      : !this._recommendationsFilterActive;
-    this._recommendationsFilterActive = targetState;
-
-    if (this._recommendationsFilterActive) {
-      this._favoritesFilterActive = false;
-      this._recentlyPlayedFilterActive = false;
-      this._upcomingFilterActive = false;
-      this._initialFavoritesLoaded = false;
-      this._searchQuery = '';
-
-      try {
-        const hasMassQueue = await this._isMassQueueIntegrationAvailable(this.hass);
-        this._hasMassQueueIntegration = hasMassQueue;
-        this._massQueueAvailable = hasMassQueue;
-
-        if (!hasMassQueue) {
-          this._recommendationsFilterActive = false;
-          this._searchError = "Recommendations require the Music Assistant queue integration.";
-          this.requestUpdate();
-          return;
-        }
-
-        const targetFilter =
-          this._keepFiltersOnSearch &&
-          this._searchMediaClassFilter &&
-          this._searchMediaClassFilter !== "favorites"
-            ? this._searchMediaClassFilter
-            : "all";
-
-        await this._doSearch(targetFilter, { isRecommendations: true, clearFilters: true });
-      } catch (error) {
-        console.error('yamp: Error in _doSearch for recommendations:', error);
-        this._searchError = "Unable to load recommendations.";
-        this._recommendationsFilterActive = false;
-        this.requestUpdate();
-      }
-    } else {
-      if (this._searchQuery && this._searchQuery.trim() !== '') {
-        const currentMediaType = this._searchMediaClassFilter;
-        await this._doSearch(currentMediaType);
-      } else {
-        const currentMediaType = this._searchMediaClassFilter || 'all';
-        if (this._restoreSearchResultsFromCache(currentMediaType)) {
-          // Restored from cache
-        } else if (this._keepFiltersOnSearch && currentMediaType !== 'all') {
-          await this._doSearch(currentMediaType);
-        } else {
-          await this._doSearch('favorites');
-        }
-      }
-    }
+    return this._searchController.toggleRecommendationsFilter(forceState);
   }
 
   /**
@@ -3335,639 +1897,81 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
    * @returns {boolean} True if restored from cache, false otherwise
    */
   _restoreSearchResultsFromCache(currentMediaType) {
-    const sortMode = this._getActiveSearchDisplaySortMode();
-    const cacheKey = `${currentMediaType}_sort_${sortMode}`;
-    if (this._searchResultsByType[cacheKey] || this._searchResultsByType[currentMediaType]) {
-      this._searchResults = this._sortSearchResults(
-        this._searchResultsByType[cacheKey] || this._searchResultsByType[currentMediaType]
-      );
-      this.requestUpdate();
-      return true;
-    }
-    return false;
+    return this._searchController.restoreSearchResultsFromCache(currentMediaType);
   }
 
-  // Get next track from Music Assistant (limited by Music Assistant API)
+  // Get next track from Music Assistant (delegated to QueueController)
   async _getUpcomingQueue(hass, entityId, limit = 250) {
-    try {
-      // Always check for mass_queue integration (don't cache this)
-      const hasMassQueue = await this._isMassQueueIntegrationAvailable(hass);
-
-      // Cache the result for UI rendering
-      this._massQueueAvailable = hasMassQueue;
-      this._hasMassQueueIntegration = hasMassQueue;
-
-      if (hasMassQueue) {
-        try {
-          const massQueueResult = await this._getUpcomingQueueWithMassQueue(hass, entityId, limit);
-
-          // If mass_queue returns 0 results, fall back to original method
-          if (!massQueueResult.results || massQueueResult.results.length === 0) {
-            this._massQueueAvailable = false; // Hide queue management buttons
-            return await this._getUpcomingQueueOriginal(hass, entityId, limit);
-          }
-
-          return massQueueResult;
-        } catch (error) {
-          this._massQueueAvailable = false; // Hide queue management buttons
-          return await this._getUpcomingQueueOriginal(hass, entityId, limit);
-        }
-      }
-
-      // Fallback to the original method
-      return await this._getUpcomingQueueOriginal(hass, entityId, limit);
-    } catch (error) {
-      console.error('yamp: Error getting upcoming queue:', error);
-      this._massQueueAvailable = false;
-      return { results: [], usedMusicAssistant: false };
-    }
+    return this._queueController.getUpcomingQueue(hass, entityId, limit);
   }
 
-  // Get recommendations using mass_queue integration
+  // Get recommendations using mass_queue integration (delegated to QueueController)
   async _getRecommendations(hass, entityId, mediaType = null, limit = 20) {
-    try {
-      const hasMassQueue = await this._isMassQueueIntegrationAvailable(hass);
-      this._hasMassQueueIntegration = hasMassQueue;
-      this._massQueueAvailable = hasMassQueue;
-
-      if (!hasMassQueue) {
-        throw new Error('mass_queue integration unavailable');
-      }
-
-      const limitToUse = Math.max(limit || 0, this._getSearchResultsLimit());
-      const message = {
-        type: "call_service",
-        domain: "mass_queue",
-        service: "get_recommendations",
-        service_data: {
-          entity: entityId
-        },
-        return_response: true,
-      };
-
-      const response = await hass.connection.sendMessagePromise(message);
-      const payload = response?.response;
-
-      let groups = [];
-      if (Array.isArray(payload)) {
-        groups = payload;
-      } else if (payload && typeof payload === "object") {
-        if (Array.isArray(payload[entityId])) {
-          groups = payload[entityId];
-        } else {
-          const values = Object.values(payload);
-          values.forEach(val => {
-            if (Array.isArray(val)) {
-              groups.push(...val);
-            } else if (val && typeof val === "object") {
-              groups.push(val);
-            }
-          });
-        }
-        if (groups.length === 0 && Array.isArray(payload.items)) {
-          groups = payload.items;
-        }
-      }
-
-      const normalizeMediaClass = (value) => {
-        if (!value || typeof value !== "string") return "track";
-        const type = value.toLowerCase();
-        switch (type) {
-          case "song":
-          case "music":
-            return "track";
-          case "podcast_episode":
-          case "episode":
-            return "podcast";
-          case "station":
-            return "radio";
-          case "directory":
-          case "folder":
-            return "playlist";
-          default:
-            return type;
-        }
-      };
-      const formatLabel = (value) => {
-        if (!value) return "";
-        return value
-          .toString()
-          .replace(/[_-]+/g, " ")
-          .replace(/\s+/g, " ")
-          .trim()
-          .replace(/\b\w/g, ch => ch.toUpperCase());
-      };
-
-      const requestedClass = mediaType && mediaType !== "all"
-        ? normalizeMediaClass(mediaType)
-        : null;
-
-      const results = [];
-      let collected = 0;
-      const maxItems = limitToUse > 0 ? limitToUse : Infinity;
-      for (const group of groups) {
-        if (collected >= maxItems) break;
-        const groupName = group?.name || group?.sort_name || "";
-        const groupImage = typeof group?.image === "string" && group.image.trim() !== "" ? group.image : null;
-        const groupItems = (Array.isArray(group?.items) && group.items.length > 0)
-          ? group.items
-          : [group];
-
-        for (const item of groupItems) {
-          if (collected >= maxItems) break;
-          const mediaContentId = item?.uri || item?.item_id;
-          if (!mediaContentId) continue;
-
-          const itemImage = typeof item?.image === "string" && item.image.trim() !== "" ? item.image : null;
-          const rawType = item?.media_type || group?.media_type || "music";
-          const normalizedClass = normalizeMediaClass(rawType);
-          if (requestedClass && normalizedClass !== requestedClass) {
-            continue;
-          }
-          const typeLabel = formatLabel(rawType) || formatLabel(normalizedClass);
-          const providerLabel = formatLabel(item?.provider || group?.provider);
-          const subtitleParts = typeLabel ? [typeLabel] : [];
-          if (groupName) {
-            subtitleParts.push(groupName);
-          } else if (providerLabel) {
-            subtitleParts.push(providerLabel);
-          }
-
-          results.push({
-            media_content_id: mediaContentId,
-            media_content_type: rawType || normalizedClass,
-            media_class: normalizedClass,
-            title: item?.name || item?.sort_name || groupName || "Recommendation",
-            artist: subtitleParts.join(" • "),
-            thumbnail: itemImage || groupImage || null,
-            provider: item?.provider || group?.provider || null
-          });
-          collected += 1;
-        }
-      }
-
-      return {
-        results,
-        usedMusicAssistant: true,
-        source: 'mass_queue'
-      };
-    } catch (error) {
-      console.error('yamp: Error getting recommendations from mass_queue:', error);
-      throw error;
-    }
+    return this._queueController.getRecommendations(hass, entityId, mediaType, limit);
   }
 
-  // Check if mass_queue integration is available and enabled
+  // Check if mass_queue integration is available and enabled (delegated to QueueController)
   async _isMassQueueIntegrationAvailable(hass) {
-    if (this.config.disable_mass_queue === true) {
-      return false;
-    }
-    try {
-      // First check if the mass_queue domain is available in services
-      const services = await hass.callWS({
-        type: "get_services"
-      });
-
-      let hasServices = false;
-      // Handle different response formats
-      if (Array.isArray(services)) {
-        hasServices = services.some(service => service.domain === "mass_queue");
-      } else if (services && typeof services === 'object') {
-        // Check if mass_queue exists as a key in the services object
-        hasServices = Object.prototype.hasOwnProperty.call(services, "mass_queue") || Object.keys(services).some(key => key === "mass_queue");
-      }
-
-      if (!hasServices) {
-        return false;
-      }
-
-      // If services are available, assume integration is working
-      // The companion card works, so this should be sufficient
-      return true;
-    } catch (error) {
-      return false;
-    }
+    return this._queueController.isMassQueueIntegrationAvailable(hass);
   }
 
-  // Get queue using mass_queue integration
+  // Check if Music Assistant AI Radio shows are available
+  async _checkAiRadioAvailability() {
+    return this._searchController.checkAiRadioAvailability();
+  }
+
+  // Get queue using mass_queue integration (delegated to QueueController)
   async _getUpcomingQueueWithMassQueue(hass, entityId, limit = 250) {
-    try {
-      // Get the currently playing track's media_content_id
-      const playerState = hass.states[entityId];
-      const currentTrackId = playerState?.attributes?.media_content_id;
-
-      // Use limit_before and limit_after like the companion card does
-      const message = {
-        type: "call_service",
-        domain: "mass_queue",
-        service: "get_queue_items",
-        service_data: {
-          entity: entityId,
-          limit_before: 5  // Request some history to avoid falsy zero bugs in backend
-        },
-        return_response: true,
-      };
-      const limitAfter = Number.isFinite(limit) && limit > 0 ? limit : 250;
-      message.service_data.limit_after = limitAfter;  // Keep for backwards compatibility
-      message.service_data.limit = limitAfter + 6;    // Account for 5 history + 1 active + limitAfter upcoming items
-
-      const response = await hass.connection.sendMessagePromise(message);
-      const queueItems = response?.response?.[entityId];
-
-      if (!Array.isArray(queueItems)) {
-        throw new Error('Invalid response from mass_queue');
-      }
-
-      // Find active item index
-      let currentTrackIndex = queueItems.findIndex(item => item.active === true || item.state === 'playing');
-      
-      // Fallback to Home Assistant's media_content_id (slower sync but reliable)
-      if (currentTrackIndex === -1 && currentTrackId) {
-        currentTrackIndex = queueItems.findIndex(item => item.media_content_id === currentTrackId || item.queue_item_id === currentTrackId);
-      }
-
-      // Default to 0 if all else fails
-      if (currentTrackIndex === -1 && queueItems.length > 0) {
-        currentTrackIndex = 0;
-      }
-
-      // Get upcoming items (items after the current track)
-      const upcomingItems = currentTrackIndex >= 0 ? queueItems.slice(currentTrackIndex + 1) : queueItems;
-
-      // Process the upcoming items like the companion card does
-      const itemsToRender = limitAfter > 0 ? upcomingItems.slice(0, limitAfter) : upcomingItems;
-      const results = itemsToRender.map((item, index) => ({
-        media_content_id: item.media_content_id || item.queue_item_id || `queue_${index}`,
-        media_content_type: 'track',
-        media_class: 'track',
-        title: item.media_title || item.name || 'Unknown Track',
-        artist: item.media_artist || item.artist || 'Unknown Artist',
-        album: item.media_album_name || item.album || 'Unknown Album',
-        thumbnail: item.media_image || item.image || null,
-        duration: item.duration || null,
-        position: index + 1,
-        queue_item_id: item.queue_item_id || null
-      }));
-
-      return {
-        results,
-        usedMusicAssistant: true,
-        total: results.length,
-        source: 'mass_queue'
-      };
-    } catch (error) {
-      console.error('yamp: mass_queue service call failed:', error);
-      throw error;
-    }
+    return this._queueController.getUpcomingQueueWithMassQueue(hass, entityId, limit);
   }
 
-  // Queue reordering methods
+  // Queue reordering methods (delegated to QueueController)
   _enqueueQueueOperation(operationFn) {
-    if (this._queueOpsTotal === this._queueOpsCompleted) {
-      this._queueOpsTotal = 0;
-      this._queueOpsCompleted = 0;
-    }
-    this._queueOpsTotal++;
-    if (this._queueOpsTimeout) {
-      clearTimeout(this._queueOpsTimeout);
-      this._queueOpsTimeout = null;
-    }
-
-    this._queueOperationPromise = this._queueOperationPromise.then(async () => {
-      try {
-        await operationFn();
-        this._invalidateUpcomingCache();
-      } catch (error) {
-        console.error("yamp: Queue operation failed:", error);
-        this._refreshQueue();
-      } finally {
-        this._queueOpsCompleted++;
-
-        if (this._queueOpsCompleted === this._queueOpsTotal) {
-          if (this._queueOpsTimeout) clearTimeout(this._queueOpsTimeout);
-          this._queueOpsTimeout = setTimeout(() => {
-            if (this._queueOpsCompleted === this._queueOpsTotal) {
-              this._queueOpsTotal = 0;
-              this._queueOpsCompleted = 0;
-              this._queueOpsTimeout = null;
-            }
-          }, 1500);
-        }
-      }
-    });
+    return this._queueController.enqueueQueueOperation(operationFn);
   }
 
   async _moveQueueItemUp(queueItemId) {
-    try {
-      // Get the Music Assistant entity for the current chip
-      const maState = this._getMusicAssistantState();
-      const maEntityId = maState?.entity_id;
-
-      if (!maEntityId) {
-        throw new Error('No Music Assistant entity found');
-      }
-
-      // Update UI immediately (like companion card does)
-      this._moveQueueItemInUI(queueItemId, 'up');
-
-      this._enqueueQueueOperation(async () => {
-        await this.hass.callService("mass_queue", "move_queue_item_up", {
-          entity: maEntityId,
-          queue_item_id: queueItemId
-        });
-      });
-    } catch (error) {
-      // Revert UI change on error
-      this._refreshQueue();
-    }
+    return this._queueController.moveQueueItemUp(queueItemId);
   }
 
   async _moveQueueItemDown(queueItemId) {
-    try {
-      // Get the Music Assistant entity for the current chip
-      const maState = this._getMusicAssistantState();
-      const maEntityId = maState?.entity_id;
-
-      if (!maEntityId) {
-        throw new Error('No Music Assistant entity found');
-      }
-
-      // Update UI immediately
-      this._moveQueueItemInUI(queueItemId, 'down');
-
-      this._enqueueQueueOperation(async () => {
-        await this.hass.callService("mass_queue", "move_queue_item_down", {
-          entity: maEntityId,
-          queue_item_id: queueItemId
-        });
-      });
-    } catch (error) {
-      // Revert UI change on error
-      this._refreshQueue();
-    }
+    return this._queueController.moveQueueItemDown(queueItemId);
   }
 
   async _moveQueueItemNext(queueItemId) {
-    try {
-      // Get the Music Assistant entity for the current chip
-      const maState = this._getMusicAssistantState();
-      const maEntityId = maState?.entity_id;
-
-      if (!maEntityId) {
-        throw new Error('No Music Assistant entity found');
-      }
-
-      // Update UI immediately
-      this._moveQueueItemInUI(queueItemId, 'next');
-
-      this._enqueueQueueOperation(async () => {
-        await this.hass.callService("mass_queue", "move_queue_item_next", {
-          entity: maEntityId,
-          queue_item_id: queueItemId
-        });
-      });
-    } catch (error) {
-      // Revert UI change on error
-      this._refreshQueue();
-    }
+    return this._queueController.moveQueueItemNext(queueItemId);
   }
 
   async _removeQueueItem(queueItemId) {
-    try {
-      // Get the Music Assistant entity for the current chip
-      const maState = this._getMusicAssistantState();
-      const maEntityId = maState?.entity_id;
-
-      if (!maEntityId) {
-        throw new Error('No Music Assistant entity found');
-      }
-
-      // Update UI immediately
-      this._removeQueueItemFromUI(queueItemId);
-
-      this._enqueueQueueOperation(async () => {
-        await this.hass.callService("mass_queue", "remove_queue_item", {
-          entity: maEntityId,
-          queue_item_id: queueItemId
-        });
-      });
-    } catch (error) {
-      // Revert UI change on error
-      this._refreshQueue();
-    }
+    return this._queueController.removeQueueItem(queueItemId);
   }
 
-  // Show queue error message
   _showQueueError(message) {
-    // For now, just log the error. In the future, we could show a toast notification
-    console.error('yamp: Queue operation failed:', message);
-    // You could implement a toast notification here if desired
+    return this._queueController.showQueueError(message);
   }
 
-  // Update queue items in UI immediately (like companion card does)
   _moveQueueItemInUI(queueItemId, direction) {
-    const cacheKey = `${this._searchMediaClassFilter || 'all'}_upcoming_sort_default`;
-    const currentResults = this._searchResultsByType[cacheKey];
-
-    if (!Array.isArray(currentResults)) {
-      return;
-    }
-
-    const itemIndex = currentResults.findIndex(item => item.queue_item_id === queueItemId);
-    if (itemIndex === -1) return;
-
-    let newIndex;
-    switch (direction) {
-      case 'up':
-        newIndex = Math.max(0, itemIndex - 1);
-        break;
-      case 'down':
-        newIndex = Math.min(currentResults.length - 1, itemIndex + 1);
-        break;
-      case 'next':
-        newIndex = 0; // Move to next position (first in upcoming queue)
-        break;
-      default:
-        return;
-    }
-
-    this._moveQueueItemInUIByIndex(itemIndex, newIndex);
+    return this._queueController.moveQueueItemInUI(queueItemId, direction);
   }
 
   async _onQueueItemMoved(e) {
-    const { oldIndex, newIndex } = e.detail;
-    if (oldIndex === newIndex) return;
-
-    const currentResults = this._getDisplaySearchResults();
-    if (!currentResults || oldIndex < 0 || oldIndex >= currentResults.length || newIndex < 0 || newIndex >= currentResults.length) {
-      return;
-    }
-
-    const draggedItem = currentResults[oldIndex];
-    const queueItemId = draggedItem?.queue_item_id;
-    if (!queueItemId) {
-      console.error("yamp: No queue_item_id found on dragged item", draggedItem);
-      return;
-    }
-
-    try {
-      // Get the Music Assistant entity for the current chip
-      const maState = this._getMusicAssistantState();
-      const maEntityId = maState?.entity_id;
-
-      if (!maEntityId) {
-        throw new Error('No Music Assistant entity found');
-      }
-
-      // Update UI immediately for a seamless feel
-      this._moveQueueItemInUIByIndex(oldIndex, newIndex);
-
-      this._enqueueQueueOperation(async () => {
-        // Perform backend move using the most efficient path of service calls
-        const costDirect = Math.abs(newIndex - oldIndex);
-        const costViaNext = 1 + newIndex;
-
-        if (costViaNext < costDirect) {
-          // Strategy B: Move to next (index 0), then move down sequentially
-          await this.hass.callService("mass_queue", "move_queue_item_next", {
-            entity: maEntityId,
-            queue_item_id: queueItemId
-          });
-          for (let i = 0; i < newIndex; i++) {
-            await this.hass.callService("mass_queue", "move_queue_item_down", {
-              entity: maEntityId,
-              queue_item_id: queueItemId
-            });
-          }
-        } else {
-          // Strategy A: Direct moves up or down sequentially
-          const serviceName = newIndex < oldIndex ? "move_queue_item_up" : "move_queue_item_down";
-          for (let i = 0; i < costDirect; i++) {
-            await this.hass.callService("mass_queue", serviceName, {
-              entity: maEntityId,
-              queue_item_id: queueItemId
-            });
-          }
-        }
-      });
-    } catch (error) {
-      console.error("yamp: Failed to move queue item via drag and drop:", error);
-      // Revert UI change on error
-      this._refreshQueue();
-    }
+    return this._queueController.onQueueItemMoved(e);
   }
 
   _moveQueueItemInUIByIndex(oldIndex, newIndex) {
-    const cacheKey = `${this._searchMediaClassFilter || 'all'}_upcoming_sort_default`;
-    const currentResults = this._searchResultsByType[cacheKey];
-
-    if (!Array.isArray(currentResults)) {
-      return;
-    }
-
-    if (oldIndex < 0 || oldIndex >= currentResults.length || newIndex < 0 || newIndex >= currentResults.length) {
-      return;
-    }
-
-    // Move item in array
-    const movedItem = currentResults.splice(oldIndex, 1)[0];
-    currentResults.splice(newIndex, 0, movedItem);
-
-    // Update the active search results too
-    this._searchResults = [...currentResults];
-
-    // Update position numbers for visual feedback
-    currentResults.forEach((item, index) => {
-      item.position = index + 1;
-    });
-
-    // Add visual feedback - temporarily highlight the moved item
-    movedItem._justMoved = true;
-    setTimeout(() => {
-      delete movedItem._justMoved;
-      this.requestUpdate();
-    }, 1000);
-
-    // Invalidate any in-flight background fetches so they don't overwrite this manual UI shift
-    this._latestSearchToken = Date.now();
-
-    // Trigger UI update
-    this.requestUpdate();
+    return this._queueController.moveQueueItemInUIByIndex(oldIndex, newIndex);
   }
 
-
-  // Advance the queue in UI immediately (e.g. on track skip)
   _advanceQueueInUI(queueItemId = null, isManual = false) {
-    if (!this._upcomingFilterActive) return;
-
-    if (isManual) {
-      this._latestManualShiftTime = Date.now();
-    }
-
-    const cacheKey = `${this._searchMediaClassFilter || 'all'}_upcoming_sort_default`;
-    let currentResults = this._searchResultsByType[cacheKey];
-
-    if (!Array.isArray(currentResults) || currentResults.length === 0) {
-      return;
-    }
-
-    if (queueItemId) {
-      // Remove the specific item and all items before it
-      const itemIndex = currentResults.findIndex(it => it.queue_item_id === queueItemId);
-      if (itemIndex >= 0) {
-        currentResults = currentResults.slice(itemIndex + 1);
-      }
-    } else {
-      // Just remove the first item
-      currentResults = currentResults.slice(1);
-    }
-
-    // Update both cache and active results
-    this._searchResultsByType[cacheKey] = currentResults;
-    this._searchResults = currentResults;
-
-    // Invalidate any in-flight background fetches so they don't overwrite this manual UI shift
-    this._latestSearchToken = Date.now();
-
-    // Trigger UI update
-    this.requestUpdate();
+    return this._queueController.advanceQueueInUI(queueItemId, isManual);
   }
 
-  // Remove queue item from UI immediately
   _removeQueueItemFromUI(queueItemId) {
-    const cacheKey = `${this._searchMediaClassFilter || 'all'}_upcoming_sort_default`;
-    const currentResults = this._searchResultsByType[cacheKey];
-
-    if (!Array.isArray(currentResults)) {
-      return;
-    }
-
-    // Remove item from array
-    const updatedResults = currentResults.filter(item => item.queue_item_id !== queueItemId);
-    this._searchResultsByType[cacheKey] = updatedResults;
-    this._searchResults = updatedResults;
-
-    // Trigger UI update
-    this.requestUpdate();
+    return this._queueController.removeQueueItemFromUI(queueItemId);
   }
 
-  // Check if current entity is a Music Assistant entity
   _isMusicAssistantEntity() {
-    const activeState = this.currentActivePlaybackStateObj || this.currentStateObj;
-    if (this._looksLikeMusicAssistantState(activeState)) return true;
-
-    // Get the Music Assistant state for the current chip
-    const maState = this._getMusicAssistantState();
-    if (!maState) return false;
-
-    // Check if the Music Assistant entity has the right attributes
-    const hasMassAttributes = isMusicAssistantEntity(maState) ||
-      maState.attributes?.mass_player_id ||
-      maState.attributes?.active_queue ||
-      // If we're in upcoming mode and getting queue items, assume it's MA
-      (this._upcomingFilterActive && this._searchResultsByType[`${this._searchMediaClassFilter || 'all'}_upcoming_sort_default`]?.some(item => item.queue_item_id));
-
-    return Boolean(hasMassAttributes);
+    return this._queueController.isMusicAssistantEntity();
   }
 
   _looksLikeMusicAssistantState(state) {
@@ -3994,741 +1998,89 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _getTransferQueueTargets() {
-    if (!this.hass?.services?.music_assistant?.transfer_queue) return [];
-    const currentIdx = this._selectedIndex;
-    if (currentIdx === null || currentIdx === undefined || currentIdx < 0) return [];
-
-    const sourceMaId = this._getActualResolvedMaEntityForState(currentIdx);
-    if (!sourceMaId) return [];
-
-    const seen = new Set([sourceMaId]);
-    const targets = [];
-
-    for (let idx = 0; idx < this.entityObjs.length; idx++) {
-      const obj = this.entityObjs[idx];
-      if (!obj) continue;
-
-      const maEntityId = this._getActualResolvedMaEntityForState(idx);
-      if (!maEntityId || seen.has(maEntityId)) continue;
-
-      const maState = this.hass?.states?.[maEntityId];
-      const mainState = this.hass?.states?.[obj.entity_id];
-      if (!this._looksLikeMusicAssistantState(maState) && !this._looksLikeMusicAssistantState(mainState)) {
-        continue;
-      }
-
-      seen.add(maEntityId);
-
-      const displayState = maState || mainState;
-      const configuredName = obj?.name;
-      const displayName = configuredName ||
-        getEntityName(this.hass, mainState) ||
-        getEntityName(this.hass, maState) ||
-        obj.entity_id;
-
-      targets.push({
-        index: idx,
-        entityId: obj.entity_id,
-        maEntityId,
-        name: displayName,
-        subtitle: maEntityId !== obj.entity_id ? maEntityId : obj.entity_id,
-        state: displayState?.state,
-        icon: displayState?.attributes?.icon || "mdi:music",
-      });
-    }
-
-    return targets;
+    return this._queueController.getTransferQueueTargets();
   }
 
   _hasQueueInState(maState) {
-    if (!maState) return false;
-    const attrs = maState.attributes || {};
-
-    const arrayKeys = ["queue_items", "queue", "media_queue", "mass_queue_items"];
-    for (const key of arrayKeys) {
-      const value = attrs[key];
-      if (Array.isArray(value) && value.length > 0) return true;
-    }
-
-    const numericKeys = ["queue_length", "queue_size", "queue_total_items", "queue_pending", "queue_remaining", "items_in_queue"];
-    for (const key of numericKeys) {
-      const value = attrs[key];
-      if (typeof value === "number" && value > 0) return true;
-    }
-
-    if (attrs.next_item || attrs.current_queue_item || attrs.queue_item_id) {
-      return true;
-    }
-
-    if (attrs.media_content_id) {
-      return true;
-    }
-
-    // Fall back to cached upcoming results if we've loaded them
-    const cacheKey = `${this._searchMediaClassFilter || 'all'}_upcoming_sort_default`;
-    const cached = this._searchResultsByType?.[cacheKey];
-    if (Array.isArray(cached) && cached.length > 0) {
-      return true;
-    }
-
-    return false;
+    return this._queueController.hasQueueInState(maState);
   }
 
   async _updateTransferQueueAvailability({ refresh = false } = {}) {
-    const maState = this._getMusicAssistantState();
-    const looksLikeMa = this._looksLikeMusicAssistantState(maState);
-
-    if (!maState || !looksLikeMa) {
-      if (this._hasTransferQueueForCurrent) {
-        this._hasTransferQueueForCurrent = false;
-        this.requestUpdate();
-      }
-      return false;
-    }
-
-    let hasQueue = this._hasQueueInState(maState);
-
-    if (!hasQueue && refresh && this.hass) {
-      const entityId = this._getActualResolvedMaEntityForState(this._selectedIndex);
-      if (entityId) {
-        try {
-          const queueInfo = await this._getUpcomingQueue(this.hass, entityId, 2);
-          if (Array.isArray(queueInfo?.results) && queueInfo.results.length > 0) {
-            hasQueue = true;
-          } else if (this._isEntityPlaying(maState) || maState.state === "paused" || maState.attributes?.media_content_id) {
-            hasQueue = true;
-          }
-        } catch (error) {
-          // Ignore errors; fall back to heuristic result
-        }
-      }
-    }
-
-    if (this._hasTransferQueueForCurrent !== hasQueue) {
-      this._hasTransferQueueForCurrent = hasQueue;
-      this.requestUpdate();
-    }
-
-    return hasQueue;
+    return this._queueController.updateTransferQueueAvailability({ refresh });
   }
 
   _canShowTransferQueueOption() {
-    if (!this._hasTransferQueueForCurrent) return false;
-    return this._getTransferQueueTargets().length > 0;
+    return this._queueController.canShowTransferQueueOption();
   }
 
   _openTransferQueue() {
-    this._showEntityOptions = true;
-    this._showTransferQueue = true;
-    this._showGrouping = false;
-    this._showSourceList = false;
-    this._showSearchInSheet = false;
-    this._showResolvedEntities = false;
-    this._transferQueuePendingTarget = null;
-    this._transferQueueStatus = null;
-    if (this._transferQueueAutoCloseTimer) {
-      clearTimeout(this._transferQueueAutoCloseTimer);
-      this._transferQueueAutoCloseTimer = null;
-    }
-    this.requestUpdate();
+    return this._queueController.openTransferQueue();
   }
 
   _closeTransferQueue() {
-    this._showTransferQueue = false;
-    this._transferQueuePendingTarget = null;
-    this._transferQueueStatus = null;
-    if (this._transferQueueAutoCloseTimer) {
-      clearTimeout(this._transferQueueAutoCloseTimer);
-      this._transferQueueAutoCloseTimer = null;
-    }
-    this.requestUpdate();
+    return this._queueController.closeTransferQueue();
   }
 
   async _transferQueueTo(target) {
-    if (!target) return;
-
-    const sourceMaId = this._getActualResolvedMaEntityForState(this._selectedIndex);
-    if (!sourceMaId) return;
-
-    this._transferQueuePendingTarget = target.maEntityId;
-    this._transferQueueStatus = null;
-    this.requestUpdate();
-
-    try {
-      const payload = this._buildTransferQueuePayload(sourceMaId, target.maEntityId);
-      await this.hass.callService("music_assistant", "transfer_queue", payload);
-      this._transferQueueStatus = {
-        type: "success",
-        message: `Queue sent to ${target.name}.`
-      };
-      const targetIdx = typeof target.index === "number" ? target.index : this.entityIds.indexOf(target.entityId);
-      if (targetIdx !== undefined && targetIdx !== null && targetIdx >= 0) {
-        const pinnedIdx = this._pinnedIndex;
-        if (pinnedIdx === null || pinnedIdx === targetIdx) {
-          this._selectedIndex = targetIdx;
-          this._manualSelect = true;
-          this._manualSelectPlayingSet = null;
-          if (pinnedIdx === targetIdx) {
-            this._pinnedIndex = targetIdx;
-          }
-          const lingerEntity = target.maEntityId || this.entityObjs[targetIdx]?.entity_id;
-          if (lingerEntity) {
-            if (!this._playbackLingerByIdx) this._playbackLingerByIdx = {};
-            this._playbackLingerByIdx[targetIdx] = {
-              entityId: lingerEntity,
-              until: Date.now() + 5000
-            };
-            if (!this._lastPlayingEntityIdByChip) this._lastPlayingEntityIdByChip = {};
-            this._lastPlayingEntityIdByChip[targetIdx] = lingerEntity;
-          }
-          this._ensureResolvedMaForIndex(targetIdx);
-          this._ensureResolvedVolForIndex(targetIdx);
-          this._ensureResolvedHiddenControlsForIndex(targetIdx);
-        }
-      }
-      await this._updateTransferQueueAvailability({ refresh: true });
-      if (this._transferQueueAutoCloseTimer) {
-        clearTimeout(this._transferQueueAutoCloseTimer);
-      }
-      this._transferQueueAutoCloseTimer = setTimeout(() => {
-        this._transferQueueAutoCloseTimer = null;
-        if (this._showEntityOptions && this._showTransferQueue) {
-          this._dismissWithAnimation();
-        }
-      }, 2000);
-    } catch (error) {
-      console.error("yamp: Error transferring queue:", error);
-      this._transferQueueStatus = {
-        type: "error",
-        message: error?.message || "Failed to transfer queue."
-      };
-      if (this._transferQueueAutoCloseTimer) {
-        clearTimeout(this._transferQueueAutoCloseTimer);
-        this._transferQueueAutoCloseTimer = null;
-      }
-    } finally {
-      this._transferQueuePendingTarget = null;
-      this.requestUpdate();
-    }
+    return this._queueController.transferQueueTo(target);
   }
 
   _buildTransferQueuePayload(sourceId, targetId) {
-    const serviceMeta = this.hass?.services?.music_assistant?.transfer_queue;
-    const fields = serviceMeta?.fields || {};
-    const payload = {};
-    const assignField = (candidateKeys, value) => {
-      for (const key of candidateKeys) {
-        if (fields[key] !== undefined) {
-          payload[key] = value;
-          return true;
-        }
-      }
-      return false;
-    };
-
-    // Prefer explicit source fields, fall back to legacy names if metadata missing
-    const sourceAssigned = assignField(
-      ["source_player", "source_player_id", "player_id", "source"],
-      sourceId
-    );
-
-    const targetAssigned = assignField(
-      ["target_player", "target_player_id", "target", "entity_id"],
-      targetId
-    );
-
-    if (!sourceAssigned) {
-      // Avoid clobbering target assignment when metadata is missing
-      const fallbackKey = targetAssigned ? "source_player" : "entity_id";
-      payload[fallbackKey] = sourceId;
-    }
-
-    if (!targetAssigned) {
-      // If entity_id already used for source, use a more specific key
-      if (payload.entity_id === sourceId) {
-        payload.entity_id = targetId;
-        payload.source_player = sourceId;
-      } else if (payload.source_player === sourceId) {
-        payload.entity_id = targetId;
-      } else {
-        payload.entity_id = targetId;
-      }
-    }
-
-    return payload;
+    return this._queueController.buildTransferQueuePayload(sourceId, targetId);
   }
 
-  // Refresh the queue display (used for heartbeat and entry)
   _refreshQueue({ delayMs = 50 } = {}) {
-    if (this._upcomingFilterActive) {
-      // Clear existing timer for simple debounce
-      if (this._queueRefreshTimer) {
-        clearTimeout(this._queueRefreshTimer);
-      }
-
-      this._queueRefreshTimer = setTimeout(() => {
-        this._queueRefreshTimer = null;
-
-        if (!this._upcomingFilterActive) return;
-
-        // Capture a new token to protect against stale results from entry/heartbeat fetches
-        const searchToken = Date.now();
-        this._latestSearchToken = searchToken;
-
-        this._doSearch('all', {
-          isUpcoming: true,
-          clearFilters: true,
-          silent: true,
-          force: true,
-          token: searchToken
-        }).catch(error => {
-          console.error('yamp: Error refreshing queue:', error);
-        });
-      }, delayMs);
-    }
+    return this._queueController.refreshQueue({ delayMs });
   }
 
-  // Subscribe to queue update events (like companion card)
   async _subscribeToQueueUpdates() {
-    if (this._queueEventSubscription) return; // Already subscribed
-
-    try {
-      this._queueEventSubscription = await this.hass.connection.subscribeEvents((event) => {
-        const eventData = event.data;
-        if (eventData.type === "queue_updated") {
-          // NO-OP: In strictly optimistic mode, we ignore background updates 
-          // while the sheet is open to prevent flicker. Heartbeat handles sync.
-        }
-      }, "mass_queue");
-    } catch (error) {
-      console.error('yamp: Failed to subscribe to queue updates:', error);
-    }
+    return this._queueController.subscribeToQueueUpdates();
   }
 
-  // Unsubscribe from queue update events
   _unsubscribeFromQueueUpdates() {
-    if (this._queueEventSubscription) {
-      this._queueEventSubscription();
-      this._queueEventSubscription = null;
-    }
+    return this._queueController.unsubscribeFromQueueUpdates();
   }
 
-  // Original method for getting queue (fallback)
   async _getUpcomingQueueOriginal(hass, entityId, limit = 20) {
-    try {
-      // Get the queue metadata first to get the queue_id
-      const message = {
-        type: "call_service",
-        domain: "music_assistant",
-        service: "get_queue",
-        service_data: {
-          entity_id: entityId
-        },
-        return_response: true,
-      };
-
-      const response = await hass.connection.sendMessagePromise(message);
-
-      const queueData = response?.response?.[entityId];
-
-      if (!queueData) {
-        return { results: [], usedMusicAssistant: true };
-      }
-
-      // Build results array from the queue data structure
-      const results = [];
-
-      if (!queueData) {
-        return { results: [], usedMusicAssistant: true };
-      }
-
-      // Fallback to just the next item
-      if (queueData.next_item) {
-        const item = queueData.next_item;
-        results.push({
-          media_content_id: item.media_item?.uri || `queue_next`,
-          media_content_type: item.media_item?.media_type || 'track',
-          media_class: 'track',
-          title: item.name || item.media_item?.name || 'Unknown Track',
-          artist: item.media_item?.artists?.[0]?.name || 'Unknown Artist',
-          album: item.media_item?.album?.name || 'Unknown Album',
-          thumbnail: item.media_item?.image || null,
-          duration: item.duration || null,
-          position: 1, // Next item
-          queue_item_id: item.queue_item_id || null
-        });
-      }
-
-      return {
-        results,
-        usedMusicAssistant: true,
-        total: results.length,
-        source: 'music_assistant'
-      };
-    } catch (error) {
-      console.error('yamp: Error in original queue method:', error);
-      throw error;
-    }
+    return this._queueController.getUpcomingQueueOriginal(hass, entityId, limit);
   }
 
   // Apply favorites filter to current results (called when switching filter chips)
   async _applyLocalFavoritesFilter(results = []) {
-    if (!this._favoritesFilterActive) return results;
-
-    const searchEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
-    const searchEntityId = await this._resolveTemplateAtActionTime(searchEntityIdTemplate, this.currentEntityId);
-
-    try {
-      const favoritesResponse = await getFavorites(this.hass, searchEntityId, this._searchMediaClassFilter, this._getSearchResultsLimit());
-      const favorites = favoritesResponse.results || [];
-
-      // Create a set of favorite URIs for quick lookup
-      const favoriteUris = new Set(favorites.map(fav => fav.media_content_id));
-
-      // Filter current results to only show favorites
-      return results.filter(item => favoriteUris.has(item.media_content_id));
-    } catch (error) {
-      // If favorites loading fails, just show current results
-      return results;
-    }
+    return this._searchController.applyLocalFavoritesFilter(results);
   }
 
   // Handle clicks on search result titles
   async _handleSearchResultClick(item, event) {
-    if (this._isDragging) {
-      if (event) {
-        event.stopPropagation();
-        event.preventDefault();
-      }
-      return;
-    }
-    if (!this._isClickableSearchResult(item)) return;
-
-
-    // Radio flow: user is picking a track to resolve from search results
-    const currentHierarchyLevel = this._searchHierarchy[this._searchHierarchy.length - 1];
-    if (currentHierarchyLevel?.type === 'select_track_for_playlist' && (item.media_class === 'track' || item.media_content_type === 'track')) {
-      // Use the selected real MA track and continue to playlist selection
-      this._performSearchOptionAction(item, 'add_to_playlist');
-      return;
-    }
-
-    if (this._addToPlaylistTarget && item.media_class === 'playlist') {
-      this._loadingSearchRowMenuId = item.media_content_id;
-      this.requestUpdate();
-
-      try {
-        const searchEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
-        const searchEntityId = await this._resolveTemplateAtActionTime(searchEntityIdTemplate, this.currentEntityId);
-        const mqConfigEntryId = await getMassQueueConfigEntryId(this.hass, searchEntityId);
-        if (mqConfigEntryId) {
-          const playlistId = item.item_id || item.media_content_id?.split('/').pop();
-          const servicePayload = {
-            command: "music/playlists/add_playlist_tracks",
-            data: {
-              db_playlist_id: playlistId,
-              uris: [this._addToPlaylistTarget.media_content_id]
-            }
-          };
-          if (mqConfigEntryId && mqConfigEntryId !== "auto") {
-            servicePayload.config_entry_id = mqConfigEntryId;
-          }
-          await this.hass.callService("mass_queue", "send_command", servicePayload);
-
-          this._showSearchSuccessToast(item.media_content_id, 'playlist');
-        }
-      } catch (e) {
-        console.error("Failed to add to playlist:", e);
-        this._errorSearchRowMenuId = item.media_content_id;
-        this.requestUpdate();
-        setTimeout(() => {
-          this._errorSearchRowMenuId = null;
-          this.requestUpdate();
-        }, 3000);
-      } finally {
-        this._loadingSearchRowMenuId = null;
-        this.requestUpdate();
-      }
-      this._addToPlaylistTarget = null;
-      setTimeout(() => {
-        if (this._dismissMenuAfterPlaylistAdd) {
-          this._closeEntityOptions();
-          this._dismissMenuAfterPlaylistAdd = false;
-        } else {
-          this._goBackInSearch();
-        }
-      }, SUCCESS_MESSAGE_TIMEOUT_MS);
-      return;
-    }
-
-    if (item.media_class === 'artist') {
-      await this._searchArtistAlbums(item.title, item.media_content_id);
-    } else if (item.media_class === 'album') {
-      // Get artist name from hierarchy if we're viewing artist albums, or from item metadata if available
-      let artistName = null;
-      if (this._searchHierarchy.length > 0 && this._searchHierarchy[this._searchHierarchy.length - 1].type === 'artist') {
-        artistName = this._searchHierarchy[this._searchHierarchy.length - 1].name;
-      } else if (item.artist) {
-        artistName = item.artist;
-      }
-      await this._searchAlbumTracks(item.title, artistName, item.media_content_id);
-    } else if (item.media_class === 'track') {
-      // Navigate to the album this track belongs to
-      if (item.album) {
-        await this._searchAlbumTracks(item.album, item.artist, item.album_uri);
-      }
-    } else if (item.media_class === 'playlist') {
-      let playlistUri = item.media_content_id || item.uri || null;
-      if (!playlistUri && this._isMusicAssistantEntity()) {
-        try {
-          const searchEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
-          const searchEntityId = await this._resolveTemplateAtActionTime(searchEntityIdTemplate, this.currentEntityId);
-          playlistUri = await this._resolvePlaylistUri(item.title, searchEntityId);
-        } catch (e) {
-          console.warn("yamp: error resolving playlist URI:", e);
-        }
-      }
-      await this._searchPlaylistTracks(item.title, playlistUri);
-    }
+    return this._searchController.handleSearchResultClick(item, event);
   }
 
   // Stack-safe loader: fetches album tracks without modifying _searchHierarchy
   async _loadAlbumTracks(albumUri, albumName, artistName = null) {
-    // Priority 1: Use mass_queue integration if available (preferred for Music Assistant)
-    if (albumUri && (await this._isMassQueueIntegrationAvailable(this.hass))) {
-      const mqTracks = await this._fetchMassQueueTracks(albumUri, "get_album_tracks");
-      if (mqTracks && mqTracks.length > 0) {
-        this._setSearchResultsFromMassQueue(mqTracks, "");
-        return;
-      }
-    }
-
-    // Priority 2: Use browse_media (fallback for non-mass_queue MA or other integration)
-    if (albumUri && this._isMusicAssistantEntity()) {
-      try {
-        const searchEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
-        const searchEntityId = await this._resolveTemplateAtActionTime(searchEntityIdTemplate, this.currentEntityId);
-
-        const browseMsg = {
-          type: "call_service",
-          domain: "media_player",
-          service: "browse_media",
-          service_data: {
-            entity_id: searchEntityId,
-            media_content_id: albumUri,
-          },
-          return_response: true,
-        };
-
-        const browseRes = await this.hass.connection.sendMessagePromise(browseMsg);
-        const browseResult = browseRes?.response?.[searchEntityId]?.result || browseRes?.result || {};
-        const tracks = browseResult.children || [];
-
-        if (tracks.length > 0) {
-          this._searchQuery = "";
-          this._searchResults = this._sortSearchResults(tracks);
-          this._searchTotalRows = Math.max(15, tracks.length);
-          this._searchAttempted = true;
-          this._searchLoading = false;
-          this.requestUpdate();
-          return;
-        }
-      } catch (e) {
-        console.error("yamp: Failed to browse album tracks:", e);
-      }
-    }
-
-    // Fallback to search-based navigation
-    this._searchQuery = "";
-
-    // Clear filter states to ensure accurate album search results
-    this._favoritesFilterActive = false;
-    this._recentlyPlayedFilterActive = false;
-    this._initialFavoritesLoaded = false;
-
-    // Pass artist and album as search parameters for more precise results
-    const searchParams = { album: albumName, clearFilters: true };
-    if (artistName) {
-      searchParams.artist = artistName;
-    }
-
-    // Use Music Assistant search with specific parameters for tracks
-    await this._doSearch('track', searchParams);
+    return this._searchController.loadAlbumTracks(albumUri, albumName, artistName);
   }
 
   // Handle hierarchical search - search for tracks by album
   async _searchAlbumTracks(albumName, artistName, albumUri = null) {
-    this._searchHierarchy.push({ type: 'album', name: albumName, query: this._searchQuery, uri: albumUri, filter: this._searchMediaClassFilter });
-    this._searchBreadcrumb = `Tracks from ${albumName}`;
-    this._searchResultsByType = {}; // Clear cache for new search
-    this._currentSearchQuery = "";
-    this._searchMediaClassFilter = 'track';
-
-    // Immediate loading state
-    this._searchResults = [];
-    this._searchLoading = true;
-    this._searchQuery = "";
-    this.requestUpdate();
-
-    // Remove swipe handlers when entering hierarchy
-    this._removeSearchSwipeHandlers();
-
-    await this._loadAlbumTracks(albumUri, albumName, artistName);
+    return this._searchController.searchAlbumTracks(albumName, artistName, albumUri);
   }
 
   // Helper to load tracks for a playlist via mass_queue or browse_media
   async _loadPlaylistTracks(playlistUri, playlistName) {
-    // Priority 1: Use mass_queue integration if available (preferred for Music Assistant)
-    if (playlistUri && (await this._isMassQueueIntegrationAvailable(this.hass))) {
-      const mqTracks = await this._fetchMassQueueTracks(playlistUri, "get_playlist_tracks");
-      if (mqTracks && mqTracks.length > 0) {
-        this._setSearchResultsFromMassQueue(mqTracks, "");
-        return true;
-      }
-    }
-
-    // Priority 2: Use browse_media (fallback for non-mass_queue MA or other integration)
-    if (playlistUri && this._isMusicAssistantEntity()) {
-      try {
-        const searchEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
-        const searchEntityId = await this._resolveTemplateAtActionTime(searchEntityIdTemplate, this.currentEntityId);
-
-        const browseMsg = {
-          type: "call_service",
-          domain: "media_player",
-          service: "browse_media",
-          service_data: {
-            entity_id: searchEntityId,
-            media_content_id: playlistUri,
-          },
-          return_response: true,
-        };
-
-        const browseRes = await this.hass.connection.sendMessagePromise(browseMsg);
-        const browseResult = browseRes?.response?.[searchEntityId]?.result || browseRes?.result || {};
-        const tracks = browseResult.children || [];
-
-        if (tracks.length > 0) {
-          this._searchQuery = "";
-          this._searchResults = this._sortSearchResults(tracks);
-          this._searchTotalRows = Math.max(15, tracks.length);
-          this._searchAttempted = true;
-          this._searchLoading = false;
-          this.requestUpdate();
-          return true;
-        }
-      } catch (e) {
-        console.error("yamp: Failed to browse playlist tracks:", e);
-      }
-    }
-
-    this._searchQuery = "";
-    this._searchResults = [];
-    this._searchAttempted = true;
-    this._searchLoading = false;
-    this.requestUpdate();
-    return false;
+    return this._searchController.loadPlaylistTracks(playlistUri, playlistName);
   }
 
   // Handle hierarchical search - search for tracks in a playlist
   async _searchPlaylistTracks(playlistName, playlistUri) {
-    this._searchHierarchy.push({ type: 'playlist', name: playlistName, query: this._searchQuery, uri: playlistUri, filter: this._searchMediaClassFilter });
-    this._searchBreadcrumb = `Tracks from ${playlistName}`;
-    this._searchResultsByType = {}; // Clear cache for new search
-    this._currentSearchQuery = "";
-    this._searchMediaClassFilter = 'track';
-
-    // Immediate loading state
-    this._searchResults = [];
-    this._searchLoading = true;
-    this._searchQuery = "";
-    this.requestUpdate();
-
-    // Remove swipe handlers when entering hierarchy
-    this._removeSearchSwipeHandlers();
-
-    await this._loadPlaylistTracks(playlistUri, playlistName);
+    return this._searchController.searchPlaylistTracks(playlistName, playlistUri);
   }
 
   async _fetchMassQueueTracks(uri, serviceName) {
-    try {
-      const hasMassQueue = await this._isMassQueueIntegrationAvailable(this.hass);
-      if (!hasMassQueue) return null;
-
-      const configEntryId = await getMassQueueConfigEntryId(this.hass);
-      let tracks = [];
-
-      if (configEntryId && uri) {
-        try {
-          const message = {
-            type: "call_service",
-            domain: "mass_queue",
-            service: serviceName,
-            service_data: {
-              ...(configEntryId && configEntryId !== "auto" && { config_entry_id: configEntryId }),
-              uri: uri
-            },
-            return_response: true,
-          };
-          const responseData = await this.hass.connection.sendMessagePromise(message);
-          if (responseData?.response?.tracks) {
-            tracks = responseData.response.tracks;
-          }
-        } catch (firstError) {
-          console.warn(`yamp: mass_queue.${serviceName} failed with config_entry_id, trying fallback with entity_id`, firstError);
-          const maState = this._getMusicAssistantState();
-          const maEntityId = maState?.entity_id;
-
-          if (maEntityId) {
-            try {
-              const messageFallback = {
-                type: "call_service",
-                domain: "mass_queue",
-                service: serviceName,
-                service_data: {
-                  entity: maEntityId,
-                  uri: uri
-                },
-                return_response: true,
-              };
-              const responseDataFallback = await this.hass.connection.sendMessagePromise(messageFallback);
-              if (responseDataFallback?.response?.tracks) {
-                tracks = responseDataFallback.response.tracks;
-              }
-            } catch (fallbackError) {
-              console.warn(`yamp: mass_queue.${serviceName} fallback with entity_id also failed.`, fallbackError);
-              throw firstError;
-            }
-          } else {
-            throw firstError;
-          }
-        }
-      }
-      return tracks;
-    } catch (e) {
-      console.error(`yamp: Error fetching ${serviceName} via mass_queue:`, e);
-      return null;
-    }
+    return this._queueController.fetchMassQueueTracks(uri, serviceName);
   }
 
   _setSearchResultsFromMassQueue(tracks, queryName) {
-    this._searchResults = tracks.map(track => ({
-      media_content_id: track.media_content_id,
-      media_content_type: 'track',
-      media_class: 'track',
-      title: track.media_title,
-      artist: track.media_artist,
-      album: track.media_album_name,
-      thumbnail: track.media_image,
-      duration: track.duration,
-      is_browsable: false,
-      favorite: track.favorite
-    }));
-    this._searchQuery = queryName;
-    this._searchTotalRows = Math.max(15, tracks.length);
-    this._searchAttempted = true;
-    this._searchLoading = false;
-    this.requestUpdate();
+    return this._queueController.setSearchResultsFromMassQueue(tracks, queryName);
   }
 
 
@@ -5476,11 +2828,15 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       is_playing: this._isCurrentEntityPlaying(),
       is_search: this._showSearchInSheet,
       is_grouping: this._showGrouping,
+      is_players: this._showGrouping,
+      is_group_players: this._showGrouping,
       is_source: this._showSourceList || this._showSourceMenu,
       is_lyrics: this._lyricsActive,
       is_options: this._showEntityOptions,
-      is_transfer_queue: this._showTransferQueue,
+      is_transfer_queue: this._showGrouping || this._showTransferQueue,
       is_any_menu_open: this.isAnyMenuOpen,
+      is_fullscreen: this._isFullScreen,
+      is_full_screen: this._isFullScreen,
       is_dark_mode: isDarkMode,
       is_mobile: this._isMobile,
       is_music_assistant: this._isMusicAssistantEntity(),
@@ -5501,256 +2857,47 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     if (this._cardHeightTemplate) this._cardHeightTemplateNeedsResolve = true;
   }
   _ensureArtworkOverrideIndexMap() {
-    if (this._artworkOverrideIndexMap) return;
-    this._artworkOverrideIndexMap = new WeakMap();
-    const overrides = Array.isArray(this.config?.media_artwork_overrides)
-      ? this.config.media_artwork_overrides
-      : [];
-    overrides.forEach((item, idx) => {
-      if (item && typeof item === "object") {
-        this._artworkOverrideIndexMap.set(item, idx);
-      }
-    });
+    this._artworkController.ensureArtworkOverrideIndexMap();
   }
 
   _getArtworkOverrideCacheKey(override, type = "image", stateObj = null) {
-    this._ensureArtworkOverrideIndexMap();
-
-    // Include media title and artist in the key if available to ensure
-    // templates are re-evaluated when the track changes.
-    const mediaTitle = stateObj?.attributes?.media_title || "";
-    const mediaArtist = stateObj?.attributes?.media_artist || "";
-    const stateKey = `${mediaTitle}:${mediaArtist}`;
-
-    const idx = override && this._artworkOverrideIndexMap?.get(override);
-    const prefix = typeof idx === "number" ? idx : "generic";
-
-    return `${prefix}:${type}:${stateKey}`;
+    return this._artworkController.getArtworkOverrideCacheKey(override, type, stateObj);
   }
 
   _getResolvedArtworkOverrideSource(override, sourceValue, type = "image", stateObj = null) {
-    if (!sourceValue || typeof sourceValue !== "string") return null;
-    const normalizedInput = this._normalizeImageSourceValue(sourceValue);
-    if (!normalizedInput) return null;
-    const isJsTemplate = typeof sourceValue === "string" && sourceValue.trim().startsWith("[[[");
-    const isJinjaTemplate = typeof sourceValue === "string" && (sourceValue.includes("{{") || sourceValue.includes("{%"));
-    if (!isJsTemplate && !isJinjaTemplate) return normalizedInput;
-
-    if (isJsTemplate) {
-      return this._normalizeImageSourceValue(this._evaluateJsTemplate(sourceValue));
-    }
-
-    if (!this._artworkOverrideTemplateCache) {
-      this._artworkOverrideTemplateCache = {};
-    }
-    const key = this._getArtworkOverrideCacheKey(override, type, stateObj);
-    if (!this._artworkOverrideTemplateCache[key]) {
-      this._artworkOverrideTemplateCache[key] = { value: null, resolving: false };
-    }
-    const entry = this._artworkOverrideTemplateCache[key];
-    if (entry.value) return entry.value;
-    if (!entry.resolving && this.hass) {
-      entry.resolving = true;
-      const context = this._getTemplateContext();
-      resolveStringTemplate(this.hass, sourceValue, context)
-        .then((res) => {
-          entry.value = this._normalizeImageSourceValue((res ?? "").toString());
-        })
-        .catch(() => {
-          entry.value = "";
-        })
-        .finally(() => {
-          entry.resolving = false;
-          this.requestUpdate();
-        });
-    }
-    return entry.value;
+    return this._artworkController.getResolvedArtworkOverrideSource(override, sourceValue, type, stateObj);
   }
 
-  // Get style for collapsed artwork based on mobile and control count
   _getCollapsedArtworkStyle() {
-    if (this._alwaysCollapsed) {
-      const showFavorite = !!this._getFavoriteButtonEntity() && !this._getHiddenControlsForCurrentEntity().favorite;
-      const controls = countMainControls(
-        this.currentActivePlaybackStateObj,
-        (s, f) => this._supportsFeature(s, f),
-        showFavorite,
-        this._getHiddenControlsForCurrentEntity(),
-        true,
-        this._controlLayout
-      );
-      if (controls > 6) {
-        // Check if we're on a mobile device or mobile screen breakpoint
-        if (this._isMobile) {
-          // Make artwork smaller on mobile when there are many controls
-          return "width: 60px; height: 60px; object-fit: var(--yamp-artwork-fit, cover); border-radius: 8px;";
-        }
-      }
-    }
-    return ""; // Default style (no additional styling)
+    return this._artworkController.getCollapsedArtworkStyle();
   }
 
-  // Get artwork URL from entity state, supporting entity_picture_local
   _getArtworkUrl(state, forceIdleImage = false, ignoreIdleImage = false) {
-    const isIdleImageActive = !ignoreIdleImage && (this._isIdle || forceIdleImage) && !!this.config?.idle_image;
-    const res = getArtworkUrl(state, {
-      hostname: this.config?.artwork_hostname || '',
-      overrides: Array.isArray(this.config?.media_artwork_overrides) ? this.config.media_artwork_overrides : [],
-      fallbackArtwork: this.config?.fallback_artwork,
-      artworkObjectFit: this._artworkObjectFit,
-      aspectRatioCache: this._aspectRatioCache,
-      isIdleImageActive,
-      resolveOverrideSource: (override, sourceValue, type, stateObj) =>
-        this._getResolvedArtworkOverrideSource(override, sourceValue, type, stateObj)
-    });
-
-    if (!res) return null;
-
-    let { url, sizePercentage, objectFit, objectPosition } = res;
-
-    // Validate artwork URL to prevent proxy errors
-    if (url && !isValidArtworkUrl(url)) {
-      url = null;
-    }
-
-    if (!objectFit) {
-      objectFit = this._artworkObjectFit;
-    }
-
-    if (!objectPosition) {
-      objectPosition = this.config?.artwork_position || "top center";
-    }
-
-    return { url, sizePercentage, objectFit, objectPosition };
+    return this._artworkController.getArtworkUrl(state, forceIdleImage, ignoreIdleImage);
   }
 
-  // Unified helper to resolve artwork with intelligent fallbacks
-  _resolveSelectedArtwork({
-    metadataArtwork,
-    playbackArtwork,
-    mainArtwork,
-    displayTitle,
-    playbackStateObj,
-    mainState,
-    isPlayingSameMedia = false,
-  }) {
-    let selectedArt = metadataArtwork;
-    if (displayTitle && (!selectedArt || !selectedArt.url)) {
-      if (playbackArtwork?.url && (playbackStateObj?.attributes?.media_title === displayTitle || isPlayingSameMedia)) {
-        selectedArt = playbackArtwork;
-      } else if (mainArtwork?.url && (mainState?.attributes?.media_title === displayTitle || isPlayingSameMedia)) {
-        selectedArt = mainArtwork;
-      }
-    }
-    if (!selectedArt || !selectedArt.url) {
-      if (playbackArtwork?.url) {
-        selectedArt = playbackArtwork;
-      } else if (mainArtwork?.url) {
-        selectedArt = mainArtwork;
-      } else {
-        selectedArt = playbackArtwork || mainArtwork || null;
-      }
-    }
-    return selectedArt;
+  _resolveSelectedArtwork(options) {
+    return this._artworkController.resolveSelectedArtwork(options);
   }
 
   _getBackgroundSizeForFit(fit) {
-    switch (fit) {
-      case "contain":
-        return "contain";
-      case "fill":
-        return "100% 100%";
-      case "scale-down":
-        return "contain";
-      case "none":
-        return "auto";
-      case "scaled-contain":
-      case "scaled-contain-alternate":
-        return "80%";
-      case "cover":
-      default:
-        return "cover";
-    }
+    return this._artworkController.getBackgroundSizeForFit(fit);
   }
 
-
-
-  // Check if a URL points to an external origin (not the current HA instance)
   _isExternalImageUrl(url) {
-    return (
-      /^https?:\/\//i.test(url) &&
-      window.location?.origin &&
-      !url.startsWith(window.location.origin)
-    );
+    return this._artworkController.isExternalImageUrl(url);
   }
 
-  // Extract dominant color from image
   async _extractDominantColor(imgUrl) {
-    return new Promise((resolve) => {
-      if (!imgUrl || typeof imgUrl !== "string") {
-        resolve("#888");
-        return;
-      }
-      const img = new window.Image();
-      // Only set crossOrigin for external URLs to prevent CORS credential stripping on relative HA proxy paths
-      if (this._isExternalImageUrl(imgUrl)) {
-        img.crossOrigin = "Anonymous";
-      }
-      img.src = imgUrl;
-      img.onload = function () {
-        try {
-          const canvas = document.createElement("canvas");
-          canvas.width = 1;
-          canvas.height = 1;
-          const ctx = canvas.getContext("2d");
-          ctx.drawImage(img, 0, 0, 1, 1);
-          const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data;
-          resolve(`rgb(${r},${g},${b})`);
-        } catch (e) {
-          resolve("#888");
-        }
-      };
-      img.onerror = function () { resolve("#888"); };
-    });
+    return this._artworkController.extractDominantColor(imgUrl);
   }
 
   _updateArtworkAspectRatios() {
-    if (!this.hass) return;
-    this.entityIds.forEach(entityId => {
-      const state = this.hass.states[entityId];
-      if (state?.attributes) {
-        const attrs = state.attributes;
-        const baseArtworkUrl =
-          getValidArtworkAttr(attrs, "entity_picture_local") ||
-          getValidArtworkAttr(attrs, "entity_picture") ||
-          getValidArtworkAttr(attrs, "album_art");
-
-        if (baseArtworkUrl) {
-          this._calculateAspectRatio(this._normalizeImageSourceValue(baseArtworkUrl));
-        }
-      }
-    });
+    this._artworkController.updateArtworkAspectRatios();
   }
 
   _calculateAspectRatio(url) {
-    if (!url || typeof url !== "string") return;
-    if (this._aspectRatioCache[url] !== undefined) return;
-
-    this._aspectRatioCache[url] = null;
-    const img = new window.Image();
-    if (this._isExternalImageUrl(url)) {
-      img.crossOrigin = "Anonymous";
-    }
-    img.src = url;
-    img.onload = () => {
-      if (img.naturalWidth && img.naturalHeight) {
-        this._aspectRatioCache[url] = img.naturalWidth / img.naturalHeight;
-        this.requestUpdate();
-      }
-    };
-    img.onerror = () => {
-      this._aspectRatioCache[url] = null;
-    };
+    this._artworkController.calculateAspectRatio(url);
   }
 
   _normalizeAdaptiveTextTargets(config) {
@@ -5766,54 +2913,113 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _normalizeImageSourceValue(value) {
-    if (!value || typeof value !== "string") return "";
-    let trimmed = value.trim();
-    if (!trimmed) return "";
-    const quoted = (trimmed.startsWith("'") && trimmed.endsWith("'")) ||
-      (trimmed.startsWith('"') && trimmed.endsWith('"'));
-    if (quoted && trimmed.length >= 2) {
-      trimmed = trimmed.slice(1, -1).trim();
-    }
-    const urlMatch = trimmed.match(/^url\((.*)\)$/i);
-    if (urlMatch && urlMatch[1] !== undefined) {
-      let inner = urlMatch[1].trim();
-      if ((inner.startsWith("'") && inner.endsWith("'")) || (inner.startsWith('"') && inner.endsWith('"'))) {
-        inner = inner.slice(1, -1).trim();
-      }
-      return inner;
-    }
-    return trimmed;
+    return this._artworkController.normalizeImageSourceValue(value);
   }
 
   _resolveImageUrlFromInput(input) {
-    const normalized = this._normalizeImageSourceValue(input);
-    if (!normalized || !this.hass) return null;
-    if (this.hass.states?.[normalized]) {
-      const stateObj = this.hass.states[normalized];
-      return (
-        stateObj.attributes?.entity_picture_local ||
-        stateObj.attributes?.entity_picture ||
-        (stateObj.state && typeof stateObj.state === "string" && (stateObj.state.startsWith("http") || stateObj.state.startsWith("/")) ? stateObj.state : null)
-      );
-    }
-    if (normalized.startsWith("http") || normalized.startsWith("/")) {
-      return normalized;
-    }
-    return null;
+    return this._artworkController.resolveImageUrlFromInput(input);
   }
 
   setConfig(rawConfig) {
+    this._isEditorPreviewCached = undefined;
+    this._favoriteButtonCache?.clear();
+    this._lastEntitiesRef = null;
     if (!rawConfig.entities || !Array.isArray(rawConfig.entities) || rawConfig.entities.length === 0) {
       throw new Error("You must define at least one media_player entity.");
     }
     const oldConfig = this.config;
     const templateName = rawConfig.template || "custom";
-    const templateBase = TEMPLATE_CONFIGS[templateName] || {};
+    const templateBase = getTemplatePresetDefaults(templateName);
     const config = { ...templateBase, ...rawConfig };
+    if (
+      templateBase.card_type &&
+      (!rawConfig.card_type ||
+        rawConfig.card_type === "default" ||
+        rawConfig.card_type === "standard")
+    ) {
+      config.card_type = templateBase.card_type;
+    }
     if (oldConfig?.lock_screen_controls !== config.lock_screen_controls) {
       this._mediaSessionOverride = null;
     }
     this.config = config;
+    if (this._cardType === "group_players") {
+      this._showEntityOptions = true;
+      this._setIdleState(false);
+      this._showGrouping = true;
+    } else if (this._cardType === "search") {
+      this._showEntityOptions = true;
+      this._setIdleState(false);
+      this._showSearchSheetInOptions?.();
+    } else if (this._cardType === "up_next") {
+      this._showEntityOptions = true;
+      this._setIdleState(false);
+      this._showSearchSheetInOptions?.("next-up");
+    } else if (this._cardType === "remote_control") {
+      this._showEntityOptions = true;
+      this._setIdleState(false);
+      this._showRemoteControl = true;
+    }
+    const configuredSet = new Set(
+      (config.entities || [])
+        .map((e) => (typeof e === "string" ? e : e?.entity_id || e?.entity))
+        .filter(Boolean)
+    );
+    const storedSession = this._loadStoredSessionEntities();
+    const currentSession = this._sessionEntities || [];
+    const mergedSession = Array.from(
+      new Set([...storedSession, ...currentSession])
+    ).filter((id) => !configuredSet.has(id));
+    this._sessionEntities = mergedSession;
+    if (this.isConnected !== false && !this._isEditorPreview) {
+      this._saveStoredSessionEntities(mergedSession);
+    }
+    if (this._autoEntities?.length) {
+      if (!config.auto_add_playing_entities) {
+        this._autoEntities = [];
+      } else {
+        this._autoEntities = this._autoEntities.filter(
+          (id) => !configuredSet.has(id)
+        );
+      }
+    }
+    if (oldConfig?.auto_add_playing_entities !== config.auto_add_playing_entities) {
+      this._initialAutoDiscoveryDone = false;
+    }
+    this._cachedEffectiveEntities = null;
+    this._cachedEntityIds = null;
+    this._cachedEntityObjs = null;
+
+    const actionHelpers = [];
+    if (Array.isArray(config.actions)) {
+      for (const act of config.actions) {
+        if (act && typeof act === "object") {
+          const helperId = act.entity || act.service_data?.entity_id;
+          if (typeof helperId === "string" && helperId.includes(".")) {
+            actionHelpers.push(helperId);
+          }
+        }
+      }
+    }
+    this._actionHelperEntities = actionHelpers;
+
+    const jsEntities = new Set();
+    const scanForEntities = (val) => {
+      if (typeof val === "string" && val.trim().startsWith("[[[")) {
+        const matches = val.match(/[a-z0-9_]+\.[a-z0-9_]+/gi);
+        if (matches) {
+          for (const m of matches) {
+            jsEntities.add(m.toLowerCase());
+          }
+        }
+      } else if (val && typeof val === "object") {
+        for (const k in val) {
+          scanForEntities(val[k]);
+        }
+      }
+    };
+    scanForEntities(config);
+    this._jsTemplateEntities = Array.from(jsEntities);
     this._swapPauseForStop = config.swap_pause_for_stop === true;
     this._holdToPin = !!config.hold_to_pin;
     this._disableSearchAutofocus = config.disable_autofocus === true;
@@ -5829,6 +3035,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._selectedIndex = (newSelectedIndex < this.entityIds.length) ? newSelectedIndex : 0;
     this._lastPlaying = null;
     this._lastActiveEntityId = null;
+    this._lastMainState = null;
+    this._lastMaState = null;
+    this._lastMainStateByChip = {};
+    this._lastMaStateByChip = {};
+    this._lastLingerRenderIdx = null;
     const allowedFits = new Set(["cover", "contain", "fill", "scale-down", "none", "scaled-contain", "scaled-contain-alternate", "no_artwork"]);
     this._baseArtworkObjectFit = allowedFits.has(config.artwork_object_fit) ? config.artwork_object_fit : "cover";
     this._extendArtwork = config.extend_artwork === true;
@@ -5843,6 +3054,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._updateHostAttributes();
     // Volume overlay toggle
     this._showVolumeOverlay = !!config.show_volume_overlay;
+    // Hold track title for volume overlay toggle
+    this._holdTitleForVolume = !!(config.hold_title_for_volume ?? config.hold_track_title_for_volume);
     // Collapse card when idle
     this._collapseOnIdle = !!config.collapse_on_idle;
     // Expand on search option (only available when always_collapsed is true)
@@ -5876,30 +3089,13 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     }
     this._hideActiveEntityLabel = config.hide_active_entity_label === true;
     this._hideActiveEntityLabelOnIdle = config.hide_active_entity_label_on_idle === true;
-    this._artworkOverrideTemplateCache = {};
-    this._artworkOverrideIndexMap = null;
+    this._artworkController.resetCaches();
 
     // Pre-compile wildcard regexes for artwork overrides
     if (Array.isArray(config.media_artwork_overrides)) {
-      // Create a copy of the overrides array and objects to avoid "not extensible" errors
-      // with Home Assistant's frozen config objects.
-      this.config.media_artwork_overrides = config.media_artwork_overrides.map(o => ({ ...o }));
-
-      this.config.media_artwork_overrides.forEach(override => {
-        if (!override || typeof override !== "object") return;
-        override.__cachedRegexes = {};
-        ARTWORK_OVERRIDE_MATCH_KEYS.forEach(key => {
-          const pattern = override[key];
-          if (typeof pattern === "string" && pattern.includes("*") && pattern !== "*") {
-            try {
-              const regexPattern = pattern.replace(/[.*+?^${}()|[\]\\]/g, "\\$&").replace(/\\\*/g, ".*");
-              override.__cachedRegexes[key] = new RegExp(`^${regexPattern}$`, "i");
-            } catch (e) {
-              console.warn("yamp: Failed to compile artwork override regex for", key, pattern);
-            }
-          }
-        });
-      });
+      this.config.media_artwork_overrides = this._artworkController.compileArtworkOverrides(
+        config.media_artwork_overrides
+      );
     }
     // Handle idle image templates
     if (typeof config.idle_image === "string" &&
@@ -5963,8 +3159,13 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
   // Returns array of entity config objects, including group_volume if present in user config.
   get entityObjs() {
-    return this.config.entities.map((e, index) => {
-      const entity_id = typeof e === "string" ? e : e.entity_id;
+    if (this._cachedEntityObjs) {
+      return this._cachedEntityObjs;
+    }
+    const entities = this._effectiveEntities;
+    const configEntityIds = this.entityIds;
+    this._cachedEntityObjs = entities.map((e, index) => {
+      const entity_id = typeof e === "string" ? e : e.entity_id || e.entity;
       const name = typeof e === "string" ? "" : (e.name || "");
       const volume_entity = typeof e === "string" ? undefined : e.volume_entity;
       const remote_entity = typeof e === "string" ? undefined : e.remote_entity;
@@ -5972,6 +3173,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       const sync_power = typeof e === "string" ? false : !!e.sync_power;
       const follow_active_volume = typeof e === "string" ? false : !!e.follow_active_volume;
       const hidden_controls = typeof e === "string" ? undefined : e.hidden_controls;
+      const transient = typeof e === "string" ? undefined : e.transient;
       let group_volume;
 
       if (typeof e === "object" && typeof e.group_volume !== "undefined") {
@@ -5982,10 +3184,6 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         if (state && Array.isArray(state.attributes.group_members) && state.attributes.group_members.length > 0) {
           // Are any group members in entityIds?
           const otherMembers = state.attributes.group_members.filter(id => id !== entity_id);
-          // Use raw config.entities to avoid circular dependency in this.entityIds
-          const configEntityIds = this.config.entities.map(en =>
-            typeof en === "string" ? en : en.entity_id
-          );
           const visibleMembers = otherMembers.filter(id => configEntityIds.includes(id));
           group_volume = visibleMembers.length > 0;
         }
@@ -6005,13 +3203,20 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         hidden_controls,
         hidden_filter_chips: typeof e === "string" ? undefined : e.hidden_filter_chips,
         hide_remote_buttons: typeof e === "string" ? undefined : e.hide_remote_buttons,
+        hidden_menu_options: typeof e === "string" ? undefined : (e.hidden_menu_options ?? e.hide_menu_options),
+        hide_menu_options: typeof e === "string" ? undefined : (e.hidden_menu_options ?? e.hide_menu_options),
         disable_auto_select: this._isAutoSelectDisabled(index),
         prefer_ma_metadata: typeof e === "string" ? false : !!e.prefer_ma_metadata,
+        ...(transient ? { transient } : {}),
         ...(typeof group_volume !== "undefined" ? { group_volume } : {}),
         ...(entity_volume_mode ? { entity_volume_mode } : {}),
-        ...(typeof entity_volume_step === "number" ? { entity_volume_step } : {})
+        ...(typeof entity_volume_step === "number" ? { entity_volume_step } : {}),
+        ...(typeof e === "object" && typeof (e.hold_title_for_volume ?? e.hold_track_title_for_volume) === "boolean"
+          ? { hold_title_for_volume: (e.hold_title_for_volume ?? e.hold_track_title_for_volume) }
+          : {}),
       };
     });
+    return this._cachedEntityObjs;
   }
 
 
@@ -6050,21 +3255,13 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
   // Helper to resolve template entities
   _resolveEntity(entityTemplate, fallbackEntityId, idx, cacheType = 'ma') {
-    if (!entityTemplate) return null;
-
-    if (typeof entityTemplate === 'string' &&
-      (entityTemplate.includes('{{') || entityTemplate.includes('{%') || entityTemplate.trim().startsWith('[[['))) {
-      // For templates, use cached resolved entity
-      const cache = cacheType === 'vol' ? this._volResolveCache : cacheType === 'remote' ? this._remoteResolveCache : this._maResolveCache;
-      const cached = cache?.[idx]?.id;
-      return cached || fallbackEntityId;
-    }
-
-    return entityTemplate;
+    return this._templateController.resolveEntity(entityTemplate, fallbackEntityId, idx, cacheType);
   }
 
   // Helper to determine if main and paired MA entities are playing the same media
   _areEntitiesPlayingSameMedia(mainState, maState) {
+    if (!mainState || !maState) return false;
+    if (mainState.state === "unavailable" || maState.state === "unavailable") return false;
     return areEntitiesPlayingSameMedia(mainState, maState);
   }
 
@@ -6099,22 +3296,43 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       return id;
     };
 
-    // Check for linger first - if we recently paused MA, stay on MA unless main entity is playing
+    // Check for manual override from More Info sheet first
+    const manualId = this._manualActiveEntityByChip?.[idx];
+    if (manualId) {
+      const manualState = this.hass?.states?.[manualId];
+      if (manualState && manualState.state !== "unavailable") {
+        return resolve(manualId);
+      }
+      delete this._manualActiveEntityByChip[idx];
+    }
+
+    // Prune expired linger
     const linger = this._playbackLingerByIdx?.[idx];
     const now = Date.now();
+    if (linger && linger.until <= now) {
+      delete this._playbackLingerByIdx[idx];
+    }
+
+    if (!maId || maId === mainId) return resolve(mainId);
+
+    // If both entities share media (e.g. Apple TV playing audio to HomePod via AirPlay/tvairplayd),
+    // the main entity is ALWAYS the primary source player.
+    // It must NEVER switch to the companion speaker, whether playing, paused, or transitioning.
+    if (this._areEntitiesPlayingSameMedia(mainState, maState)) {
+      return resolve(mainId);
+    }
+
+    // Check for linger first - stay on lingering entity unless the other entity is actively playing
     if (linger && linger.until > now) {
-      // If main entity is playing AND was recently controlled, prioritize it over linger
-      if (this._isEntityPlaying(mainState) && this._lastPlayingEntityIdByChip?.[idx] === mainId) {
+      if (linger.entityId === maId && this._isEntityPlaying(mainState)) {
         return resolve(mainId);
       }
-      // Only resolve to linger entity if it actually exists in HA
+      if (linger.entityId === mainId && this._isEntityPlaying(maState)) {
+        return resolve(maId);
+      }
       if (this.hass?.states?.[linger.entityId]) {
         return resolve(linger.entityId);
       }
-    }
-    // Clear expired linger
-    if (linger && linger.until <= now) {
-      delete this._playbackLingerByIdx[idx];
     }
 
     // Prioritize the entity that is actually playing
@@ -6123,14 +3341,13 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
     // If both are playing, prioritize main entity if they are playing the same thing; otherwise be sticky
     if (maPlaying && mainPlaying) {
-      if (this._areEntitiesPlayingSameMedia(mainState, maState)) {
-        return resolve(mainId);
-      }
       if (lastResolved === mainId) return resolve(mainId);
       if (lastResolved === maId) return resolve(maId);
       return resolve(maId); // Default to MA
     }
-    if (maPlaying) return resolve(maId);
+    if (maPlaying) {
+      return resolve(maId);
+    }
     if (mainPlaying) return resolve(mainId);
 
     // When neither is playing, check if one was recently controlled for this specific chip
@@ -6172,6 +3389,32 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     return obj?.entity_volume_mode || this._volumeMode;
   }
 
+  // Returns whether track title press-and-hold volume overlay is enabled for active entity
+  _getEffectiveHoldTitleForVolume() {
+    const obj = this.entityObjs?.[this._selectedIndex];
+    if (typeof obj?.hold_title_for_volume === "boolean") {
+      return obj.hold_title_for_volume;
+    }
+    if (typeof obj?.hold_track_title_for_volume === "boolean") {
+      return obj.hold_track_title_for_volume;
+    }
+    return this._holdTitleForVolume;
+  }
+
+  // Whether the press-and-hold volume overlay is available for the active entity
+  _canUseVolumeHold(allowMenuMode = false, isTitle = false) {
+    if (isTitle) {
+      if (!this._getEffectiveHoldTitleForVolume()) return false;
+    } else {
+      if (!allowMenuMode && this._getEffectiveVolumeMode() !== "stepper") return false;
+      if (this._getEffectiveVolumeMode() === "hidden") return false;
+    }
+    const entity = this._getVolumeEntity(this._selectedIndex);
+    if (!entity || (typeof entity === "string" && entity.startsWith("remote."))) return false;
+    const stateObj = this.currentVolumeStateObj;
+    return !!stateObj && this._supportsFeature(stateObj, SUPPORT_VOLUME_SET);
+  }
+
   // Returns the effective volume step for the active entity, preferring per-entity override
   _getEffectiveVolumeStep() {
     const obj = this.entityObjs?.[this._selectedIndex];
@@ -6182,8 +3425,9 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   _resolveEntityIdxByGroupingId(groupingEntityId) {
     const objs = this.entityObjs;
     for (let i = 0; i < objs.length; i++) {
+      if (this._getGroupingEntityId(i) === groupingEntityId) return i;
       const resolvedId = this._resolveMaEntityForObj(objs[i], i);
-      if (resolvedId === groupingEntityId) return i;
+      if (resolvedId === groupingEntityId || objs[i].entity_id === groupingEntityId) return i;
     }
     return -1;
   }
@@ -6200,13 +3444,17 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     if (!obj || !obj.music_assistant_entity) return obj?.entity_id;
 
     // Check if it's a template
-    if (typeof obj.music_assistant_entity === 'string' &&
-      (obj.music_assistant_entity.includes('{{') || obj.music_assistant_entity.includes('{%') || obj.music_assistant_entity.trim().startsWith('[[['))) {
+    if (
+      typeof obj.music_assistant_entity === 'string' &&
+      (obj.music_assistant_entity.includes('{{') ||
+        obj.music_assistant_entity.includes('{%') ||
+        obj.music_assistant_entity.trim().startsWith('[[['))
+    ) {
       // For templates, resolve at action time - return template string for now
       return obj.music_assistant_entity;
     }
 
-    return obj.music_assistant_entity;
+    return this._getActualResolvedMaEntityForState(idx);
   }
   // Prefer Music Assistant entity for playback controls (play/pause/seek/etc.) if configured
   _getPlaybackEntityId(idx) {
@@ -6225,9 +3473,45 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _getActivePlaybackEntityIdInternal(idx, mainId, maId, mainState, maState) {
-    if (maId === mainId) return mainId;
+    // Check for manual override from More Info sheet first
+    const manualId = this._manualActiveEntityByChip?.[idx];
+    if (manualId) {
+      const manualState = this.hass?.states?.[manualId];
+      if (manualState && manualState.state !== "unavailable") {
+        this._lastActiveEntityIdByChip[idx] = manualId;
+        return manualId;
+      }
+      delete this._manualActiveEntityByChip[idx];
+    }
 
+    if (!maId || maId === mainId) return mainId;
+
+    // If both entities share media, main entity is always the primary source player
+    if (this._areEntitiesPlayingSameMedia(mainState, maState)) {
+      this._lastActiveEntityIdByChip[idx] = mainId;
+      return mainId;
+    }
+
+    const linger = this._playbackLingerByIdx?.[idx];
     const now = Date.now();
+    if (linger && linger.until > now) {
+      if (linger.entityId === maId && this._isEntityPlaying(mainState)) {
+        this._lastActiveEntityIdByChip[idx] = mainId;
+        return mainId;
+      }
+      if (linger.entityId === mainId && this._isEntityPlaying(maState)) {
+        this._lastActiveEntityIdByChip[idx] = maId;
+        return maId;
+      }
+      if (this.hass?.states?.[linger.entityId]) {
+        this._lastActiveEntityIdByChip[idx] = linger.entityId;
+        return linger.entityId;
+      }
+    }
+    if (linger && linger.until <= now) {
+      delete this._playbackLingerByIdx[idx];
+    }
+
     const maPlayTime = this._playTimestamps?.[maId] || 0;
     const mainPlayTime = this._playTimestamps?.[mainId] || 0;
 
@@ -6242,31 +3526,37 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const maPlaying = this._isEntityPlaying(maState);
     const mainPlaying = this._isEntityPlaying(mainState);
 
-    // If both are playing the same thing, prioritize the main entity
-    if (maPlaying && mainPlaying && this._areEntitiesPlayingSameMedia(mainState, maState)) {
-      this._lastActiveEntityIdByChip[idx] = mainId;
-      return mainId;
-    }
-
     // Prioritize the Music Assistant entity when it's playing
     if (maPlaying) {
       this._lastActiveEntityIdByChip[idx] = maId;
       return maId;
     }
 
-    // Debounce: Stay on MA if it stopped recently, even if Main is playing.
-    if (maWasRecent && maState?.state !== "playing") {
-      return maId;
-    }
-
     // Prioritize the main entity when it's playing
-    if (this._isEntityPlaying(mainState)) {
+    if (mainPlaying) {
       this._lastActiveEntityIdByChip[idx] = mainId;
       return mainId;
     }
 
-    // Debounce: Stay on Main if it stopped recently, even if MA is playing.
-    if (mainWasRecent && mainState?.state !== "playing") {
+    const lastActive = this._lastActiveEntityIdByChip?.[idx];
+
+    // When checking recent transitions (maWasRecent, mainWasRecent):
+    if (maWasRecent && mainWasRecent) {
+      if (lastActive === mainId) {
+        this._lastActiveEntityIdByChip[idx] = mainId;
+        return mainId;
+      }
+    }
+
+    // Only debounce to MA if !mainPlaying && !mainWasRecent
+    if (maWasRecent && !mainPlaying && !mainWasRecent && maState?.state !== "playing") {
+      this._lastActiveEntityIdByChip[idx] = maId;
+      return maId;
+    }
+
+    // Only debounce to Main if !maPlaying && !maWasRecent
+    if (mainWasRecent && !maPlaying && !maWasRecent && mainState?.state !== "playing") {
+      this._lastActiveEntityIdByChip[idx] = mainId;
       return mainId;
     }
 
@@ -6276,8 +3566,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       return lastActiveForChip;
     }
 
-    // Absolute fallback: music assistant entity if configured, otherwise main.
-    return (maId && maId !== mainId) ? maId : mainId;
+    // Fallback to mainId || maId
+    return mainId || maId;
   }
 
   // Get hidden controls configuration for the current entity
@@ -6323,15 +3613,34 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   _getGroupingEntityId(idx) {
     const obj = this.entityObjs[idx];
     if (!obj) return null;
+    const mainId = obj.entity_id;
+    let candidateId = null;
     if (obj.music_assistant_entity) {
-      if (typeof obj.music_assistant_entity === 'string' &&
-        (obj.music_assistant_entity.includes('{{') || obj.music_assistant_entity.includes('{%') || obj.music_assistant_entity.trim().startsWith('[[['))) {
+      if (
+        typeof obj.music_assistant_entity === 'string' &&
+        (obj.music_assistant_entity.includes('{{') ||
+          obj.music_assistant_entity.includes('{%') ||
+          obj.music_assistant_entity.trim().startsWith('[[['))
+      ) {
         const cached = this._maResolveCache?.[idx]?.id;
-        return cached || obj.entity_id;
+        candidateId = cached || mainId;
+      } else {
+        candidateId = obj.music_assistant_entity;
       }
-      return obj.music_assistant_entity;
     }
-    return obj.entity_id;
+    if (!candidateId || candidateId === mainId) {
+      return mainId;
+    }
+    const candidateState = this.hass?.states?.[candidateId];
+    const mainState = mainId ? this.hass?.states?.[mainId] : null;
+    if (
+      mainState &&
+      this._isGroupCapable(mainState) &&
+      (!candidateState || !this._isGroupCapable(candidateState))
+    ) {
+      return mainId;
+    }
+    return candidateId;
   }
 
   _getGroupingEntityIdByEntityId(entityId) {
@@ -6340,7 +3649,12 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     return this._getGroupingEntityId(idx);
   }
   _findEntityObjByAnyId(anyId) {
-    return this.entityObjs.find(o => o.entity_id === anyId || o.music_assistant_entity === anyId) || null;
+    if (!anyId || !Array.isArray(this.entityObjs)) return null;
+    return (
+      this.entityObjs.find((o) => o.entity_id === anyId) ||
+      this.entityObjs.find((o) => o.music_assistant_entity === anyId) ||
+      null
+    );
   }
 
   // Resolve Jinja template for music_assistant_entity with fallback to main entity
@@ -6395,17 +3709,427 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     }
 
     // Find configured entity corresponding to this master grouping ID
-    const masterEntityId = this.entityIds.find(eId => {
-      const gId = this._getGroupingEntityIdByEntityId(eId);
-      return gId === masterGroupingId;
-    });
+    const masterEntityId =
+      this.entityIds.find((eId) => eId === masterGroupingId) ||
+      this.entityIds.find((eId) => {
+        const gId = this._getGroupingEntityIdByEntityId(eId);
+        return gId === masterGroupingId;
+      });
 
     // If master is not in our config, return the raw grouping ID so we know it's external/different
     return masterEntityId || masterGroupingId;
   }
 
+  _getCoveredEntityIds() {
+    const covered = new Set();
+    const configured = this.config?.entities || [];
+    for (const e of configured) {
+      const id = typeof e === "string" ? e : e?.entity_id || e?.entity;
+      if (id) covered.add(id);
+    }
+    for (const id of this._sessionEntities || []) {
+      covered.add(id);
+    }
+    for (const id of Array.from(covered)) {
+      const st = this.hass?.states?.[id];
+      if (st?.attributes?.group_members && Array.isArray(st.attributes.group_members)) {
+        for (const m of st.attributes.group_members) {
+          covered.add(m);
+        }
+      }
+    }
+    if (this._cachedEntityObjs) {
+      for (const obj of this._cachedEntityObjs) {
+        if (obj?.music_assistant_entity) covered.add(obj.music_assistant_entity);
+        if (obj?.volume_entity) covered.add(obj.volume_entity);
+      }
+    }
+    return covered;
+  }
+
+  _getSessionStorageKey(cfg = this.config) {
+    const cardId = cfg?.card_id || cfg?.id;
+    if (cardId) {
+      return `${SESSION_STORAGE_PREFIX}${cardId}`;
+    }
+    const entities = cfg?.entities || [];
+    const firstEntity = entities[0];
+    const primaryId =
+      typeof firstEntity === "string"
+        ? firstEntity
+        : firstEntity?.entity_id || firstEntity?.entity;
+    if (primaryId) {
+      return `${SESSION_STORAGE_PREFIX}${primaryId}`;
+    }
+    return `${SESSION_STORAGE_PREFIX}default`;
+  }
+
+  _loadStoredSessionEntities(customKey = null) {
+    if (typeof window === "undefined" || typeof localStorage === "undefined") {
+      return [];
+    }
+    const canMutateStorage = this.isConnected !== false && !this._isEditorPreview;
+    if (canMutateStorage) {
+      this._pruneOrphanStorageKeys();
+    }
+    try {
+      const key = customKey || this._getSessionStorageKey();
+      let raw = localStorage.getItem(key);
+
+      // Legacy migration: If no data under stable key and not using a custom key,
+      // check other configured entities of this card (e.g. if re-ordered) or default key
+      if (!raw && !customKey) {
+        const otherEntities = (this.config?.entities || []).slice(1);
+        for (const e of otherEntities) {
+          const id = typeof e === "string" ? e : e?.entity_id || e?.entity;
+          if (id) {
+            const altKey = `${SESSION_STORAGE_PREFIX}${id}`;
+            const candidateRaw = localStorage.getItem(altKey);
+            if (candidateRaw) {
+              try {
+                const candData = JSON.parse(candidateRaw);
+                const candEntities = Array.isArray(candData) ? candData : candData?.entities;
+                if (Array.isArray(candEntities) && candEntities.length > 0) {
+                  raw = candidateRaw;
+                  if (canMutateStorage) {
+                    localStorage.setItem(key, candidateRaw);
+                    localStorage.removeItem(altKey);
+                  }
+                  break;
+                }
+              } catch {
+                // Ignore parse errors safely
+              }
+            }
+          }
+        }
+      }
+
+      if (!raw && !customKey) {
+        const defaultKey = `${SESSION_STORAGE_PREFIX}default`;
+        if (defaultKey !== key) {
+          const defaultRaw = localStorage.getItem(defaultKey);
+          if (defaultRaw) {
+            try {
+              const defaultData = JSON.parse(defaultRaw);
+              const defaultEntities = Array.isArray(defaultData)
+                ? defaultData
+                : defaultData?.entities;
+              if (Array.isArray(defaultEntities)) {
+                const configuredSet = new Set(
+                  (this.config?.entities || [])
+                    .map((e) => (typeof e === "string" ? e : e?.entity_id || e?.entity))
+                    .filter(Boolean)
+                );
+                const applicable = defaultEntities.filter(
+                  (id) => typeof id === "string" && !configuredSet.has(id)
+                );
+                if (applicable.length > 0) {
+                  raw = defaultRaw;
+                  if (canMutateStorage) {
+                    localStorage.setItem(key, defaultRaw);
+                    localStorage.removeItem(defaultKey);
+                  }
+                }
+              }
+            } catch {
+              // Ignore parse errors safely
+            }
+          }
+        }
+      }
+
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      const entities = Array.isArray(parsed) ? parsed : parsed?.entities;
+      if (!Array.isArray(entities)) {
+        if (canMutateStorage) {
+          localStorage.removeItem(key);
+        }
+        return [];
+      }
+      const configuredSet = new Set(
+        (this.config?.entities || [])
+          .map((e) => (typeof e === "string" ? e : e?.entity_id || e?.entity))
+          .filter(Boolean)
+      );
+      const filtered = entities.filter((id) => typeof id === "string" && !configuredSet.has(id));
+      if (filtered.length === 0) {
+        if (canMutateStorage) {
+          localStorage.removeItem(key);
+        }
+      } else if (!customKey && canMutateStorage) {
+        this._saveStoredSessionEntities(filtered);
+      }
+      return filtered;
+    } catch {
+      return [];
+    }
+  }
+
+  _saveStoredSessionEntities(entities) {
+    if (
+      this.isConnected === false ||
+      this._isEditorPreview ||
+      typeof window === "undefined" ||
+      typeof localStorage === "undefined"
+    ) {
+      return;
+    }
+    try {
+      const key = this._getSessionStorageKey();
+      if (!entities || entities.length === 0) {
+        localStorage.removeItem(key);
+      } else {
+        const payload = {
+          entities,
+          updatedAt: Date.now(),
+        };
+        localStorage.setItem(key, JSON.stringify(payload));
+      }
+    } catch {
+      // Safe containment for private mode/quota exceptions
+    }
+  }
+
+  _pruneOrphanStorageKeys() {
+    if (
+      this.isConnected === false ||
+      this._isEditorPreview ||
+      typeof window === "undefined" ||
+      typeof localStorage === "undefined"
+    ) {
+      return;
+    }
+    try {
+      const now = Date.now();
+      const keysToRemove = [];
+      const totalKeys = localStorage.length || 0;
+      for (let i = 0; i < totalKeys; i++) {
+        const key = localStorage.key(i);
+        if (key && key.startsWith(SESSION_STORAGE_PREFIX)) {
+          const raw = localStorage.getItem(key);
+          if (!raw) {
+            keysToRemove.push(key);
+            continue;
+          }
+          try {
+            const data = JSON.parse(raw);
+            const entities = Array.isArray(data) ? data : data?.entities;
+            const updatedAt = typeof data?.updatedAt === "number" ? data.updatedAt : 0;
+            if (
+              !Array.isArray(entities) ||
+              entities.length === 0 ||
+              (updatedAt > 0 && now - updatedAt > SESSION_STORAGE_TTL_MS)
+            ) {
+              keysToRemove.push(key);
+            }
+          } catch {
+            keysToRemove.push(key);
+          }
+        }
+      }
+      for (let i = 0; i < keysToRemove.length; i++) {
+        localStorage.removeItem(keysToRemove[i]);
+      }
+    } catch {
+      // Safe containment
+    }
+  }
+
+  _pruneMissingSessionEntities() {
+    if (
+      this.isConnected === false ||
+      this._isEditorPreview ||
+      !this.hass?.states ||
+      !this._sessionEntities?.length
+    ) {
+      return;
+    }
+    const currentStates = this.hass.states;
+    const valid = this._sessionEntities.filter((id) => !!currentStates[id]);
+    if (valid.length !== this._sessionEntities.length) {
+      this._setTransientEntities({ session: valid });
+    }
+  }
+
+  /**
+   * @param {{ session?: string[], auto?: string[], selectedId?: string }} [options]
+   */
+  _setTransientEntities({ session = undefined, auto = undefined, selectedId = undefined } = {}) {
+    const targetSelectedId = selectedId || this.currentEntityId;
+    const prevPinnedId =
+      this._pinnedIndex !== null ? this.entityIds[this._pinnedIndex] : null;
+
+    if (session !== undefined) {
+      this._sessionEntities = session;
+      this._saveStoredSessionEntities(session);
+    }
+    if (auto !== undefined) this._autoEntities = auto;
+
+    this._cachedEffectiveEntities = null;
+    this._cachedEntityIds = null;
+    this._cachedEntityObjs = null;
+
+    this._pruneTransientIndexState();
+
+    const newIds = this.entityIds;
+    if (targetSelectedId && newIds.includes(targetSelectedId)) {
+      this._selectedIndex = newIds.indexOf(targetSelectedId);
+    } else if (this._selectedIndex >= newIds.length) {
+      this._selectedIndex = 0;
+    }
+
+    if (prevPinnedId && newIds.includes(prevPinnedId)) {
+      this._pinnedIndex = newIds.indexOf(prevPinnedId);
+    } else if (this._pinnedIndex !== null && !newIds.includes(prevPinnedId)) {
+      this._pinnedIndex = null;
+    }
+
+    this.requestUpdate();
+  }
+
+  _pruneTransientIndexState() {
+    const maxLen = this.entityIds.length;
+    const pruneObj = (obj) => {
+      if (!obj || typeof obj !== "object") return;
+      for (const k of Object.keys(obj)) {
+        const idx = Number(k);
+        if (!isNaN(idx) && idx >= maxLen) {
+          delete obj[k];
+        }
+      }
+    };
+    pruneObj(this._playbackLingerByIdx);
+    pruneObj(this._lastActiveEntityIdByChip);
+    pruneObj(this._manualActiveEntityByChip);
+    pruneObj(this._lastResolvedEntityIdByChip);
+    pruneObj(this._lastPlayingEntityIdByChip);
+  }
+
+  _addSessionEntity(id, makeActive = true) {
+    if (!id || typeof id !== "string") return;
+    const currentSession = this._sessionEntities || [];
+    const currentAuto = (this._autoEntities || []).filter((aId) => aId !== id);
+    const newSession = currentSession.includes(id) ? currentSession : [...currentSession, id];
+    this._setTransientEntities({
+      session: newSession,
+      auto: currentAuto,
+      selectedId: makeActive ? id : undefined,
+    });
+    if (makeActive) {
+      const idx = this.entityIds.indexOf(id);
+      if (idx >= 0) {
+        if (typeof this._selectEntityFromGrouping === "function") {
+          this._selectEntityFromGrouping(idx);
+        } else {
+          this._onChipClick(idx);
+        }
+      }
+    }
+  }
+
+  _removeSessionEntity(id) {
+    if (!id || typeof id !== "string") return;
+    const currentSession = (this._sessionEntities || []).filter((sId) => sId !== id);
+    const currentAuto = (this._autoEntities || []).filter((aId) => aId !== id);
+    this._setTransientEntities({
+      session: currentSession,
+      auto: currentAuto,
+    });
+  }
+
+  _promoteAutoToSession(id) {
+    if (!id || typeof id !== "string") return;
+    this._addSessionEntity(id, false);
+  }
+
+  _discoverAutoEntities(oldHass) {
+    if (!this.hass?.states) return false;
+    const currentStates = this.hass.states;
+    const oldStates = oldHass?.states;
+
+    if (oldStates) {
+      let anyChanged = false;
+      for (const id in currentStates) {
+        if (id.startsWith("media_player.") && currentStates[id] !== oldStates[id]) {
+          anyChanged = true;
+          break;
+        }
+      }
+      if (!anyChanged) {
+        for (const autoId of this._autoEntities || []) {
+          if (!currentStates[autoId]) {
+            anyChanged = true;
+            break;
+          }
+        }
+      }
+      if (!anyChanged) return false;
+    }
+
+    const covered = this._getCoveredEntityIds();
+    const excludePatterns = this.config?.auto_add_exclude || [];
+    const playingNew = findPlayingUnconfiguredPlayers(currentStates, covered, excludePatterns);
+
+    let changed = false;
+    const currentAuto = [...(this._autoEntities || [])];
+    const validAuto = currentAuto.filter((id) => {
+      const st = currentStates[id];
+      return st && st.state !== "unavailable" && st.state !== "unknown";
+    });
+    if (validAuto.length !== currentAuto.length) {
+      changed = true;
+    }
+
+    const autoSet = new Set(validAuto);
+    for (const id of playingNew) {
+      if (!autoSet.has(id)) {
+        validAuto.push(id);
+        autoSet.add(id);
+        changed = true;
+      }
+    }
+
+    if (changed) {
+      this._setTransientEntities({ auto: validAuto });
+      return true;
+    }
+    return false;
+  }
+
+  get _effectiveEntities() {
+    if (!this._cachedEffectiveEntities) {
+      const configured = this.config?.entities || [];
+      const seen = new Set(
+        configured
+          .map((e) => (typeof e === "string" ? e : e?.entity_id || e?.entity))
+          .filter(Boolean)
+      );
+      const extras = [];
+      for (const [list, kind] of [
+        [this._sessionEntities, "session"],
+        [this._autoEntities, "auto"],
+      ]) {
+        for (const id of list || []) {
+          if (id && !seen.has(id)) {
+            seen.add(id);
+            extras.push({ entity_id: id, transient: kind });
+          }
+        }
+      }
+      this._cachedEffectiveEntities = [...configured, ...extras];
+    }
+    return this._cachedEffectiveEntities;
+  }
+
   get entityIds() {
-    return this.entityObjs.map(e => e.entity_id);
+    if (!this._cachedEntityIds) {
+      this._cachedEntityIds = this._effectiveEntities.map((e) =>
+        typeof e === "string" ? e : e.entity_id || e.entity
+      );
+    }
+    return this._cachedEntityIds;
   }
 
   // Return display name for a chip/entity
@@ -6500,14 +4224,29 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _resolveGroupingEntityId(obj, fallbackEntityId) {
-    if (!obj?.music_assistant_entity) return fallbackEntityId;
-    if (typeof obj.music_assistant_entity === 'string' &&
-      (obj.music_assistant_entity.includes('{{') || obj.music_assistant_entity.includes('{%') || obj.music_assistant_entity.trim().startsWith('[[['))) {
-      const idx = this.entityIds.indexOf(fallbackEntityId);
-      const cached = this._maResolveCache?.[idx]?.id;
-      return cached || fallbackEntityId;
+    let idx = -1;
+    if (fallbackEntityId) {
+      idx = this.entityIds.indexOf(fallbackEntityId);
     }
-    return obj.music_assistant_entity;
+    if (idx < 0 && obj) {
+      idx = this.entityObjs.indexOf(obj);
+    }
+    if (idx >= 0) {
+      return this._getGroupingEntityId(idx);
+    }
+    const mainId = fallbackEntityId || obj?.entity_id || null;
+    let candidateId = obj?.music_assistant_entity || null;
+    if (!candidateId || candidateId === mainId) return mainId;
+    const candidateState = this.hass?.states?.[candidateId];
+    const mainState = mainId ? this.hass?.states?.[mainId] : null;
+    if (
+      mainState &&
+      this._isGroupCapable(mainState) &&
+      (!candidateState || !this._isGroupCapable(candidateState))
+    ) {
+      return mainId;
+    }
+    return candidateId;
   }
 
   get currentEntityId() {
@@ -6536,7 +4275,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   get currentActivePlaybackEntityId() {
     // Cache the result to prevent continuous re-calling during renders
     // Only recalculate if the cache is invalid or if key state has changed
-    const cacheKey = `${this._selectedIndex}-${this.hass?.states?.[this.currentEntityId]?.state}-${this.hass?.states?.[this._getSearchEntityId(this._selectedIndex)]?.state}`;
+    const cacheKey = `${this._selectedIndex}-${this.hass?.states?.[this.currentEntityId]?.state}-${this.hass?.states?.[this._getSearchEntityId(this._selectedIndex)]?.state}-${this._manualActiveEntityByChip?.[this._selectedIndex] || ""}`;
 
     if (this._cachedActivePlaybackEntityId === undefined || this._cachedActivePlaybackEntityKey !== cacheKey) {
       this._cachedActivePlaybackEntityId = this._getActivePlaybackEntityId(this._selectedIndex);
@@ -6585,82 +4324,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _renderMainMenu(sourceList, menuOnlyActions, showChipsInMenu) {
-    const isGridMode = this._isGridMode;
-    const renderMenuItem = (label, icon, onClick) => {
-      if (isGridMode) {
-        return html`
-          <button class="entity-options-item menu-action-item" @click=${onClick}>
-            <ha-icon class="menu-action-icon" icon=${icon}></ha-icon>
-            <span class="menu-action-label">${label}</span>
-          </button>
-        `;
-      }
-      return html`
-        <button class="entity-options-item" @click=${onClick}>${label}</button>
-      `;
-    };
+    return renderMainMenu.call(this, sourceList, menuOnlyActions, showChipsInMenu);
+  }
 
-    return html`
-      <div class="entity-options-header">
-        <button class="entity-options-item close-item" @click=${() => this._closeEntityOptions()}>
-          ${localize('common.close')}
-        </button>
-        <div class="entity-options-divider"></div>
-      </div>
-      <div class="entity-options-menu ${showChipsInMenu ? 'chips-in-menu' : ''} ${isGridMode ? 'grid-menu' : 'entity-options-scroll'}" style="${!isGridMode ? 'display:flex; flex-direction:column;' : ''}">
-        ${renderMenuItem(localize('card.menu.more_info'), 'mdi:information-outline', () => {
-          const resolvedEntities = this._getResolvedEntitiesForCurrentChip();
-          if (resolvedEntities.length === 1) {
-            this._openMoreInfoForEntity(resolvedEntities[0]);
-            this._showEntityOptions = false;
-          } else {
-            this._showResolvedEntities = true;
-          }
-          this.requestUpdate();
-        })}
-        ${renderMenuItem(localize('common.search'), 'mdi:magnify', () => { this._showSearchSheetInOptions(); })}
-
-        ${Array.isArray(sourceList) && sourceList.length > 0 ? renderMenuItem(localize('card.menu.source'), 'mdi:import', () => this._openSourceList()) : nothing}
-        
-        ${this._canShowTransferQueueOption() ? renderMenuItem(localize('card.menu.transfer_queue'), 'mdi:swap-horizontal', () => this._openTransferQueue()) : nothing}
-        
-        ${this._renderGroupingMenuOption(isGridMode)}
-        
-        ${this._hasRemoteControlSupport() ? renderMenuItem(localize('card.menu.remote_controls'), 'mdi:remote', () => this._openRemoteControl()) : nothing}
-        
-        ${!this._alwaysCollapsed ? renderMenuItem(localize(this._lyricsActive ? 'card.menu.hide_lyrics' : 'card.menu.show_lyrics'), 'mdi:script-text-outline', () => {
-          this._lyricsActive = !this._lyricsActive;
-          if (!this._lyricsActive) {
-            this._lastLyricsTrackId = null;
-            this._lastLyricsEntityId = null;
-            this._lastLyricsArtist = null;
-            this._lastLyricsTitle = null;
-          }
-          this._showEntityOptions = false;
-          this.requestUpdate();
-        }) : nothing}
-        
-        ${menuOnlyActions.length ? html`
-          ${menuOnlyActions.map(({ action, idx }) => {
-            const label = this._getActionLabel(action);
-            return html`
-                <button
-                  class="entity-options-item menu-action-item"
-                  @click=${() => this._onMenuActionClick(idx)}
-                >
-                  ${action.icon ? html`
-                    <ha-icon
-                      class="menu-action-icon"
-                      .icon=${action.icon}
-                    ></ha-icon>
-                  ` : nothing}
-                  ${label ? html`<span class="menu-action-label">${label}</span>` : nothing}
-                </button>
-              `;
-          })}
-        ` : nothing}
-      </div>
-    `;
+  _renderOptionsOverlay(props) {
+    return renderOptionsOverlay.call(this, props);
   }
 
   _getChipRowProps() {
@@ -6697,7 +4365,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         const isPlayingSameMedia = this._areEntitiesPlayingSameMedia(mainState, playbackState);
 
         const metaTitle = metadataState?.attributes?.media_title;
-        const isMetaPlaceholder = isPlaceholderMediaTitle(metaTitle, metadataState?.attributes?.friendly_name);
+        const isMetaPlaceholder = isPlaceholderMediaTitle(
+          metaTitle,
+          metadataState?.attributes?.friendly_name,
+          mainState?.attributes?.app_name
+        );
         const effectiveMetaTitle = (!isMetaPlaceholder && metaTitle) ? metaTitle : null;
         const displayTitle = effectiveMetaTitle || playbackState?.attributes?.media_title || mainState?.attributes?.media_title || metaTitle;
 
@@ -6721,6 +4393,12 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         const playbackState = this.hass?.states?.[playbackEntityId];
         return playbackEntityId === this._resolveEntity(entityObj.music_assistant_entity, entityObj.entity_id, idx) &&
           this._isEntityPlaying(playbackState);
+      },
+      getChipTransient: (id, idx) => {
+        return (
+          (idx !== undefined && idx >= 0 ? this.entityObjs[idx]?.transient : undefined) ??
+          this.entityObjs.find((e) => e.entity_id === id)?.transient
+        );
       },
       isIdle: this._isIdle,
       hass: this.hass,
@@ -6791,737 +4469,423 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _renderGroupingMenuOption(isGridMode = false) {
-    const totalEntities = this.entityIds.length;
-    if (totalEntities <= 1) return nothing;
-
-    const groupableCount = this.entityIds.reduce((acc, id, idx) => {
-      const actualGroupId = this._getGroupingEntityId(idx);
-      const st = this.hass.states[actualGroupId];
-      return acc + (this._isGroupCapable(st) ? 1 : 0);
-    }, 0);
-
-    const currGroupId = this._getGroupingEntityId(this._selectedIndex);
-    const currGroupState = this.hass.states[currGroupId];
-
-    // Check if the current entity is a follower (unavailable for acting as a new group master)
-    const currentId = this.currentEntityId;
-    const groupKey = this._getGroupKey(currentId);
-    const isFollower = groupKey !== currentId;
-
-    if (groupableCount > 1 && this._isGroupCapable(currGroupState) && !isFollower) {
-      if (isGridMode) {
-        return html`
-          <button class="entity-options-item menu-action-item" @click=${() => this._openGrouping()}>
-            <ha-icon class="menu-action-icon" icon="mdi:speaker-multiple"></ha-icon>
-            <span class="menu-action-label">${localize('card.menu.group_players')}</span>
-          </button>
-        `;
-      }
-      return html`
-        <button class="entity-options-item" @click=${() => this._openGrouping()}>${localize('card.menu.group_players')}</button>
-      `;
-    }
-    return nothing;
+    return renderGroupingMenuOption.call(this, isGridMode);
   }
 
-  // Determine the grouping state of a player ID relative to an active ID
+  /**
+   * Determine the grouping state of a player ID relative to an active ID
+   * @param {string} targetId
+   * @param {string|null} [activeId]
+   * @param {string|null} [activeGroupKey]
+   * @param {any} [masterState]
+   * @param {string|null} [myGroupKey]
+   * @returns {import("./types.d.ts").GroupPlayerState}
+   */
   _getGroupPlayerState(targetId, activeId, activeGroupKey, masterState, myGroupKey) {
     const targetIdx = this.entityIds.indexOf(targetId);
-    if (targetIdx < 0) return { isGroupable: false, isBusy: false, busyLabel: "", grouped: false };
+    if (targetIdx < 0) {
+      return {
+        isGroupable: false,
+        isBusy: false,
+        busyLabel: "",
+        grouped: false,
+        isPrimary: false,
+        disabled: true,
+        entityToCheck: null,
+        tooltip: "",
+      };
+    }
 
     const entityToCheck = this._getGroupingEntityId(targetIdx);
     const st = this.hass.states[entityToCheck];
 
     if (!st || !this._isGroupCapable(st)) {
-      return { isGroupable: false, isBusy: false, busyLabel: "", grouped: false };
+      return {
+        isGroupable: false,
+        isBusy: false,
+        busyLabel: "",
+        grouped: false,
+        isPrimary: false,
+        disabled: true,
+        entityToCheck,
+        tooltip: "",
+      };
     }
 
     const playerGroupKey = this._getGroupKey(targetId);
     let isBusy = false;
     let busyLabel = "";
 
-    // Busy if joined to a DIFFERENT group
-    if (playerGroupKey !== targetId && playerGroupKey !== myGroupKey) {
+    // Busy if entity or its grouping entity is unavailable
+    if (st.state === "unavailable" || this.hass?.states?.[targetId]?.state === "unavailable") {
       isBusy = true;
       busyLabel = localize('common.unavailable');
     }
-    // Or if it IS a master of a different group
-    else if (playerGroupKey === targetId && playerGroupKey !== myGroupKey) {
-      if (st.attributes?.group_members?.length > 1) {
+    // Check if target belongs to a different group (either as a master or follower)
+    else if (playerGroupKey !== myGroupKey) {
+      const targetMasterId = playerGroupKey || targetId;
+      const targetMasterIdx = this.entityIds.indexOf(targetMasterId);
+      const targetMasterGroupId =
+        targetMasterIdx >= 0
+          ? this._getGroupingEntityId(targetMasterIdx)
+          : this._getGroupingEntityIdByEntityId(targetMasterId) || targetMasterId;
+      const targetMasterState = targetMasterGroupId
+        ? this.hass?.states?.[targetMasterGroupId]
+        : null;
+      const targetGroupMembers = Array.isArray(targetMasterState?.attributes?.group_members)
+        ? targetMasterState.attributes.group_members
+        : [];
+      const isTargetInEstablishedGroup =
+        targetGroupMembers.length > 1 || (playerGroupKey && playerGroupKey !== targetId);
+
+      if (targetMasterState?.state === "unavailable") {
         isBusy = true;
         busyLabel = localize('common.unavailable');
+      } else if (isTargetInEstablishedGroup) {
+        const activeIdx = activeId ? this.entityIds.indexOf(activeId) : -1;
+        const activeGroupId = activeIdx >= 0 ? this._getGroupingEntityId(activeIdx) : activeId;
+        const activeEntityState =
+          masterState ||
+          (activeGroupId ? this.hass?.states?.[activeGroupId] : null) ||
+          (activeId ? this.hass?.states?.[activeId] : null);
+
+        const effectiveActiveGroupKey = activeGroupKey || this._getGroupKey(activeId);
+        const activeIsFollower = Boolean(
+          effectiveActiveGroupKey && effectiveActiveGroupKey !== activeId
+        );
+
+        if (activeIsFollower) {
+          isBusy = true;
+          busyLabel = localize('common.unavailable');
+        } else {
+          const isActivePlaying = this._isEntityPlaying(activeEntityState);
+          const isTargetGroupPlaying =
+            this._isEntityPlaying(targetMasterState) ||
+            this._isEntityPlaying(st) ||
+            (Array.isArray(targetGroupMembers) &&
+              targetGroupMembers.some((m) => this._isEntityPlaying(this.hass?.states?.[m])));
+
+          const areBothPlaying = isActivePlaying && isTargetGroupPlaying;
+          if (
+            areBothPlaying &&
+            !this._areEntitiesPlayingSameMedia(activeEntityState, targetMasterState || st)
+          ) {
+            // Playing two different things -> group button is unavailable
+            isBusy = true;
+            busyLabel = localize('common.unavailable');
+          }
+        }
       }
     }
 
     const filteredMembers = Array.isArray(masterState?.attributes?.group_members) ? masterState.attributes.group_members : [];
     const grouped = filteredMembers.includes(entityToCheck);
     const isPrimary = targetId === myGroupKey;
+    const groupedAny = filteredMembers.length > 1;
+    const hasMaTransfer = Boolean(this.hass?.services?.music_assistant?.transfer_queue);
 
-    const masterName = this.getChipName(activeId);
+    const isGroupActive = isPrimary ? (groupedAny || targetId === activeId) : grouped;
+    const isSolePlayer = isGroupActive && !groupedAny;
+    const isMasterLocked = isPrimary && (!hasMaTransfer || !groupedAny);
+    const isActionDisabled = Boolean(isBusy || isSolePlayer || isMasterLocked);
+
     let tooltip;
-    if (isPrimary) {
-      tooltip = localize('card.grouping.master');
-    } else if (grouped) {
-      tooltip = localize('card.grouping.unjoin_from', '{master}', masterName);
-      if (tooltip === 'card.grouping.unjoin_from') tooltip = `Unjoin from ${masterName}`;
+    if (isBusy) {
+      tooltip = localize('card.grouping.unavailable') || localize('common.unavailable') || 'Unavailable';
+    } else if (isSolePlayer) {
+      tooltip = localize('card.grouping.current') || 'Current';
+    } else if (isGroupActive) {
+      tooltip = localize('card.grouping.unjoin') || 'Unjoin';
     } else {
-      tooltip = localize('card.grouping.join_with', '{master}', masterName);
-      if (tooltip === 'card.grouping.join_with') tooltip = `Join with ${masterName}`;
+      tooltip = localize('card.grouping.join') || 'Join';
     }
 
     return {
       isGroupable: true,
       isBusy,
       busyLabel,
-      grouped,
+      grouped: isGroupActive,
       isPrimary,
+      disabled: isActionDisabled,
       entityToCheck,
       tooltip
     };
   }
 
   _renderGroupingSheet() {
-    const isGridMode = this._isGridMode;
-    const masterId = this._getGroupingMasterId();
-    const masterIdx = masterId ? this.entityIds.indexOf(masterId) : -1;
-    const masterGroupId = masterIdx >= 0 ? this._getGroupingEntityId(masterIdx) : masterId;
-    const masterState = masterGroupId ? this.hass.states[masterGroupId] : null;
-    const groupedAny = Array.isArray(masterState?.attributes?.group_members) && masterState.attributes.group_members.length > 1;
-
-    const groupPlayerIds = [];
-    const myGroupKey = this._getGroupKey(this.currentEntityId);
-
-    this.entityIds.forEach((id) => {
-      const state = this._getGroupPlayerState(id, this.currentEntityId, null, masterState, myGroupKey);
-      if (state.isGroupable) {
-        groupPlayerIds.push({
-          id: id,
-          groupId: state.entityToCheck,
-          isBusy: state.isBusy,
-          busyLabel: state.busyLabel
-        });
-      }
-    });
-
-    const activeId = this.currentEntityId;
-    const activeIdx = this.entityIds.indexOf(activeId);
-    const activeGroupId = activeIdx >= 0 ? this._getGroupingEntityId(activeIdx) : null;
-    const activeState = activeGroupId ? this.hass.states[activeGroupId] : null;
-    const activeIsGroupCapable = activeState ? this._isGroupCapable(activeState) : false;
-
-    // Check if active entity is itself a follower (isBusy)
-    const activeGroupKey = this._getGroupKey(activeId);
-    const activeIsBusy = activeGroupKey !== activeId;
-
-    if (!groupedAny && (!activeIsGroupCapable || activeIsBusy)) {
-      return html`
-        <div class="entity-options-header">
-          ${this._cardType !== "group_players" && this._cardType !== "remote_control" ? html`
-            <button class="entity-options-item close-item" @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._closeGrouping(); } }}>
-              ${localize('common.back')}
-            </button>
-          ` : nothing}
-          <div class="entity-options-divider"></div>
-        </div>
-        ${nothing}
-        <div class="entity-options-item" style="padding:12px; opacity:0.75; text-align:center;">
-          ${activeIsBusy ? localize('card.grouping.unavailable') : localize('card.grouping.no_players')}
-        </div>
-      `;
-    }
-
-    const sortedGroupIds = [...groupPlayerIds].sort((a, b) => {
-      if (groupedAny) {
-        if (a.id === masterId) return -1;
-        if (b.id === masterId) return 1;
-      } else {
-        if (a.id === activeId) return -1;
-        if (b.id === activeId) return 1;
-      }
-      if (a.isBusy === b.isBusy) return 0;
-      return a.isBusy ? 1 : -1;
-    });
-
-    return html`
-      <div class="entity-options-header grouping-header group-list-header">
-        ${this._cardType !== "group_players" && this._cardType !== "remote_control" ? html`
-          <button class="entity-options-item close-item" @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._closeGrouping(); } }}>
-            ${localize('common.back')}
-          </button>
-        ` : nothing}
-        <div class="entity-options-divider"></div>
-      </div>
-      ${nothing}
-      <div style="display:flex; align-items:center; gap:8px; margin-bottom:12px;">
-        ${groupedAny ? html`
-          <button class="entity-options-item"
-            @click=${() => this._syncGroupVolume()}
-            style="flex:0 0 auto; min-width:140px; text-align:center;">
-            ${localize('card.grouping.sync_volume')}
-          </button>
-        ` : nothing}
-        <button class="entity-options-item"
-          @click=${() => groupedAny ? this._ungroupAll() : this._groupAll()}
-          style="flex:0 0 auto; min-width:140px; text-align:center; margin-left:auto;">
-          ${groupedAny ? localize('card.grouping.ungroup_all') : localize('card.grouping.group_all')}
-        </button>
-      </div>
-      <div class="group-list-scroll ${isGridMode ? 'grid-menu' : ''}">
-        ${sortedGroupIds.length === 0 ? html`
-          <div class="entity-options-item" style="padding:12px; opacity:0.75; text-align:center;">
-            ${localize('card.grouping.no_players')}
-          </div>
-        ` : html`
-          <div class="${isGridMode ? 'grid-menu-items' : ''}">
-            ${sortedGroupIds.map(item => {
-              const id = item.id;
-              const actualGroupId = item.groupId;
-              const filteredMembers = Array.isArray(masterState?.attributes?.group_members) ? masterState.attributes.group_members : [];
-              const grouped = filteredMembers.includes(actualGroupId);
-              const name = this.getChipName(id);
-              const isBusy = item.isBusy;
-              const busyLabel = item.busyLabel;
-
-              const entityIdx = this.entityIds.indexOf(id);
-              const volumeEntity = this._getVolumeEntity(entityIdx);
-              const displayEntity = volumeEntity || actualGroupId;
-              const displayVolumeState = this.hass.states[displayEntity];
-
-              const isRemoteVol = displayEntity?.startsWith && displayEntity.startsWith("remote.");
-              const volVal = Number(displayVolumeState?.attributes?.volume_level || 0);
-              const isPrimaryRow = id === masterId;
-              const showToggleButton = !isPrimaryRow;
-              const isCurrent = id === activeId;
-              const masterName = masterId ? this.getChipName(masterId) : localize('card.grouping.master');
-
-              let stateLabel = groupedAny
-                ? (isPrimaryRow ? localize('card.grouping.master') : (grouped ? localize('card.grouping.joined') : localize('card.grouping.available')))
-                : (isCurrent ? localize('card.grouping.current') : localize('card.grouping.available'));
-
-              if (isBusy) {
-                stateLabel = busyLabel || "Unavailable";
-              }
-              
-              if (isGridMode) {
-                const isDisabled = isBusy || !showToggleButton;
-                const toggleTooltip = grouped 
-                  ? localize('card.grouping.unjoin_from').replace('{master}', masterName)
-                  : localize('card.grouping.join_with').replace('{master}', masterName);
-                
-                return html`
-                  <button class="entity-options-item menu-action-item group-toggle-btn ${(!showToggleButton || grouped) ? 'grid-active' : ''}" 
-                    ?disabled=${isDisabled}
-                    @click=${() => !isDisabled && this._toggleGroup(id)}
-                    title=${isBusy ? localize('card.grouping.unavailable') : (!showToggleButton ? stateLabel : toggleTooltip)}>
-                    <ha-icon class="menu-action-icon" icon=${isPrimaryRow ? "mdi:star" : (grouped ? "mdi:speaker-multiple" : "mdi:speaker")}></ha-icon>
-                    <span class="menu-action-label">${name}</span>
-                  </button>
-                `;
-              }
-
-              return html`
-                    <div class="entity-options-item group-player-row" style="
-                      display:flex;
-                      align-items:center;
-                      gap:6px;
-                      padding: 12px 8px 4px 8px;
-                      margin-bottom: 1px;
-                      ${isBusy ? "opacity: 0.5;" : ""}
-                    ">
-                      <div style="flex:1; min-width:120px;">
-                        <div style="text-align:left;">${name}</div>
-                        <div style="font-size:0.8em; opacity:0.7; text-align:left;">${stateLabel}</div>
-                      </div>
-                      <div style="flex:1.8;display:flex;align-items:center;gap:4px;margin:0 6px; min-width:160px;">
-                        ${isRemoteVol
-                  ? html`
-                            <div class="vol-stepper" style="display:flex;align-items:center;gap:4px;">
-                              <button @click=${() => this._onGroupVolumeStep(displayEntity, -1)} title="${localize('common.vol_down')}" style="background:none;border:none;padding:0;width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:inherit;">
-                                <ha-icon icon="mdi:minus"></ha-icon>
-                              </button>
-                              <button @click=${() => this._onGroupVolumeStep(displayEntity, 1)} title="${localize('common.vol_up')}" style="background:none;border:none;padding:0;width:28px;height:28px;display:flex;align-items:center;justify-content:center;color:inherit;">
-                                <ha-icon icon="mdi:plus"></ha-icon>
-                              </button>
-                            </div>
-                          `
-                  : html`
-                            <div class="volume-slider-container grouping-vol-slider-container" style="flex:1; padding: 0 4px; position: relative; display: flex; align-items: center;">
-                              <div class="volume-percentage-indicator ${this._volumeDraggingEntity === id ? 'visible' : ''}" style="left: calc(13px + ${this._dragVolume} * (100% - 26px))">
-                                ${Math.round(this._dragVolume * 100)}%
-                              </div>
-                              <input
-                                class="vol-slider"
-                                type="range"
-                                min="0"
-                                max="1"
-                                step="0.01"
-                                .value=${volVal}
-                                @mousedown=${(e) => this._onVolumeDragStart(e, id)}
-                                @touchstart=${(e) => this._onVolumeDragStart(e, id)}
-                                @input=${(e) => this._onVolumeInput(e)}
-                                @mouseup=${(e) => this._onVolumeDragEnd(e)}
-                                @touchend=${(e) => this._onVolumeDragEnd(e)}
-                                @change=${e => this._onGroupVolumeChange(id, displayEntity, e)}
-                                title="${localize('common.volume')}"
-                                style="width:100%;max-width:260px;"
-                              />
-                            </div>
-                          `
-                }
-                        <span style="min-width:36px;display:inline-block;text-align:right;">${typeof volVal === "number" ? Math.round(volVal * 100) + "%" : "--"}</span>
-                      </div>
-                      ${showToggleButton
-                  ? html`
-                            <button class="group-toggle-btn"
-                                    @click=${() => !isBusy && this._toggleGroup(id)}
-                                    title=${isBusy ? localize('card.grouping.unavailable') : (grouped ? localize('card.grouping.unjoin_from').replace('{master}', masterName) : localize('card.grouping.join_with').replace('{master}', masterName))}
-                                    style="margin-left:4px; ${isBusy ? "cursor: not-allowed; opacity: 0.5;" : ""}">
-                              <ha-icon icon=${grouped ? "mdi:minus-circle-outline" : "mdi:plus-circle-outline"}></ha-icon>
-                            </button>
-                          `
-                  : html`<span style="margin-left:4px;margin-right:10px;width:32px;display:inline-block;"></span>`
-                }
-                    </div>
-                  `;
-            })}
-          </div>
-        `}
-      </div>
-    `;
+    return renderGroupingSheet.call(this);
   }
 
   _renderTransferQueueSheet() {
-    const isGridMode = this._isGridMode;
-    const targets = this._getTransferQueueTargets();
-    return html`
-      <div class="entity-options-header">
-        <button class="entity-options-item close-item" @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._closeTransferQueue(); } }}>
-          ${localize('common.back')}
-        </button>
-        <div class="entity-options-divider"></div>
-        ${!isGridMode ? html`<div class="entity-options-title" style="margin-bottom:12px;">${localize('card.menu.transfer_to')}</div>` : nothing}
-      </div>
-      <div class="entity-options-scroll ${isGridMode ? 'grid-menu' : ''}">
-        ${!targets.length ? html`
-          <div style="padding: 12px; opacity: 0.75;">${localize('card.menu.no_players')}</div>
-        ` : html`
-          <div class="${isGridMode ? 'grid-menu-items' : 'transfer-queue-list'}">
-            ${targets.map(target => {
-              if (isGridMode) {
-                return html`
-                  <button class="entity-options-item menu-action-item" 
-                    ?disabled=${this._transferQueuePendingTarget === target.maEntityId}
-                    @click=${() => this._transferQueueTo(target)}>
-                    <ha-icon class="menu-action-icon" .icon=${target.icon}></ha-icon>
-                    <span class="menu-action-label">${target.name}</span>
-                  </button>
-                `;
-              }
-              return html`
-                <button
-                  class="entity-options-item transfer-queue-item"
-                  ?disabled=${this._transferQueuePendingTarget === target.maEntityId}
-                  @click=${() => this._transferQueueTo(target)}>
-                  <ha-icon .icon=${target.icon} style="margin-right:4px;"></ha-icon>
-                  <div style="display:flex;flex-direction:column;align-items:flex-start;">
-                    <div>${target.name}</div>
-                    <div style="font-size:0.82em;opacity:0.7;">${target.subtitle}</div>
-                  </div>
-                  ${target.state ? html`<div style="margin-left:auto;font-size:0.82em;opacity:0.7;text-transform:capitalize;">${target.state}</div>` : nothing}
-                </button>
-              `;
-            })}
-          </div>
-        `}
-        ${this._transferQueueStatus ? html`
-          <div style="
-            margin-top: 14px;
-            padding: 10px 12px;
-            border-radius: 8px;
-            font-weight: 600;
-            text-align: center;
-            background: ${this._transferQueueStatus.type === 'error' ? 'rgba(244, 67, 54, 0.18)' : 'rgba(76, 175, 80, 0.18)'};
-            color: ${this._transferQueueStatus.type === 'error' ? '#ff8a80' : '#8bc34a'};
-          ">
-            ${this._transferQueueStatus.message}
-          </div>
-        ` : nothing}
-      </div>
-    `;
+    return renderTransferQueueSheet.call(this);
   }
 
   _renderResolvedEntitiesSheet() {
-    const isGridMode = this._isGridMode;
-
-    return html`
-      <div class="entity-options-header">
-        <button class="entity-options-item close-item" @click=${() => {
-        this._showResolvedEntities = false;
-        this.requestUpdate();
-      }}>
-          ${localize('common.back')}
-        </button>
-        <div class="entity-options-divider"></div>
-        <div class="entity-options-resolved-entities" style="margin-top:12px;">
-          ${!isGridMode ? html`<div class="entity-options-title">${localize('card.menu.select_entity')}</div>` : nothing}
-          <div class="entity-options-resolved-entities-list ${isGridMode ? 'grid-menu' : ''}">
-            ${this._getResolvedEntitiesForCurrentChip().map(entityId => {
-        const state = this.hass?.states?.[entityId];
-        const name = getEntityName(this.hass, state || entityId);
-        const icon = state?.attributes?.icon || "mdi:help-circle";
-
-        const idx = this._selectedIndex;
-        const obj = this.entityObjs[idx];
-        let role = "Main Entity";
-
-        let isActive = false;
-        if (obj) {
-          const maEntity = this._getActualResolvedMaEntityForState(idx);
-          const volEntity = this._getVolumeEntity(idx);
-          const activeEntity = this._getActivePlaybackEntityForIndex(idx) || obj.entity_id;
-          isActive = activeEntity === entityId;
-
-          if (entityId === maEntity && maEntity !== obj.entity_id) {
-            role = "Music Assistant Entity";
-          } else if (entityId === volEntity && volEntity !== obj.entity_id && volEntity !== maEntity) {
-            role = "Volume Entity";
-          }
-        }
-
-        if (isGridMode) {
-          return html`
-            <button class="entity-options-item menu-action-item" @click=${() => {
-              this._openMoreInfoForEntity(entityId);
-              this._showEntityOptions = false;
-              this._showResolvedEntities = false;
-              this.requestUpdate();
-            }}>
-              <ha-icon class="menu-action-icon" .icon=${icon}></ha-icon>
-              <span class="menu-action-label">${isActive ? `${name} (Active)` : name}</span>
-            </button>
-          `;
-        }
-
-        return html`
-                <button class="entity-options-item" @click=${() => {
-            this._openMoreInfoForEntity(entityId);
-            this._showEntityOptions = false;
-            this._showResolvedEntities = false;
-            this.requestUpdate();
-          }}>
-                  <ha-icon .icon=${icon} style="margin-right: 8px;"></ha-icon>
-                  <div style="display: flex; flex-direction: column; align-items: flex-start;">
-                    <div>${isActive ? `${name} (Active)` : name}</div>
-                    <div style="font-size: 0.85em; opacity: 0.7;">${role}</div>
-                  </div>
-                </button>
-              `;
-      })}
-          </div>
-        </div>
-      </div>
-    `;
+    return renderResolvedEntitiesSheet.call(this);
   }
   /**
    * Universal lyrics fetcher that supports both Music Assistant and LRCLIB.
-   * Logic is guided by the 'lyrics_source' configuration.
+   * Delegated to LyricsController.
    */
   async _fetchLyrics() {
-    // Safety guard: ensure lyrics are still active and card is visible/active
-    if (!this._lyricsActive || this._isIdle || this.isAnyMenuOpen) {
-      this._fetchingLyrics = false;
-      this.requestUpdate();
-      return;
-    }
-
-    this._lyricsError = false;
-    let configSource = this.config.lyrics_source || "mass_lrclib";
-
-    const isAdmin = this.hass?.user?.is_admin === true;
-    if (!isAdmin && configSource !== "lrclib") {
-      if (configSource === "mass") {
-        console.warn(`YAMP: ${localize('lyrics.admin_only_mass')}`);
-
-        const event = new CustomEvent("hass-notification", {
-          bubbles: true,
-          composed: true,
-          detail: { message: localize("lyrics.admin_only_mass") },
-        });
-        this.dispatchEvent(event);
-
-        this._fetchingLyrics = false;
-        this._lyricsError = true;
-        this.requestUpdate();
-        return;
-      } else {
-        console.log(`YAMP: ${localize('lyrics.fallback_to_lrclib_non_admin')}`);
-        configSource = "lrclib";
-      }
-    }
-
-    const activeState = this.metadataStateObj || this.currentActivePlaybackStateObj || this.currentPlaybackStateObj || this.currentStateObj;
-    if (!activeState) {
-      this._massLyrics = [];
-      this.requestUpdate();
-      return;
-    }
-
-    const artist = activeState.attributes.media_artist;
-    const title = activeState.attributes.media_title;
-    const album = activeState.attributes.media_album_name;
-    const duration = activeState.attributes.media_duration;
-    const trackId = activeState.attributes.media_content_id;
-
-    // 1. Check Internal Cache
-    const cacheKey = trackId ? `${trackId}:${artist}:${title}` : `${artist}:${title}`;
-
-    // Prevent redundant fetches if already in progress for this same key
-    if (this._fetchingLyrics && this._fetchingCacheKey === cacheKey) return;
-
-    if (this._lyricsCache.has(cacheKey)) {
-      const cachedLyrics = this._lyricsCache.get(cacheKey);
-      // Move to end to track as "most recently used"
-      this._lyricsCache.delete(cacheKey);
-      this._lyricsCache.set(cacheKey, cachedLyrics);
-
-      this._massLyrics = cachedLyrics;
-      this._fetchingLyrics = false;
-      this.requestUpdate();
-      return;
-    }
-
-    // Generate token to prevent race conditions
-    const fetchToken = Symbol();
-    this._currentFetchToken = fetchToken;
-
-    this._fetchingLyrics = true;
-    this._fetchingCacheKey = cacheKey;
-    this._massLyrics = [];
-    this.requestUpdate();
-
-    let lyrics;
-
-    try {
-      if (configSource === "mass") {
-        lyrics = await this._getMassLyrics(activeState, fetchToken);
-      } else if (configSource === "lrclib") {
-        lyrics = await this._getLrclibLyrics(artist, title, album, duration, fetchToken);
-      } else {
-        // Parallel fetching for mass_lrclib and lrclib_mass modes
-        const massPromise = this._getMassLyrics(activeState, fetchToken);
-        const lrclibPromise = this._getLrclibLyrics(artist, title, album, duration, fetchToken);
-
-        // Define preferred and fallback based on config
-        const isMassPreferred = configSource === "mass_lrclib";
-
-        // Setup interim update handler
-        const handleInterim = async (promise, name) => {
-          const res = await promise;
-          if (this._currentFetchToken !== fetchToken) return null;
-          if (res && res.length > 0) {
-            const isPreferred = (name === "mass" && isMassPreferred) || (name === "lrclib" && !isMassPreferred);
-            // Only perform interim update if the other source hasn't finished or we are the preferred source
-            if (!this._massLyrics || this._massLyrics.length === 0 || isPreferred) {
-              this._massLyrics = res || [];
-              // Immediately hide fetching state as we now have results to show
-              this._fetchingLyrics = false;
-              this.requestUpdate();
-            }
-          }
-          return res;
-        };
-
-        // Fire both and await the preferred one (or first available)
-        const [massResults, lrclibResults] = await Promise.all([
-          handleInterim(massPromise, "mass"),
-          handleInterim(lrclibPromise, "lrclib")
-        ]);
-
-        if (this._currentFetchToken !== fetchToken) return;
-
-        // Final selection: Prefer MA in mass_lrclib, LRCLIB in lrclib_mass
-        if (isMassPreferred) {
-          lyrics = (massResults && massResults.length > 0) ? massResults : lrclibResults;
-        } else {
-          lyrics = (lrclibResults && lrclibResults.length > 0) ? lrclibResults : massResults;
-        }
-      }
-
-      if (this._currentFetchToken === fetchToken) {
-        this._massLyrics = lyrics || [];
-        if (lyrics && lyrics.length > 0) {
-          // Add to cache with LRU eviction
-          if (this._lyricsCache.size >= MAX_LYRICS_CACHE_SIZE) {
-            // Remove the oldest (first) entry
-            const oldestKey = this._lyricsCache.keys().next().value;
-            this._lyricsCache.delete(oldestKey);
-          }
-          this._lyricsCache.set(cacheKey, lyrics);
-        } else if (lyrics === null) {
-          // Explicit null means fetch failed
-          this._lyricsError = true;
-        }
-        this._fetchingLyrics = false;
-        this._fetchingCacheKey = null;
-        this.requestUpdate();
-      }
-    } catch (e) {
-      if (this._currentFetchToken === fetchToken) {
-        console.error("YAMP: Failed to fetch lyrics:", e);
-        this._lyricsError = true;
-        this._fetchingLyrics = false;
-        this._fetchingCacheKey = null;
-        this.requestUpdate();
-      }
-    }
+    return this._lyricsController.fetchLyrics();
   }
 
   /**
    * Internal helper to fetch lyrics from Music Assistant.
+   * Delegated to LyricsController.
    */
   async _getMassLyrics(activeState, fetchToken) {
-    // Use the already-resolved integration status if available
-    if (this._hasMassQueueIntegration === false) return [];
-
-    if (!this._massQueueAvailable) {
-      this._massQueueAvailable = await this._isMassQueueIntegrationAvailable(this.hass);
-      this._hasMassQueueIntegration = this._massQueueAvailable;
-      if (!this._massQueueAvailable) return [];
-      if (this._currentFetchToken !== fetchToken) return [];
-    }
-
-    try {
-      const searchEntityIdTemplate = this._getSearchEntityId(this._selectedIndex);
-      const searchEntityId = await this._resolveTemplateAtActionTime(searchEntityIdTemplate, this.currentEntityId);
-      const mqConfigEntryId = await getMassQueueConfigEntryId(this.hass, searchEntityId);
-      if (!mqConfigEntryId) return [];
-
-      const trackUri = activeState.attributes.media_content_id;
-      if (!trackUri || !trackUri.includes("://")) return [];
-
-      const trackMsg = {
-        type: "call_service",
-        domain: "mass_queue",
-        service: "send_command",
-        service_data: {
-          command: "music/item_by_uri",
-          data: { uri: trackUri },
-          ...(mqConfigEntryId && mqConfigEntryId !== "auto" && { config_entry_id: mqConfigEntryId })
-        },
-        return_response: true
-      };
-
-      const trackRes = await this.hass.connection.sendMessagePromise(trackMsg);
-      if (this._currentFetchToken !== fetchToken) return [];
-
-      const validTrack = trackRes?.response?.response || trackRes?.response || trackRes?.result;
-      if (!validTrack) return [];
-
-      const lyricsMsg = {
-        type: "call_service",
-        domain: "mass_queue",
-        service: "send_command",
-        service_data: {
-          command: "metadata/get_track_lyrics",
-          data: { track: validTrack },
-          ...(mqConfigEntryId && mqConfigEntryId !== "auto" && { config_entry_id: mqConfigEntryId })
-        },
-        return_response: true
-      };
-
-      const lyricsRes = await this.hass.connection.sendMessagePromise(lyricsMsg);
-      if (this._currentFetchToken !== fetchToken) return [];
-
-      const lyricsArray = lyricsRes?.response?.response || lyricsRes?.response || lyricsRes?.result;
-      if (lyricsArray) {
-        let lrcString = "";
-        if (Array.isArray(lyricsArray)) {
-          lrcString = lyricsArray[1] || lyricsArray[0] || "";
-        } else if (typeof lyricsArray === "string") {
-          lrcString = lyricsArray;
-        } else if (typeof lyricsArray === "object") {
-          if (lyricsArray.instrumental) {
-            return [
-              {
-                time: 0,
-                text: localize("lyrics.instrumental") || "Instrumental Track",
-                isInstrumental: true,
-              },
-            ];
-          }
-          lrcString = lyricsArray.lyrics || lyricsArray.text || "";
-        }
-        return lrcString ? parseLrc(lrcString) : [];
-      }
-    } catch (e) {
-      console.warn("YAMP: MA Lyrics fetch failed:", e);
-    }
-    return [];
+    return this._lyricsController.getMassLyrics(activeState, fetchToken);
   }
 
   /**
    * Internal helper to fetch lyrics from LRCLIB.
+   * Delegated to LyricsController.
    */
   async _getLrclibLyrics(artist, title, album, duration, fetchToken) {
-    if (!artist || !title) return [];
-
-    const cleanArtist = this._cleanTrackMetadata(artist);
-    const cleanTitle = this._cleanTrackMetadata(title);
-    const cleanAlbum = album ? this._cleanTrackMetadata(album) : "";
-
-    try {
-      const headers = {
-        "Lrclib-Client": `yet-another-media-player/${__VERSION__} (https://github.com/jianyu-li/yet-another-media-player)`
-      };
-
-      // 1. Try precise get first
-      let url = `https://lrclib.net/api/get?artist_name=${encodeURIComponent(cleanArtist)}&track_name=${encodeURIComponent(cleanTitle)}`;
-      if (cleanAlbum) url += `&album_name=${encodeURIComponent(cleanAlbum)}`;
-      if (duration) url += `&duration=${Math.round(duration)}`;
-
-      let response = await fetch(url, { headers });
-      if (this._currentFetchToken !== fetchToken) return [];
-
-      if (!response.ok && response.status !== 404) {
-        throw new Error(`LRCLIB error: ${response.status}`);
-      }
-
-      let data = null;
-      if (response.ok) {
-        data = await response.json();
-      } else {
-        // 2. Try search fallback if precise get failed
-        const searchUrl = `https://lrclib.net/api/search?artist_name=${encodeURIComponent(cleanArtist)}&track_name=${encodeURIComponent(cleanTitle)}`;
-        const searchRes = await fetch(searchUrl, { headers });
-        if (this._currentFetchToken !== fetchToken) return [];
-
-        if (searchRes.ok) {
-          const results = await searchRes.json();
-          if (results && results.length > 0) {
-            data = results[0]; // Take the first result
-          }
-        }
-      }
-
-      if (data) {
-        if (data.instrumental) {
-          return [
-            {
-              time: 0,
-              text: localize("lyrics.instrumental") || "Instrumental Track",
-              isInstrumental: true,
-            },
-          ];
-        }
-        const lrcString = data.syncedLyrics || data.plainLyrics || "";
-        return lrcString ? parseLrc(lrcString) : [];
-      }
-    } catch (e) {
-      console.warn("YAMP: LRCLIB Lyrics fetch failed:", e);
-    }
-    return [];
+    return this._lyricsController.getLrclibLyrics(artist, title, album, duration, fetchToken);
   }
 
+  get _fetchingLyrics() {
+    return this._lyricsController?.loading ?? false;
+  }
+
+  set _fetchingLyrics(val) {
+    if (this._lyricsController) {
+      this._lyricsController.loading = val;
+    }
+  }
+
+  get _massLyrics() {
+    return this._lyricsController?.lyrics ?? [];
+  }
+
+  set _massLyrics(val) {
+    if (this._lyricsController) {
+      this._lyricsController.lyrics = val;
+    }
+  }
+
+  get _lyricsError() {
+    return this._lyricsController?.error ?? false;
+  }
+
+  set _lyricsError(val) {
+    if (this._lyricsController) {
+      this._lyricsController.error = val;
+    }
+  }
+
+  get _massQueueAvailable() {
+    return this._queueController?.massQueueAvailable ?? false;
+  }
+
+  set _massQueueAvailable(val) {
+    if (this._queueController) {
+      this._queueController.massQueueAvailable = val;
+    }
+  }
+
+  get _hasMassQueueIntegration() {
+    return this._queueController?.hasMassQueueIntegration ?? null;
+  }
+
+  set _hasMassQueueIntegration(val) {
+    if (this._queueController) {
+      this._queueController.hasMassQueueIntegration = val;
+    }
+  }
+
+  get _checkingMassQueueIntegration() {
+    return this._queueController?.checkingMassQueueIntegration ?? false;
+  }
+
+  set _checkingMassQueueIntegration(val) {
+    if (this._queueController) {
+      this._queueController.checkingMassQueueIntegration = val;
+    }
+  }
+
+  get _showTransferQueue() {
+    return this._queueController?.showTransferQueue ?? false;
+  }
+
+  set _showTransferQueue(val) {
+    if (this._queueController) {
+      this._queueController.showTransferQueue = val;
+    }
+  }
+
+  get _transferQueuePendingTarget() {
+    return this._queueController?.transferQueuePendingTarget ?? null;
+  }
+
+  set _transferQueuePendingTarget(val) {
+    if (this._queueController) {
+      this._queueController.transferQueuePendingTarget = val;
+    }
+  }
+
+  get _transferQueueStatus() {
+    return this._queueController?.transferQueueStatus ?? null;
+  }
+
+  set _transferQueueStatus(val) {
+    if (this._queueController) {
+      this._queueController.transferQueueStatus = val;
+    }
+  }
+
+  get _hasTransferQueueForCurrent() {
+    return this._queueController?.hasTransferQueueForCurrent ?? false;
+  }
+
+  set _hasTransferQueueForCurrent(val) {
+    if (this._queueController) {
+      this._queueController.hasTransferQueueForCurrent = val;
+    }
+  }
+
+  get _queueOpsTotal() {
+    return this._queueController?.queueOpsTotal ?? 0;
+  }
+
+  set _queueOpsTotal(val) {
+    if (this._queueController) {
+      this._queueController.queueOpsTotal = val;
+    }
+  }
+
+  get _queueOpsCompleted() {
+    return this._queueController?.queueOpsCompleted ?? 0;
+  }
+
+  set _queueOpsCompleted(val) {
+    if (this._queueController) {
+      this._queueController.queueOpsCompleted = val;
+    }
+  }
+
+  get _queueOperationPromise() {
+    return this._queueController?.queueOperationPromise ?? Promise.resolve();
+  }
+
+  set _queueOperationPromise(val) {
+    if (this._queueController) {
+      this._queueController.queueOperationPromise = val;
+    }
+  }
+
+  get _queueOpsTimeout() {
+    return this._queueController?.queueOpsTimeout ?? null;
+  }
+
+  set _queueOpsTimeout(val) {
+    if (this._queueController) {
+      this._queueController.queueOpsTimeout = val;
+    }
+  }
+
+  get _queueRefreshTimer() {
+    return this._queueController?.queueRefreshTimer ?? null;
+  }
+
+  set _queueRefreshTimer(val) {
+    if (this._queueController) {
+      this._queueController.queueRefreshTimer = val;
+    }
+  }
+
+  get _queueEventSubscription() {
+    return this._queueController?.queueEventSubscription ?? null;
+  }
+
+  set _queueEventSubscription(val) {
+    if (this._queueController) {
+      this._queueController.queueEventSubscription = val;
+    }
+  }
+
+  get _transferQueueAutoCloseTimer() {
+    return this._queueController?.transferQueueAutoCloseTimer ?? null;
+  }
+
+  set _transferQueueAutoCloseTimer(val) {
+    if (this._queueController) {
+      this._queueController.transferQueueAutoCloseTimer = val;
+    }
+  }
+
+
+  _updateChipPlaybackLinger(
+    idx,
+    mainId,
+    maId,
+    prevMainState,
+    mainState,
+    prevMaState,
+    maState,
+    now = Date.now()
+  ) {
+    const mainStopped = prevMainState === "playing" && mainState !== "playing";
+    const maStopped = Boolean(
+      maId && maId !== mainId && prevMaState === "playing" && maState !== "playing"
+    );
+
+    if (mainStopped || maStopped) {
+      const ttl = Math.max(
+        Number(this._idleTimeoutMs || this.config?.idle_timeout_ms || 60000),
+        500
+      );
+      let lingerEntityId = null;
+
+      const isSameMedia = this._areEntitiesPlayingSameMedia(
+        this.hass?.states?.[mainId],
+        maId ? this.hass?.states?.[maId] : null
+      );
+      const currentLinger = this._playbackLingerByIdx?.[idx];
+      const hasActiveMainLinger =
+        currentLinger?.entityId === mainId && currentLinger.until > now;
+
+      if (isSameMedia || hasActiveMainLinger) {
+        lingerEntityId = mainId;
+      } else if (mainStopped) {
+        lingerEntityId = mainId;
+      } else if (maStopped && mainState !== "playing") {
+        lingerEntityId = maId;
+      }
+
+      if (lingerEntityId) {
+        if (!this._playbackLingerByIdx) this._playbackLingerByIdx = {};
+        this._playbackLingerByIdx[idx] = {
+          entityId: lingerEntityId,
+          until: now + ttl,
+        };
+        if (!this._lastActiveEntityIdByChip) this._lastActiveEntityIdByChip = {};
+        this._lastActiveEntityIdByChip[idx] = lingerEntityId;
+        if (!this._lastResolvedEntityIdByChip) this._lastResolvedEntityIdByChip = {};
+        this._lastResolvedEntityIdByChip[idx] = lingerEntityId;
+      }
+    }
+
+    // Symmetrically clear linger if an entity resumes playing
+    if (mainState === "playing" && this._playbackLingerByIdx?.[idx]?.entityId === maId) {
+      delete this._playbackLingerByIdx[idx];
+    }
+    const isSameMediaResume = this._areEntitiesPlayingSameMedia(
+      this.hass?.states?.[mainId],
+      maId ? this.hass?.states?.[maId] : null
+    );
+    if (
+      maState === "playing" &&
+      mainState !== "playing" &&
+      !isSameMediaResume &&
+      this._playbackLingerByIdx?.[idx]?.entityId === mainId
+    ) {
+      delete this._playbackLingerByIdx[idx];
+    }
+  }
 
   updated(changedProps) {
     if (changedProps.has("hass") && this.hass) {
@@ -7545,8 +4909,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._syncTemplateSubscriptions('always_collapsed', currentContext, this.config?.always_collapsed);
     this._syncTemplateSubscriptions('control_layout', currentContext, this.config?.control_layout);
     this._syncTemplateSubscriptions('card_height', currentContext, this.config?.card_height);
-    this._syncTemplateSubscriptions('lyrics_background_fade', currentContext, this.config?.lyrics_background_fade);
+    const bgFadeConfig = this.config?.background_fade ?? this.config?.lyrics_background_fade;
+    this._syncTemplateSubscriptions('background_fade', currentContext, bgFadeConfig);
     this._syncTemplateSubscriptions('lock_screen_controls', currentContext, this.config?.lock_screen_controls);
+    this._syncTemplateSubscriptions('full_screen', currentContext, this.config?.full_screen);
+    this._syncTemplateSubscriptions('show_chip_row', currentContext, this.config?.show_chip_row);
     this._syncEntityTemplateSubscriptions('ma', currentContext);
     this._syncEntityTemplateSubscriptions('vol', currentContext);
     this._syncEntityTemplateSubscriptions('remote', currentContext);
@@ -7561,6 +4928,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     }
     if (changedProps.has("_selectedIndex") || changedProps.has("hass")) {
       void this._updateTransferQueueAvailability({ refresh: false });
+      void this._checkAiRadioAvailability();
     }
     if (changedProps.has("hass") || changedProps.has("config")) {
       this._updateArtworkAspectRatios();
@@ -7573,6 +4941,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           this._hasMassQueueIntegration = hasIntegration;
           if (hasIntegration) {
             this._massQueueAvailable = this._massQueueAvailable || hasIntegration;
+            void this._checkAiRadioAvailability();
           }
         })
         .catch(() => {
@@ -7628,22 +4997,51 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         const prevMainState = this._playerStateCache[mainId];
         if (mainState === "playing") {
           this._playTimestamps[mainId] = now;
-          this._lastActiveEntityIdByChip[idx] = mainId;
+          if (prevMainState !== "playing" && this._manualActiveEntityByChip?.[idx] && this._manualActiveEntityByChip[idx] !== mainId) {
+            delete this._manualActiveEntityByChip[idx];
+          }
+          if (!this._manualActiveEntityByChip?.[idx]) {
+            this._lastActiveEntityIdByChip[idx] = mainId;
+          }
         } else if (prevMainState === "playing" && mainState !== "playing") {
           this._playTimestamps[mainId] = now;
         }
-        this._playerStateCache[mainId] = mainState;
 
         // Track Music Assistant player state if different
+        let prevMaState;
+        let maState;
         if (maId && maId !== mainId) {
-          const maState = this.hass.states[maId]?.state;
-          const prevMaState = this._playerStateCache[maId];
+          maState = this.hass.states[maId]?.state;
+          prevMaState = this._playerStateCache[maId];
           if (maState === "playing") {
             this._playTimestamps[maId] = now;
-            this._lastActiveEntityIdByChip[idx] = maId;
+            if (prevMaState !== "playing" && this._manualActiveEntityByChip?.[idx] && this._manualActiveEntityByChip[idx] !== maId) {
+              delete this._manualActiveEntityByChip[idx];
+            }
+            if (!this._manualActiveEntityByChip?.[idx]) {
+              const isSameMedia = this._areEntitiesPlayingSameMedia(this.hass.states[mainId], this.hass.states[maId]);
+              if (!isSameMedia) {
+                this._lastActiveEntityIdByChip[idx] = maId;
+              }
+            }
           } else if (prevMaState === "playing" && maState !== "playing") {
             this._playTimestamps[maId] = now;
           }
+        }
+
+        this._updateChipPlaybackLinger(
+          idx,
+          mainId,
+          maId,
+          prevMainState,
+          mainState,
+          prevMaState,
+          maState,
+          now
+        );
+
+        this._playerStateCache[mainId] = mainState;
+        if (maId && maId !== mainId) {
           this._playerStateCache[maId] = maState;
         }
 
@@ -7779,51 +5177,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     }
 
     // Lyrics fetch trigger
-    if (this._lyricsActive) {
-      const activeState = this.metadataStateObj || this.currentActivePlaybackStateObj || this.currentPlaybackStateObj || this.currentStateObj;
-      const trackId = activeState?.attributes?.media_content_id || null;
-      const artist = activeState?.attributes?.media_artist || null;
-      const title = activeState?.attributes?.media_title || null;
-      const activeEntityId = this.currentActivePlaybackEntityId || this.currentEntityId || null;
-
-      const hasMetadata = !!(trackId || artist || title);
-      const metadataChanged =
-        trackId !== this._lastLyricsTrackId ||
-        artist !== this._lastLyricsArtist ||
-        title !== this._lastLyricsTitle ||
-        activeEntityId !== this._lastLyricsEntityId;
-
-      if (hasMetadata && metadataChanged && !this._isIdle && !this.isAnyMenuOpen) {
-        // Update trackers immediately to avoid multiple triggers
-        this._lastLyricsTrackId = trackId;
-        this._lastLyricsArtist = artist;
-        this._lastLyricsTitle = title;
-        this._lastLyricsEntityId = activeEntityId;
-
-        // Set loading state immediately to avoid UI flicker during debounce
-        this._fetchingLyrics = true;
-        this._lyricsError = false;
-
-        // Debounce fetch to handle rapid metadata updates (e.g. radio streams)
-        if (this._lyricsFetchTimeout) clearTimeout(this._lyricsFetchTimeout);
-        this._lyricsFetchTimeout = setTimeout(() => {
-          this._fetchLyrics();
-          this._lyricsFetchTimeout = null;
-        }, 500);
-      } else if (!hasMetadata && metadataChanged) {
-        // Clear trackers
-        this._lastLyricsTrackId = null;
-        this._lastLyricsArtist = null;
-        this._lastLyricsTitle = null;
-        this._lastLyricsEntityId = activeEntityId;
-
-        if (this._lyricsFetchTimeout) clearTimeout(this._lyricsFetchTimeout);
-        this._massLyrics = [];
-        this._fetchingLyrics = false;
-        this._lyricsError = false;
-        this.requestUpdate();
-      }
-    }
+    this._lyricsController.checkTrackLyrics();
 
     // Restart progress timer
     super.updated?.(changedProps);
@@ -7834,9 +5188,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     }
     const playbackState = this.currentActivePlaybackStateObj || this.currentPlaybackStateObj || this.currentStateObj;
     if (this._isEntityPlaying(playbackState) && playbackState.attributes.media_duration) {
-      this._progressTimer = setInterval(() => {
-        this.requestUpdate();
-      }, 500);
+      if (typeof document === "undefined" || !document.hidden) {
+        this._progressTimer = setInterval(() => {
+          this.requestUpdate();
+        }, 500);
+      }
     }
 
     // Sync lock screen media controls (Web Media Session API)
@@ -7849,14 +5205,19 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       const playbackArtwork = this._getArtworkUrl(playbackState, false);
       const mainArtwork = this._getArtworkUrl(mainState, false);
 
-      const artworkUrl =
+      const rawArtworkUrl =
         metadataArtwork?.url ||
         playbackArtwork?.url ||
         mainArtwork?.url ||
+        metadataState?.attributes?.entity_picture_local ||
+        playbackState?.attributes?.entity_picture_local ||
+        mainState?.attributes?.entity_picture_local ||
         metadataState?.attributes?.entity_picture ||
         playbackState?.attributes?.entity_picture ||
         mainState?.attributes?.entity_picture ||
         "";
+
+      const artworkUrl = isValidArtworkUrl(rawArtworkUrl) ? rawArtworkUrl : "";
 
       const title =
         metadataState?.attributes?.media_title ||
@@ -8060,10 +5421,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   _selectSource(src) {
     const entity = this.currentEntityId;
     if (!entity || !src) return;
-    this.hass.callService("media_player", "select_source", {
-      entity_id: entity,
-      source: src
-    });
+    selectSource(this.hass, entity, src);
     // Close the source list sheet after selection
     this._closeEntityOptions();
   }
@@ -8084,6 +5442,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     }
 
     // Select the tapped chip immediately
+    this._volumeHoldController?.cancel();
     this._selectedIndex = idx;
 
     // Wake from idle if the selected entity is actually playing
@@ -8143,6 +5502,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     // Clear the manual‑select snapshot; a long‑press establishes a pin.
     this._manualSelectPlayingSet = null;
 
+    const id = this.entityIds[idx];
+    if (id && this._autoEntities?.includes(id)) {
+      this._promoteAutoToSession(id);
+    }
+
     this._pinnedIndex = idx;
     this._manualSelect = true;
     this.requestUpdate();
@@ -8166,9 +5530,12 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           this.requestUpdate();
           break;
         case "group-players":
-          this._showEntityOptions = true;
-          this._showGrouping = true;
-          this.requestUpdate();
+        case "group_players":
+        case "players":
+        case "player":
+        case "transfer-queue":
+        case "transfer_queue":
+          this._openGrouping();
           break;
         case "search":
           this._openQuickSearchOverlay();
@@ -8193,10 +5560,6 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           this._showGrouping = false;
           this.requestUpdate();
           break;
-        case "transfer-queue":
-          this._showEntityOptions = true;
-          this._openTransferQueue();
-          break;
         case "main-menu":
           this._showGrouping = false;
           this._showSourceList = false;
@@ -8204,6 +5567,13 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           this._showResolvedEntities = false;
           this._showTransferQueue = false;
           await this._openEntityOptions();
+          break;
+        case "full-screen":
+        case "full_screen":
+        case "fullscreen":
+          this._toggleFullScreen();
+          this._showEntityOptions = false;
+          this.requestUpdate();
           break;
         default:
           // Do nothing for unknown menu_item
@@ -8236,10 +5606,25 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       return;
     }
 
+    if (action.action === "full_screen" || action.action === "toggle_full_screen") {
+      this._toggleFullScreen();
+      return;
+    }
+
     if (action.action === "toggle_lyrics") {
-      this._lyricsActive = !this._lyricsActive;
-      // No explicit fetch call here - updated() will handle it lazily if appropriate
-      this.requestUpdate();
+      this._lyricsController.toggle();
+      return;
+    }
+
+    if (
+      action.action === "group_players" ||
+      action.action === "group-players" ||
+      action.action === "players" ||
+      action.action === "player" ||
+      action.action === "transfer_queue" ||
+      action.action === "transfer-queue"
+    ) {
+      this._openGrouping();
       return;
     }
 
@@ -8536,9 +5921,16 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         "search-next-up": localize("search.next_up"),
         "source": localize("card.menu.source"),
         "more-info": localize("card.menu.more_info"),
-        "group-players": localize("card.menu.group_players"),
-        "transfer-queue": localize("card.menu.transfer_queue"),
+        "group-players": localize("card.menu.players") || localize("card.menu.group_players") || "Players",
+        "group_players": localize("card.menu.players") || localize("card.menu.group_players") || "Players",
+        "players": localize("card.menu.players") || localize("card.menu.group_players") || "Players",
+        "player": localize("card.menu.players") || localize("card.menu.group_players") || "Players",
+        "transfer-queue": localize("card.menu.players") || localize("card.menu.group_players") || "Players",
+        "transfer_queue": localize("card.menu.players") || localize("card.menu.group_players") || "Players",
         "main-menu": localize("card.menu.main_menu"),
+        "full-screen": localize(this._isFullScreen ? "card.menu.exit_full_screen" : "card.menu.full_screen"),
+        "full_screen": localize(this._isFullScreen ? "card.menu.exit_full_screen" : "card.menu.full_screen"),
+        "fullscreen": localize(this._isFullScreen ? "card.menu.exit_full_screen" : "card.menu.full_screen"),
       };
       return menuLabels[action.menu_item] ?? action.menu_item;
     }
@@ -8548,8 +5940,25 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     ) {
       return iconOnly ? "" : "Navigate";
     }
+    if (action.action === "full_screen" || action.action === "toggle_full_screen") {
+      return iconOnly ? "" : localize(this._isFullScreen ? "card.menu.exit_full_screen" : "card.menu.full_screen");
+    }
     if (action.action === "toggle_lyrics") {
       return iconOnly ? "" : localize("editor.action_types.toggle_lyrics") || "Toggle Lyrics Overlay";
+    }
+    if (
+      action.action === "group_players" ||
+      action.action === "group-players" ||
+      action.action === "players" ||
+      action.action === "player" ||
+      action.action === "transfer_queue" ||
+      action.action === "transfer-queue"
+    ) {
+      return iconOnly
+        ? ""
+        : localize("card.menu.players") ||
+            localize("card.menu.group_players") ||
+            "Players";
     }
     if (action.action === "remote_control") {
       return iconOnly ? "" : localize("editor.action_types.remote_control") || "Open Remote Controls Overlay";
@@ -8577,7 +5986,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     switch (action) {
       case "play_pause":
         if (this._isEntityPlaying(stateObj)) {
-          this.hass.callService("media_player", "media_pause", { entity_id: targetEntity });
+          mediaPause(this.hass, targetEntity);
           // When pausing, set the last playing entity to the one we just paused (per-chip)
           if (!this._lastPlayingEntityIdByChip) this._lastPlayingEntityIdByChip = {};
           this._lastPlayingEntityIdByChip[this._selectedIndex] = targetEntity;
@@ -8592,7 +6001,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           setTimeout(() => { this._optimisticPlayback = null; this.requestUpdate(); }, 1200);
         } else {
           this._mediaSessionManager?.startPlaybackGesture(targetEntity);
-          this.hass.callService("media_player", "media_play", { entity_id: targetEntity });
+          mediaPlay(this.hass, targetEntity);
           // On resume, clear the paused entity tracking since we're now playing
           if (this._lastPlayingEntityIdByChip) {
             delete this._lastPlayingEntityIdByChip[this._selectedIndex];
@@ -8611,14 +6020,14 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       case "next":
         this._mediaSessionManager?.startPlaybackGesture(targetEntity);
         this._advanceQueueInUI(null, true); // Manual advance
-        this.hass.callService("media_player", "media_next_track", { entity_id: targetEntity });
+        mediaNextTrack(this.hass, targetEntity);
         break;
       case "prev":
         this._mediaSessionManager?.startPlaybackGesture(targetEntity);
-        this.hass.callService("media_player", "media_previous_track", { entity_id: targetEntity });
+        mediaPreviousTrack(this.hass, targetEntity);
         break;
       case "stop":
-        this.hass.callService("media_player", "media_stop", { entity_id: targetEntity });
+        mediaStop(this.hass, targetEntity);
         if (stateObj) {
           // Set optimistic state for the entity we're actually controlling
           const targetEntityId = targetEntity;
@@ -8631,7 +6040,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       case "shuffle": {
         // Toggle shuffle based on current state
         const curr = !!stateObj.attributes.shuffle;
-        this.hass.callService("media_player", "shuffle_set", { entity_id: targetEntity, shuffle: !curr });
+        setShuffle(this.hass, targetEntity, !curr);
         break;
       }
       case "repeat": {
@@ -8641,22 +6050,21 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         if (curr === "off") next = "all";
         else if (curr === "all") next = "one";
         else next = "off";
-        this.hass.callService("media_player", "repeat_set", { entity_id: targetEntity, repeat: next });
+        setRepeat(this.hass, targetEntity, next);
         break;
       }
       case "power": {
         // Toggle main entity power (physical power behavior)
         const mainId = this.currentEntityId;
         const mainState = this.hass?.states?.[mainId] || stateObj;
-        const svc = mainState?.state === "off" ? "turn_on" : "turn_off";
-        this.hass.callService("media_player", svc, { entity_id: mainId });
+        togglePower(this.hass, mainId, mainState?.state);
 
         // Also toggle volume_entity if sync_power is enabled for this entity
         const obj = this.entityObjs[this._selectedIndex];
         if (obj && obj.sync_power) {
           const volEntityId = this._getVolumeEntity(this._selectedIndex);
           if (volEntityId && volEntityId !== obj.entity_id) {
-            this.hass.callService("media_player", svc, { entity_id: volEntityId });
+            togglePower(this.hass, volEntityId, mainState?.state);
           }
         }
         break;
@@ -8757,11 +6165,19 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
    * With group_volume: true/undefined, applies group logic.
    */
   _onVolumeChange(e) {
+    this._applyVolumeLevel(Number(e.target.value));
+  }
+
+  /**
+   * Applies an absolute volume level to the active entity, honoring group_volume logic.
+   * Shared by the slider and the stepper press-and-hold overlay.
+   * @param {number} newVol 0..1
+   */
+  _applyVolumeLevel(newVol) {
     this._suppressVolumeOverlay();
     const idx = this._selectedIndex;
     const groupingEntity = this._getGroupingEntityId(idx) || this.currentEntityId;
     const state = this.hass.states[groupingEntity];
-    const newVol = Number(e.target.value);
     const obj = this.entityObjs[idx];
 
     // Always use group_volume directly from obj
@@ -8769,10 +6185,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const isChipGrouped = this._isActiveChipGrouped(idx);
 
     if (!groupVolume || !isChipGrouped) {
-      this.hass.callService("media_player", "volume_set", {
-        entity_id: this._getVolumeEntity(idx),
-        volume_level: newVol
-      });
+      setVolume(this.hass, this._getVolumeEntity(idx), newVol);
       return;
     }
 
@@ -8803,15 +6216,12 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         const st = this.hass.states[volTarget];
         if (!st) continue;
         let v = Number(st.attributes.volume_level || 0) + delta;
-        v = Math.max(0, Math.min(1, v));
-        // Round to 4 decimal places to prevent floating point precision errors
-        v = Math.round(v * 10000) / 10000;
-        this.hass.callService("media_player", "volume_set", { entity_id: volTarget, volume_level: v });
+        setVolume(this.hass, volTarget, v);
       }
       this._groupBaseVolume = newVol;
     } else {
       const volumeEntity = this._getVolumeEntity(idx);
-      this.hass.callService("media_player", "volume_set", { entity_id: volumeEntity, volume_level: newVol });
+      setVolume(this.hass, volumeEntity, newVol);
     }
   }
 
@@ -8825,10 +6235,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     if (!stateObj) return;
 
     if (isRemoteVolumeEntity) {
-      this.hass.callService("remote", "send_command", {
-        entity_id: entity,
-        command: direction > 0 ? "volume_up" : "volume_down"
-      });
+      sendRemoteVolumeStep(this.hass, entity, direction);
       return;
     }
 
@@ -8861,19 +6268,13 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         const st = this.hass.states[volTarget];
         if (!st) continue;
         let v = Number(st.attributes.volume_level || 0) + step;
-        v = Math.max(0, Math.min(1, v));
-        // Round to 4 decimal places to prevent floating point precision errors
-        v = Math.round(v * 10000) / 10000;
-        this.hass.callService("media_player", "volume_set", { entity_id: volTarget, volume_level: v });
+        setVolume(this.hass, volTarget, v);
       }
     } else {
       // Not grouped, set directly
       let current = Number(stateObj.attributes.volume_level || 0);
       current += this._getEffectiveVolumeStep() * direction;
-      current = Math.max(0, Math.min(1, current));
-      // Round to 4 decimal places to prevent floating point precision errors
-      current = Math.round(current * 10000) / 10000;
-      this.hass.callService("media_player", "volume_set", { entity_id: entity, volume_level: current });
+      setVolume(this.hass, entity, current);
     }
   }
 
@@ -8891,19 +6292,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
     if (isRemoteVolumeEntity) {
       // For remote entities, we can't easily toggle mute, so just set volume to 0 or restore
-      if (isMuted) {
-        // Restore to a reasonable volume if was muted
-        this.hass.callService("media_player", "volume_set", {
-          entity_id: entity,
-          volume_level: 0.5
-        });
-      } else {
-        // Mute by setting volume to 0
-        this.hass.callService("media_player", "volume_set", {
-          entity_id: entity,
-          volume_level: 0
-        });
-      }
+      setVolume(this.hass, entity, isMuted ? 0.5 : 0);
       return;
     }
 
@@ -8915,17 +6304,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       if (currentVolume > 0) {
         // Store current volume and mute
         this._previousVolume = currentVolume;
-        this.hass.callService("media_player", "volume_set", {
-          entity_id: entity,
-          volume_level: 0
-        });
+        setVolume(this.hass, entity, 0);
       } else {
         // Restore previous volume
         const restoreVolume = this._previousVolume ?? 0.5;
-        this.hass.callService("media_player", "volume_set", {
-          entity_id: entity,
-          volume_level: restoreVolume
-        });
+        setVolume(this.hass, entity, restoreVolume);
         this._previousVolume = null;
       }
       return;
@@ -8942,8 +6325,6 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       // Grouped: apply mute to all group members (deduplicated)
       const mainEntity = this.entityObjs[idx].entity_id;
       const targets = [...new Set([mainEntity, ...state.attributes.group_members])];
-
-
 
       // Deduplicate resolved volume targets to prevent redundant service calls
       const seen = new Set();
@@ -8962,34 +6343,16 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         const targetSupportsMute = targetState ? this._supportsFeature(targetState, SUPPORT_VOLUME_MUTE) : false;
 
         if (targetSupportsMute) {
-          this.hass.callService("media_player", "volume_mute", {
-            entity_id: volTarget,
-            is_volume_muted: !isMuted
-          });
+          setMute(this.hass, volTarget, !isMuted);
         } else {
           // For entities that don't support mute, set volume to 0 or restore
           const targetVolume = targetState?.attributes?.volume_level ?? 0;
-          if (targetVolume > 0) {
-            // Store current volume and mute (simplified - in a real implementation you'd want to store per entity)
-            this.hass.callService("media_player", "volume_set", {
-              entity_id: volTarget,
-              volume_level: 0
-            });
-          } else {
-            // Restore to a reasonable volume
-            this.hass.callService("media_player", "volume_set", {
-              entity_id: volTarget,
-              volume_level: 0.5
-            });
-          }
+          setVolume(this.hass, volTarget, targetVolume > 0 ? 0 : 0.5);
         }
       }
     } else {
       // Not grouped, toggle mute directly
-      this.hass.callService("media_player", "volume_mute", {
-        entity_id: entity,
-        is_volume_muted: !isMuted
-      });
+      setMute(this.hass, entity, !isMuted);
     }
   }
 
@@ -9065,10 +6428,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _getVolumeOverlayIcon() {
-    if (this._volumeOverlayMuted || this._volumeOverlayValue === 0) return "mdi:volume-off";
-    if (this._volumeOverlayValue < 20) return "mdi:volume-low";
-    if (this._volumeOverlayValue < 50) return "mdi:volume-medium";
-    return "mdi:volume-high";
+    return getVolumeIconForPercent(this._volumeOverlayValue, this._volumeOverlayMuted);
   }
 
   _dismissVolumeOverlay() {
@@ -9083,15 +6443,12 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   _onGroupVolumeChange(entityId, volumeEntity, e) {
     this._suppressVolumeOverlay();
     const vol = Number(e.target.value);
-    this.hass.callService("media_player", "volume_set", { entity_id: volumeEntity, volume_level: vol });
+    setVolume(this.hass, volumeEntity, vol);
     this.requestUpdate();
   }
   _onGroupVolumeStep(volumeEntity, direction) {
     this._suppressVolumeOverlay();
-    this.hass.callService("remote", "send_command", {
-      entity_id: volumeEntity,
-      command: direction > 0 ? "volume_up" : "volume_down"
-    });
+    sendRemoteVolumeStep(this.hass, volumeEntity, direction);
     this.requestUpdate();
   }
 
@@ -9099,10 +6456,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const entity = this.currentEntityId;
     const source = e.target.value;
     if (!entity || !source) return;
-    this.hass.callService("media_player", "select_source", {
-      entity_id: entity,
-      source
-    });
+    selectSource(this.hass, entity, source);
   }
 
   _openMoreInfo() {
@@ -9176,40 +6530,18 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       // Force immediate update
       this.requestUpdate();
 
-      this.hass.callService("media_player", "media_seek", { entity_id: targetEntity, seek_position: seekTime });
+      mediaSeek(this.hass, targetEntity, seekTime);
     } catch (err) {
       console.error("YAMP: Error in _onProgressBarClick", err);
     }
   }
 
   _resetSearchContext() {
-    this._searchResultsByType = {}; // Clear cache
-    this._favoritesFilterActive = false;
-    this._recentlyPlayedFilterActive = false;
-    this._upcomingFilterActive = false;
-    this._recommendationsFilterActive = false;
-    this._initialFavoritesLoaded = false;
-    this._loadingSearchRowMenuId = null;
-    this._errorSearchRowMenuId = null;
+    return this._searchController.resetSearchContext();
   }
 
   _showSearchSuccessToast(menuId = null, type = null) {
-    this._showQueueSuccessMessage = true;
-    if (menuId) this._successSearchRowMenuId = menuId;
-    if (type) this._successSearchRowType = type;
-    this.requestUpdate();
-
-    if (this._successToastHandle) {
-      clearTimeout(this._successToastHandle);
-    }
-
-    this._successToastHandle = setTimeout(() => {
-      this._showQueueSuccessMessage = false;
-      this._successSearchRowMenuId = null;
-      this._successSearchRowType = null;
-      this._successToastHandle = null;
-      this.requestUpdate();
-    }, SUCCESS_MESSAGE_TIMEOUT_MS);
+    return this._searchController.showSearchSuccessToast(menuId, type);
   }
 
   render() {
@@ -9231,10 +6563,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       : Number(customCardHeightInput);
     const isValidCardHeightNumber = typeof customCardHeight === "number" && Number.isFinite(customCardHeight) && customCardHeight > 0;
     const hasCustomCardHeight =
-      isValidCardHeightNumber ||
-      (typeof customCardHeightInput === "string" &&
-        customCardHeightInput.trim() !== "" &&
-        customCardHeightInput !== "auto");
+      !this._isFullScreen &&
+      (isValidCardHeightNumber ||
+        (typeof customCardHeightInput === "string" &&
+          customCardHeightInput.trim() !== "" &&
+          customCardHeightInput !== "auto"));
 
     const collapsedBaselineHeight = this._collapsedBaselineHeight || 220;
 
@@ -9245,7 +6578,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
 
 
-    const showChipRow = this.config.show_chip_row || "auto";
+    const showChipRow = this._showChipRow || "auto";
     const hasMultipleEntities = this.entityObjs.length > 1;
     // Show chips in menu if explicitly set to in_menu, or if in_menu_on_idle and currently idle
     const showChipsInMenu = (showChipRow === "in_menu" || (showChipRow === "in_menu_on_idle" && this._isIdle)) && hasMultipleEntities;
@@ -9324,7 +6657,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     if (!stateObj) return html`<div class="details">${localize('common.not_found')}</div>`;
 
     const currentHiddenControls = this._getHiddenControlsForCurrentEntity();
-    const showFavoriteButton = !!this._getFavoriteButtonEntity() && !currentHiddenControls.favorite;
+    const showFavoriteButton = !currentHiddenControls.favorite && !!this._getFavoriteButtonEntity();
     const favoriteActive = this._isCurrentTrackFavorited();
     const powerSupported = !currentHiddenControls.power && (this._supportsFeature(stateObj, SUPPORT_TURN_OFF) || this._supportsFeature(stateObj, SUPPORT_TURN_ON));
     const showModernPowerButton = this._controlLayout === "modern" && powerSupported;
@@ -9345,6 +6678,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       if (!icon) {
         if (action.action === "toggle_media_session" || action.action === "toggle_lock_screen_controls") {
           icon = this._isMediaSessionEnabled ? "mdi:cellphone-lock" : "mdi:cellphone-wireless";
+        } else if (action.action === "full_screen" || action.action === "toggle_full_screen") {
+          icon = this._isFullScreen ? "mdi:fullscreen-exit" : "mdi:fullscreen";
         } else if (action.action === "toggle_lyrics") {
           icon = "mdi:script-text-outline";
         } else if (action.action === "remote_control") {
@@ -9354,6 +6689,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         }
       }
       if (!iconColor && (action.action === "toggle_media_session" || action.action === "toggle_lock_screen_controls") && this._isMediaSessionEnabled) {
+        iconColor = "var(--custom-accent, var(--accent-color, #ff9800))";
+      } else if (!iconColor && (action.action === "full_screen" || action.action === "toggle_full_screen") && this._isFullScreen) {
         iconColor = "var(--custom-accent, var(--accent-color, #ff9800))";
       }
       return html`
@@ -9469,6 +6806,49 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const cardFontColor = (typeof rawFontColorInput === "string" && rawFontColorInput.trim().length > 0) ? rawFontColorInput.trim() : null;
     const hasFontColor = !!cardFontColor;
 
+    // Update state tracking for optimistic playback and set/clear MA linger window
+    const idx = this._selectedIndex;
+    const mainStateForPlayback = this.currentStateObj;
+    const actualResolvedMaId = this._getActualResolvedMaEntityForState(idx);
+    const actualMaState = actualResolvedMaId ? this.hass?.states?.[actualResolvedMaId] : null;
+
+    const mainId = mainStateForPlayback?.entity_id || this.entityIds[idx];
+    const maId = actualResolvedMaId;
+
+    const sameChipAsLastRender =
+      this._lastLingerRenderIdx === null ||
+      this._lastLingerRenderIdx === undefined ||
+      this._lastLingerRenderIdx === idx;
+
+    const prevMain =
+      sameChipAsLastRender && this._lastMainState !== null && this._lastMainState !== undefined
+        ? this._lastMainState
+        : this._lastMainStateByChip?.[idx];
+
+    const prevMa =
+      sameChipAsLastRender && this._lastMaState !== null && this._lastMaState !== undefined
+        ? this._lastMaState
+        : this._lastMaStateByChip?.[idx];
+
+    this._lastMainState = mainStateForPlayback?.state;
+    this._lastMaState = actualMaState?.state;
+    this._lastLingerRenderIdx = idx;
+
+    if (!this._lastMainStateByChip) this._lastMainStateByChip = {};
+    if (!this._lastMaStateByChip) this._lastMaStateByChip = {};
+    this._lastMainStateByChip[idx] = this._lastMainState;
+    this._lastMaStateByChip[idx] = this._lastMaState;
+
+    this._updateChipPlaybackLinger(
+      idx,
+      mainId,
+      maId,
+      prevMain,
+      this._lastMainState,
+      prevMa,
+      this._lastMaState
+    );
+
     // Use the unified entity resolution system for playback state.
     // (Note: resolved here at the top of render to support show_idle_artwork_when_not_playing detection)
     const playbackEntityId = this._getEntityForPurpose(this._selectedIndex, 'playback_control');
@@ -9494,72 +6874,6 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     // Extend artwork when configured, when chips are hidden inline (in_menu_on_idle + idle), or when using scaled-contain
     const artworkFullBleed = this.config.extend_artwork === true || chipsHiddenInline || preCalcInsetArtwork;
 
-    // Calculate shuffle/repeat state from the active playback entity when available
-    const mainStateForPlayback = this.currentStateObj;
-
-    // --- Priority rule for entity selection ---
-    // Keep the currently‑selected entity (even if paused)
-    // unless some other entity is *playing*.
-    // Also get the actual resolved MA entity for state detection (can be unconfigured)
-    const actualResolvedMaId = this._getActualResolvedMaEntityForState(this._selectedIndex);
-    const actualMaState = actualResolvedMaId ? this.hass?.states?.[actualResolvedMaId] : null;
-
-    // Update state tracking for optimistic playback and set/clear MA linger window
-    const prevMain = this._lastMainState;
-
-
-    const prevMa = this._lastMaState;
-    this._lastMainState = mainStateForPlayback?.state;
-    this._lastMaState = actualMaState?.state;
-    const idx = this._selectedIndex;
-
-
-    // If MA just transitioned from playing -> not playing, start a linger window (permanent until something else plays)
-    if (prevMa === "playing" && this._lastMaState !== "playing") {
-      const ttl = Math.max(Number(this._idleTimeoutMs || this.config?.idle_timeout_ms || 60000), 500);
-      this._playbackLingerByIdx[idx] = {
-        entityId: actualResolvedMaId,
-        until: Date.now() + ttl,
-      };
-
-    }
-    // Also set linger when MA entity is paused (regardless of previous state) to ensure UI stays on MA
-
-    // Set linger when MA entity transitions to paused OR when main entity transitions to paused and was last controlled
-    const shouldSetLinger = (prevMa === "playing" && this._lastMaState === "paused" && this._lastPlayingEntityIdByChip?.[idx] === actualResolvedMaId) ||
-      (prevMain === "playing" && this._lastMainState === "paused" && this._lastPlayingEntityIdByChip?.[idx] === mainStateForPlayback?.entity_id);
-
-    if (shouldSetLinger) {
-      // Use the last controlled entity for the linger (main entity if main was controlled, MA entity if MA was controlled)
-      const lingerEntityId = this._lastPlayingEntityIdByChip[idx];
-      const ttl = Math.max(Number(this._idleTimeoutMs || this.config?.idle_timeout_ms || 60000), 500);
-      this._playbackLingerByIdx[idx] = {
-        entityId: lingerEntityId, // Use cached MA entity or last controlled entity
-        until: Date.now() + ttl,
-      };
-    }
-    // If MA resumed playing, clear linger
-    if (this._lastMaState === "playing" && this._playbackLingerByIdx?.[idx]) {
-      delete this._playbackLingerByIdx[idx];
-    }
-    // Only clear linger if main entity is playing AND MA entity is not the last controlled entity
-    const maEntityId = this.config.entities[idx]?.music_assistant_entity;
-    const currentResolvedMaId = this._getEntityForPurpose(idx, 'ma_resolve');
-    const lastControlled = this._lastPlayingEntityIdByChip?.[idx];
-    const cachedResolvedMaId = this._maResolveCache?.[idx]?.id;
-    const isLastControlledMa = !!(lastControlled && (
-      lastControlled === cachedResolvedMaId ||
-      lastControlled === currentResolvedMaId ||
-      lastControlled === maEntityId ||
-      lastControlled === actualResolvedMaId
-    ));
-
-    if (this._lastMainState === "playing" && this._playbackLingerByIdx?.[idx] && !isLastControlledMa) {
-      delete this._playbackLingerByIdx[idx];
-    }
-
-
-
     // Use the unified entity resolution system for playback state
     const finalPlaybackStateObj = playbackStateObj;
 
@@ -9583,7 +6897,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     // If metadataStateObj only has a placeholder title (like 'AirPlay' or the entity name)
     // while mainState or playbackState has real media metadata, fall back to the real metadata
     const metaTitle = metadataStateObj?.attributes?.media_title;
-    const isMetaPlaceholder = isPlaceholderMediaTitle(metaTitle, metadataStateObj?.attributes?.friendly_name);
+    const isMetaPlaceholder = isPlaceholderMediaTitle(
+      metaTitle,
+      metadataStateObj?.attributes?.friendly_name,
+      mainState?.attributes?.app_name
+    );
     const effectiveMetaTitle = (!isMetaPlaceholder && metaTitle) ? metaTitle : null;
 
     const displayTitle = effectiveMetaTitle || finalPlaybackStateObj?.attributes?.media_title || mainState?.attributes?.media_title || metaTitle || "";
@@ -9907,8 +7225,9 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
     const hasRightPlaceholder = this._controlLayout === "modern";
     const hasLeadingControl = leadingVolumeControl !== nothing && leadingVolumeControl !== undefined && leadingVolumeControl !== null;
+    const hasMuteAction = muteSlotTemplate !== nothing && muteSlotTemplate !== undefined && muteSlotTemplate !== null;
 
-    const volumeRowWillCollapse = isVolumeHiddenByConfig && !hasLeadingControl && !hasRightPlaceholder;
+    const volumeRowWillCollapse = isVolumeHiddenByConfig && !hasLeadingControl && !hasRightPlaceholder && !hasMuteAction;
 
     const detailsHasAdaptiveText = !!this._adaptiveTextTargets?.has("details");
     this._lastSpacerRendered = !!(showCollapsedPlaceholder || (!collapsed && (!detailsHasAdaptiveText || hasSpacerContent)));
@@ -9921,7 +7240,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       (volumeRowWillCollapse ? 0 : 56)
     );
     const lyricsBottomOffset = lowerControlsH;
-    const lyricsFade = this._getLyricsBackgroundFade();
+    const backgroundFade = this._getBackgroundFade();
+    const lyricsFade = backgroundFade;
     const lyricsBlurPx = lyricsFade === 0 ? 0 : Math.min(5, Number(((lyricsFade / 80) * 5).toFixed(1)));
     const lyricsBackdropFilter = lyricsBlurPx === 0 ? "none" : `blur(${lyricsBlurPx}px)`;
 
@@ -9930,15 +7250,21 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
     return html`
         <ha-card class="yamp-card" 
-          style=${(hasCustomCardHeight && (!collapsed || this._alwaysCollapsed)) ? `height:${customCardHeight}px;` : nothing}>
+          style=${[
+            (hasCustomCardHeight && (!collapsed || this._alwaysCollapsed)) ? `height:${customCardHeight}px;` : null,
+            `--yamp-background-fade: ${backgroundFade}%`
+          ].filter(Boolean).join('; ') || nothing}>
           <div
             data-match-theme="${String(this.config.match_theme === true)}"
             data-has-font-color="${String(hasFontColor)}"
             data-artwork-fit="${activeArtworkFit}"
             data-has-background-image="${String(hasCardBg)}"
             data-lyrics-active="${String(this._lyricsActive === true)}"
+            data-options-active="${String(this._showEntityOptions === true)}"
             style=${[
               (hasCustomCardHeight && (!collapsed || this._alwaysCollapsed)) ? `height:${customCardHeight}px;` : null,
+              `--yamp-background-fade: ${backgroundFade}%`,
+              `--yamp-overlay-bg: color-mix(in srgb, var(--yamp-overlay-base, #000) ${backgroundFade}%, transparent)`,
               this._lyricsActive ? `--yamp-lyrics-fade: ${lyricsFade}%; --yamp-lyrics-backdrop-filter: ${lyricsBackdropFilter}` : null,
               hasFontColor ? `--primary-text: ${cardFontColor}; --primary-text-color: ${cardFontColor}; --secondary-text: ${cardFontColor}; --secondary-text-color: ${cardFontColor}; --yamp-icon-color: ${cardFontColor};` : null
             ].filter(Boolean).join('; ') || nothing}
@@ -9952,11 +7278,11 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           >
             ${hasCardBg ? html`
               <div class="card-background-image-layer" style="${cardBgStyle}"></div>
-              ${!this._artworkGradientDisabled && !isDirectColorOrGradient ? html`<div class="card-background-image-overlay"></div>` : nothing}
+              ${!this._artworkGradientDisabled && !isDirectColorOrGradient && !this._showEntityOptions ? html`<div class="card-background-image-overlay"></div>` : nothing}
             ` : nothing}
             ${artworkFullBleed && hasBackgroundImage ? html`
               <div class="full-bleed-artwork-bg" style="${sharedBackgroundStyle}"></div>
-              ${!this._artworkGradientDisabled && !(dimIdleFrame || this._isIdle || this._lyricsActive) ? html`<div class="full-bleed-artwork-fade"></div>` : nothing}
+              ${!this._artworkGradientDisabled && !(dimIdleFrame || this._isIdle || this._lyricsActive || this._showEntityOptions) ? html`<div class="full-bleed-artwork-fade"></div>` : nothing}
             ` : nothing}
             ${(!useInsetArtwork && !artworkUrl && !idleImageUrl && !hasCardBg) ? html`
               <div class="media-artwork-placeholder"
@@ -9983,10 +7309,10 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
                 data-artwork-fit="${activeArtworkFit}"
                 data-playing="${String(this._isCurrentEntityPlaying())}"
                 .hass=${this.hass}
-                .lyrics=${this._massLyrics}
+                .lyrics=${this._lyricsController.lyrics}
                 .position=${pos}
-                .loading=${this._fetchingLyrics}
-                .error=${this._lyricsError}
+                .loading=${this._lyricsController.loading}
+                .error=${this._lyricsController.error}
                 .playing=${this._isCurrentEntityPlaying()}
                 .activeThemeColor=${this.config.match_theme === true ? "var(--custom-accent, var(--state-media_player-active-color, var(--primary-color, #ffffff)))" : "var(--custom-accent, #ffffff)"}
                 .mode=${this._isCurrentlyPlayingRadio() ? 'text' : (this.config.lyrics_mode || 'default')}
@@ -9998,6 +7324,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
                 style="${[
                   `--yamp-lyrics-top-offset: ${showChipsInline ? 48 : 0}px`,
                   `--yamp-lyrics-bottom-offset: ${lyricsBottomOffset}px`,
+                  `--yamp-background-fade: ${backgroundFade}%`,
                   `--yamp-lyrics-fade: ${lyricsFade}%`,
                   `--yamp-lyrics-backdrop-filter: ${lyricsBackdropFilter}`,
                   this._getGestureStyles()
@@ -10013,6 +7340,19 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
                 <span class="volume-overlay-text">${this._volumeOverlayValue}%</span>
               </div>
             ` : nothing}
+            ${(this._volumeHoldController?.active || this._volumeHoldController?.releasing) ? (() => {
+              const pct = Math.round(this._volumeHoldController.value * 100);
+              const muted = this.currentVolumeStateObj?.attributes?.is_volume_muted === true;
+              return html`
+                <div
+                  class="volume-overlay volume-hold-overlay ${this._volumeHoldController.releasing ? "releasing" : ""}"
+                  style="--yamp-volume-hold-level: ${pct}%"
+                >
+                  <div class="volume-hold-fill"></div>
+                  <ha-icon icon=${getVolumeIconForPercent(pct, muted)}></ha-icon>
+                  <span class="volume-overlay-text">${pct}%</span>
+                </div>`;
+            })() : nothing}
             <div class="card-lower-content-container" style="${idleMinHeight ? `min-height:${idleMinHeight}px;` : ''}">
               <div class="card-lower-content-bg"
                 style="${(() => {
@@ -10029,7 +7369,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         return styles.join('; ');
       })()}"
               ></div>
-              ${!this._artworkGradientDisabled && !(dimIdleFrame || this._isIdle || this._lyricsActive || (!artworkUrl && hasCardBg)) && (!useInsetArtwork || activeArtworkFit === "scaled-contain") ? html`<div class="card-lower-fade" style="--yamp-lyrics-bottom-offset: ${lyricsBottomOffset}px;"></div>` : nothing}
+              ${!this._artworkGradientDisabled && !(dimIdleFrame || this._isIdle || this._lyricsActive || this._showEntityOptions || (!artworkUrl && hasCardBg)) && (!useInsetArtwork || activeArtworkFit === "scaled-contain") ? html`<div class="card-lower-fade" style="--yamp-lyrics-bottom-offset: ${lyricsBottomOffset}px;"></div>` : nothing}
               <div class="card-lower-content${collapsed ? ' collapsed transitioning' : ' transitioning'}${collapsed && artworkUrl && collapsedArtworkSize > 0 ? ' has-artwork' : ''}" style="${(() => {
         if (!hideControlsNow) return '';
         return collapsed
@@ -10129,11 +7469,45 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
                           <ha-icon icon="mdi:close"></ha-icon>
                         </div>
                       </div>
-                    ` : html`
-                      <div class="title track-options-title" @click=${(e) => { if (!this._suppressMarqueeClick && shouldShowDetails && title) { e.stopPropagation(); this._showMediaTitleOptions = true; } }} style="${shouldShowDetails && title ? 'cursor: pointer;' : ''}" title="${shouldShowDetails && title ? localize('search.show_track_options') : ''}">
-                        <span class="marquee-inner">${shouldShowDetails && title ? title : html`&nbsp;`}</span>
-                      </div>
-                    `}
+                    ` : (() => {
+                      const canHoldTitle = shouldShowDetails && !!title && this._canUseVolumeHold(false, true);
+                      const titleHoldHandlers = canHoldTitle ? this._volumeHoldController : null;
+                      return html`
+                        <div
+                          class="title track-options-title ${titleHoldHandlers ? "track-title-holdable" : ""}"
+                          @pointerdown=${(e) => {
+                            if (titleHoldHandlers) {
+                              e.stopPropagation();
+                              titleHoldHandlers.onPointerDown(e);
+                            }
+                          }}
+                          @pointermove=${titleHoldHandlers?.onPointerMove}
+                          @pointerup=${(e) => {
+                            if (titleHoldHandlers) {
+                              e.stopPropagation();
+                              titleHoldHandlers.onPointerUp(e);
+                            }
+                          }}
+                          @pointercancel=${titleHoldHandlers?.onPointerCancel}
+                          @lostpointercapture=${titleHoldHandlers?.onLostPointerCapture}
+                          @contextmenu=${titleHoldHandlers?.onContextMenu}
+                          @click=${(e) => {
+                            if (titleHoldHandlers) {
+                              titleHoldHandlers.clickCapture.handleEvent(e);
+                              if (e.defaultPrevented) return;
+                            }
+                            if (!this._suppressMarqueeClick && shouldShowDetails && title) {
+                              e.stopPropagation();
+                              this._showMediaTitleOptions = true;
+                            }
+                          }}
+                          style="${shouldShowDetails && title ? "cursor: pointer;" : ""}"
+                          title="${shouldShowDetails && title ? localize("search.show_track_options") : ""}"
+                        >
+                          <span class="marquee-inner">${shouldShowDetails && title ? title : html`&nbsp;`}</span>
+                        </div>
+                      `;
+                    })()}
                     <div class="artist">
                       <span class="marquee-inner">${shouldShowDetails ? (
                         artist && album ? html`
@@ -10247,9 +7621,10 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
                 ${renderVolumeRow({
         isRemoteVolumeEntity,
         showSlider,
-        vol,
+        vol: this._volumeHoldController?.active ? this._volumeHoldController.value : vol,
         isDragging: this._volumeDraggingEntity === 'main',
         dragVol: this._dragVolume,
+        holdHandlers: this._canUseVolumeHold() ? this._volumeHoldController : null,
         isMuted: this.currentVolumeStateObj?.attributes?.is_volume_muted ?? false,
         supportsMute: this.currentVolumeStateObj ? this._supportsFeature(this.currentVolumeStateObj, SUPPORT_VOLUME_MUTE) : false,
         onVolumeDragStart: (e) => this._onVolumeDragStart(e),
@@ -10267,110 +7642,41 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         collapseRow: volumeRowWillCollapse,
         moreInfoMenu: (!this._showEntityOptions && !volumeRowWillCollapse) ? html`
           <div class="more-info-menu">
-            <button class="more-info-btn" @click=${async () => await this._openEntityOptions()}>
-              <span class="more-info-icon" style="${menuIconStyle}">&#9776;</span>
+            <button class="volume-icon-btn more-info-btn" @click=${async () => await this._openEntityOptions()}>
+              <ha-icon class="more-info-icon" style="${menuIconStyle}" .icon=${"mdi:menu"}></ha-icon>
             </button>
           </div>
         ` : nothing,
       })}
             ${(volumeRowWillCollapse && !this._showEntityOptions) ? html`
               <div class="more-info-menu volume-collapsed">
-                <button class="more-info-btn" @click=${async () => await this._openEntityOptions()}>
-                  <span class="more-info-icon" style="${menuIconStyle}">&#9776;</span>
+                <button class="volume-icon-btn more-info-btn" @click=${async () => await this._openEntityOptions()}>
+                  <ha-icon class="more-info-icon" style="${menuIconStyle}" .icon=${"mdi:menu"}></ha-icon>
                 </button>
               </div>
             ` : nothing}
-            ${showChipsInMenu && !this._hideActiveEntityLabel && !(this._hideActiveEntityLabelOnIdle && this._isIdle) ? html`
-              <div class="in-menu-active-label" style="${this._showEntityOptions ? 'visibility:hidden; opacity:0; pointer-events:none;' : ''}">${activeChipName}</div>
-            ` : nothing}
+            ${this._renderBottomDynamicLabel({
+              showChipsInMenu,
+              activeChipName,
+            })}
           </div>
         </div>
 
 
-      ${this._showEntityOptions ? html`
-      <div class="entity-options-overlay entity-options-overlay-opening" @click=${(e) => this._closeEntityOptions(e)}>
-        <div class="entity-options-container entity-options-container-opening" style="${this._showSearchInSheet ? 'height:100%;' : ''}">
-          <div class="entity-options-sheet${(showChipsInMenu || reserveChipSpaceInMenu) ? ' chips-mode' : ''}${this._showSearchInSheet ? ' search-mode' : ''} entity-options-sheet-opening" 
-               @click=${e => e.stopPropagation()}
-               data-pin-search-headers="${effectivePinHeaders}">
-            ${(showChipsInMenu || reserveChipSpaceInMenu) ? html`
-                <div class="entity-options-chips-wrapper" style="${reserveChipSpaceInMenu && !showChipsInMenu ? 'visibility:hidden;pointer-events:none;' : ''}" @click=${(e) => e.stopPropagation()}>
-                <div class="chip-row entity-options-chips-strip">
-                  ${renderChipRow(this._getChipRowProps())}
-                </div>
-              </div>
-            ` : nothing}
-              ${(!this._showGrouping && !this._showSourceList && !this._showSearchInSheet && !this._showResolvedEntities && !this._showTransferQueue && !this._showRemoteControl) ? this._renderMainMenu(sourceList, menuOnlyActions, showChipsInMenu) :
-          this._showRemoteControl ? this._renderRemoteControlSheet() :
-            this._showGrouping ? this._renderGroupingSheet() :
-              this._showTransferQueue ? this._renderTransferQueueSheet() :
-                this._showResolvedEntities ? this._renderResolvedEntitiesSheet() :
-                  this._showSearchInSheet ? this._renderSearchInOptions(showSearchHeaders, effectivePinHeaders) :
-                    this._renderSourceListSheet(sourceList, sourceLetters, availableSourceFirstLetters)}
-              </div>
-            </div>
-            <!-- Persistent Media Controls Section - Outside Scrollable Area -->
-            ${shouldShowPersistentControls ? html`
-              <div class="persistent-media-controls" @click=${e => e.stopPropagation()}>
-                <div class="persistent-controls-artwork">
-                  ${(() => {
-            // Use track artwork if available, falling back to selected card artwork
-            const artwork = persistentArt?.url ? persistentArt : selectedArt;
-            return artwork?.url && isValidArtworkUrl(artwork.url) ? html`
-                      <img src="${artwork.url}" alt="${localize('common.album_art')}" class="persistent-artwork" onerror="this.style.display='none'">
-                    ` : html`
-                      <div class="persistent-artwork-placeholder">
-                        <ha-icon icon="mdi:music"></ha-icon>
-                      </div>
-                    `;
-          })()}
-                </div>
-                <div class="persistent-controls-buttons" style="position: relative;">
-                  <button class="persistent-control-btn" @click=${() => this._onControlClick("prev")} title="${localize('card.media_controls.previous')}">
-                    <ha-icon icon="mdi:skip-previous"></ha-icon>
-                  </button>
-                  <button class="persistent-control-btn" @click=${() => this._onControlClick("play_pause")} title="${localize('card.media_controls.play_pause')}">
-                    <ha-icon icon=${this._isEntityPlaying(this.currentPlaybackStateObj) ? "mdi:pause" : "mdi:play"}></ha-icon>
-                  </button>
-                  <button class="persistent-control-btn" @click=${() => this._onControlClick("next")} title="${localize('card.media_controls.next')}">
-                    <ha-icon icon="mdi:skip-next"></ha-icon>
-                  </button>
-                  ${!this.config.hide_reorder_progress && !this.config.hide_menu_player && this._queueOpsTotal > 0 ? html`
-                    <div class="queue-ops-progress" style="position: absolute !important; bottom: -20px !important; left: 50% !important; transform: translate(-50%, 0) !important; z-index: 1000 !important; width: max-content !important; pointer-events: none !important; color: var(--search-text-secondary) !important;">
-                      Re-ordering ${this._queueOpsCompleted} / ${this._queueOpsTotal}
-                    </div>
-                  ` : nothing}
-                  ${this._lyricsActive && !this._isIdle && this._fetchingLyrics ? html`
-                    <div class="queue-ops-progress" style="position: absolute !important; bottom: -20px !important; left: 50% !important; transform: translate(-50%, 0) !important; z-index: 1000 !important; width: max-content !important; pointer-events: none !important; color: var(--search-text-secondary) !important;">
-                      ${localize("lyrics.finding")}
-                    </div>
-                  ` : nothing}
-                </div>
-                ${(() => {
-            const idx = this._selectedIndex;
-            const volumeEntity = this._getVolumeEntity(idx);
-            if (!volumeEntity) return nothing;
-
-            const isRemote = volumeEntity.startsWith && volumeEntity.startsWith("remote.");
-            const volumeState = this.currentVolumeStateObj;
-            const volumeLevel = Number(volumeState?.attributes?.volume_level ?? 0);
-            const percentLabel = !isRemote ? `${Math.round((volumeLevel || 0) * 100)}%` : null;
-
-            if (this._getEffectiveVolumeMode() === "hidden") return nothing;
-
-            return html`
-                    <div class="persistent-volume-stepper">
-                      <button class="stepper-btn" @click=${() => this._onVolumeStep(-1)} title="${localize('common.vol_down')}">–</button>
-                      ${percentLabel ? html`<span class="stepper-value">${percentLabel}</span>` : nothing}
-                      <button class="stepper-btn" @click=${() => this._onVolumeStep(1)} title="${localize('common.vol_up')}">+</button>
-                    </div>
-                  `;
-          })()}
-              </div>
-            ` : nothing}
-          </div>
-        ` : nothing
-      }
+      ${this._showEntityOptions ? this._renderOptionsOverlay({
+        showChipsInMenu,
+        reserveChipSpaceInMenu,
+        effectivePinHeaders,
+        sourceList,
+        menuOnlyActions,
+        showSearchHeaders,
+        sourceLetters,
+        availableSourceFirstLetters,
+        shouldShowPersistentControls,
+        persistentArt,
+        selectedArt,
+        backgroundFade,
+      }) : nothing}
           ${this._searchActiveOptionsItem ? renderSearchOptionsOverlay({
         item: this._searchActiveOptionsItem,
         onClose: () => {
@@ -10378,22 +7684,94 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           this.requestUpdate();
         },
         onPlayOption: (item, mode) => this._performSearchOptionAction(item, mode),
-        massQueueAvailable: this._massQueueAvailable
+        massQueueAvailable: this._massQueueAvailable,
+        backgroundFade,
       }) : nothing
       }
-          ${!shouldShowPersistentControls && !this.config.hide_reorder_progress && !this.config.hide_menu_player && this._queueOpsTotal > 0 ? html`
-            <div class="queue-ops-progress" style="position: absolute !important; bottom: 12px !important; left: 50% !important; transform: translate(-50%, 0) !important; z-index: 1000 !important; width: max-content !important; pointer-events: none !important; color: var(--search-text-secondary) !important;">
-              Re-ordering ${this._queueOpsCompleted} / ${this._queueOpsTotal}
-            </div>
-          ` : ""}
-          ${(!this._showEntityOptions || !shouldShowPersistentControls) && this._lyricsActive && !this._isIdle && this._fetchingLyrics ? html`
-            <div class="queue-ops-progress" style="position: absolute !important; bottom: 2px !important; left: 50% !important; transform: translate(-50%, 0) !important; z-index: 1000 !important; width: max-content !important; pointer-events: none !important; color: var(--search-text-secondary) !important;">
-              ${localize("lyrics.finding")}
-            </div>
-          ` : ""}
           </div>
     </ha-card>
   `;
+  }
+
+  /**
+   * Determine the content and type of the consolidated bottom dynamic label.
+   * Priority:
+   * 1. Queue re-ordering progress (transient operational progress)
+   * 2. Finding lyrics status (transient fetch status)
+   * 3. Active entity label (default persistent label when chips are in menu)
+   *
+   * @param {Object} options
+   * @param {boolean} options.showChipsInMenu
+   * @param {string} [options.activeChipName]
+   * @returns {{ text: string, type: string } | null}
+   */
+  _getBottomDynamicLabel({ showChipsInMenu, activeChipName }) {
+    if (this._showEntityOptions) {
+      return null;
+    }
+
+    const showQueueOps =
+      !this.config.hide_reorder_progress &&
+      !this.config.hide_menu_player &&
+      this._queueOpsTotal > 0;
+
+    if (showQueueOps) {
+      return {
+        text: `Re-ordering ${this._queueOpsCompleted} / ${this._queueOpsTotal}`,
+        type: "queue-progress",
+      };
+    }
+
+    const showLyricsFinding =
+      this._lyricsActive &&
+      !this._isIdle &&
+      this._fetchingLyrics;
+
+    if (showLyricsFinding) {
+      return {
+        text: localize("lyrics.finding") || "Finding Lyrics...",
+        type: "lyrics-finding",
+      };
+    }
+
+    const showEntityLabel =
+      showChipsInMenu &&
+      !this._hideActiveEntityLabel &&
+      !(this._hideActiveEntityLabelOnIdle && this._isIdle) &&
+      Boolean(activeChipName);
+
+    if (showEntityLabel) {
+      return {
+        text: activeChipName,
+        type: "entity",
+      };
+    }
+
+    return null;
+  }
+
+  /**
+   * Render the consolidated bottom dynamic label.
+   *
+   * @param {Object} options
+   * @param {boolean} options.showChipsInMenu
+   * @param {string} [options.activeChipName]
+   * @returns {import("lit").TemplateResult | typeof nothing}
+   */
+  _renderBottomDynamicLabel(options) {
+    const labelInfo = this._getBottomDynamicLabel(options);
+    if (!labelInfo) {
+      return nothing;
+    }
+
+    return html`
+      <div
+        class="in-menu-active-label bottom-dynamic-label"
+        data-label-type="${labelInfo.type}"
+      >
+        ${labelInfo.text}
+      </div>
+    `;
   }
 
   _getCardHeightMetrics(config) {
@@ -10402,7 +7780,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       ? parseFloat(customCardHeightInput)
       : Number(customCardHeightInput);
     const isValidCardHeightNumber = typeof customCardHeight === "number" && Number.isFinite(customCardHeight) && customCardHeight > 0;
-    const hasCustomCardHeight = isValidCardHeightNumber;
+    const hasCustomCardHeight = !this._isFullScreen && isValidCardHeightNumber;
     return { customCardHeight, hasCustomCardHeight };
   }
 
@@ -10414,8 +7792,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
    * artwork remains recognisable even on narrow cards.
    */
   _getMaxCollapsedArtworkWidth(cardWidth) {
-    const safeMaxWidth = cardWidth > 0 ? Math.max(64, cardWidth - 220) : 102;
-    return Math.min(safeMaxWidth, 160);
+    return this._artworkController.getMaxCollapsedArtworkWidth(cardWidth);
   }
 
   _setHostDataAttributes(host, config, hasCustomCardHeight) {
@@ -10423,6 +7800,12 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     host.setAttribute("data-match-theme", String(config.match_theme === true));
     host.setAttribute("data-appearance", appearance);
     host.setAttribute("data-always-collapsed", String(this._alwaysCollapsed));
+
+    if (this._isFullScreen) {
+      host.setAttribute("fullscreen", "");
+    } else {
+      host.removeAttribute("fullscreen");
+    }
 
     // Force hide menu player if always collapsed and no multiple entities/grouping mode
     const hasMultipleEntities = (this.entityObjs || []).length > 1;
@@ -10443,7 +7826,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     host.setAttribute("data-pin-search-headers", String(effectivePinHeaders));
     host.setAttribute("data-in-search", String(this._showSearchInSheet));
 
-    if (hasCustomCardHeight) {
+    if (hasCustomCardHeight && !this._isFullScreen) {
       host.setAttribute("data-has-custom-height", "true");
     } else {
       host.removeAttribute("data-has-custom-height");
@@ -10492,7 +7875,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
   _updateHostLayoutStyles(host, config, collapsed, customCardHeight, hasCustomCardHeight) {
     const isCompact = hasCustomCardHeight && customCardHeight < 280;
-    const showChipRow = config.show_chip_row || "auto";
+    const showChipRow = this._showChipRow || "auto";
     const hasMultipleEntities = (this.entityObjs || []).length > 1;
     const showChipsInMenu = (showChipRow === "in_menu" || (showChipRow === "in_menu_on_idle" && this._isIdle)) && hasMultipleEntities;
     const renderChipRowSeparately = showChipRow !== "hidden" && !showChipsInMenu && hasMultipleEntities;
@@ -10588,6 +7971,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         let smallIcon = 24;
         let controlsPadding = "16px";
         let controlsGap = "20px";
+        let volumePaddingTop = "10px";
+        let volumePaddingBottom = "14px";
         let volumePadding = "10px 16px 14px 16px";
 
         if (effectiveHeight < 380) {
@@ -10603,7 +7988,9 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           
           controlsPadding = `${Math.max(4, Math.round(16 * heightRatio))}px 16px`;
           controlsGap = `${Math.max(8, Math.round(20 * heightRatio))}px`;
-          volumePadding = `${Math.max(4, Math.round(10 * heightRatio))}px 16px ${Math.max(8, Math.round(14 * heightRatio))}px 16px`;
+          volumePaddingTop = `${Math.max(4, Math.round(10 * heightRatio))}px`;
+          volumePaddingBottom = `${Math.max(8, Math.round(14 * heightRatio))}px`;
+          volumePadding = `${volumePaddingTop} 16px ${volumePaddingBottom} 16px`;
         }
 
         host.style.setProperty('--yamp-modern-primary-size', `${primarySize}px`);
@@ -10615,6 +8002,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         host.style.setProperty('--yamp-modern-padding', controlsPadding);
         host.style.setProperty('--yamp-modern-gap', controlsGap);
         host.style.setProperty('--yamp-volume-row-padding', volumePadding);
+        host.style.setProperty('--yamp-volume-row-padding-top', volumePaddingTop);
+        host.style.setProperty('--yamp-volume-row-padding-bottom', volumePaddingBottom);
       } else {
         host.style.removeProperty('--yamp-modern-primary-size');
         host.style.removeProperty('--yamp-modern-medium-size');
@@ -10625,6 +8014,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         host.style.removeProperty('--yamp-modern-padding');
         host.style.removeProperty('--yamp-modern-gap');
         host.style.removeProperty('--yamp-volume-row-padding');
+        host.style.removeProperty('--yamp-volume-row-padding-top');
+        host.style.removeProperty('--yamp-volume-row-padding-bottom');
       }
 
       host.style.removeProperty('--yamp-collapsed-controls-offset');
@@ -10637,39 +8028,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _updateHostArtworkStyles(host, playbackStateObj, forceIdleImage) {
-    const metadataStateObj = this.metadataStateObj;
-    const metadataArtwork = this._getArtworkUrl(metadataStateObj, forceIdleImage);
-    const playbackArtwork = this._getArtworkUrl(playbackStateObj, forceIdleImage);
-    const mainState = this.currentStateObj;
-    const mainArtwork = this._getArtworkUrl(mainState, forceIdleImage);
-
-    const displayTitle = metadataStateObj?.attributes?.media_title || playbackStateObj?.attributes?.media_title || mainState?.attributes?.media_title;
-
-    const selectedArt = this._resolveSelectedArtwork({
-      metadataArtwork,
-      playbackArtwork,
-      mainArtwork,
-      displayTitle,
-      playbackStateObj,
-      mainState,
-    });
-
-    let artworkObjectFit = this._artworkObjectFit;
-    if (selectedArt?.objectFit) {
-      artworkObjectFit = selectedArt.objectFit;
-    }
-
-    const activeArtworkFit = artworkObjectFit || "cover";
-    const backgroundSize = this._getBackgroundSizeForFit(activeArtworkFit);
-    host.style.setProperty('--yamp-artwork-fit', activeArtworkFit);
-    host.style.setProperty('--yamp-artwork-bg-size', backgroundSize);
-    if (selectedArt?.objectPosition) {
-      host.style.setProperty('--yamp-artwork-position', selectedArt.objectPosition);
-    } else if (this.config?.artwork_position) {
-      host.style.setProperty('--yamp-artwork-position', this.config.artwork_position);
-    } else {
-      host.style.setProperty('--yamp-artwork-position', 'top center');
-    }
+    this._artworkController.updateHostArtworkStyles(host, playbackStateObj, forceIdleImage);
   }
 
   _updateHostAttributes() {
@@ -10677,6 +8036,10 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
     const host = this.shadowRoot.host;
     const config = this.config;
+
+    const backgroundFade = this._getBackgroundFade();
+    host.style.setProperty("--yamp-background-fade", `${backgroundFade}%`);
+    this.style.setProperty("--yamp-background-fade", `${backgroundFade}%`);
 
     const { customCardHeight, hasCustomCardHeight } = this._getCardHeightMetrics(config);
 
@@ -10692,464 +8055,26 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _renderSearchSubFilters(showSearchHeaders) {
-    if (!showSearchHeaders || !this._usingMusicAssistant || this._searchLoading) return nothing;
-
-    return html`
-      <div class="search-sub-filters" style="display: flex; align-items: center; margin-bottom: 2px; margin-top: 4px; padding-left: 3px; width: 100%; gap: 8px;">
-        <div style="display: flex; align-items: center; flex-wrap: wrap; flex: 1; min-width: 0;">
-          ${this._cardType !== 'up_next' ? html`
-          <button
-            class="button${this._initialFavoritesLoaded || this._favoritesFilterActive ? ' active' : ''}"
-            style="
-              border: none;
-              font-size: 1.2em;
-              cursor: ${this._searchAttempted ? 'pointer' : 'default'};
-              padding: 4px 8px;
-              border-radius: 50%;
-              transition: all 0.2s ease;
-              margin-right: 8px;
-              display: flex;
-              align-items: center;
-              opacity: ${this._searchAttempted ? '1' : '0.5'};
-            "
-            @click=${this._searchAttempted ? () => {
-          this._toggleFavoritesFilter();
-        } : () => { }}
-            title="${localize('search.favorites')}"
-          >
-            <ha-icon .icon=${this._initialFavoritesLoaded || this._favoritesFilterActive ? 'mdi:cards-heart' : 'mdi:cards-heart-outline'}></ha-icon>
-            ${this._initialFavoritesLoaded || this._favoritesFilterActive ? html`
-              <span style="margin-left:6px;font-size:0.82em;font-weight:600;white-space:nowrap;">
-                ${localize('search.favorites')}
-              </span>
-            ` : nothing}
-          </button>
-          <button
-            class="button${this._recentlyPlayedFilterActive ? ' active' : ''}"
-            style="
-              border: none;
-              font-size: 1.2em;
-              cursor: ${this._searchAttempted ? 'pointer' : 'default'};
-              padding: 4px 8px;
-              border-radius: 50%;
-              transition: all 0.2s ease;
-              margin-right: 8px;
-              display: flex;
-              align-items: center;
-              opacity: ${this._searchAttempted ? '1' : '0.5'};
-            "
-            @click=${this._searchAttempted ? () => {
-          this._toggleRecentlyPlayedFilter();
-        } : () => { }}
-            title="${localize('search.recently_played')}"
-          >
-            <ha-icon .icon=${this._recentlyPlayedFilterActive ? 'mdi:clock' : 'mdi:clock-outline'}></ha-icon>
-            ${this._recentlyPlayedFilterActive ? html`
-              <span style="margin-left:6px;font-size:0.82em;font-weight:600;white-space:nowrap;">
-                ${localize('search.recently_played')}
-              </span>
-            ` : nothing}
-          </button>
-          ${this._isMusicAssistantEntity() ? html`
-            <button
-              class="button${this._upcomingFilterActive ? ' active' : ''}"
-              style="
-                border: none;
-                font-size: 1.2em;
-                cursor: ${this._searchAttempted ? 'pointer' : 'default'};
-                padding: 4px 8px;
-                border-radius: 50%;
-                transition: all 0.2s ease;
-                margin-right: 8px;
-                display: flex;
-                align-items: center;
-                opacity: ${this._searchAttempted ? '1' : '0.5'};
-              "
-              @click=${this._searchAttempted ? () => {
-            this._toggleUpcomingFilter();
-          } : () => { }}
-              title="${localize('search.next_up')}"
-            >
-              <ha-icon .icon=${this._upcomingFilterActive ? 'mdi:playlist-music' : 'mdi:playlist-music-outline'}></ha-icon>
-              ${this._upcomingFilterActive ? html`
-                <span style="margin-left:6px;font-size:0.82em;font-weight:600;white-space:nowrap;">
-                  ${localize('search.next_up')}
-                </span>
-              ` : nothing}
-            </button>
-            ${this._hasMassQueueIntegration ? html`
-              <button
-                class="button${this._recommendationsFilterActive ? ' active' : ''}"
-                style="
-                  border: none;
-                  font-size: 1.2em;
-                  cursor: ${this._searchAttempted ? 'pointer' : 'default'};
-                  padding: 4px 8px;
-                  border-radius: 50%;
-                  transition: all 0.2s ease;
-                  margin-right: 8px;
-                  display: flex;
-                  align-items: center;
-                  opacity: ${this._searchAttempted ? '1' : '0.5'};
-                "
-                @click=${this._searchAttempted ? () => {
-              this._toggleRecommendationsFilter();
-            } : () => { }}
-                title="${localize('search.recommendations')}"
-              >
-                <ha-icon .icon=${this._recommendationsFilterActive ? 'mdi:creation' : 'mdi:creation-outline'}></ha-icon>
-                ${this._recommendationsFilterActive ? html`
-                  <span style="margin-left:6px;font-size:0.81em;font-weight:600;white-space:nowrap;">
-                    ${localize('search.recommendations')}
-                  </span>
-                ` : nothing}
-              </button>
-            ` : nothing}
-          ` : nothing}
-          <button
-            class="radio-mode-button${this._radioModeActive ? ' active' : ''}"
-            @click=${() => this._toggleRadioMode()}
-            title="${localize('search.radio_mode')}"
-          >
-            <ha-icon .icon=${this._radioModeActive ? 'mdi:radio' : 'mdi:radio-off'}></ha-icon>
-          </button>
-          ${this._shouldShowSearchSortToggle() ? html`
-            <button
-              class="button"
-              style="
-                border: none;
-                font-size: 1.2em;
-                cursor: ${this._searchAttempted ? 'pointer' : 'default'};
-                padding: 4px 8px;
-                border-radius: 50%;
-                transition: all 0.2s ease;
-                margin-right: 8px;
-                display: flex;
-                align-items: center;
-                opacity: ${this._searchAttempted ? '1' : '0.5'};
-              "
-              @click=${this._searchAttempted ? () => this._toggleSearchResultsSortDirection() : () => { }}
-              title=${this._getSearchSortToggleTitle()}
-            >
-              <ha-icon .icon=${this._getSearchSortToggleIcon()}></ha-icon>
-            </button>
-          ` : nothing}
-          ` : nothing}
-          ${this._shouldShowSearchResultsCount() ? html`
-            <span class="search-results-count" style="${this._cardType === 'up_next' ? 'padding-top: 15px; display: inline-block;' : ''}">
-              ${this._getSearchResultsCountLabel()}
-            </span>
-          ` : nothing}
-        </div>
-      </div>
-    `;
+    return renderSearchSubFilters.call(this, showSearchHeaders);
   }
 
   _renderSearchInOptions(showSearchHeaders, pinSearchHeaders = false) {
-    const isPinned = pinSearchHeaders || this.config?.pin_search_headers === true;
-    const currentOffset = !isPinned ? (this._searchHeaderOffset || 0) : 0;
-    const headerHeight = this._searchHeaderNaturalHeight || 120;
-    const progress = headerHeight > 0 ? currentOffset / headerHeight : 0;
-    const opacity = Math.max(0, Math.min(1, 1 - progress));
-    const isRetracted = !isPinned && (this._searchHeadersRetracted || (currentOffset >= headerHeight && headerHeight > 0));
-    const panelStyle = (!isPinned && currentOffset > 0)
-      ? `margin-top: -${currentOffset}px; opacity: ${opacity.toFixed(3)};${isRetracted ? ' pointer-events: none;' : ''}`
-      : '';
-    return html`
-      <div class="entity-options-search"
-           @wheel=${(e) => this._handleSearchContainerWheel(e, pinSearchHeaders)}
-           style="margin-top:${this._cardType === 'up_next' ? '0' : '12px'};">
-        <div class="search-header-panel ${isRetracted ? 'retracted' : ''}"
-             style="${panelStyle}"
-             @wheel=${(e) => this._handleHeaderWheel(e, pinSearchHeaders)}
-             @touchstart=${(e) => this._handleHeaderTouchStart(e)}
-             @touchmove=${(e) => this._handleHeaderTouchMove(e, pinSearchHeaders)}
-             @touchend=${() => this._handleHeaderTouchEnd()}>
-          ${this._searchHierarchy.length > 0 ? html`
-              <button class="entity-options-item close-item" @click=${() => this._goBackInSearch()}>
-                ${localize('common.back')}
-              </button>
-              <div class="entity-options-divider"></div>
-            ` : nothing
-        }
-          ${this._searchBreadcrumb ? html`
-              <div class="entity-options-search-breadcrumb">
-                <div class="entity-options-search-breadcrumb-text">${this._searchBreadcrumb}</div>
-                ${!this._isSelectionFlow ? html`
-                  <button class="entity-options-search-breadcrumb-play" @click=${() => this._playCurrentCollection()} title="${localize('search.play_collection')}">
-                    <ha-icon icon="mdi:play"></ha-icon>
-                  </button>
-                ` : nothing}
-              </div>
-            ` : (showSearchHeaders && this._cardType !== 'up_next' ? html`<div class="entity-options-search-skeleton"></div>` : nothing)
-        }
-          ${showSearchHeaders && this._cardType !== 'up_next' ? html`
-            <div class="entity-options-search-row">
-              <div class="search-input-wrapper">
-                <input
-                  type="text"
-                  id="search-input-box"
-                  ?autofocus=${!this._disableSearchAutofocus}
-                  class="entity-options-search-input"
-                  .value=${this._searchQuery}
-                  @focus=${() => {
-                    if ((this._searchHeaderOffset || 0) > 0) {
-                      this._updateSearchHeaderPosition(0, true);
-                    }
-                  }}
-                  @input=${e => { this._searchQuery = e.target.value; this.requestUpdate(); }}
-                  @keydown=${e => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              this._handleSearchSubmit();
-            }
-            else if (e.key === "Escape") { e.preventDefault(); this._hideSearchSheetInOptions(); }
-          }}
-                  placeholder="${localize('editor.placeholders.search')}"
-                />
-                ${this._searchQuery ? html`
-                  <button
-                    class="search-input-clear"
-                    @click=${() => {
-                      if (this._searchHierarchy.length > 0) {
-                        this._searchQuery = "";
-                        this.requestUpdate();
-                      } else {
-                        this._showSearchSheetInOptions();
-                      }
-                    }}
-                    title="${localize('common.clear')}">
-                    <ha-icon icon="mdi:close"></ha-icon>
-                  </button>
-                ` : nothing}
-              </div>
-              <button
-                class="entity-options-item icon-only"
-                style="min-width:48px; padding: 0;"
-                @click=${() => this._handleSearchSubmit()}
-                title="${localize('common.search')}"
-                aria-label="${localize('common.search')}"
-                ?disabled=${this._searchLoading}>
-                <ha-icon icon="mdi:magnify"></ha-icon>
-              </button>
-              ${this._cardType !== "search" && this._cardType !== "up_next" ? html`
-              <button
-                class="entity-options-item icon-only"
-                style="min-width:48px; padding: 0;"
-                title="${localize('common.cancel')}"
-                aria-label="${localize('common.cancel')}"
-                @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._hideSearchSheetInOptions(); } }}>
-                <ha-icon icon="mdi:close"></ha-icon>
-              </button>
-              ` : nothing}
-            </div>
-          ` : nothing}
-          <!--FILTER CHIPS-->
-          ${showSearchHeaders && this._cardType !== 'up_next' ? (() => {
-          const classes = this._getVisibleSearchFilterClasses();
-          const filter = this._searchMediaClassFilter || "all";
-
-          if (this._searchHierarchy.length > 0) return nothing;
-          if (classes.length < 2 && !this._usingMusicAssistant) return nothing;
-
-          return html`
-              <div class="chip-row search-filter-chips" id="search-filter-chip-row" style="margin-bottom:4px; justify-content: center; align-items: center;">
-                  <button
-                    class="chip"
-                    ?selected=${filter === 'all'}
-                    @click=${() => this._doSearch()}
-                  >${localize('search.filters.all')}</button>
-                  ${classes.map(c => html`
-                    <button
-                      class="chip"
-                      ?selected=${filter === c}
-                      @click=${() => this._doSearch(c)}
-                    >
-                      ${localize(`search.filters.${c}`)}
-                    </button>
-                  `)}
-              </div>
-            `;
-        })() : nothing}
-          
-          ${this._searchLoading ? html`<div class="entity-options-search-loading">${localize('common.loading')}</div>` : nothing}
-          ${this._searchError ? html`<div class="entity-options-search-error">${this._searchError}</div>` : nothing}
-          
-          ${this._renderSearchSubFilters(showSearchHeaders)}
-        </div>
- 
-        ${(() => {
-          const isQueueDragAndDrop = this._upcomingFilterActive && this._massQueueAvailable;
-          const currentResults = this._getDisplaySearchResults();
-          const isCard = this.config.search_view === 'card' || this.config.search_view === 'card_minimal';
-          const isMinimal = this.config.search_view === 'card_minimal';
-          const isGridMode = this._isGridMode;
-          
-          const renderItemFn = (item) => renderSearchResultItem({
-            item,
-            isCard,
-            isMinimal,
-            isGridMode,
-            activeSearchRowMenuId: this._activeSearchRowMenuId,
-            loadingSearchRowMenuId: this._loadingSearchRowMenuId,
-            errorSearchRowMenuId: this._errorSearchRowMenuId,
-            successSearchRowMenuId: this._successSearchRowMenuId,
-            successSearchRowType: this._successSearchRowType,
-            isSelectionFlow: this._isSelectionFlow,
-            massQueueAvailable: this._massQueueAvailable,
-            upcomingFilterActive: !!this._upcomingFilterActive,
-            recentlyPlayedFilterActive: !!this._recentlyPlayedFilterActive,
-            recommendationsFilterActive: !!this._recommendationsFilterActive,
-            searchMediaClassFilter: this._searchMediaClassFilter,
-            queueControlsStyle: this.config.queue_controls_style || "drag_handle",
-            onPlay: (it, e) => this._playMediaFromSearch(it, e),
-            onResultClick: (it, e) => this._handleSearchResultClick(it, e),
-            onOptionsToggle: (it) => { this._activeSearchRowMenuId = it?.media_content_id || null; this.requestUpdate(); },
-            onPlayOption: (it, mode) => this._performSearchOptionAction(it, mode),
-            onMoveUp: (it) => this._moveQueueItemUp(it.queue_item_id),
-            onMoveDown: (it) => this._moveQueueItemDown(it.queue_item_id),
-            onMoveNext: (it) => this._moveQueueItemNext(it.queue_item_id),
-            onRemove: (it) => this._removeQueueItem(it.queue_item_id),
-            isMusicAssistant: this._isMusicAssistantEntity(),
-            isValidArtwork: (url) => isValidArtworkUrl(url),
-            getClickTitle: (it) => this._getSearchResultClickTitle(it),
-            artworkHostname: this.config?.artwork_hostname || ""
-          });
-
-          if (this._searchAttempted && currentResults.length === 0 && !this._searchLoading) {
-            return html`
-              <div class="${this._showSearchInSheet ? 'search-sheet-results' : 'entity-options-search-results'}"
-                   @wheel=${(e) => this._handleSearchResultsWheel(e, pinSearchHeaders)}
-                   @touchstart=${(e) => this._handleResultsTouchStart(e)}
-                   @touchmove=${(e) => this._handleResultsTouchMove(e, pinSearchHeaders)}
-                   @touchend=${() => this._handleResultsTouchEnd()}>
-                <div class="entity-options-search-empty">${localize('common.no_results')}</div>
-              </div>
-            `;
-          }
-
-          if (isQueueDragAndDrop) {
-            return html`
-              <div class="${this._showSearchInSheet ? 'search-sheet-results' : 'entity-options-search-results'} queue-results-wrapper ${isGridMode ? 'grid-mode' : ''}"
-                   @scroll=${(e) => this._handleSearchResultsScroll(e, pinSearchHeaders)}
-                   @wheel=${(e) => this._handleSearchResultsWheel(e, pinSearchHeaders)}
-                   @touchstart=${(e) => this._handleResultsTouchStart(e)}
-                   @touchmove=${(e) => this._handleResultsTouchMove(e, pinSearchHeaders)}
-                   @touchend=${() => this._handleResultsTouchEnd()}
-                   style="${(this.config.search_view === 'card' || this.config.search_view === 'card_minimal' || isGridMode) ? `--search-card-columns: ${isGridMode ? 5 /* MINI_GRID_COLUMNS */ : (this.config.search_card_columns || 4)};` : ''}">
-                <div class="queue-sortable-container ${(isCard || isGridMode) ? 'is-card-layout' : ''} ${isGridMode ? 'grid-mode' : ''}"
-                  @pointerdown=${(e) => this._onQueueDragStart(e)}
-                >
-                  ${currentResults.map((item, idx) => html`
-                    <div class="queue-drag-wrapper" data-queue-idx="${idx}">
-                      ${renderItemFn(item)}
-                    </div>
-                  `)}
-                </div>
-              </div>
-            `;
-          }
-
-          if (!this._cachedSearchGridLayout || this._cachedSearchGridLayoutColumns !== (isGridMode ? 5 /* MINI_GRID_COLUMNS */ : (this.config.search_card_columns || 4)) || this._cachedSearchGridLayoutIsMinimal !== isMinimal || this._cachedSearchGridLayoutIsGridMode !== isGridMode) {
-            const columns = isGridMode ? 5 /* MINI_GRID_COLUMNS */ : (this.config.search_card_columns || 4);
-            this._cachedSearchGridLayoutColumns = columns;
-            this._cachedSearchGridLayoutIsMinimal = isMinimal;
-            this._cachedSearchGridLayoutIsGridMode = isGridMode;
-            this._cachedSearchGridLayout = yampGrid({
-              columns: columns,
-              gap: isGridMode ? '0px' : '12px',
-              padding: isGridMode ? '0px' : '12px',
-              itemSize: isGridMode 
-                ? { width: 70, height: 85 } 
-                : (isMinimal
-                  ? { width: 150, height: 150 }
-                  : { width: 150, height: 244 })
-            });
-          }
-
-          return html`
-            <div class="${this._showSearchInSheet ? 'search-sheet-results' : 'entity-options-search-results'} virtualized-results-wrapper ${isGridMode ? 'grid-mode' : ''}"
-                 @scroll=${(e) => this._handleSearchResultsScroll(e, pinSearchHeaders)}
-                 @wheel=${(e) => this._handleSearchResultsWheel(e, pinSearchHeaders)}
-                 @touchstart=${(e) => this._handleResultsTouchStart(e)}
-                 @touchmove=${(e) => this._handleResultsTouchMove(e, pinSearchHeaders)}
-                 @touchend=${() => this._handleResultsTouchEnd()}
-                 style="${(this.config.search_view === 'card' || this.config.search_view === 'card_minimal' || isGridMode) ? `--search-card-columns: ${isGridMode ? 5 /* MINI_GRID_COLUMNS */ : (this.config.search_card_columns || 4)};` : ''}">
-              ${(isCard || isGridMode)
-                ? virtualize({
-                  items: currentResults,
-                  renderItem: renderItemFn,
-                  layout: this._cachedSearchGridLayout,
-                  scroller: true
-                })
-                : virtualize({ items: currentResults, renderItem: renderItemFn, scroller: true })}
-            </div>
-          `;
-        })()}
-      </div>
-    `;
+    return renderSearchInOptions.call(this, showSearchHeaders, pinSearchHeaders);
   }
 
   _renderSourceListSheet(sourceList, sourceLetters, availableSourceFirstLetters) {
-    const isGridMode = this._isGridMode;
-
-    return html`
-      <div class="entity-options-header">
-        <button class="entity-options-item close-item" @click=${() => { if (this._quickMenuInvoke) { this._dismissWithAnimation(); } else { this._closeSourceList(); } }}>
-          ${localize('common.back')}
-        </button>
-        <div class="entity-options-divider"></div>
-      </div>
-      <div class="entity-options-scroll source-list-centering-wrapper">
-        <div class="source-list-sheet">
-          <div class="source-list-scroll ${isGridMode ? 'grid-menu' : ''}">
-            ${sourceList.map(src => {
-              if (isGridMode) {
-                return html`
-                  <button class="entity-options-item menu-action-item" @click=${() => this._selectSource(src)}>
-                    <ha-icon class="menu-action-icon" icon="mdi:login"></ha-icon>
-                    <span class="menu-action-label">${src}</span>
-                  </button>
-                `;
-              }
-              return html`
-                <div class="entity-options-item" data-source-name="${src}" @click=${() => this._selectSource(src)}>${src}</div>
-              `;
-            })}
-          </div>
-        </div>
-      </div>
-      ${!isGridMode ? html`
-        <div class="floating-source-index">
-          ${sourceLetters.map((letter, i) => {
-        const isAvailable = availableSourceFirstLetters.has(letter);
-        const hovered = this._hoveredSourceLetterIndex;
-        let scale = "";
-        if (isAvailable && hovered !== null && hovered !== undefined) {
-          const dist = Math.abs(hovered - i);
-          if (dist === 0) scale = "max";
-          else if (dist === 1) scale = "large";
-          else if (dist === 2) scale = "med";
-        }
-        return html`
-              <button
-                class="source-index-letter"
-                ?disabled=${!isAvailable}
-                data-scale=${scale}
-                @mouseenter=${isAvailable ? () => { this._hoveredSourceLetterIndex = i; this.requestUpdate(); } : nothing}
-                @mouseleave=${() => { this._hoveredSourceLetterIndex = null; this.requestUpdate(); }}
-                @click=${isAvailable ? () => this._scrollToSourceLetter(letter) : nothing}
-              >
-                ${letter}
-              </button>
-            `;
-      })}
-        </div>
-      ` : nothing}
-    `;
+    return renderSourceListSheet.call(this, sourceList, sourceLetters, availableSourceFirstLetters);
   }
 
   _updateIdleState(changedProps) {
+    if (this._cardType === "group_players") {
+      if (this._idleTimeout) clearTimeout(this._idleTimeout);
+      this._idleTimeout = null;
+      this._setIdleState(false);
+      this._showEntityOptions = true;
+      this._showGrouping = true;
+      return;
+    }
     // Consider both main and Music Assistant entities so we can wake from idle
     // even if the active selection is frozen while idle.
     const isAnyUnrestrictedPlaying = this.entityIds.some((id, idx) => {
@@ -11244,11 +8169,13 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
             this._idleTimeout = setTimeout(() => {
               this._handleIdleTimeoutCallback();
             }, this._idleTimeoutMs);
+            if (typeof this._idleTimeout?.unref === "function") this._idleTimeout.unref();
           }
         } else if (!this._idleTimeout) {
           this._idleTimeout = setTimeout(() => {
             this._handleIdleTimeoutCallback();
           }, this._idleTimeoutMs);
+          if (typeof this._idleTimeout?.unref === "function") this._idleTimeout.unref();
         }
       }
 
@@ -11261,6 +8188,14 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _handleIdleTimeoutCallback() {
+    if (this._cardType === "group_players") {
+      this._idleTimeout = null;
+      this._setIdleState(false);
+      this._showEntityOptions = true;
+      this._showGrouping = true;
+      this.requestUpdate();
+      return;
+    }
     // In search card mode: reset drill-down instead of going idle
     if (this._cardType === "search" || this._cardType === "up_next") {
       this._idleTimeout = null;
@@ -11315,6 +8250,9 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       return;
     }
 
+    if (this._autoEntities?.length) {
+      this._setTransientEntities({ auto: [] });
+    }
     this._setIdleState(true);
     this._idleScreenApplied = false;
     this._applyIdleScreen();
@@ -11380,8 +8318,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
               { value: "search", label: "Search" },
               { value: "source", label: "Source" },
               { value: "more-info", label: "More Info" },
-              { value: "group-players", label: "Group Players" },
-              { value: "transfer-queue", label: "Transfer Queue" }
+              { value: "group-players", label: "Players" },
+              { value: "transfer-queue", label: "Players (Legacy)" }
             ]
           }
         },
@@ -11516,6 +8454,12 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
   firstUpdated() {
     super.firstUpdated?.();
+    if (this._cardType === "group_players") {
+      this._showEntityOptions = true;
+      this._setIdleState(false);
+      this._showGrouping = true;
+      this.requestUpdate();
+    }
     // Trap scroll events inside floating index so they don't scroll the page
     const index = this.renderRoot.querySelector('.floating-source-index');
     if (index) {
@@ -11670,15 +8614,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _removeSearchSwipeHandlers() {
-    // Remove search swipe handlers
-    const area = this.renderRoot.querySelector('.entity-options-search-results');
-    if (area && area._searchSwipeHandlers) {
-      const handlers = area._searchSwipeHandlers;
-      area.removeEventListener('touchstart', handlers.touchstart);
-      area.removeEventListener('touchend', handlers.touchend);
-      delete area._searchSwipeHandlers;
-      this._searchSwipeAttached = false;
-    }
+    this._searchController.removeSearchSwipeHandlers();
   }
 
   disconnectedCallback() {
@@ -11690,6 +8626,10 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       clearTimeout(this._idleTimeout);
       this._idleTimeout = null;
     }
+    if (this._justSelectedGroupingTimeout) {
+      clearTimeout(this._justSelectedGroupingTimeout);
+      this._justSelectedGroupingTimeout = null;
+    }
     if (this._dragClickCaptureTimeout) {
       clearTimeout(this._dragClickCaptureTimeout);
       this._dragClickCaptureTimeout = null;
@@ -11698,11 +8638,22 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       window.removeEventListener("click", this._dragClickCaptureFn, true);
       this._dragClickCaptureFn = null;
     }
+    if (this._handleKeyDownBound) {
+      window.removeEventListener("keydown", this._handleKeyDownBound);
+    }
+    if (this._handleVisibilityChangeBound) {
+      document.removeEventListener("visibilitychange", this._handleVisibilityChangeBound);
+    }
     // Unsubscribe from queue update events
     this._unsubscribeFromQueueUpdates();
-    if (this._lyricsFetchTimeout) {
-      clearTimeout(this._lyricsFetchTimeout);
-      this._lyricsFetchTimeout = null;
+    if (this._lyricsController) {
+      this._lyricsController.hostDisconnected();
+    }
+    if (this._queueController) {
+      this._queueController.hostDisconnected();
+    }
+    if (this._searchController) {
+      this._searchController.hostDisconnected();
     }
     if (this._mediaSessionManager) {
       this._mediaSessionManager.destroy();
@@ -11779,16 +8730,8 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     window.removeEventListener("resize", this._handleViewportResize);
     if (typeof this._teardownAdaptiveTextObserver === 'function') this._teardownAdaptiveTextObserver();
 
-    // Cleanup all websocket subscriptions
-    Object.values(this._templateSubscriptions).forEach(unsub => {
-      try {
-        if (typeof unsub === 'function') unsub();
-      } catch (e) {
-        console.warn('yamp: Error during template unsubscription:', e);
-      }
-    });
-    this._templateSubscriptions = {};
-    this._activeSubscriptionTokens = {};
+    // Cleanup all websocket subscriptions via TemplateController
+    this._templateController.unsubscribeAll();
 
     if (this._adaptiveScrollTimer) {
       clearTimeout(this._adaptiveScrollTimer);
@@ -11837,6 +8780,19 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       this.requestUpdate();
       return;
     }
+    if (this._cardType === "group_players") {
+      this._showSourceList = false;
+      this._showSearchInSheet = false;
+      this._showResolvedEntities = false;
+      this._showTransferQueue = false;
+      this._transferQueuePendingTarget = null;
+      this._transferQueueStatus = null;
+      this._showEntityOptions = true;
+      this._showGrouping = true;
+      this._quickMenuInvoke = false;
+      this.requestUpdate();
+      return;
+    }
     this._applyClosingAnimations();
     if (this._transferQueueAutoCloseTimer) {
       clearTimeout(this._transferQueueAutoCloseTimer);
@@ -11874,6 +8830,18 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       this._transferQueuePendingTarget = null;
       this._transferQueueStatus = null;
       this._showResolvedEntities = false;
+      this.requestUpdate();
+      return;
+    }
+    if (this._cardType === "group_players") {
+      this._showSourceList = false;
+      this._showSearchInSheet = false;
+      this._showTransferQueue = false;
+      this._transferQueuePendingTarget = null;
+      this._transferQueueStatus = null;
+      this._showResolvedEntities = false;
+      this._showEntityOptions = true;
+      this._showGrouping = true;
       this.requestUpdate();
       return;
     }
@@ -11984,7 +8952,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     return !!this._getRemoteControlEntity(true);
   }
 
-  _getRemoteControlEntity(strict = false) {
+  _getRemoteControlEntity(strict = true) {
     const idx = this._selectedIndex;
     const obj = (this.entityObjs || [])[idx];
 
@@ -12013,60 +8981,7 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const targetEntity = this._getRemoteControlEntity();
     if (!targetEntity) return;
 
-    if (targetEntity.startsWith("remote.")) {
-      this.hass.callService("remote", "send_command", {
-        entity_id: targetEntity,
-        command: command
-      });
-      return;
-    }
-
-    switch (command) {
-      case "up":
-      case "down":
-      case "left":
-      case "right":
-      case "select":
-      case "back":
-      case "menu":
-      case "home":
-        this.hass.callService("remote", "send_command", {
-          entity_id: targetEntity,
-          command: command
-        });
-        break;
-      case "play_pause":
-        this.hass.callService("media_player", "media_play_pause", { entity_id: targetEntity });
-        break;
-      case "previous":
-      case "rewind":
-        this.hass.callService("media_player", "media_previous_track", { entity_id: targetEntity });
-        break;
-      case "next":
-      case "fast_forward":
-        this.hass.callService("media_player", "media_next_track", { entity_id: targetEntity });
-        break;
-      case "volume_up":
-        this.hass.callService("media_player", "volume_up", { entity_id: targetEntity });
-        break;
-      case "volume_down":
-        this.hass.callService("media_player", "volume_down", { entity_id: targetEntity });
-        break;
-      case "mute":
-        this.hass.callService("media_player", "volume_mute", {
-          entity_id: targetEntity,
-          is_volume_muted: !(this.currentVolumeStateObj?.attributes?.is_volume_muted)
-        });
-        break;
-      case "power":
-        this.hass.callService("media_player", "toggle", { entity_id: targetEntity });
-        break;
-      default:
-        this.hass.callService("remote", "send_command", {
-          entity_id: targetEntity,
-          command: command
-        });
-    }
+    sendRemoteCommand(this.hass, targetEntity, command);
   }
 
   _openRemoteControl() {
@@ -12084,6 +8999,38 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     if (this._cardType === "remote_control") return;
     this._showRemoteControl = false;
     this.requestUpdate();
+  }
+
+  _toggleFullScreen() {
+    this._fullScreenOverride = !this._isFullScreen;
+    this._updateHostAttributes();
+    this.requestUpdate();
+  }
+
+  _enterFullScreen() {
+    this._fullScreenOverride = true;
+    this._updateHostAttributes();
+    this.requestUpdate();
+  }
+
+  _exitFullScreen() {
+    this._fullScreenOverride = false;
+    this._updateHostAttributes();
+    this.requestUpdate();
+  }
+
+  _handleKeyDown(e) {
+    if (e.key === "Escape" && this._isFullScreen) {
+      if (this._showEntityOptions) {
+        this._closeEntityOptions();
+        return;
+      }
+      if (this._showSearchInSheet) {
+        this._hideSearchSheetInOptions();
+        return;
+      }
+      this._exitFullScreen();
+    }
   }
 
   _getHiddenRemoteButtons() {
@@ -12105,231 +9052,43 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     return Array.isArray(raw) ? raw : [];
   }
 
+  _getHiddenMenuOptions(idx = this._selectedIndex) {
+    const obj = (this.entityObjs || [])[idx];
+    let raw = obj?.hidden_menu_options ?? obj?.hide_menu_options ?? this.config?.hidden_menu_options ?? this.config?.hide_menu_options;
+
+    if (typeof raw === "string") {
+      try {
+        raw = JSON.parse(raw.replace(/'/g, '"'));
+      } catch (e) {
+        raw = raw.split(",").map(s => s.trim()).filter(s => s !== "");
+      }
+    }
+    return Array.isArray(raw) ? raw : [];
+  }
+
+  _isMenuOptionHidden(optionKey, idx = this._selectedIndex) {
+    if (!optionKey) return false;
+    const hidden = this._getHiddenMenuOptions(idx);
+    if (!hidden || hidden.length === 0) return false;
+    const normKey = String(optionKey).toLowerCase().replace(/[-\s]+/g, "_");
+    const canonicalTarget = CANONICAL_MENU_OPTION_MAP[normKey] || normKey;
+    return hidden.some((opt) => {
+      if (typeof opt !== "string") return false;
+      const normOpt = opt.toLowerCase().replace(/[-\s]+/g, "_");
+      const canonicalOpt = CANONICAL_MENU_OPTION_MAP[normOpt] || normOpt;
+      return canonicalTarget === canonicalOpt;
+    });
+  }
+
+  _isMenuActionHidden(action, idx = this._selectedIndex) {
+    if (!action) return false;
+    const label = this._getActionLabel ? this._getActionLabel(action) : "";
+    const candidates = [action.id, action.name, action.action, label].filter(Boolean);
+    return candidates.some(cand => this._isMenuOptionHidden(cand, idx));
+  }
+
   _renderRemoteControlSheet() {
-    const hiddenButtons = this._getHiddenRemoteButtons();
-
-    return html`
-      <style>
-        .remote-control-container {
-          display: flex !important;
-          flex-direction: column !important;
-          align-items: center !important;
-          justify-content: flex-start !important;
-          padding: 12px 16px 24px 16px !important;
-          gap: 16px !important;
-          box-sizing: border-box !important;
-          width: 100% !important;
-          flex: 1 !important;
-          margin: 0 auto !important;
-        }
-        .remote-dpad-wrapper {
-          position: relative !important;
-          width: 200px !important;
-          height: 200px !important;
-          flex-shrink: 0 !important;
-          margin: 4px auto 12px auto !important;
-        }
-        .remote-dpad-cross {
-          position: relative !important;
-          width: 100% !important;
-          height: 100% !important;
-          border-radius: 50% !important;
-          background: var(--yamp-overlay-divider, rgba(255, 255, 255, 0.08)) !important;
-          border: 1px solid var(--yamp-overlay-divider, rgba(255, 255, 255, 0.18)) !important;
-          backdrop-filter: blur(14px) !important;
-          -webkit-backdrop-filter: blur(14px) !important;
-          box-shadow: inset 0 2px 6px rgba(0, 0, 0, 0.3), 0 6px 18px rgba(0, 0, 0, 0.25) !important;
-          overflow: hidden !important;
-          box-sizing: border-box !important;
-        }
-        .dpad-btn {
-          appearance: none !important;
-          -webkit-appearance: none !important;
-          position: absolute !important;
-          display: flex !important;
-          align-items: center !important;
-          justify-content: center !important;
-          background: transparent !important;
-          border: none !important;
-          color: var(--yamp-overlay-text, var(--primary-text-color, #fff)) !important;
-          cursor: pointer !important;
-          transition: background 0.15s ease, transform 0.1s ease, color 0.15s ease !important;
-          padding: 0 !important;
-          margin: 0 !important;
-          outline: none !important;
-          box-sizing: border-box !important;
-          -webkit-tap-highlight-color: transparent !important;
-        }
-        .dpad-btn:not(.dpad-center) {
-          -webkit-mask-image: radial-gradient(closest-side circle at 50% 50%, transparent 47%, black 49%) !important;
-          mask-image: radial-gradient(closest-side circle at 50% 50%, transparent 47%, black 49%) !important;
-        }
-        .dpad-btn:hover {
-          background: rgba(255, 255, 255, 0.16) !important;
-          color: var(--custom-accent, var(--accent-color, #ff9800)) !important;
-        }
-        .dpad-btn:active {
-          background: rgba(255, 255, 255, 0.28) !important;
-          transform: scale(0.92) !important;
-        }
-        .dpad-btn ha-icon {
-          --mdc-icon-size: 28px !important;
-          pointer-events: none !important;
-        }
-        .dpad-btn.dpad-up {
-          top: 0 !important;
-          left: 0 !important;
-          width: 100% !important;
-          height: 100% !important;
-          clip-path: polygon(0 0, 100% 0, 50% 50%) !important;
-          align-items: flex-start !important;
-          padding-top: 12% !important;
-        }
-        .dpad-btn.dpad-down {
-          top: 0 !important;
-          left: 0 !important;
-          width: 100% !important;
-          height: 100% !important;
-          clip-path: polygon(100% 100%, 0 100%, 50% 50%) !important;
-          align-items: flex-end !important;
-          padding-bottom: 12% !important;
-        }
-        .dpad-btn.dpad-left {
-          top: 0 !important;
-          left: 0 !important;
-          width: 100% !important;
-          height: 100% !important;
-          clip-path: polygon(0 100%, 0 0, 50% 50%) !important;
-          justify-content: flex-start !important;
-          padding-left: 12% !important;
-        }
-        .dpad-btn.dpad-right {
-          top: 0 !important;
-          left: 0 !important;
-          width: 100% !important;
-          height: 100% !important;
-          clip-path: polygon(100% 0, 100% 100%, 50% 50%) !important;
-          justify-content: flex-end !important;
-          padding-right: 12% !important;
-        }
-        .dpad-btn.dpad-center {
-          top: 28% !important;
-          left: 28% !important;
-          width: 44% !important;
-          height: 44% !important;
-          border-radius: 50% !important;
-          background: rgba(255, 255, 255, 0.12) !important;
-          border: 1px solid var(--yamp-overlay-divider, rgba(255, 255, 255, 0.25)) !important;
-          font-weight: 600 !important;
-          font-size: 0.88rem !important;
-          letter-spacing: 0.03em !important;
-          box-shadow: 0 3px 8px rgba(0, 0, 0, 0.3) !important;
-          z-index: 3 !important;
-        }
-        .dpad-btn.dpad-center:hover {
-          background: rgba(255, 255, 255, 0.25) !important;
-          color: var(--custom-accent, var(--accent-color, #ff9800)) !important;
-        }
-        .remote-control-row {
-          display: flex !important;
-          align-items: center !important;
-          justify-content: space-around !important;
-          gap: 12px !important;
-          width: 100% !important;
-          max-width: 320px !important;
-          margin: 0 auto !important;
-        }
-        .remote-control-btn {
-          appearance: none !important;
-          -webkit-appearance: none !important;
-          display: flex !important;
-          flex: 1 !important;
-          flex-direction: column !important;
-          align-items: center !important;
-          justify-content: center !important;
-          height: 48px !important;
-          max-width: 72px !important;
-          border-radius: 14px !important;
-          background: var(--yamp-overlay-divider, rgba(255, 255, 255, 0.08)) !important;
-          border: 1px solid var(--yamp-overlay-divider, rgba(255, 255, 255, 0.15)) !important;
-          color: var(--yamp-overlay-text, var(--primary-text-color, #fff)) !important;
-          cursor: pointer !important;
-          transition: all 0.15s ease !important;
-          outline: none !important;
-          margin: 0 !important;
-          padding: 0 !important;
-          box-sizing: border-box !important;
-          -webkit-tap-highlight-color: transparent !important;
-        }
-        .remote-control-btn:hover {
-          background: rgba(255, 255, 255, 0.18) !important;
-          border-color: var(--custom-accent, var(--accent-color, #ff9800)) !important;
-          color: var(--custom-accent, var(--accent-color, #ff9800)) !important;
-          transform: translateY(-1px) !important;
-        }
-        .remote-control-btn:active {
-          transform: scale(0.93) !important;
-        }
-        .remote-control-btn ha-icon {
-          --mdc-icon-size: 22px !important;
-          pointer-events: none !important;
-        }
-      </style>
-      ${this._cardType !== 'remote_control' ? html`
-        <div class="entity-options-header">
-          <button class="entity-options-item close-item" @click=${() => this._closeRemoteControl()}>
-            ${localize('common.back')}
-          </button>
-        </div>
-        <div class="entity-options-divider"></div>
-      ` : nothing}
-      <div class="entity-options-scroll remote-control-container">
-        <!-- D-Pad Directional Pad -->
-        <div class="remote-dpad-wrapper">
-          <div class="remote-dpad-cross">
-            <button class="dpad-btn dpad-up" @click=${() => this._sendRemoteCommand('up')} title="${localize('card.remote.up')}">
-              <ha-icon icon="mdi:chevron-up"></ha-icon>
-            </button>
-            <button class="dpad-btn dpad-down" @click=${() => this._sendRemoteCommand('down')} title="${localize('card.remote.down')}">
-              <ha-icon icon="mdi:chevron-down"></ha-icon>
-            </button>
-            <button class="dpad-btn dpad-left" @click=${() => this._sendRemoteCommand('left')} title="${localize('card.remote.left')}">
-              <ha-icon icon="mdi:chevron-left"></ha-icon>
-            </button>
-            <button class="dpad-btn dpad-right" @click=${() => this._sendRemoteCommand('right')} title="${localize('card.remote.right')}">
-              <ha-icon icon="mdi:chevron-right"></ha-icon>
-            </button>
-            <button class="dpad-btn dpad-center" @click=${() => this._sendRemoteCommand('select')} title="${localize('card.remote.select')}">
-              ${localize('card.remote.select')}
-            </button>
-          </div>
-        </div>
-
-        <!-- Navigation Row -->
-        <div class="remote-control-row">
-          ${!hiddenButtons.includes('back') ? html`
-            <button class="remote-control-btn" @click=${() => this._sendRemoteCommand('back')} title="${localize('card.remote.back')}">
-              <ha-icon icon="mdi:arrow-left"></ha-icon>
-            </button>
-          ` : nothing}
-          ${!hiddenButtons.includes('menu') ? html`
-            <button class="remote-control-btn" @click=${() => this._sendRemoteCommand('menu')} title="${localize('card.remote.menu')}">
-              <ha-icon icon="mdi:menu"></ha-icon>
-            </button>
-          ` : nothing}
-          ${!hiddenButtons.includes('home') ? html`
-            <button class="remote-control-btn" @click=${() => this._sendRemoteCommand('home')} title="${localize('card.remote.home')}">
-              <ha-icon icon="mdi:home"></ha-icon>
-            </button>
-          ` : nothing}
-          ${!hiddenButtons.includes('power') ? html`
-            <button class="remote-control-btn" @click=${() => this._onControlClick('power')} title="${localize('card.remote.power')}">
-              <ha-icon icon="mdi:power"></ha-icon>
-            </button>
-          ` : nothing}
-        </div>
-      </div>
-    `;
+    return renderRemoteControlSheet.call(this);
   }
 
   // Source List Helper Methods
@@ -12345,8 +9104,61 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this.requestUpdate();
   }
   _closeGrouping() {
+    if (this._cardType === "group_players") return;
     this._showGrouping = false;
+    this._playerSearchQuery = "";
+    this._transferQueuePendingTarget = null;
+    this._transferQueueStatus = null;
+    this._justSelectedGroupingEntityId = null;
+    if (this._justSelectedGroupingTimeout) {
+      clearTimeout(this._justSelectedGroupingTimeout);
+      this._justSelectedGroupingTimeout = null;
+    }
     // No requestUpdate here; overlay close will handle it.
+  }
+  _scrollGroupingListToTop() {
+    const root = this.renderRoot || this;
+    if (!root || typeof root.querySelector !== "function") return;
+    const containers = [
+      root.querySelector(".group-list-scroll"),
+      root.querySelector(".entity-options-sheet"),
+      root.querySelector(".entity-options-overlay"),
+      root.querySelector(".entity-options-container"),
+    ].filter(Boolean);
+
+    for (const el of containers) {
+      if (typeof el.scrollTo === "function") {
+        try {
+          el.scrollTo({ top: 0, behavior: "smooth" });
+        } catch {
+          el.scrollTop = 0;
+        }
+      } else {
+        el.scrollTop = 0;
+      }
+    }
+  }
+  _selectEntityFromGrouping(idx) {
+    if (idx === undefined || idx < 0) return;
+    const targetEntityId = this.entityIds?.[idx];
+    if (targetEntityId) {
+      if (this._justSelectedGroupingTimeout) {
+        clearTimeout(this._justSelectedGroupingTimeout);
+      }
+      this._justSelectedGroupingEntityId = targetEntityId;
+      this._justSelectedGroupingTimeout = setTimeout(() => {
+        this._justSelectedGroupingEntityId = null;
+        this._justSelectedGroupingTimeout = null;
+        this.requestUpdate();
+      }, GROUP_SELECTION_FEEDBACK_DURATION_MS);
+    }
+    this._onChipClick(idx);
+    this._scrollGroupingListToTop();
+    if (this.updateComplete?.then) {
+      this.updateComplete.then(() => {
+        this._scrollGroupingListToTop();
+      });
+    }
   }
   async _toggleGroup(targetId) {
     const masterId = this._getGroupingMasterId();
@@ -12357,28 +9169,300 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const masterGroupId = await this._resolveGroupingEntityId(masterObj, masterId);
     if (!masterGroupId) return;
 
-    const targetObj = this.entityObjs.find(e => e.entity_id === targetId);
+    const targetObj = this._findEntityObjByAnyId(targetId) || this.entityObjs.find(e => e.entity_id === targetId);
     if (!targetObj) return;
 
     const targetGroupId = await this._resolveGroupingEntityId(targetObj, targetId);
     if (!targetGroupId) return;
 
     const masterState = masterGroupId ? this.hass.states[masterGroupId] : null;
-    const grouped =
-      Array.isArray(masterState?.attributes?.group_members) &&
-      masterState.attributes.group_members.includes(targetGroupId);
+    const members = Array.isArray(masterState?.attributes?.group_members)
+      ? masterState.attributes.group_members
+      : [];
+    const grouped = members.includes(targetGroupId);
+
+    // If unjoining the active master:
+    if (targetId === masterId || targetGroupId === masterGroupId) {
+      const remainingMembers = members.filter(
+        (m) => m !== masterGroupId && m !== masterId && m !== targetId
+      );
+      if (remainingMembers.length === 0) {
+        const groupMembersInConfig = this.entityIds.filter((eId) => {
+          if (eId === targetId || eId === masterId) return false;
+          return this._getGroupKey(eId) === masterId;
+        });
+        remainingMembers.push(...groupMembersInConfig);
+      }
+      const hasMaTransferService = Boolean(this.hass?.services?.music_assistant?.transfer_queue);
+
+      const activeMaState = this._getMusicAssistantState?.();
+      const sourceMaId =
+        (activeMaState &&
+          this._looksLikeMusicAssistantState?.(activeMaState) &&
+          activeMaState.entity_id) ||
+        this._getActualResolvedMaEntityForState?.(masterIdx) ||
+        masterGroupId;
+      const sourceState = this.hass?.states?.[sourceMaId] || masterState;
+      const isSourceMa = this._queueController?.isTargetMusicAssistant
+        ? this._queueController.isTargetMusicAssistant({
+            maEntityId: sourceMaId,
+            entityId: masterId,
+            mainEntityId: masterId,
+          })
+        : Boolean(
+            (sourceState && this._looksLikeMusicAssistantState?.(sourceState)) ||
+            isMusicAssistantEntity(sourceState)
+          );
+
+      // Only unjoin master if multiple members are playing and transfer_queue is supported
+      if (remainingMembers.length === 0 || !hasMaTransferService || !isSourceMa) {
+        return;
+      }
+
+      await this._handoffCoordinator({
+        remainingMembers,
+        sourceMaId,
+        preventAutoSelect: false,
+      });
+      return;
+    }
 
     if (grouped) {
-      await this.hass.callService("media_player", "unjoin", {
-        entity_id: targetGroupId,
-      });
+      await unjoinPlayer(this.hass, targetGroupId);
+      this._lastGroupingMasterId = masterId || targetId;
     } else {
-      await this.hass.callService("media_player", "join", {
-        entity_id: masterGroupId,
-        group_members: [targetGroupId],
-      });
+      const targetGroupKey = this._getGroupKey(targetId);
+      const targetMasterId = targetGroupKey || targetId;
+      const targetMasterIdx = this.entityIds.indexOf(targetMasterId);
+      const targetMasterObj = targetMasterIdx >= 0 ? this.entityObjs[targetMasterIdx] : null;
+      const targetMasterGroupId =
+        (targetMasterObj ? await this._resolveGroupingEntityId(targetMasterObj, targetMasterId) : null) ||
+        this._getGroupingEntityIdByEntityId(targetMasterId) ||
+        targetMasterId;
+      const targetMasterState = targetMasterGroupId ? this.hass?.states?.[targetMasterGroupId] : null;
+      let targetGroupMembers = Array.isArray(targetMasterState?.attributes?.group_members)
+        ? targetMasterState.attributes.group_members
+        : [];
+      if (targetGroupMembers.length === 0 && targetGroupKey !== targetId) {
+        targetGroupMembers = [targetMasterGroupId, targetGroupId];
+      }
+      const isTargetInEstablishedGroup =
+        targetGroupMembers.length > 1 || (targetGroupKey && targetGroupKey !== targetId);
+
+      if (isTargetInEstablishedGroup && !targetGroupMembers.includes(masterGroupId)) {
+        const isActivePlaying = this._isEntityPlaying(masterState);
+        const isTargetGroupPlaying =
+          this._isEntityPlaying(targetMasterState) ||
+          targetGroupMembers.some((m) => this._isEntityPlaying(this.hass?.states?.[m]));
+        const areBothPlaying = isActivePlaying && isTargetGroupPlaying;
+
+        if (areBothPlaying && !this._areEntitiesPlayingSameMedia(masterState, targetMasterState)) {
+          // Playback conflict: both playing different things
+          return;
+        }
+
+        if (isActivePlaying && !isTargetGroupPlaying) {
+          // Active player is playing on its own, target group is not playing.
+          // Start playing what's in active player on the whole group.
+          const toJoin = [...new Set(targetGroupMembers.filter((m) => m && m !== masterGroupId))];
+          if (toJoin.length > 0) {
+            await joinPlayers(this.hass, masterGroupId, toJoin);
+          }
+          this._lastGroupingMasterId = masterId;
+        } else {
+          // Group is playing (or neither is playing, or both playing same media).
+          // Active player starts playing what the group is playing by joining into the group.
+          await joinPlayers(this.hass, targetMasterGroupId, [masterGroupId]);
+          this._lastGroupingMasterId = targetMasterId;
+        }
+      } else {
+        await joinPlayers(this.hass, masterGroupId, [targetGroupId]);
+        this._lastGroupingMasterId = masterId || targetId;
+      }
     }
-    this._lastGroupingMasterId = masterId || targetId;
+    if (this.triggerRender) {
+      this.triggerRender();
+    } else {
+      this.requestUpdate?.();
+    }
+  }
+
+  /**
+   * Performs coordinator handoff and regroups followers when unjoining a master player.
+   * @param {Object} options
+   * @param {string[]} options.remainingMembers
+   * @param {string} options.sourceMaId
+   * @param {boolean} [options.preventAutoSelect=false]
+   * @returns {Promise<void>}
+   */
+  async _handoffCoordinator({ remainingMembers, sourceMaId, preventAutoSelect = false }) {
+    if (!remainingMembers || remainingMembers.length === 0) return;
+
+    // Elect successor from remaining members
+    const successorGroupId = remainingMembers[0];
+    const successorEntityId =
+      this.entityIds.find((eId) => eId === successorGroupId) ||
+      this.entityIds.find((eId) => {
+        const gId = this._getGroupingEntityIdByEntityId(eId);
+        return gId === successorGroupId;
+      }) ||
+      successorGroupId;
+    const successorIdx = this.entityIds.indexOf(successorEntityId);
+    const successorMaId =
+      (successorIdx >= 0 ? this._getActualResolvedMaEntityForState?.(successorIdx) : null) ||
+      successorGroupId;
+    const successorName =
+      (successorEntityId && this.getChipName(successorEntityId)) ||
+      (successorGroupId && this.getChipName(successorGroupId)) ||
+      getEntityName(this.hass, successorEntityId || successorGroupId) ||
+      successorEntityId ||
+      successorGroupId ||
+      "player";
+
+    const otherMembers = remainingMembers.slice(1);
+    const hasOtherMembers = otherMembers.length > 0;
+
+    const pendingTemplate =
+      localize("card.grouping.transferring_coordinator") ||
+      "Transferring playback to {player}...";
+    const pendingMessage = pendingTemplate.includes("{player}")
+      ? pendingTemplate.replace("{player}", successorName)
+      : `${pendingTemplate} ${successorName}`;
+    const successTemplate =
+      localize("card.grouping.transfer_success") || "Queue sent to {player}.";
+    const successMessage = successTemplate.includes("{player}")
+      ? successTemplate.replace("{player}", successorName)
+      : `${successTemplate} ${successorName}`;
+
+    const targetPayload = {
+      index: successorIdx,
+      entityId: successorEntityId,
+      maEntityId: successorMaId,
+      sourceMaId,
+      name: successorName,
+      preventAutoSelect,
+      pendingMessage,
+      deferSuccess: hasOtherMembers,
+    };
+
+    await this._transferQueueTo(targetPayload);
+
+    // If transfer succeeded, keep other members grouped with the new master
+    if (this._transferQueueStatus?.type !== "error") {
+      if (hasOtherMembers) {
+        this._transferQueueStatus = {
+          type: "pending",
+          message: (
+            localize("card.grouping.regrouping") ||
+            "Regrouping speakers with {player}..."
+          ).replace("{player}", successorName),
+        };
+        if (this.triggerRender) {
+          this.triggerRender();
+        } else {
+          this.requestUpdate?.();
+        }
+        try {
+          await joinPlayers(this.hass, successorGroupId, otherMembers);
+          this._transferQueueStatus = {
+            type: "success",
+            message: successMessage,
+          };
+          this._queueController?.scheduleTransferQueueAutoClose?.(2000);
+        } catch (err) {
+          this._transferQueueStatus = {
+            type: "error",
+            message: err?.message || "Failed to regroup speakers.",
+          };
+          this._queueController?.scheduleTransferQueueAutoClose?.(4000);
+        }
+      } else {
+        this._transferQueueStatus = {
+          type: "success",
+          message: successMessage,
+        };
+        this._queueController?.scheduleTransferQueueAutoClose?.(2000);
+      }
+      this._lastGroupingMasterId = successorEntityId;
+      if (this.triggerRender) {
+        this.triggerRender();
+      } else {
+        this.requestUpdate?.();
+      }
+    }
+  }
+
+  // Remove an individual group member from its group, regardless of what entity is active
+  async _unjoinGroupMember(targetId) {
+    const targetObj =
+      this._findEntityObjByAnyId(targetId) || this.entityObjs.find((e) => e.entity_id === targetId);
+    if (!targetObj) return;
+
+    const targetGroupId = await this._resolveGroupingEntityId(targetObj, targetId);
+    if (!targetGroupId) return;
+
+    const targetGroupKey = this._getGroupKey(targetId);
+    const targetMasterId = targetGroupKey || targetId;
+    const isMasterOfGroup = targetId === targetMasterId || targetGroupId === targetMasterId;
+
+    if (isMasterOfGroup) {
+      const targetMasterIdx = this.entityIds.indexOf(targetMasterId);
+      const targetMasterObj = targetMasterIdx >= 0 ? this.entityObjs[targetMasterIdx] : null;
+      const targetMasterGroupId =
+        (targetMasterObj ? await this._resolveGroupingEntityId(targetMasterObj, targetMasterId) : null) ||
+        this._getGroupingEntityIdByEntityId(targetMasterId) ||
+        targetMasterId;
+      const masterState =
+        (targetMasterGroupId ? this.hass?.states?.[targetMasterGroupId] : null) ||
+        (targetMasterId ? this.hass?.states?.[targetMasterId] : null);
+      const members = Array.isArray(masterState?.attributes?.group_members)
+        ? masterState.attributes.group_members
+        : [];
+      const remainingMembers = members.filter(
+        (m) => m !== targetMasterGroupId && m !== targetMasterId && m !== targetId
+      );
+      if (remainingMembers.length === 0) {
+        const groupMembersInConfig = this.entityIds.filter((eId) => {
+          if (eId === targetId || eId === targetMasterId) return false;
+          return this._getGroupKey(eId) === targetMasterId;
+        });
+        remainingMembers.push(...groupMembersInConfig);
+      }
+      const hasMaTransferService = Boolean(this.hass?.services?.music_assistant?.transfer_queue);
+
+      const targetMaId =
+        (targetMasterIdx >= 0 ? this._getActualResolvedMaEntityForState?.(targetMasterIdx) : null) ||
+        targetMasterGroupId;
+      const targetState = this.hass?.states?.[targetMaId] || masterState;
+      const isTargetMa = this._queueController?.isTargetMusicAssistant
+        ? this._queueController.isTargetMusicAssistant({
+            maEntityId: targetMaId,
+            entityId: targetMasterId,
+            mainEntityId: targetMasterId,
+          })
+        : Boolean(
+            (targetState && this._looksLikeMusicAssistantState?.(targetState)) ||
+            isMusicAssistantEntity(targetState)
+          );
+
+      if (remainingMembers.length > 0 && hasMaTransferService && isTargetMa) {
+        await this._handoffCoordinator({
+          remainingMembers,
+          sourceMaId: targetMaId,
+          preventAutoSelect: targetId !== this.currentEntityId,
+        });
+      } else {
+        await unjoinPlayer(this.hass, targetGroupId);
+      }
+    } else {
+      await unjoinPlayer(this.hass, targetGroupId);
+    }
+
+    if (this.triggerRender) {
+      this.triggerRender();
+    } else {
+      this.requestUpdate?.();
+    }
   }
 
 
@@ -12395,15 +9479,29 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
   // Group all supported entities to current master
   async _groupAll() {
-    const masterId = this._getGroupingMasterId();
-    const masterIdx = masterId ? this.entityIds.indexOf(masterId) : -1;
-    const masterObj = masterIdx >= 0 ? this.entityObjs[masterIdx] : null;
-    if (!masterObj) return;
+    let masterId = this._getGroupingMasterId();
+    let masterIdx = masterId ? this.entityIds.indexOf(masterId) : -1;
+    let masterObj = masterIdx >= 0 ? this.entityObjs[masterIdx] : null;
 
-    const masterGroupId = await this._resolveGroupingEntityId(masterObj, masterId);
-    if (!masterGroupId) return;
-    const masterState = this.hass.states[masterGroupId];
-    if (!this._isGroupCapable(masterState)) return;
+    let masterGroupId = masterObj ? await this._resolveGroupingEntityId(masterObj, masterId) : null;
+    let masterState = masterGroupId ? this.hass.states[masterGroupId] : null;
+
+    // If current master is not group capable or unavailable, fallback to first available group-capable player
+    if (!masterState || !this._isGroupCapable(masterState) || masterState.state === "unavailable") {
+      const fallbackIdx = this.entityIds.findIndex((id, idx) => {
+        const gId = this._getGroupingEntityId(idx);
+        const st = this.hass?.states?.[gId] || this.hass?.states?.[id];
+        return st && st.state !== "unavailable" && this._isGroupCapable(st);
+      });
+      if (fallbackIdx >= 0) {
+        masterId = this.entityIds[fallbackIdx];
+        masterObj = this.entityObjs[fallbackIdx];
+        masterGroupId = await this._resolveGroupingEntityId(masterObj, masterId);
+        masterState = masterGroupId ? this.hass.states[masterGroupId] : null;
+      }
+    }
+
+    if (!masterState || !this._isGroupCapable(masterState) || masterState.state === "unavailable") return;
 
     // Get all other entities that support grouping and are not already grouped with master
     const alreadyGrouped = Array.isArray(masterState.attributes?.group_members)
@@ -12422,49 +9520,123 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       if (!resolvedGroupId) continue;
 
       const st = this.hass.states[resolvedGroupId];
-      if (this._isGroupCapable(st) && !alreadyGrouped.includes(resolvedGroupId)) {
+      const mainSt = id !== resolvedGroupId ? this.hass?.states?.[id] : null;
+      const isUnavailable =
+        st?.state === "unavailable" ||
+        (mainSt && mainSt.state === "unavailable");
+
+      if (
+        st &&
+        !isUnavailable &&
+        this._isGroupCapable(st) &&
+        !alreadyGrouped.includes(resolvedGroupId)
+      ) {
         toJoin.push(resolvedGroupId);
       }
     }
     if (toJoin.length > 0) {
-      await this.hass.callService("media_player", "join", {
-        entity_id: masterGroupId,
-        group_members: toJoin,
-      });
+      await joinPlayers(this.hass, masterGroupId, toJoin);
     }
     // After grouping, keep the master set if still valid
     this._lastGroupingMasterId = masterId || this.currentEntityId;
+    if (this.triggerRender) {
+      this.triggerRender();
+    } else {
+      this.requestUpdate?.();
+    }
     // Remain in grouping sheet
   }
 
-  // Ungroup all members from current master
-  async _ungroupAll() {
-    const masterId = this._getGroupingMasterId();
-    const masterIdx = masterId ? this.entityIds.indexOf(masterId) : -1;
-    const masterObj = masterIdx >= 0 ? this.entityObjs[masterIdx] : null;
-    if (!masterObj) return;
+  // Ungroup all members from specified master (or all entities across all groups if not provided)
+  async _ungroupAll(targetMasterId = null) {
+    if (targetMasterId) {
+      const masterIdx = this.entityIds.indexOf(targetMasterId);
+      const masterObj = masterIdx >= 0 ? this.entityObjs[masterIdx] : null;
 
-    const masterGroupId = await this._resolveGroupingEntityId(masterObj, masterId);
-    if (!masterGroupId) return;
-    const masterState = this.hass.states[masterGroupId];
-    if (!this._isGroupCapable(masterState)) return;
+      const masterGroupId =
+        (masterObj && (await this._resolveGroupingEntityId(masterObj, targetMasterId))) ||
+        this._getGroupingEntityIdByEntityId(targetMasterId) ||
+        targetMasterId;
+      if (!masterGroupId) return;
+      const masterState = this.hass?.states?.[masterGroupId];
+      if (!this._isGroupCapable(masterState)) return;
 
-    const members = Array.isArray(masterState.attributes?.group_members)
-      ? masterState.attributes.group_members
-      : [];
-    // Only unjoin those that support grouping
-    const toUnjoin = members.filter(id => {
-      const st = this.hass.states[id];
-      return this._isGroupCapable(st);
-    });
-    // Unjoin each member individually
-    for (const id of toUnjoin) {
-      await this.hass.callService("media_player", "unjoin", {
-        entity_id: id,
+      const members = Array.isArray(masterState.attributes?.group_members)
+        ? masterState.attributes.group_members
+        : [];
+      // Only unjoin follower members (exclude the coordinator itself to avoid invalid coordinator unjoin errors)
+      const toUnjoin = members.filter(id => {
+        if (id === masterGroupId) return false;
+        const st = this.hass?.states?.[id];
+        return !st || this._isGroupCapable(st);
       });
+      // Unjoin each follower individually
+      for (const id of toUnjoin) {
+        await unjoinPlayer(this.hass, id);
+      }
+      // After ungrouping, keep the master set if still valid (may now be solo)
+      if (targetMasterId === this.currentEntityId) {
+        this._lastGroupingMasterId = targetMasterId;
+      }
+      if (this.triggerRender) {
+        this.triggerRender();
+      } else {
+        this.requestUpdate?.();
+      }
+      return;
     }
-    // After ungrouping, keep the master set if still valid (may now be solo)
-    this._lastGroupingMasterId = masterId || this.currentEntityId;
+
+    // Ungroup all entities in the list across all groups
+    const followersToUnjoin = new Set();
+    const entityList = this.entityIds || [];
+
+    for (let idx = 0; idx < entityList.length; idx++) {
+      const id = entityList[idx];
+      const obj = this.entityObjs?.[idx] || null;
+      const groupId =
+        (obj && (await this._resolveGroupingEntityId(obj, id))) ||
+        this._getGroupingEntityIdByEntityId(id) ||
+        id;
+      const state = this.hass?.states?.[groupId];
+      if (!state) continue;
+
+      const members = Array.isArray(state.attributes?.group_members)
+        ? state.attributes.group_members
+        : [];
+
+      if (members.length > 1) {
+        // Coordinator is the first member in group_members
+        const coordinator = members[0];
+        for (const m of members) {
+          if (m !== coordinator) {
+            const memberState = this.hass?.states?.[m];
+            if (!memberState || this._isGroupCapable(memberState)) {
+              followersToUnjoin.add(m);
+            }
+          }
+        }
+      }
+
+      // If this entity itself is a follower of another group
+      const groupKey = this._getGroupKey(id);
+      if (groupKey && groupKey !== id) {
+        if (this._isGroupCapable(state)) {
+          followersToUnjoin.add(groupId);
+        }
+      }
+    }
+
+    // Unjoin each follower individually
+    for (const id of followersToUnjoin) {
+      await unjoinPlayer(this.hass, id);
+    }
+
+    this._lastGroupingMasterId = this.currentEntityId;
+    if (this.triggerRender) {
+      this.triggerRender();
+    } else {
+      this.requestUpdate?.();
+    }
     // Remain in grouping sheet
   }
 
@@ -12504,16 +9676,10 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
       if (foundIdx !== undefined) {
         const targetVolEntity = this._getVolumeEntity(foundIdx) || memberGroupId;
-        this.hass.callService("media_player", "volume_set", {
-          entity_id: targetVolEntity,
-          volume_level: masterVol
-        });
+        setVolume(this.hass, targetVolEntity, masterVol);
       } else {
         // Fallback: if we can't find a configured entity, just try setting volume on the group member ID acting as an entity
-        this.hass.callService("media_player", "volume_set", {
-          entity_id: memberGroupId,
-          volume_level: masterVol
-        });
+        setVolume(this.hass, memberGroupId, masterVol);
       }
     }
   }
@@ -12551,6 +9717,33 @@ class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       bubbles: true,
       composed: true,
     }));
+  }
+
+  // Set the active entity override on demand for the current chip
+  _setActiveEntityForCurrentChip(entityId) {
+    const idx = this._selectedIndex;
+    if (idx === undefined || idx < 0) return;
+
+    if (!this._manualActiveEntityByChip) {
+      this._manualActiveEntityByChip = {};
+    }
+    this._manualActiveEntityByChip[idx] = entityId;
+    this._lastActiveEntityIdByChip[idx] = entityId;
+    this._lastResolvedEntityIdByChip[idx] = entityId;
+
+    // Reset playback linger for this chip
+    if (this._playbackLingerByIdx?.[idx]) {
+      delete this._playbackLingerByIdx[idx];
+    }
+
+    // Invalidate cached active playback entity
+    this._cachedActivePlaybackEntityId = undefined;
+    this._cachedActivePlaybackEntityKey = undefined;
+
+    // Sync any sync_selected_entity actions with new active entity
+    this._updateSelectedEntityHelper();
+
+    this.requestUpdate();
   }
 
   // Read helper and select matching entity chip via select_entity actions

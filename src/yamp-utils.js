@@ -51,14 +51,31 @@ export function getEntityName(hass, stateOrEntityId) {
 }
 
 /**
- * Resolve a Jinja template string at runtime
+ * Resolve a Jinja or JS template string at runtime
  * @param {Object} hass - Home Assistant object
  * @param {string} templateString - The template string to resolve
  * @param {string} fallbackEntityId - Fallback entity ID if template resolution fails
+ * @param {Record<string, any>} [context] - Optional context variables to inject into the template
  * @returns {Promise<string>} Resolved entity ID
  */
-export async function resolveTemplateAtActionTime(hass, templateString, fallbackEntityId) {
+export async function resolveTemplateAtActionTime(
+  hass,
+  templateString,
+  fallbackEntityId,
+  context = {}
+) {
   if (!templateString || typeof templateString !== "string") return fallbackEntityId;
+
+  if (templateString.trim().startsWith("[[[") && templateString.trim().endsWith("]]]")) {
+    try {
+      const res = evaluateJsTemplate(templateString, /** @type {any} */ (hass), context);
+      const out = (res ?? "").toString().trim();
+      if (out && /^([a-z_]+)\.[A-Za-z0-9_]+$/.test(out)) return out;
+      return fallbackEntityId;
+    } catch {
+      return fallbackEntityId;
+    }
+  }
 
   // Not a template — return as-is
   if (!templateString.includes("{{") && !templateString.includes("{%")) {
@@ -77,7 +94,7 @@ export async function resolveTemplateAtActionTime(hass, templateString, fallback
 }
 
 /**
- * Resolve a generic Jinja template string at runtime (no entity validation)
+ * Resolve a generic Jinja or JS template string at runtime (no entity validation)
  * @param {Object} hass - Home Assistant object
  * @param {string} templateString - The template string to resolve
  * @param {Object} context - Optional context variables to inject into the template
@@ -86,30 +103,32 @@ export async function resolveTemplateAtActionTime(hass, templateString, fallback
 export async function resolveStringTemplate(hass, templateString, context = {}) {
   if (!templateString || typeof templateString !== "string") return templateString;
 
-  // Not a template — return as-is
-  if (!templateString.includes("{{") && !templateString.includes("{%")) {
-    // Check for URL-encoded templates (%7B%7B or %7B%25)
-    if (/%7B%7B|%7B%25/i.test(templateString)) {
-      try {
-        templateString = decodeURIComponent(templateString);
-      } catch (e) {
-        // Ignore decode error
-      }
-    }
-
-    // Re-check after decoding
-    if (!templateString.includes("{{") && !templateString.includes("{%")) {
-      return templateString;
+  let decoded = templateString;
+  if (/%7B%7B|%7B%25|%5B%5B%5B/i.test(decoded)) {
+    try {
+      decoded = decodeURIComponent(decoded);
+    } catch (e) {
+      // Ignore decode error
     }
   }
 
+  if (decoded.trim().startsWith("[[[") && decoded.trim().endsWith("]]]")) {
+    const res = evaluateJsTemplate(decoded, /** @type {any} */ (hass), context);
+    return res !== undefined && res !== null ? String(res).trim() : "";
+  }
+
+  // Not a template — return as-is
+  if (!decoded.includes("{{") && !decoded.includes("{%")) {
+    return decoded;
+  }
+
   // Inject context variables
-  let finalTemplate = templateString;
+  let finalTemplate = decoded;
   if (context && Object.keys(context).length > 0) {
     const setStatements = Object.entries(context)
       .map(([key, value]) => `{% set ${key} = ${JSON.stringify(value)} %}`)
       .join(" ");
-    finalTemplate = `${setStatements} ${templateString}`;
+    finalTemplate = `${setStatements} ${decoded}`;
   }
 
   try {
@@ -122,7 +141,7 @@ export async function resolveStringTemplate(hass, templateString, context = {}) 
 }
 
 /**
- * Attempt to resolve a simple Jinja template string synchronously to bypass mobile WebView popup blockers.
+ * Attempt to resolve a simple Jinja or JS template string synchronously to bypass mobile WebView popup blockers.
  * Supports basic {{ state_attr(entity, attr) }}, {{ states(entity) }} and {{ variable }} patterns.
  * @param {Object} hass - Home Assistant object
  * @param {string} templateString - The template string to resolve
@@ -133,12 +152,17 @@ export function resolveStringTemplateSync(hass, templateString, context = {}) {
   if (!templateString || typeof templateString !== "string") return templateString;
 
   let decoded = templateString;
-  if (/%7B%7B|%7B%25/i.test(decoded)) {
+  if (/%7B%7B|%7B%25|%5B%5B%5B/i.test(decoded)) {
     try {
       decoded = decodeURIComponent(decoded);
     } catch (e) {
       // Ignore
     }
+  }
+
+  if (decoded.trim().startsWith("[[[") && decoded.trim().endsWith("]]]")) {
+    const res = evaluateJsTemplate(decoded, /** @type {any} */ (hass), context);
+    return res !== undefined && res !== null ? String(res).trim() : null;
   }
 
   if (!decoded.includes("{{") && !decoded.includes("{%")) {
@@ -241,7 +265,133 @@ export function resolveStringTemplateSync(hass, templateString, context = {}) {
 }
 
 /**
- * Find button entities associated with a Music Assistant entity
+ * Evaluates a client-side JavaScript template string enclosed within [[[ ... ]]].
+ *
+ * @param {string} templateStr - The template string to evaluate.
+ * @param {import('./types.d.ts').HomeAssistant} hass - Home Assistant object.
+ * @param {Record<string, any>} [context] - Context variables (e.g. from _getTemplateContext()).
+ * @param {Record<string, any>} [compiledCache] - Optional cache dictionary for compiled functions.
+ * @returns {any} Evaluated result, or undefined on error / when hass is not available, or original input if not a JS template.
+ */
+export function evaluateJsTemplate(templateStr, hass, context = {}, compiledCache = {}) {
+  if (typeof templateStr !== "string") return templateStr;
+
+  const trimmed = templateStr.trim();
+  if (!trimmed.startsWith("[[[") || !trimmed.endsWith("]]]")) {
+    return templateStr;
+  }
+
+  // Extract the JS code block
+  const code = trimmed.substring(3, trimmed.length - 3).trim();
+
+  try {
+    if (!hass) return undefined;
+
+    const states = hass.states;
+    const user = hass.user;
+    const is_state = (entity, state) => states?.[entity]?.state === state;
+    const state_attr = (entity, attr) => states?.[entity]?.attributes?.[attr];
+
+    // Compile and execute in context
+    if (!compiledCache[code]) {
+      const body = code.includes("return") ? code : `return (${code});`;
+      compiledCache[code] = new Function(
+        "hass",
+        "states",
+        "user",
+        "is_state",
+        "state_attr",
+        "context",
+        "current",
+        "is_idle",
+        "is_playing",
+        "is_search",
+        "is_grouping",
+        "is_players",
+        "is_group_players",
+        "is_source",
+        "is_lyrics",
+        "is_options",
+        "is_transfer_queue",
+        "is_any_menu_open",
+        "is_fullscreen",
+        "is_full_screen",
+        "is_dark_mode",
+        "is_mobile",
+        "is_music_assistant",
+        "is_music",
+        body
+      );
+    }
+    return compiledCache[code](
+      hass,
+      states,
+      user,
+      is_state,
+      state_attr,
+      context,
+      context?.current,
+      context?.is_idle,
+      context?.is_playing,
+      context?.is_search,
+      context?.is_grouping,
+      context?.is_players ?? context?.is_grouping,
+      context?.is_group_players ?? context?.is_grouping,
+      context?.is_source,
+      context?.is_lyrics,
+      context?.is_options,
+      context?.is_transfer_queue ?? context?.is_grouping,
+      context?.is_any_menu_open,
+      context?.is_fullscreen ?? context?.is_full_screen,
+      context?.is_full_screen ?? context?.is_fullscreen,
+      context?.is_dark_mode,
+      context?.is_mobile,
+      context?.is_music_assistant,
+      context?.is_music
+    );
+  } catch (err) {
+    console.warn("yamp: failed to evaluate JS template:", templateStr, err);
+    return undefined;
+  }
+}
+
+// WeakMap cache keyed by hass.entities to avoid recomputing for identical registry snapshots
+const associatedButtonsRegistryCache = new WeakMap();
+
+/**
+ * Probe deterministic favorite button candidate entity IDs directly on hass.states
+ * without enumerating all keys on hass.states.
+ * @param {Object} hass - Home Assistant object
+ * @param {string} maSuffix - Lowercase object_id suffix of the media player entity
+ * @param {Record<string, any>|null} [reg] - Optional entity registry map
+ * @returns {Array} Matching button descriptors
+ */
+function probeDirectButtonCandidates(hass, maSuffix, reg = null) {
+  if (!maSuffix) return [];
+  const directCandidates = [
+    `button.${maSuffix}_favorite_current_song`,
+    `button.${maSuffix}_favorite`,
+    `button.${maSuffix}_preset_favorite`,
+  ];
+  const matches = [];
+  for (const candidateId of directCandidates) {
+    if (reg?.[candidateId]?.disabled_by) continue;
+    const state = hass.states[candidateId];
+    if (state?.attributes) {
+      const buttonDisplayName = getEntityName(hass, state) || candidateId;
+      matches.push({
+        entity_id: candidateId,
+        friendly_name: buttonDisplayName,
+        device_class: state.attributes.device_class,
+        reason: "entity_id_match",
+      });
+    }
+  }
+  return matches;
+}
+
+/**
+ * Find button entities associated with a Music Assistant or media player entity
  * @param {Object} hass - Home Assistant object
  * @param {string} maEntityId - Music Assistant entity ID
  * @returns {Array} Array of associated button entities
@@ -249,22 +399,141 @@ export function resolveStringTemplateSync(hass, templateString, context = {}) {
 export function findAssociatedButtonEntities(hass, maEntityId) {
   if (!hass?.states || !maEntityId) return [];
 
-  const buttonEntities = [];
   const maEntity = hass.states[maEntityId];
   if (!maEntity) return [];
 
-  // Look for button entities that might be associated with this MA entity
-  // Common patterns: device_id matching, friendly_name similarity, or device_class
+  const maSuffix = maEntityId.includes(".") ? maEntityId.split(".")[1].toLowerCase() : "";
+  const reg = hass.entities;
+  if (reg && typeof reg === "object") {
+    let cacheForRegistry = associatedButtonsRegistryCache.get(reg);
+    if (cacheForRegistry?.has(maEntityId)) {
+      return cacheForRegistry.get(maEntityId);
+    }
+
+    let hasRegistryEntries = false;
+    for (const _k in reg) {
+      hasRegistryEntries = true;
+      break;
+    }
+
+    if (hasRegistryEntries) {
+      if (!cacheForRegistry) {
+        cacheForRegistry = new Map();
+        associatedButtonsRegistryCache.set(reg, cacheForRegistry);
+      }
+
+      const sameDeviceButtons = [];
+      const entityIdMatchButtons = [];
+      const nameMatchButtons = [];
+      let skippedMissingState = false;
+
+      const maDeviceId = reg[maEntityId]?.device_id || maEntity.attributes?.device_id || null;
+      const maDisplayName = getEntityName(hass, maEntity) || maEntityId;
+      const maDisplayNameLower = maDisplayName.toLowerCase();
+
+      for (const entityId in reg) {
+        if (!entityId.startsWith("button.")) continue;
+
+        const regEntry = reg[entityId];
+        if (regEntry?.disabled_by) continue;
+        const buttonDeviceId = regEntry?.device_id;
+
+        // 1. Same device matching (most reliable & precise)
+        if (maDeviceId && buttonDeviceId && buttonDeviceId === maDeviceId) {
+          const state = hass.states[entityId];
+          if (!state) {
+            skippedMissingState = true;
+            continue;
+          }
+          const buttonDisplayName = getEntityName(hass, state) || regEntry?.name || entityId;
+          sameDeviceButtons.push({
+            entity_id: entityId,
+            friendly_name: buttonDisplayName,
+            device_class: state.attributes?.device_class || regEntry?.device_class,
+            reason: "same_device",
+          });
+          continue;
+        }
+
+        // 2. Entity ID match (e.g., button.amzn_echo_show_5_favorite for media_player.amzn_echo_show_5)
+        if (maSuffix && entityId.toLowerCase().includes(maSuffix)) {
+          const state = hass.states[entityId];
+          if (!state) {
+            skippedMissingState = true;
+            continue;
+          }
+          const buttonDisplayName = getEntityName(hass, state) || regEntry?.name || entityId;
+          entityIdMatchButtons.push({
+            entity_id: entityId,
+            friendly_name: buttonDisplayName,
+            device_class: state.attributes?.device_class || regEntry?.device_class,
+            reason: "entity_id_match",
+          });
+          continue;
+        }
+
+        // 3. Name similarity match
+        if (regEntry?.name) {
+          const customNameLower = regEntry.name.toLowerCase();
+          if (
+            !customNameLower.includes(maDisplayNameLower) &&
+            !maDisplayNameLower.includes(customNameLower)
+          ) {
+            continue;
+          }
+        }
+        const state = hass.states[entityId];
+        if (!state) continue;
+        const buttonDisplayName =
+          getEntityName(hass, state) || regEntry?.name || regEntry?.original_name || "";
+        if (buttonDisplayName) {
+          const btnNameLower = buttonDisplayName.toLowerCase();
+          if (
+            btnNameLower.includes(maDisplayNameLower) ||
+            maDisplayNameLower.includes(btnNameLower)
+          ) {
+            nameMatchButtons.push({
+              entity_id: entityId,
+              friendly_name: buttonDisplayName,
+              device_class: state.attributes?.device_class || regEntry?.device_class,
+              reason: "name_similarity",
+            });
+          }
+        }
+      }
+
+      let buttonEntities = [...sameDeviceButtons, ...entityIdMatchButtons, ...nameMatchButtons];
+      if (buttonEntities.length === 0) {
+        buttonEntities = probeDirectButtonCandidates(hass, maSuffix, reg);
+      }
+
+      if (buttonEntities.length > 0 || !skippedMissingState) {
+        cacheForRegistry.set(maEntityId, buttonEntities);
+      } else {
+        Object.defineProperty(buttonEntities, "_incomplete", { value: true });
+      }
+      return buttonEntities;
+    }
+  }
+
+  // Fallback when hass.entities is not available (e.g. test environments without registry)
+  // First probe deterministic button candidate IDs directly on hass.states to avoid enumerating keys
+  const directMatches = probeDirectButtonCandidates(hass, maSuffix);
+  if (directMatches.length > 0) {
+    return directMatches;
+  }
+
+  // Final fallback: scan hass.states
+  const buttonEntities = [];
   const maDeviceId = maEntity.attributes?.device_id;
   const maDisplayName = getEntityName(hass, maEntity) || maEntityId;
+  const maDisplayNameLower = maDisplayName.toLowerCase();
 
-  // Search through all button entities
   for (const [entityId, state] of Object.entries(hass.states)) {
-    if (entityId.startsWith("button.") && state.attributes) {
+    if (entityId.startsWith("button.") && state?.attributes) {
       const buttonDeviceId = state.attributes.device_id;
       const buttonDisplayName = getEntityName(hass, state) || entityId;
 
-      // Check if this button is associated with the same device
       if (maDeviceId && buttonDeviceId === maDeviceId) {
         buttonEntities.push({
           entity_id: entityId,
@@ -272,26 +541,22 @@ export function findAssociatedButtonEntities(hass, maEntityId) {
           device_class: state.attributes.device_class,
           reason: "same_device",
         });
-      }
-      // Check for name similarity (e.g., "HomePod Favorite" button for "HomePod" MA entity)
-      else if (
-        buttonDisplayName.toLowerCase().includes(maDisplayName.toLowerCase()) ||
-        maDisplayName.toLowerCase().includes(buttonDisplayName.toLowerCase())
+      } else if (maSuffix && entityId.toLowerCase().includes(maSuffix)) {
+        buttonEntities.push({
+          entity_id: entityId,
+          friendly_name: buttonDisplayName,
+          device_class: state.attributes.device_class,
+          reason: "entity_id_match",
+        });
+      } else if (
+        buttonDisplayName.toLowerCase().includes(maDisplayNameLower) ||
+        maDisplayNameLower.includes(buttonDisplayName.toLowerCase())
       ) {
         buttonEntities.push({
           entity_id: entityId,
           friendly_name: buttonDisplayName,
           device_class: state.attributes.device_class,
           reason: "name_similarity",
-        });
-      }
-      // Check for entity ID match (e.g., button.amzn_echo_show_5_favorite for media_player.amzn_echo_show_5)
-      else if (entityId.toLowerCase().includes(maEntityId.split(".")[1].toLowerCase())) {
-        buttonEntities.push({
-          entity_id: entityId,
-          friendly_name: buttonDisplayName,
-          device_class: state.attributes.device_class,
-          reason: "entity_id_match",
         });
       }
     }
@@ -694,9 +959,117 @@ export function applyHostnameToUrl(url, hostname) {
   return finalUrl;
 }
 
+const secureThumbnailCache = new Map();
+const inFlightThumbnailRequests = new Map();
+const MAX_SECURE_THUMBNAIL_CACHE_SIZE = 500;
+
+/**
+ * Checks if a URL is an insecure http:// URL while running in an https: browser context.
+ * Returns false in SSR/Node environments (when window is undefined) or when window.location.protocol is not "https:".
+ * @param {string | null | undefined} [url]
+ * @returns {boolean}
+ */
+export function isInsecureHttpUrlOnHttps(url) {
+  if (!url || typeof url !== "string") return false;
+  if (typeof window === "undefined" || window.location?.protocol !== "https:") {
+    return false;
+  }
+  return /^http:\/\//i.test(url.trim());
+}
+
+/**
+ * Retrieves a cached base64/secure data URI for a given thumbnail URL if available.
+ * Refreshes the entry's position in the LRU cache on hit.
+ * @param {string | null | undefined} [url]
+ * @returns {string | null}
+ */
+export function getCachedSecureThumbnail(url) {
+  if (!url || typeof url !== "string") return null;
+  const cached = secureThumbnailCache.get(url);
+  if (cached) {
+    // Refresh LRU order on hit
+    secureThumbnailCache.delete(url);
+    secureThumbnailCache.set(url, cached);
+    return cached;
+  }
+  return null;
+}
+
+/**
+ * Clears or modifies the secure thumbnail cache (primarily for testing).
+ * @param {string} [url]
+ */
+export function clearSecureThumbnailCache(url) {
+  if (url) {
+    secureThumbnailCache.delete(url);
+    inFlightThumbnailRequests.delete(url);
+  } else {
+    secureThumbnailCache.clear();
+    inFlightThumbnailRequests.clear();
+  }
+}
+
+/**
+ * Asynchronously resolves an insecure http:// thumbnail URL to a data:image;base64 URI
+ * using the mass_queue/download_and_encode_image WebSocket command if available.
+ * Caches resolved images in memory with an LRU cap.
+ *
+ * @param {any} hass - Home Assistant connection object with callWS
+ * @param {string | null | undefined} [url] - Insecure artwork URL
+ * @returns {Promise<string | null>} Base64 data URI or null if resolution fails
+ */
+export async function resolveSecureThumbnailUrl(hass, url) {
+  if (!url || typeof url !== "string" || !hass?.callWS) {
+    return null;
+  }
+
+  // If already cached, return immediately and refresh LRU order
+  const cached = getCachedSecureThumbnail(url);
+  if (cached) {
+    return cached;
+  }
+
+  // Deduplicate concurrent in-flight requests for the same URL
+  if (inFlightThumbnailRequests.has(url)) {
+    return inFlightThumbnailRequests.get(url);
+  }
+
+  // Normalize /imageproxy/ URLs: change size=0 to size=256 to avoid downloading massive raw images
+  let fetchUrl = url;
+  if (fetchUrl.includes("/imageproxy/") && /[?&]size=0\b/.test(fetchUrl)) {
+    fetchUrl = fetchUrl.replace(/([?&]size=)0\b/, "$1256");
+  }
+
+  const fetchPromise = (async () => {
+    try {
+      const response = await hass.callWS({
+        type: "mass_queue/download_and_encode_image",
+        url: fetchUrl,
+      });
+
+      if (response?.image && typeof response.image === "string") {
+        if (secureThumbnailCache.size >= MAX_SECURE_THUMBNAIL_CACHE_SIZE) {
+          const oldestKey = secureThumbnailCache.keys().next().value;
+          secureThumbnailCache.delete(oldestKey);
+        }
+        secureThumbnailCache.set(url, response.image);
+        return response.image;
+      }
+      return null;
+    } catch (_error) {
+      return null;
+    } finally {
+      inFlightThumbnailRequests.delete(url);
+    }
+  })();
+
+  inFlightThumbnailRequests.set(url, fetchPromise);
+  return fetchPromise;
+}
+
 /**
  * Validate artwork URL to prevent proxy errors
- * @param {string} url - Artwork URL to validate
+ * @param {string | null | undefined} [url] - Artwork URL to validate
  * @returns {boolean} True if valid
  */
 export function isValidArtworkUrl(url) {
@@ -704,6 +1077,9 @@ export function isValidArtworkUrl(url) {
 
   // Check for obviously invalid URLs
   if (url.includes("undefined") || url.includes("null") || url.trim() === "") return false;
+
+  // Reject insecure HTTP URLs on HTTPS pages to prevent browser Mixed Content warnings
+  if (isInsecureHttpUrlOnHttps(url)) return false;
 
   // Skip validation for data URLs and base64 images
   if (url.startsWith("data:")) return true;
@@ -732,14 +1108,15 @@ export function getActionPlacement(action, index) {
 }
 
 /**
- * Checks if a given media title is a generic placeholder (such as "AirPlay" or the entity's friendly name)
- * rather than genuine track/media metadata.
+ * Checks if a given media title is a generic placeholder (such as "AirPlay", the entity's friendly name,
+ * or the active app name) rather than genuine track/media metadata.
  *
  * @param {string|null|undefined} title - The media title to test
  * @param {string|null|undefined} [friendlyName] - The entity's friendly name
+ * @param {string|null|undefined} [appName] - The active application name (e.g. "Infuse", "YouTube")
  * @returns {boolean} True if the title is considered a placeholder
  */
-export function isPlaceholderMediaTitle(title, friendlyName) {
+export function isPlaceholderMediaTitle(title, friendlyName, appName) {
   if (!title || typeof title !== "string") return true;
   const trimmed = title.trim().toLowerCase();
   if (trimmed === "" || trimmed === "airplay") return true;
@@ -748,6 +1125,9 @@ export function isPlaceholderMediaTitle(title, friendlyName) {
     typeof friendlyName === "string" &&
     trimmed === friendlyName.trim().toLowerCase()
   ) {
+    return true;
+  }
+  if (appName && typeof appName === "string" && trimmed === appName.trim().toLowerCase()) {
     return true;
   }
   return false;
@@ -793,14 +1173,46 @@ export function areEntitiesPlayingSameMedia(mainState, maState) {
   const mainApp =
     typeof mainAttrs.app_name === "string" ? mainAttrs.app_name.trim().toLowerCase() : "";
   const maApp = typeof maAttrs.app_name === "string" ? maAttrs.app_name.trim().toLowerCase() : "";
+  const mainAppId =
+    typeof mainAttrs.app_id === "string" ? mainAttrs.app_id.trim().toLowerCase() : "";
+  const maAppId = typeof maAttrs.app_id === "string" ? maAttrs.app_id.trim().toLowerCase() : "";
   const mainSource =
     typeof mainAttrs.source === "string" ? mainAttrs.source.trim().toLowerCase() : "";
   const maSource = typeof maAttrs.source === "string" ? maAttrs.source.trim().toLowerCase() : "";
 
-  if (maTitle === "airplay" || maApp === "airplay" || maSource === "airplay") {
+  // Helper to test if a string signifies an AirPlay daemon or receiver
+  const isAirPlayIndicator = (val) =>
+    typeof val === "string" && (val === "airplay" || val.includes("tvairplay"));
+
+  if (
+    isAirPlayIndicator(maTitle) ||
+    isAirPlayIndicator(maApp) ||
+    isAirPlayIndicator(maSource) ||
+    isAirPlayIndicator(maAppId)
+  ) {
     return true;
   }
-  if (mainTitle === "airplay" || mainApp === "airplay" || mainSource === "airplay") {
+  if (
+    isAirPlayIndicator(mainTitle) ||
+    isAirPlayIndicator(mainApp) ||
+    isAirPlayIndicator(mainSource) ||
+    isAirPlayIndicator(mainAppId)
+  ) {
+    return true;
+  }
+
+  // 3b. App match: main entity app matches paired entity title, source, or app
+  // (Common when Apple TV routes audio to HomePod/AirPlay: HomePod title or source is the tvOS app name like "Infuse" or "Disney+")
+  if (mainApp && (maTitle === mainApp || maSource === mainApp || maApp === mainApp)) {
+    return true;
+  }
+  if (maApp && (mainTitle === maApp || mainSource === maApp)) {
+    return true;
+  }
+  if (mainAppId && maTitle && (mainAppId === maTitle || mainAppId.endsWith("." + maTitle))) {
+    return true;
+  }
+  if (mainAppId && maSource && (mainAppId === maSource || mainAppId.endsWith("." + maSource))) {
     return true;
   }
 
@@ -824,4 +1236,298 @@ export function areEntitiesPlayingSameMedia(mainState, maState) {
   }
 
   return false;
+}
+
+/**
+ * @typedef {Object} ArtworkObject
+ * @property {string|null} [url]
+ * @property {number|null} [sizePercentage]
+ * @property {string|null} [objectFit]
+ * @property {string|null} [objectPosition]
+ */
+
+/**
+ * Resolves artwork among metadata, playback, and main sources with intelligent fallbacks.
+ * Prevents stale artwork from leaking when track titles mismatch.
+ *
+ * @param {Object} options
+ * @param {ArtworkObject|null} [options.metadataArtwork] - Artwork object from the metadata entity.
+ * @param {ArtworkObject|null} [options.playbackArtwork] - Artwork object from the playback control entity.
+ * @param {ArtworkObject|null} [options.mainArtwork] - Artwork object from the main entity.
+ * @param {string|null} [options.displayTitle] - The currently displayed track title.
+ * @param {import("./types").HassEntity|null} [options.playbackStateObj] - State of playback entity.
+ * @param {import("./types").HassEntity|null} [options.mainState] - State of main entity.
+ * @param {boolean} [options.isPlayingSameMedia=false] - Whether entities are playing the same media.
+ * @returns {ArtworkObject|null} Resolved artwork object or null.
+ */
+export function resolveSelectedArtwork({
+  metadataArtwork = null,
+  playbackArtwork = null,
+  mainArtwork = null,
+  displayTitle = null,
+  playbackStateObj = null,
+  mainState = null,
+  isPlayingSameMedia = false,
+}) {
+  let selectedArt = metadataArtwork?.url ? metadataArtwork : null;
+
+  const matchesTitle = (titleA, titleB) =>
+    typeof titleA === "string" &&
+    typeof titleB === "string" &&
+    titleA.trim().toLowerCase() === titleB.trim().toLowerCase();
+
+  // If a track title is actively displayed and metadata artwork is missing,
+  // allow fallback to playback/main entity ONLY if they match the displayed title or are verified to play the same media.
+  if (displayTitle && !selectedArt) {
+    if (
+      playbackArtwork?.url &&
+      (matchesTitle(playbackStateObj?.attributes?.media_title, displayTitle) || isPlayingSameMedia)
+    ) {
+      selectedArt = playbackArtwork;
+    } else if (
+      mainArtwork?.url &&
+      (matchesTitle(mainState?.attributes?.media_title, displayTitle) || isPlayingSameMedia)
+    ) {
+      selectedArt = mainArtwork;
+    }
+  }
+
+  // When no display title is present (e.g. system sounds, gaming, idle), fall back to any available artwork.
+  if (!displayTitle && !selectedArt) {
+    if (playbackArtwork?.url) {
+      selectedArt = playbackArtwork;
+    } else if (mainArtwork?.url) {
+      selectedArt = mainArtwork;
+    } else {
+      selectedArt = playbackArtwork || mainArtwork || null;
+    }
+  }
+
+  return selectedArt || (metadataArtwork?.url ? metadataArtwork : null);
+}
+
+const _globRegexCache = new Map();
+
+function getCachedGlobRegex(globStr) {
+  let re = _globRegexCache.get(globStr);
+  if (!re) {
+    const escaped = globStr
+      .split("*")
+      .map((s) => s.replace(/[-[\]{}()+?.,\\^$|#\s]/g, "\\$&"))
+      .join(".*");
+    re = new RegExp("^" + escaped + "$");
+    if (_globRegexCache.size > 200) {
+      _globRegexCache.clear();
+    }
+    _globRegexCache.set(globStr, re);
+  }
+  return re;
+}
+
+/**
+ * Test whether an entity ID or its friendly name matches any pattern in a list of glob patterns or exact IDs.
+ * Supports '*' wildcard, case-insensitive, and matches against entityId and friendlyName.
+ * @param {string} entityId
+ * @param {string[] | string} [patterns]
+ * @param {string} [friendlyName=""]
+ * @returns {boolean}
+ */
+export function matchesEntityPattern(entityId, patterns, friendlyName = "") {
+  if (!entityId || !patterns) return false;
+  const list = Array.isArray(patterns)
+    ? patterns
+    : typeof patterns === "string"
+      ? patterns.split(",").map((s) => s.trim())
+      : [];
+  if (list.length === 0) return false;
+
+  const targetId = entityId.trim().toLowerCase();
+  const targetName = (friendlyName || "").trim().toLowerCase();
+
+  for (const raw of list) {
+    if (!raw || typeof raw !== "string") continue;
+    const p = raw.trim().toLowerCase();
+    if (!p) continue;
+
+    // 1. Direct equality against entity ID or friendly name
+    if (p === targetId || (targetName && p === targetName)) return true;
+
+    const pNoDomain = p.startsWith("media_player.") ? p.slice("media_player.".length) : p;
+
+    if (targetName && pNoDomain && pNoDomain === targetName) return true;
+
+    // 2. Wildcard glob matching
+    if (p.includes("*")) {
+      try {
+        const re = getCachedGlobRegex(p);
+        // Test entity ID
+        if (re.test(targetId)) return true;
+
+        // Test friendly name
+        if (targetName) {
+          if (re.test(targetName)) return true;
+          if (pNoDomain && getCachedGlobRegex(pNoDomain).test(targetName)) return true;
+          // If the pattern has a wildcard (e.g. media_player.*frame or *frame*),
+          // also match if the friendly name contains the token (e.g. "Bedroom Frame TV" contains "frame")
+          if (pNoDomain && pNoDomain.includes("*")) {
+            const token = pNoDomain.replace(/\*/g, "").trim();
+            if (token && targetName.includes(token)) return true;
+          }
+        }
+      } catch {
+        // Ignore invalid regex
+      }
+    } else {
+      // 3. Keyword / substring match when pattern has no domain or wildcards (e.g. "frame")
+      if (!p.includes(".")) {
+        if (targetId.includes(p)) return true;
+        if (targetName && targetName.includes(p)) return true;
+      }
+    }
+  }
+  return false;
+}
+
+/**
+ * Find playing media_player entities that are not covered on the card and not excluded.
+ * Implements MA duplicate deduplication: if an MA player and its physical counterpart
+ * are playing the exact same track title + artist, only the MA entity is returned.
+ * @param {Record<string, any>} states - hass.states object
+ * @param {Set<string> | string[]} coveredIds - IDs already configured, resolved, or grouped
+ * @param {string[] | string} [excludePatterns] - IDs or wildcard patterns to exclude
+ * @returns {string[]} Array of playing entity IDs
+ */
+export function findPlayingUnconfiguredPlayers(states, coveredIds, excludePatterns) {
+  if (!states || typeof states !== "object") return [];
+  const coveredSet = coveredIds instanceof Set ? coveredIds : new Set(coveredIds || []);
+
+  const candidates = [];
+  for (const [id, st] of Object.entries(states)) {
+    if (!id.startsWith("media_player.")) continue;
+    if (coveredSet.has(id)) continue;
+    if (!st || st.state !== "playing") continue;
+    if (matchesEntityPattern(id, excludePatterns, st.attributes?.friendly_name)) continue;
+    candidates.push({ id, st });
+  }
+
+  if (candidates.length === 0) return [];
+
+  // Check if any candidate duplicates an already covered playing entity
+  const coveredPlayingTracks = [];
+  for (const id of coveredSet) {
+    const st = states[id];
+    if (st && st.state === "playing") {
+      const title = (st.attributes?.media_title || "").trim().toLowerCase();
+      const artist = (st.attributes?.media_artist || "").trim().toLowerCase();
+      if (title && artist) {
+        coveredPlayingTracks.push({
+          id,
+          title,
+          artist,
+          isMa: isMusicAssistantEntity(st),
+        });
+      }
+    }
+  }
+
+  const filtered = [];
+  for (const c of candidates) {
+    const title = (c.st.attributes?.media_title || "").trim().toLowerCase();
+    const artist = (c.st.attributes?.media_artist || "").trim().toLowerCase();
+
+    if (title && artist && coveredPlayingTracks.length > 0) {
+      const match = coveredPlayingTracks.find((cp) => cp.title === title && cp.artist === artist);
+      if (match) {
+        continue;
+      }
+    }
+    filtered.push(c);
+  }
+
+  // Deduplicate between candidates themselves by title + artist
+  const groups = new Map();
+  const result = [];
+
+  for (const c of filtered) {
+    const title = (c.st.attributes?.media_title || "").trim().toLowerCase();
+    const artist = (c.st.attributes?.media_artist || "").trim().toLowerCase();
+    if (!title || !artist) {
+      result.push(c.id);
+      continue;
+    }
+    const key = `${title}:::${artist}`;
+    if (!groups.has(key)) {
+      groups.set(key, []);
+    }
+    groups.get(key).push(c);
+  }
+
+  for (const [, group] of groups.entries()) {
+    if (group.length === 1) {
+      result.push(group[0].id);
+      continue;
+    }
+    const maItem = group.find((c) => isMusicAssistantEntity(c.st));
+    const nonMaItem = group.find((c) => !isMusicAssistantEntity(c.st));
+    if (maItem && nonMaItem) {
+      result.push(maItem.id);
+      for (const item of group) {
+        if (item !== maItem && item !== nonMaItem && isMusicAssistantEntity(item.st)) {
+          result.push(item.id);
+        }
+      }
+    } else {
+      for (const item of group) {
+        result.push(item.id);
+      }
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Search media_player entities across Home Assistant states.
+ * @param {Record<string, any>} states
+ * @param {string} query
+ * @param {Set<string> | string[]} coveredIds
+ * @param {string[] | string} [excludePatterns]
+ * @param {number} [limit=8]
+ * @returns {Array<{ id: string, name: string, state: string, icon: string, isPlaying: boolean }>}
+ */
+export function searchMediaPlayers(states, query, coveredIds, excludePatterns, limit = 8) {
+  if (!states || typeof states !== "object") return [];
+  const coveredSet = coveredIds instanceof Set ? coveredIds : new Set(coveredIds || []);
+  const q = (query || "").trim().toLowerCase();
+
+  const results = [];
+  for (const [id, st] of Object.entries(states)) {
+    if (!id.startsWith("media_player.")) continue;
+    if (coveredSet.has(id)) continue;
+    if (!st || st.state === "unavailable" || st.state === "unknown") continue;
+
+    const friendlyName = st.attributes?.friendly_name || id;
+    if (matchesEntityPattern(id, excludePatterns, friendlyName)) continue;
+    const nameLower = friendlyName.toLowerCase();
+    const idLower = id.toLowerCase();
+
+    if (q) {
+      if (!nameLower.includes(q) && !idLower.includes(q)) continue;
+    }
+
+    results.push({
+      id,
+      name: friendlyName,
+      state: st.state,
+      icon: st.attributes?.icon || "mdi:cast",
+      isPlaying: st.state === "playing",
+    });
+  }
+
+  results.sort((a, b) => {
+    if (a.isPlaying !== b.isPlaying) return a.isPlaying ? -1 : 1;
+    return a.name.localeCompare(b.name);
+  });
+
+  return results.slice(0, limit);
 }

@@ -14,6 +14,11 @@ export const SUPPORT_SHUFFLE = 32768;
 export const SUPPORT_GROUPING = 524288;
 export const SUPPORT_REPEAT_SET = 262144;
 
+export const GROUP_SELECTION_FEEDBACK_DURATION_MS = 1200;
+
+export const SESSION_STORAGE_PREFIX = "yamp_session_players_";
+export const SESSION_STORAGE_TTL_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+
 export const ARTWORK_OVERRIDE_MATCH_KEYS = Object.freeze([
   "aspect_ratio",
   "media_title",
@@ -27,10 +32,33 @@ export const ARTWORK_OVERRIDE_MATCH_KEYS = Object.freeze([
   "entity_state",
 ]);
 
+export const CANONICAL_MENU_OPTION_MAP = Object.freeze({
+  more_info: "more_info",
+  moreinfo: "more_info",
+  search: "search",
+  source: "source",
+  transfer_queue: "transfer_queue",
+  queue: "transfer_queue",
+  group_players: "group_players",
+  group: "group_players",
+  grouping: "group_players",
+  players: "group_players",
+  player: "group_players",
+  remote_controls: "remote_controls",
+  remote_control: "remote_controls",
+  remote: "remote_controls",
+  lyrics: "lyrics",
+  show_lyrics: "lyrics",
+  hide_lyrics: "lyrics",
+  full_screen: "full_screen",
+  fullscreen: "full_screen",
+});
+
 export {
   DEFAULT_PROGRESS_BAR_HEIGHT,
   DEFAULT_IDLE_TIMEOUT_MS,
   DEFAULT_VOLUME_STEP,
+  DEFAULT_BACKGROUND_FADE,
   DEFAULT_LYRICS_BACKGROUND_FADE,
   TEMPLATE_CONFIGS,
   CARD_CONFIG_DEFAULTS,

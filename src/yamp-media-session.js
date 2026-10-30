@@ -6,7 +6,8 @@
  * active when backgrounding or locking the device.
  */
 
-import { getEntityName } from "./yamp-utils.js";
+import { getEntityName, isValidArtworkUrl } from "./yamp-utils.js";
+import { mediaSeek } from "./services/ha-media-services.js";
 
 let cachedInaudibleWavUrl = null;
 
@@ -529,10 +530,7 @@ export class YampMediaSessionManager {
 
     session.setActionHandler("seekto", (details) => {
       if (details.seekTime != null && targetEntityId) {
-        this.card.hass?.callService("media_player", "media_seek", {
-          entity_id: targetEntityId,
-          seek_position: Math.round(details.seekTime),
-        });
+        mediaSeek(this.card.hass, targetEntityId, Math.round(details.seekTime));
       }
     });
 
@@ -578,10 +576,7 @@ export class YampMediaSessionManager {
       this._lastSeekTimeout = null;
     }, 2000);
 
-    this.card.hass?.callService("media_player", "media_seek", {
-      entity_id: targetEntityId,
-      seek_position: finalSeek,
-    });
+    mediaSeek(this.card.hass, targetEntityId, finalSeek);
   }
 
   /**
@@ -700,9 +695,10 @@ export class YampMediaSessionManager {
     const resolvedAlbum = album || stateObj.attributes?.media_album_name || "";
     const rawArtwork =
       (typeof artworkUrl === "string" ? artworkUrl : artworkUrl?.url) ||
+      stateObj.attributes?.entity_picture_local ||
       stateObj.attributes?.entity_picture ||
       "";
-    const absoluteArtwork = toAbsoluteUrl(rawArtwork);
+    const absoluteArtwork = isValidArtworkUrl(rawArtwork) ? toAbsoluteUrl(rawArtwork) : "";
 
     const metaKey = `${resolvedTitle}|${resolvedArtist}|${resolvedAlbum}|${absoluteArtwork}`;
     if (this._lastMetadata !== metaKey) {
