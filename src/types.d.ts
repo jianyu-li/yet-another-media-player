@@ -512,8 +512,14 @@ export declare class VolumeHoldController {
   hostDisconnected(): void;
 }
 
+export declare const MAX_LYRICS_CACHE_SIZE: number;
+export declare const sharedLyricsCache: Map<string, LyricsLine[]>;
+export declare function clearSharedLyricsCacheForTests(): void;
+export declare const inFlightLrclibRequests: Map<string, Promise<LyricsLine[]>>;
+export declare function clearInFlightLrclibRequestsForTests(): void;
+
 export declare class LyricsController {
-  constructor(host: any);
+  constructor(host: any, cache?: Map<string, LyricsLine[]>);
   host: any;
   lyrics: LyricsLine[];
   loading: boolean;

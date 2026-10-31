@@ -20,6 +20,28 @@ import { isInsecureHttpUrlOnHttps } from "../yamp-utils.js";
 
 export const MAX_LYRICS_CACHE_SIZE = 30;
 
+/** @type {Map<string, LyricsLine[]>} */
+export const sharedLyricsCache = new Map();
+
+/**
+ * Clears shared lyrics cache map (primarily for unit test isolation).
+ * @returns {void}
+ */
+export function clearSharedLyricsCacheForTests() {
+  sharedLyricsCache.clear();
+}
+
+/** @type {Map<string, Promise<LyricsLine[]>>} */
+export const inFlightLrclibRequests = new Map();
+
+/**
+ * Clears in-flight LRCLIB requests map (primarily for unit test isolation).
+ * @returns {void}
+ */
+export function clearInFlightLrclibRequestsForTests() {
+  inFlightLrclibRequests.clear();
+}
+
 /**
  * Normalizes custom or default LRCLIB base API URL.
  * @param {string | null | undefined} [configUrl]
@@ -91,8 +113,9 @@ export function getActiveLyricIndex(lyrics, position, preRoll = 0, mode = "defau
 export class LyricsController {
   /**
    * @param {YetAnotherMediaPlayerCard} host
+   * @param {Map<string, LyricsLine[]>} [cache]
    */
-  constructor(host) {
+  constructor(host, cache = sharedLyricsCache) {
     /** @type {YetAnotherMediaPlayerCard} */
     this.host = host;
 
@@ -110,7 +133,7 @@ export class LyricsController {
     this.active = false;
 
     /** @type {Map<string, LyricsLine[]>} */
-    this.cache = new Map();
+    this.cache = cache;
 
     /** @type {string | null} */
     this.lastTrackId = null;
@@ -345,13 +368,15 @@ export class LyricsController {
     const effectiveDuration = isRadio ? null : duration;
 
     // 1. Check Internal Cache
-    const cacheKey = trackId ? `${trackId}:${artist}:${title}` : `${artist}:${title}`;
+    const cacheKey = trackId
+      ? `${trackId}:${artist}:${title}`
+      : `${artist}:${title}${effectiveAlbum ? `:${effectiveAlbum}` : ""}`;
 
     if (this.loading && this.fetchingCacheKey === cacheKey) return;
 
     if (this.cache.has(cacheKey)) {
       const cachedLyrics = this.cache.get(cacheKey);
-      if (cachedLyrics) {
+      if (cachedLyrics !== undefined) {
         this.cache.delete(cacheKey);
         this.cache.set(cacheKey, cachedLyrics);
 
@@ -440,7 +465,7 @@ export class LyricsController {
 
       if (this.currentFetchToken === fetchToken) {
         this.lyrics = lyrics || [];
-        if (lyrics && lyrics.length > 0) {
+        if (Array.isArray(lyrics)) {
           if (this.cache.size >= MAX_LYRICS_CACHE_SIZE) {
             const oldestKey = this.cache.keys().next().value;
             if (oldestKey !== undefined) {
@@ -613,49 +638,121 @@ export class LyricsController {
         );
       }
 
-      const headers = {
-        "Lrclib-Client": `yet-another-media-player/${version} (https://github.com/jianyu-li/yet-another-media-player)`,
-      };
+      const dedupKey = `${baseUrl}:${cleanArtist}:${cleanTitle}:${cleanAlbum}:${duration ? Math.round(duration) : ""}`;
 
-      let url = `${baseUrl}/get?artist_name=${encodeURIComponent(cleanArtist)}&track_name=${encodeURIComponent(cleanTitle)}`;
-      if (cleanAlbum) url += `&album_name=${encodeURIComponent(cleanAlbum)}`;
-      if (duration) url += `&duration=${Math.round(duration)}`;
-
-      const response = await fetch(url, { headers });
-      if (fetchToken && this.currentFetchToken !== fetchToken) return [];
-
-      if (!response.ok && response.status !== 404) {
-        throw new Error(`LRCLIB error: ${response.status}`);
+      if (inFlightLrclibRequests.has(dedupKey)) {
+        const existingPromise = inFlightLrclibRequests.get(dedupKey);
+        if (existingPromise && /** @type {any} */ (existingPromise)._fetchFn === globalThis.fetch) {
+          const results = await existingPromise;
+          if (fetchToken && this.currentFetchToken !== fetchToken) return [];
+          return results || [];
+        } else {
+          inFlightLrclibRequests.delete(dedupKey);
+        }
       }
 
-      let data = null;
-      if (response.ok) {
-        data = await response.json();
-      } else {
-        const searchUrl = `${baseUrl}/search?artist_name=${encodeURIComponent(cleanArtist)}&track_name=${encodeURIComponent(cleanTitle)}`;
-        const searchRes = await fetch(searchUrl, { headers });
-        if (fetchToken && this.currentFetchToken !== fetchToken) return [];
+      /** @type {Promise<LyricsLine[]>} */
+      const requestPromise = (async () => {
+        const headers = {
+          "Lrclib-Client": `yet-another-media-player/${version} (https://github.com/jianyu-li/yet-another-media-player)`,
+        };
 
-        if (searchRes.ok) {
-          const results = await searchRes.json();
-          if (results && results.length > 0) {
-            data = results[0];
+        /**
+         * Fetches URL with retry for transient 503 and 429 status codes.
+         * @param {string} targetUrl
+         * @returns {Promise<Response | null>}
+         */
+        const fetchWithRetry = async (targetUrl) => {
+          let response = await fetch(targetUrl, { headers });
+          if (fetchToken && this.currentFetchToken !== fetchToken) return null;
+
+          if (response.status === 503 || response.status === 429) {
+            let delayMs = 1000;
+            /** @type {string | null | undefined} */
+            let retryHeader = null;
+            if (typeof response.headers?.get === "function") {
+              retryHeader = response.headers.get("Retry-After");
+            } else if (response.headers && typeof response.headers === "object") {
+              retryHeader =
+                /** @type {any} */ (response.headers)["Retry-After"] ||
+                /** @type {any} */ (response.headers)["retry-after"];
+            }
+
+            if (retryHeader) {
+              const parsedSec = parseInt(retryHeader, 10);
+              if (!Number.isNaN(parsedSec) && parsedSec >= 0) {
+                delayMs = parsedSec * 1000;
+              }
+            }
+            delayMs = Math.min(3000, Math.max(500, delayMs));
+            delayMs += Math.floor(Math.random() * 250);
+
+            if (fetchToken && this.currentFetchToken !== fetchToken) return null;
+            await new Promise((resolve) => setTimeout(resolve, delayMs));
+            if (fetchToken && this.currentFetchToken !== fetchToken) return null;
+
+            response = await fetch(targetUrl, { headers });
+            if (fetchToken && this.currentFetchToken !== fetchToken) return null;
+          }
+
+          if (!response.ok && response.status !== 404) {
+            throw new Error(`LRCLIB error: ${response.status}`);
+          }
+
+          return response;
+        };
+
+        let url = `${baseUrl}/get?artist_name=${encodeURIComponent(cleanArtist)}&track_name=${encodeURIComponent(cleanTitle)}`;
+        if (cleanAlbum) url += `&album_name=${encodeURIComponent(cleanAlbum)}`;
+        if (duration) url += `&duration=${Math.round(duration)}`;
+
+        const response = await fetchWithRetry(url);
+        if (fetchToken && this.currentFetchToken !== fetchToken) return [];
+        if (!response) return [];
+
+        /** @type {any} */
+        let data = null;
+        if (response.ok) {
+          data = await response.json();
+        } else {
+          const searchUrl = `${baseUrl}/search?artist_name=${encodeURIComponent(cleanArtist)}&track_name=${encodeURIComponent(cleanTitle)}`;
+          const searchRes = await fetchWithRetry(searchUrl);
+          if (fetchToken && this.currentFetchToken !== fetchToken) return [];
+          if (!searchRes) return [];
+
+          if (searchRes.ok) {
+            const results = await searchRes.json();
+            if (results && results.length > 0) {
+              data = results[0];
+            }
           }
         }
-      }
 
-      if (data) {
-        if (data.instrumental) {
-          return [
-            {
-              time: 0,
-              text: localize("lyrics.instrumental") || "Instrumental Track",
-              isInstrumental: true,
-            },
-          ];
+        if (data) {
+          if (data.instrumental) {
+            return [
+              {
+                time: 0,
+                text: localize("lyrics.instrumental") || "Instrumental Track",
+                isInstrumental: true,
+              },
+            ];
+          }
+          const lrcString = data.syncedLyrics || data.plainLyrics || "";
+          return lrcString ? parseLrc(lrcString) : [];
         }
-        const lrcString = data.syncedLyrics || data.plainLyrics || "";
-        return lrcString ? parseLrc(lrcString) : [];
+
+        return [];
+      })();
+
+      /** @type {any} */ (requestPromise)._fetchFn = globalThis.fetch;
+      inFlightLrclibRequests.set(dedupKey, requestPromise);
+      try {
+        const results = await requestPromise;
+        if (fetchToken && this.currentFetchToken !== fetchToken) return [];
+        return results || [];
+      } finally {
+        inFlightLrclibRequests.delete(dedupKey);
       }
     } catch (e) {
       console.warn("YAMP: LRCLIB Lyrics fetch failed:", e);
