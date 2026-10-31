@@ -1,4 +1,4 @@
-import { describe, it, beforeEach, mock } from "node:test";
+import { describe, it, beforeEach, afterEach, mock } from "node:test";
 import assert from "node:assert/strict";
 import {
   LyricsController,
@@ -6,6 +6,10 @@ import {
   getActiveLyricIndex,
   getLrclibBaseUrl,
   MAX_LYRICS_CACHE_SIZE,
+  sharedLyricsCache,
+  clearSharedLyricsCacheForTests,
+  inFlightLrclibRequests,
+  clearInFlightLrclibRequestsForTests,
 } from "../src/controllers/lyrics-controller.js";
 
 describe("LyricsController & Lyric Helpers", () => {
@@ -161,6 +165,8 @@ describe("LyricsController & Lyric Helpers", () => {
     let mockHost;
 
     beforeEach(() => {
+      clearSharedLyricsCacheForTests();
+      clearInFlightLrclibRequestsForTests();
       mockHost = {
         addController: mock.fn(),
         requestUpdate: mock.fn(),
@@ -186,6 +192,11 @@ describe("LyricsController & Lyric Helpers", () => {
           },
         },
       };
+    });
+
+    afterEach(() => {
+      clearSharedLyricsCacheForTests();
+      clearInFlightLrclibRequestsForTests();
     });
 
     it("registers with host element and initializes default state", () => {
@@ -665,6 +676,373 @@ describe("LyricsController & Lyric Helpers", () => {
         false
       );
       assert.strictEqual(controller.isCurrentlyPlayingRadio(null), false);
+    });
+
+    describe("LRCLIB deduplication & retry with backoff", () => {
+      beforeEach(() => {
+        clearSharedLyricsCacheForTests();
+        clearInFlightLrclibRequestsForTests();
+      });
+
+      afterEach(() => {
+        clearSharedLyricsCacheForTests();
+        clearInFlightLrclibRequestsForTests();
+      });
+
+      it("deduplicates concurrent in-flight LRCLIB requests for identical tracks and supports clearing", async () => {
+        const controller = new LyricsController(mockHost);
+        const originalFetch = globalThis.fetch;
+        let fetchCallCount = 0;
+
+        globalThis.fetch = /** @type {any} */ (
+          async () => {
+            fetchCallCount++;
+            return {
+              ok: true,
+              status: 200,
+              json: async () => ({
+                syncedLyrics: "[00:01.00] Shared lyrics",
+              }),
+            };
+          }
+        );
+
+        try {
+          clearInFlightLrclibRequestsForTests();
+          assert.strictEqual(inFlightLrclibRequests.size, 0);
+
+          const promise1 = controller.getLrclibLyrics("Artist A", "Track 1");
+          const promise2 = controller.getLrclibLyrics("Artist A", "Track 1");
+
+          const [lyrics1, lyrics2] = await Promise.all([promise1, promise2]);
+
+          assert.strictEqual(fetchCallCount, 1);
+          assert.deepStrictEqual(lyrics1, lyrics2);
+          assert.strictEqual(lyrics1.length, 1);
+          assert.strictEqual(lyrics1[0].text, "Shared lyrics");
+          assert.strictEqual(inFlightLrclibRequests.size, 0);
+
+          // Verify clearInFlightLrclibRequestsForTests clears active map
+          inFlightLrclibRequests.set("manual_key", /** @type {any} */ (Promise.resolve([])));
+          assert.strictEqual(inFlightLrclibRequests.size, 1);
+          clearInFlightLrclibRequestsForTests();
+          assert.strictEqual(inFlightLrclibRequests.size, 0);
+        } finally {
+          globalThis.fetch = originalFetch;
+        }
+      });
+
+      it("retries on HTTP 503 with backoff and returns lyrics when retry succeeds", async (context) => {
+        const clock = context.mock.timers;
+        clock.enable({ apis: ["setTimeout"] });
+        const controller = new LyricsController(mockHost);
+        const originalFetch = globalThis.fetch;
+        let fetchCallCount = 0;
+
+        globalThis.fetch = /** @type {any} */ (
+          async () => {
+            fetchCallCount++;
+            if (fetchCallCount === 1) {
+              return {
+                ok: false,
+                status: 503,
+                headers: new Headers({ "Retry-After": "1" }),
+              };
+            }
+            return {
+              ok: true,
+              status: 200,
+              json: async () => ({
+                syncedLyrics: "[00:02.00] 503 retry success",
+              }),
+            };
+          }
+        );
+
+        try {
+          const fetchPromise = controller.getLrclibLyrics("Artist 503", "Track 503");
+          await new Promise((resolve) => setImmediate(resolve));
+          clock.tick(3500);
+
+          const lyrics = await fetchPromise;
+          assert.strictEqual(fetchCallCount, 2);
+          assert.strictEqual(lyrics.length, 1);
+          assert.strictEqual(lyrics[0].time, 2);
+          assert.strictEqual(lyrics[0].text, "503 retry success");
+        } finally {
+          globalThis.fetch = originalFetch;
+        }
+      });
+
+      it("catches error and safely returns empty array when HTTP 503 persists after retry", async (context) => {
+        const clock = context.mock.timers;
+        clock.enable({ apis: ["setTimeout"] });
+        const controller = new LyricsController(mockHost);
+        const originalFetch = globalThis.fetch;
+        const originalWarn = console.warn;
+        console.warn = () => {};
+        let fetchCallCount = 0;
+
+        globalThis.fetch = /** @type {any} */ (
+          async () => {
+            fetchCallCount++;
+            return {
+              ok: false,
+              status: 503,
+              headers: new Headers({ "Retry-After": "1" }),
+            };
+          }
+        );
+
+        try {
+          const fetchPromise = controller.getLrclibLyrics(
+            "Artist 503 Persist",
+            "Track 503 Persist"
+          );
+          await new Promise((resolve) => setImmediate(resolve));
+          clock.tick(3500);
+
+          const lyrics = await fetchPromise;
+          assert.strictEqual(fetchCallCount, 2);
+          assert.deepStrictEqual(lyrics, []);
+        } finally {
+          console.warn = originalWarn;
+          globalThis.fetch = originalFetch;
+        }
+      });
+
+      it("retries on HTTP 429 rate limit with backoff and succeeds on subsequent 200 response", async (context) => {
+        const clock = context.mock.timers;
+        clock.enable({ apis: ["setTimeout"] });
+        const controller = new LyricsController(mockHost);
+        const originalFetch = globalThis.fetch;
+        let fetchCallCount = 0;
+
+        globalThis.fetch = /** @type {any} */ (
+          async () => {
+            fetchCallCount++;
+            if (fetchCallCount === 1) {
+              return {
+                ok: false,
+                status: 429,
+                headers: { "Retry-After": "2" },
+              };
+            }
+            return {
+              ok: true,
+              status: 200,
+              json: async () => ({
+                plainLyrics: "Plain text after 429 rate limit",
+              }),
+            };
+          }
+        );
+
+        try {
+          const fetchPromise = controller.getLrclibLyrics("Artist 429", "Track 429");
+          await new Promise((resolve) => setImmediate(resolve));
+          clock.tick(3500);
+
+          const lyrics = await fetchPromise;
+          assert.strictEqual(fetchCallCount, 2);
+          assert.strictEqual(lyrics.length, 1);
+          assert.strictEqual(lyrics[0].text, "Plain text after 429 rate limit");
+        } finally {
+          globalThis.fetch = originalFetch;
+        }
+      });
+
+      it("aborts retry and returns empty array when fetchToken changes during backoff delay", async (context) => {
+        const clock = context.mock.timers;
+        clock.enable({ apis: ["setTimeout"] });
+        const controller = new LyricsController(mockHost);
+        const originalFetch = globalThis.fetch;
+        let fetchCallCount = 0;
+
+        globalThis.fetch = /** @type {any} */ (
+          async () => {
+            fetchCallCount++;
+            return {
+              ok: false,
+              status: 503,
+              headers: { "Retry-After": "1" },
+            };
+          }
+        );
+
+        try {
+          const token1 = Symbol("initialToken");
+          controller.currentFetchToken = token1;
+
+          const fetchPromise = controller.getLrclibLyrics(
+            "Artist Abort",
+            "Track Abort",
+            "",
+            null,
+            token1
+          );
+
+          await new Promise((resolve) => setImmediate(resolve));
+
+          // Invalidate token while waiting in backoff setTimeout
+          controller.currentFetchToken = Symbol("newToken");
+
+          clock.tick(3500);
+
+          const lyrics = await fetchPromise;
+          assert.strictEqual(fetchCallCount, 1);
+          assert.deepStrictEqual(lyrics, []);
+        } finally {
+          globalThis.fetch = originalFetch;
+        }
+      });
+    });
+
+    describe("Shared lyrics cache & negative caching", () => {
+      beforeEach(() => {
+        clearSharedLyricsCacheForTests();
+        clearInFlightLrclibRequestsForTests();
+      });
+
+      afterEach(() => {
+        clearSharedLyricsCacheForTests();
+        clearInFlightLrclibRequestsForTests();
+      });
+
+      it("shares completed lyrics cache between multiple controller instances", async () => {
+        const originalFetch = globalThis.fetch;
+        let fetchCallCount = 0;
+
+        const mockLrcResponse = {
+          id: 999,
+          trackName: "Bohemian Rhapsody",
+          artistName: "Queen",
+          syncedLyrics: "[00:02.00] Mama, just killed a man\n[00:05.00] Put a gun against his head",
+        };
+
+        globalThis.fetch = /** @type {any} */ (
+          async () => {
+            fetchCallCount++;
+            return {
+              ok: true,
+              status: 200,
+              json: async () => mockLrcResponse,
+            };
+          }
+        );
+
+        try {
+          const c1 = new LyricsController(/** @type {any} */ (mockHost));
+          c1.active = true;
+          mockHost._lyricsActive = true;
+
+          const mockHost2 = /** @type {any} */ ({
+            ...mockHost,
+            _massLyrics: [],
+            _lyricsActive: true,
+            requestUpdate: mock.fn(),
+          });
+          const c2 = new LyricsController(/** @type {any} */ (mockHost2));
+          c2.active = true;
+
+          await c1.fetchLyrics();
+
+          assert.strictEqual(fetchCallCount, 1);
+          assert.strictEqual(c1.lyrics.length, 2);
+          assert.strictEqual(c1.lyrics[0].text, "Mama, just killed a man");
+
+          await c2.fetchLyrics();
+
+          assert.strictEqual(
+            fetchCallCount,
+            1,
+            "fetch must not be called again when lyrics are cached in shared cache"
+          );
+          assert.deepStrictEqual(c2.lyrics, c1.lyrics);
+          assert.deepStrictEqual(mockHost2._massLyrics, c1.lyrics);
+          assert.strictEqual(mockHost2.requestUpdate.mock.callCount(), 1);
+        } finally {
+          globalThis.fetch = originalFetch;
+        }
+      });
+
+      it("negatively caches when no lyrics are found and skips subsequent fetches", async () => {
+        const originalFetch = globalThis.fetch;
+        let fetchCallCount = 0;
+
+        globalThis.fetch = /** @type {any} */ (
+          async () => {
+            fetchCallCount++;
+            return {
+              ok: false,
+              status: 404,
+            };
+          }
+        );
+
+        try {
+          const c1 = new LyricsController(/** @type {any} */ (mockHost));
+          c1.active = true;
+          mockHost._lyricsActive = true;
+
+          const mockHost2 = /** @type {any} */ ({
+            ...mockHost,
+            _massLyrics: [],
+            _lyricsActive: true,
+            requestUpdate: mock.fn(),
+          });
+          const c2 = new LyricsController(/** @type {any} */ (mockHost2));
+          c2.active = true;
+
+          await c1.fetchLyrics();
+
+          const callsAfterFirstFetch = fetchCallCount;
+          assert.ok(callsAfterFirstFetch > 0, "Network fetch was performed initially");
+          assert.deepStrictEqual(c1.lyrics, []);
+          assert.deepStrictEqual(mockHost._massLyrics, []);
+          assert.strictEqual(c1.error, false);
+
+          // Second fetch from distinct instance c2 for the same track metadata
+          await c2.fetchLyrics();
+
+          assert.strictEqual(
+            fetchCallCount,
+            callsAfterFirstFetch,
+            "Subsequent fetch for missing lyrics should hit negative cache and not trigger network requests"
+          );
+          assert.deepStrictEqual(c2.lyrics, []);
+          assert.deepStrictEqual(mockHost2._massLyrics, []);
+        } finally {
+          globalThis.fetch = originalFetch;
+        }
+      });
+
+      it("clears shared lyrics cache using clearSharedLyricsCacheForTests()", () => {
+        const controller = new LyricsController(/** @type {any} */ (mockHost));
+        assert.strictEqual(sharedLyricsCache.size, 0);
+
+        sharedLyricsCache.set("key_1", [{ time: 0, text: "Line 1" }]);
+        sharedLyricsCache.set("key_2", []);
+        assert.strictEqual(sharedLyricsCache.size, 2);
+        assert.strictEqual(controller.cache.size, 2);
+
+        clearSharedLyricsCacheForTests();
+
+        assert.strictEqual(sharedLyricsCache.size, 0);
+        assert.strictEqual(controller.cache.size, 0);
+      });
+
+      it("supports custom cache instance injection isolated from sharedLyricsCache", () => {
+        const customCache = new Map();
+        const customController = new LyricsController(/** @type {any} */ (mockHost), customCache);
+
+        assert.strictEqual(customController.cache, customCache);
+        assert.notStrictEqual(customController.cache, sharedLyricsCache);
+
+        customController.cache.set("custom_key", [{ time: 10, text: "Custom Line" }]);
+        assert.strictEqual(customCache.size, 1);
+        assert.strictEqual(sharedLyricsCache.size, 0);
+      });
     });
   });
 });
