@@ -881,6 +881,7 @@ export declare class IdleController {
   host: YetAnotherMediaPlayerCard;
   isIdle: boolean;
   idleTimeout: any;
+  initialCheckTimer: any;
   idleTimeoutMs: number;
   idleScreenApplied: boolean;
   hasSeenPlayback: boolean;

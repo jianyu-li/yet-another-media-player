@@ -19,9 +19,12 @@
  * @returns {number}
  */
 export function parseIdleTimeoutMs(value, defaultValue = 60000) {
-  if (value !== undefined && value !== null && value !== "") {
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? Math.max(0, value) : defaultValue;
+  }
+  if (typeof value === "string" && value.trim() !== "") {
     const parsed = Number(value);
-    if (!Number.isNaN(parsed)) {
+    if (Number.isFinite(parsed)) {
       return Math.max(0, parsed);
     }
   }
@@ -43,12 +46,18 @@ export function getSearchDismissBehavior(config, cardType) {
   };
 }
 
+const IDLE_SCREEN_SEARCH_FILTER_MAP = Object.freeze({
+  search: "default",
+  "search-recently-played": "recently-played",
+  "search-next-up": "next-up",
+});
+
 export class IdleController {
   /**
-   * @param {YetAnotherMediaPlayerCard | any} host
+   * @param {YetAnotherMediaPlayerCard} host
    */
   constructor(host) {
-    /** @type {YetAnotherMediaPlayerCard | any} */
+    /** @type {YetAnotherMediaPlayerCard} */
     this.host = host;
     if (host && typeof host.addController === "function") {
       host.addController(this);
@@ -56,7 +65,7 @@ export class IdleController {
 
     this.isIdle =
       host && Object.prototype.hasOwnProperty.call(host, "_isIdle") ? Boolean(host._isIdle) : false;
-    /** @type {ReturnType<typeof setTimeout> | null} */
+    /** @type {any} */
     this.idleTimeout =
       host && Object.prototype.hasOwnProperty.call(host, "_idleTimeout") ? host._idleTimeout : null;
     this.idleTimeoutMs =
@@ -73,7 +82,7 @@ export class IdleController {
       host && Object.prototype.hasOwnProperty.call(host, "_hasSeenPlayback")
         ? Boolean(host._hasSeenPlayback)
         : false;
-    /** @type {ReturnType<typeof setTimeout> | null} */
+    /** @type {any} */
     this.initialCheckTimer = null;
   }
 
@@ -127,43 +136,16 @@ export class IdleController {
    * Applies the configured idle screen if idle and not yet applied.
    */
   applyIdleScreen() {
-    if (this.host?._cardType === "group_players") return;
-    if (this.idleScreenApplied) return;
-    const mode = this.host?._idleScreen || "default";
-    switch (mode) {
-      case "search":
-        if (this.host) {
-          this.host._showEntityOptions = true;
-          this.host._showGrouping = false;
-          this.host._showSourceList = false;
-          this.host._showTransferQueue = false;
-          this.host._showResolvedEntities = false;
-          this.host._showSearchSheetInOptions?.("default");
-        }
-        break;
-      case "search-recently-played":
-        if (this.host) {
-          this.host._showEntityOptions = true;
-          this.host._showGrouping = false;
-          this.host._showSourceList = false;
-          this.host._showTransferQueue = false;
-          this.host._showResolvedEntities = false;
-          this.host._showSearchSheetInOptions?.("recently-played");
-        }
-        break;
-      case "search-next-up":
-        if (this.host) {
-          this.host._showEntityOptions = true;
-          this.host._showGrouping = false;
-          this.host._showSourceList = false;
-          this.host._showTransferQueue = false;
-          this.host._showResolvedEntities = false;
-          this.host._showSearchSheetInOptions?.("next-up");
-        }
-        break;
-      default:
-        return;
-    }
+    if (!this.host || this.host._cardType === "group_players" || this.idleScreenApplied) return;
+    const mode = this.host._idleScreen || "default";
+    const searchFilter = IDLE_SCREEN_SEARCH_FILTER_MAP[mode];
+    if (!searchFilter) return;
+    this.host._showEntityOptions = true;
+    this.host._showGrouping = false;
+    this.host._showSourceList = false;
+    this.host._showTransferQueue = false;
+    this.host._showResolvedEntities = false;
+    this.host._showSearchSheetInOptions?.(searchFilter);
     this.idleScreenApplied = true;
   }
 
@@ -206,6 +188,10 @@ export class IdleController {
    * Schedules initial idle check on card load.
    */
   scheduleInitialIdleCheck() {
+    if (this.initialCheckTimer) {
+      clearTimeout(this.initialCheckTimer);
+      this.initialCheckTimer = null;
+    }
     this.initialCheckTimer = setTimeout(() => {
       this.initialCheckTimer = null;
       if (!this.host) return;

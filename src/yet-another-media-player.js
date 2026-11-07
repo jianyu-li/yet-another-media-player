@@ -3012,6 +3012,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._idleScreenApplied = false;
     this._hasSeenPlayback = false;
     this._appearance = config.appearance || "automatic";
+    this._ensureIdleController().setConfig(this.config);
     if (this._isIdle) {
       this._applyIdleScreen();
     }
@@ -3097,7 +3098,6 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     }
     // Handle card_height templates (similar to idle_image)
     // card_height now uses websocket template subscriptions
-    this._ensureIdleController().setConfig(this.config);
     this._volumeStep = typeof config.volume_step === "number" ? config.volume_step : 0.05;
     this._volumeMode = config.volume_mode ?? "slider";
     if (config.always_show_lyrics === true) {

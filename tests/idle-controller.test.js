@@ -105,6 +105,12 @@ describe("IdleController & Pure Idle Helpers", () => {
       assert.strictEqual(parseIdleTimeoutMs("abc", 20000), 20000);
       assert.strictEqual(parseIdleTimeoutMs(NaN), 60000);
       assert.strictEqual(parseIdleTimeoutMs({}, 10000), 10000);
+      assert.strictEqual(parseIdleTimeoutMs("   ", 25000), 25000);
+      assert.strictEqual(parseIdleTimeoutMs(false, 30000), 30000);
+      assert.strictEqual(parseIdleTimeoutMs(true, 30000), 30000);
+      assert.strictEqual(parseIdleTimeoutMs([], 40000), 40000);
+      assert.strictEqual(parseIdleTimeoutMs(Infinity, 50000), 50000);
+      assert.strictEqual(parseIdleTimeoutMs(-Infinity, 50000), 50000);
     });
   });
 
@@ -197,13 +203,13 @@ describe("IdleController & Pure Idle Helpers", () => {
 
     it("handles null or undefined host gracefully without throwing", () => {
       assert.doesNotThrow(() => {
-        const controllerNull = new IdleController(null);
+        const controllerNull = new IdleController(/** @type {any} */ (null));
         assert.strictEqual(controllerNull.host, null);
         assert.strictEqual(controllerNull.isIdle, false);
       });
 
       assert.doesNotThrow(() => {
-        const controllerUndef = new IdleController(undefined);
+        const controllerUndef = new IdleController(/** @type {any} */ (undefined));
         assert.strictEqual(controllerUndef.host, undefined);
         assert.strictEqual(controllerUndef.isIdle, false);
       });
@@ -456,7 +462,7 @@ describe("IdleController & Pure Idle Helpers", () => {
     });
 
     it("handles null host safely in applyIdleScreen", () => {
-      const controller = new IdleController(null);
+      const controller = new IdleController(/** @type {any} */ (null));
       assert.doesNotThrow(() => controller.applyIdleScreen());
       assert.strictEqual(controller.idleScreenApplied, false);
     });
@@ -553,6 +559,31 @@ describe("IdleController & Pure Idle Helpers", () => {
   });
 
   describe("scheduleInitialIdleCheck", () => {
+    it("clears previously pending timer before scheduling when called multiple times", (t) => {
+      const clock = t.mock.timers;
+      clock.enable({ apis: ["setTimeout"] });
+
+      const mockHost = createMockHost();
+      const controller = new IdleController(/** @type {any} */ (mockHost));
+      const clearTimeoutSpy = t.mock.method(globalThis, "clearTimeout");
+
+      controller.scheduleInitialIdleCheck();
+      const firstTimer = controller.initialCheckTimer;
+      assert.notStrictEqual(firstTimer, null);
+
+      controller.scheduleInitialIdleCheck();
+      const secondTimer = controller.initialCheckTimer;
+      assert.notStrictEqual(secondTimer, null);
+      assert.notStrictEqual(firstTimer, secondTimer);
+
+      assert.strictEqual(clearTimeoutSpy.mock.calls.length >= 1, true);
+      const callArgs = /** @type {any[]} */ (clearTimeoutSpy.mock.calls[0].arguments);
+      assert.strictEqual(callArgs[0], firstTimer);
+
+      clock.tick(1);
+      assert.strictEqual(controller.initialCheckTimer, null);
+    });
+
     it("handles dedicated search mode by auto-opening search sheet and remaining awake", (t) => {
       const clock = t.mock.timers;
       clock.enable({ apis: ["setTimeout"] });
