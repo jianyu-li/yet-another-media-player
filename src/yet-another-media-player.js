@@ -40,6 +40,7 @@ import { ArtworkController } from "./controllers/artwork-controller.js";
 import { QueueController } from "./controllers/queue-controller.js";
 import { VolumeHoldController, getVolumeIconForPercent } from "./controllers/volume-hold-controller.js";
 import { SearchController } from "./controllers/search-controller.js";
+import { IdleController } from "./controllers/idle-controller.js";
 import {
   mediaPlay,
   mediaPause,
@@ -155,73 +156,15 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _applyIdleScreen() {
-    if (this._cardType === "group_players") return;
-    if (this._idleScreenApplied) return;
-    const mode = this._idleScreen || "default";
-    switch (mode) {
-      case "search":
-        this._showEntityOptions = true;
-        this._showGrouping = false;
-        this._showSourceList = false;
-        this._showTransferQueue = false;
-        this._showResolvedEntities = false;
-        this._showSearchSheetInOptions("default");
-        break;
-      case "search-recently-played":
-        this._showEntityOptions = true;
-        this._showGrouping = false;
-        this._showSourceList = false;
-        this._showTransferQueue = false;
-        this._showResolvedEntities = false;
-        this._showSearchSheetInOptions("recently-played");
-        break;
-      case "search-next-up":
-        this._showEntityOptions = true;
-        this._showGrouping = false;
-        this._showSourceList = false;
-        this._showTransferQueue = false;
-        this._showResolvedEntities = false;
-        this._showSearchSheetInOptions("next-up");
-        break;
-      default:
-        return;
-    }
-    this._idleScreenApplied = true;
+    this._ensureIdleController().applyIdleScreen();
   }
 
   _getSearchDismissBehavior() {
-    const cardDismissSetting = this.config.dismiss_search_on_play !== false;
-    const isSearchMode = this._cardType === "search";
-    return {
-      shouldDismiss: !isSearchMode && cardDismissSetting,
-      shouldReset: isSearchMode && cardDismissSetting,
-    };
+    return this._ensureIdleController().getSearchDismissBehavior();
   }
 
   _resetIdleScreen() {
-    if (!this._idleScreenApplied) return;
-
-    const { shouldDismiss, shouldReset } = this._getSearchDismissBehavior();
-
-    switch (this._idleScreen) {
-      case "search":
-      case "search-recently-played":
-      case "search-next-up":
-        if (shouldDismiss) {
-          this._hideSearchSheetInOptions();
-          this._showEntityOptions = false;
-        } else if (shouldReset) {
-          this._showSearchSheetInOptions();
-        } else {
-          this._idleScreenApplied = false;
-          return;
-        }
-        break;
-      default:
-        break;
-    }
-    this._idleScreenApplied = false;
-    this.requestUpdate();
+    this._ensureIdleController().resetIdleScreen();
   }
   _handleChipPointerMove(e, idx) {
     if (this._holdToPin && this._holdHandler) {
@@ -1090,8 +1033,9 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     // Accent color, updated in setConfig
     // Outside click handler for source dropdown
     this._sourceDropdownOutsideHandler = null;
-    this._isIdle = false;
-    this._idleTimeout = null;
+    // Idle controller
+    /** @type {IdleController} */
+    this._idleController = new IdleController(this);
     // Overlay state for entity options
     this._showEntityOptions = false;
     this._showMediaTitleOptions = false;
@@ -1197,8 +1141,6 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._lastRenderedHideControls = false;
     this._baseArtworkObjectFit = "cover";
     this._idleScreen = "default";
-    this._idleScreenApplied = false;
-    this._hasSeenPlayback = false;
     this._adaptiveText = false;
     this._textResizeObserver = null;
     this._currentTextScale = null;
@@ -1258,58 +1200,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
     // Collapse on load if nothing is playing (but respect linger state and idle_timeout_ms)
     // In specialized card modes, skip idle and auto-open dedicated view
-    setTimeout(() => {
-      if (this._cardType === "search") {
-        // Dedicated search mode: auto-open search as the primary view
-        this._showEntityOptions = true;
-        this._setIdleState(false);
-        this._showSearchSheetInOptions();
-        this.requestUpdate();
-        return;
-      }
-      if (this._cardType === "up_next") {
-        // Dedicated up next mode: auto-open search filtered to up next
-        this._showEntityOptions = true;
-        this._setIdleState(false);
-        this._showSearchSheetInOptions("next-up");
-        this.requestUpdate();
-        return;
-      }
-      if (this._cardType === "remote_control") {
-        // Dedicated remote control mode
-        this._showEntityOptions = true;
-        this._showRemoteControl = true;
-        this._setIdleState(false);
-        this.requestUpdate();
-        return;
-      }
-      if (this._cardType === "group_players") {
-        // Dedicated group players mode: auto-open grouping as the primary view
-        this._showEntityOptions = true;
-        this._setIdleState(false);
-        this._showGrouping = true;
-        this.requestUpdate();
-        return;
-      }
-      if (this.hass && this.entityIds && this.entityIds.length > 0) {
-        const stateObj = this.hass.states[this.entityIds[this._selectedIndex]];
-        // Don't go idle if there's an active linger or if idle_timeout_ms is 0
-        const hasActiveLinger = this._playbackLingerByIdx?.[this._selectedIndex] &&
-          this._playbackLingerByIdx[this._selectedIndex].until > Date.now();
-        const isAnyUnrestrictedPlaying = this.entityIds.some((id, idx) => {
-          if (this._isAutoSelectDisabled(idx)) return false;
-          const stateObj = this.hass.states[id];
-          return this._isEntityPlaying(stateObj);
-        });
-        const isCurrentDisabled = this._isAutoSelectDisabled(this._selectedIndex);
-        const isCurrentPlaying = this._isEntityPlaying(stateObj) && (!isCurrentDisabled || this._manualSelect);
-
-        if (stateObj && !isCurrentPlaying && !isAnyUnrestrictedPlaying && !hasActiveLinger && this._idleTimeoutMs > 0) {
-          this._setIdleState(true);
-          this.requestUpdate();
-        }
-      }
-    }, 0);
+    this._idleController.scheduleInitialIdleCheck();
     // Store previous collapsed state
     this._prevCollapsed = null;
     // Search attempted flag for search-in-sheet
@@ -1324,7 +1215,6 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._searchSwipeAttached = false;
     // Snapshot of entities that were playing when manual‑select started.
     this._manualSelectPlayingSet = null;
-    this._idleTimeoutMs = 60000;
     this._volumeStep = 0.05;
     this._searchInputAutoFocused = false;
     this._disableSearchAutofocus = false;
@@ -1400,6 +1290,54 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._queueOpsTotal = 0;
     this._queueOpsCompleted = 0;
     this._queueOpsTimeout = null;
+  }
+
+  // Idle Controller Delegations & Getters
+  _ensureIdleController() {
+    if (!this._idleController) {
+      this._idleController = new IdleController(this);
+    }
+    return this._idleController;
+  }
+
+  get _isIdle() {
+    return this._ensureIdleController().isIdle;
+  }
+
+  set _isIdle(val) {
+    this._ensureIdleController().isIdle = Boolean(val);
+  }
+
+  get _idleTimeout() {
+    return this._ensureIdleController().idleTimeout;
+  }
+
+  set _idleTimeout(val) {
+    this._ensureIdleController().idleTimeout = val;
+  }
+
+  get _idleTimeoutMs() {
+    return this._ensureIdleController().idleTimeoutMs;
+  }
+
+  set _idleTimeoutMs(val) {
+    this._ensureIdleController().idleTimeoutMs = val;
+  }
+
+  get _idleScreenApplied() {
+    return this._ensureIdleController().idleScreenApplied;
+  }
+
+  set _idleScreenApplied(val) {
+    this._ensureIdleController().idleScreenApplied = Boolean(val);
+  }
+
+  get _hasSeenPlayback() {
+    return this._ensureIdleController().hasSeenPlayback;
+  }
+
+  set _hasSeenPlayback(val) {
+    this._ensureIdleController().hasSeenPlayback = Boolean(val);
   }
 
   // Template Controller Delegations
@@ -2875,10 +2813,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
    * template updates.
    */
   _setIdleState(idle) {
-    const targetIdle = this._idleTimeoutMs === 0 ? false : idle;
-    if (this._isIdle === targetIdle) return;
-    this._isIdle = targetIdle;
-    if (this._cardHeightTemplate) this._cardHeightTemplateNeedsResolve = true;
+    this._ensureIdleController().setIdleState(idle);
   }
   _ensureArtworkOverrideIndexMap() {
     this._artworkController.ensureArtworkOverrideIndexMap();
@@ -3162,24 +3097,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     }
     // Handle card_height templates (similar to idle_image)
     // card_height now uses websocket template subscriptions
-    // Set idle timeout ms
-    let parsedIdle = 60000;
-    if (config.idle_timeout_ms !== undefined && config.idle_timeout_ms !== null && config.idle_timeout_ms !== "") {
-      const parsed = Number(config.idle_timeout_ms);
-      if (!isNaN(parsed)) parsedIdle = Math.max(0, parsed);
-    }
-    this._idleTimeoutMs = parsedIdle;
-    if (this._idleTimeoutMs === 0) {
-      if (this._idleTimeout) {
-        clearTimeout(this._idleTimeout);
-        this._idleTimeout = null;
-      }
-      if (this._isIdle) {
-        this._setIdleState(false);
-        this._resetIdleScreen();
-        this.requestUpdate();
-      }
-    }
+    this._ensureIdleController().setConfig(this.config);
     this._volumeStep = typeof config.volume_step === "number" ? config.volume_step : 0.05;
     this._volumeMode = config.volume_mode ?? "slider";
     if (config.always_show_lyrics === true) {
@@ -8105,196 +8023,11 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   _updateIdleState(changedProps) {
-    if (this._cardType === "group_players") {
-      if (this._idleTimeout) clearTimeout(this._idleTimeout);
-      this._idleTimeout = null;
-      this._setIdleState(false);
-      this._showEntityOptions = true;
-      this._showGrouping = true;
-      return;
-    }
-    // Consider both main and Music Assistant entities so we can wake from idle
-    // even if the active selection is frozen while idle.
-    const isAnyUnrestrictedPlaying = this.entityIds.some((id, idx) => {
-      if (this._isAutoSelectDisabled(idx)) return false;
-
-      const activeId = this._getEntityForPurpose(idx, 'sorting');
-      return this._isEntityPlaying(this.hass?.states?.[activeId]);
-    });
-
-    const isCurrentPlaying = this._isCurrentEntityPlaying();
-    const isCurrentDisabled = this._isAutoSelectDisabled(this._selectedIndex);
-
-    // Condition to wake up or stay active immediately:
-    // Only wake up (from idle or initial load) if an UNRESTRICTED player is active.
-    // If already active, we only stay active immediately if the CURRENT player is playing
-    // AND it's either an unrestricted entity OR the user manually selected it.
-    const isCurrentPlayingValidForActive = isCurrentPlaying && (!isCurrentDisabled || this._manualSelect);
-
-    let shouldBeActiveImmediately;
-    if (this._isIdle || !this._hasSeenPlayback) {
-      shouldBeActiveImmediately = isAnyUnrestrictedPlaying || isCurrentPlaying;
-    } else {
-      shouldBeActiveImmediately = isCurrentPlayingValidForActive;
-    }
-
-    if (shouldBeActiveImmediately) {
-      // Became active, clear timer and set not idle
-      if (this._idleTimeout) clearTimeout(this._idleTimeout);
-      this._idleTimeout = null;
-      this._hasSeenPlayback = true;
-      if (this._isIdle) {
-        this._setIdleState(false);
-        this._resetIdleScreen();
-        this.requestUpdate();
-      }
-      return;
-    }
-
-    // Defer idle state if user is actively browsing menus
-    if (this.isAnyMenuOpen) {
-      if (this._idleTimeout) {
-        clearTimeout(this._idleTimeout);
-        this._idleTimeout = null;
-      }
-      return;
-    }
-
-    // Current is not playing, or nothing is playing.
-    if (!this._hasSeenPlayback) {
-        // Initial load with nothing playing - go idle immediately
-        if (this._idleTimeoutMs > 0) {
-          if (!this._isIdle) {
-            this._setIdleState(true);
-            this._idleScreenApplied = false;
-            this._applyIdleScreen();
-            this.requestUpdate();
-          }
-        } else if (this._isIdle) {
-          this._setIdleState(false);
-          this._resetIdleScreen();
-          this.requestUpdate();
-        }
-        return;
-      }
-
-      // Check for grace period: something is playing somewhere, but not the current choice.
-      // Or nothing is playing at all. In both cases, we wait for the timeout.
-      if (!this._isIdle && this._idleTimeoutMs > 0) {
-        const isTabChange = changedProps && changedProps.has("_selectedIndex");
-
-        if (isTabChange) {
-          // If we manually change tabs/chips, clear any existing idle timeout to start fresh
-          if (this._idleTimeout) {
-            clearTimeout(this._idleTimeout);
-            this._idleTimeout = null;
-          }
-
-          if (!isAnyUnrestrictedPlaying && this._idleTimeoutMs > 0) {
-            // Bypass grace period if we just switched away from the only thing keeping the card awake (a playing disabled entity)
-            this._setIdleState(true);
-            this._idleScreenApplied = false;
-
-            if (this._pinnedIndex === null) {
-              this._manualSelect = false;
-              this._manualSelectPlayingSet = null;
-            }
-
-            this._applyIdleScreen();
-            this.requestUpdate();
-          } else {
-            // Something is playing, start a fresh timeout for the new selection
-            this._idleTimeout = setTimeout(() => {
-              this._handleIdleTimeoutCallback();
-            }, this._idleTimeoutMs);
-            if (typeof this._idleTimeout?.unref === "function") this._idleTimeout.unref();
-          }
-        } else if (!this._idleTimeout) {
-          this._idleTimeout = setTimeout(() => {
-            this._handleIdleTimeoutCallback();
-          }, this._idleTimeoutMs);
-          if (typeof this._idleTimeout?.unref === "function") this._idleTimeout.unref();
-        }
-      }
-
-      // If idle_timeout_ms is 0, ensure we're never idle
-      if (this._idleTimeoutMs === 0 && this._isIdle) {
-        this._setIdleState(false);
-        this._resetIdleScreen();
-        this.requestUpdate();
-      }
+    this._ensureIdleController().updateIdleState(changedProps);
   }
 
   _handleIdleTimeoutCallback() {
-    if (this._cardType === "group_players") {
-      this._idleTimeout = null;
-      this._setIdleState(false);
-      this._showEntityOptions = true;
-      this._showGrouping = true;
-      this.requestUpdate();
-      return;
-    }
-    // In search card mode: reset drill-down instead of going idle
-    if (this._cardType === "search" || this._cardType === "up_next") {
-      this._idleTimeout = null;
-      if (this._searchHierarchy.length > 0) {
-        this._searchHierarchy = [];
-        this._searchBreadcrumb = "";
-        this._searchResultsByType = {};
-        const defaultFilter = this.config?.default_search_filter === 'all' ? null : this.config?.default_search_filter;
-        this._doSearch(defaultFilter).catch(() => { });
-        this.requestUpdate();
-      }
-      return;
-    }
-
-    // Check if there is any playing entity before going idle
-    const isAnyPlaying = this.entityIds.some((id, idx) => {
-      if (this._isAutoSelectDisabled(idx)) return false;
-      const activeId = this._getEntityForPurpose(idx, 'sorting');
-      const stateObj = this.hass?.states?.[activeId];
-      return stateObj && this._isEntityPlaying(stateObj);
-    });
-
-    this._idleTimeout = null;
-
-    // If not explicitly pinned, clear manual select on idle timeout
-    // so we can switch to other playing entities if needed
-    if (this._pinnedIndex === null) {
-      this._manualSelect = false;
-      this._manualSelectPlayingSet = null;
-    }
-
-    if (isAnyPlaying) {
-      // Something is playing, so don't enter idle state. Switch to the playing entity instead.
-      const sortedIds = this.sortedEntityIds;
-      if (sortedIds.length > 0) {
-        let mostRecentId = sortedIds[0];
-        const candidateGroup = mostRecentId
-          ? (this.groupedSortedEntityIds || []).find(g => g.includes(mostRecentId))
-          : null;
-        if (candidateGroup && candidateGroup.length > 1) {
-          const groupMaster = this._getActualGroupMaster(candidateGroup);
-          if (groupMaster) {
-            mostRecentId = groupMaster;
-          }
-        }
-        const mostRecentIdx = this.entityIds.indexOf(mostRecentId);
-        if (mostRecentIdx >= 0 && mostRecentIdx !== this._selectedIndex) {
-          this._selectedIndex = mostRecentIdx;
-        }
-      }
-      this.requestUpdate();
-      return;
-    }
-
-    if (this._autoEntities?.length) {
-      this._setTransientEntities({ auto: [] });
-    }
-    this._setIdleState(true);
-    this._idleScreenApplied = false;
-    this._applyIdleScreen();
-    this.requestUpdate();
+    this._ensureIdleController().handleIdleTimeoutCallback();
   }
 
   // Home assistant layout options
@@ -8661,7 +8394,9 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     if (this._activeDragCleanup) {
       this._activeDragCleanup();
     }
-    if (this._idleTimeout) {
+    if (this._idleController) {
+      this._idleController.hostDisconnected();
+    } else if (this._idleTimeout) {
       clearTimeout(this._idleTimeout);
       this._idleTimeout = null;
     }
