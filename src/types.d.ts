@@ -871,6 +871,35 @@ export declare class SearchController {
   showSearchSuccessToast(menuId?: string | null, type?: string | null): void;
 }
 
+export declare function parseIdleTimeoutMs(value?: any, defaultValue?: number): number;
+export declare function getSearchDismissBehavior(
+  config?: any,
+  cardType?: string
+): { shouldDismiss: boolean; shouldReset: boolean };
+
+export declare class IdleController {
+  host: YetAnotherMediaPlayerCard;
+  isIdle: boolean;
+  idleTimeout: any;
+  initialCheckTimer: any;
+  idleTimeoutMs: number;
+  idleScreenApplied: boolean;
+  hasSeenPlayback: boolean;
+
+  constructor(host: YetAnotherMediaPlayerCard);
+  hostConnected(): void;
+  hostDisconnected(): void;
+  clearIdleTimeout(): void;
+  setConfig(config?: YampCardConfig): void;
+  setIdleState(idle: boolean): void;
+  applyIdleScreen(): void;
+  resetIdleScreen(): void;
+  getSearchDismissBehavior(): { shouldDismiss: boolean; shouldReset: boolean };
+  scheduleInitialIdleCheck(): void;
+  updateIdleState(changedProps?: Map<string | number | symbol, unknown>): void;
+  handleIdleTimeoutCallback(): void;
+}
+
 export function mediaPlay(hass?: HomeAssistant, entityId?: string): Promise<any>;
 export function mediaPause(hass?: HomeAssistant, entityId?: string): Promise<any>;
 export function mediaPlayPause(hass?: HomeAssistant, entityId?: string): Promise<any>;
@@ -988,6 +1017,9 @@ export interface YetAnotherMediaPlayerCard {
   searchController?: SearchController;
   _searchController?: SearchController;
   _volumeHoldController?: VolumeHoldController;
+  idleController?: IdleController;
+  _idleController?: IdleController;
+  _ensureIdleController?(): IdleController;
   _canUseVolumeHold?: (allowMenuMode?: boolean, isTitle?: boolean) => boolean;
   _holdTitleForVolume?: boolean;
   _getEffectiveHoldTitleForVolume?: () => boolean;
