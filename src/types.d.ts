@@ -391,8 +391,14 @@ export function getEntityName(
   stateOrEntityId?: HassEntity | string | null
 ): string;
 export function getValidArtworkAttr(attrs: any, key: string): string | null;
-export function isValidArtworkUrl(url?: string | null): boolean;
+export function isValidArtworkUrl(
+  url?: string | null,
+  options?: { allowHttp?: boolean; hostname?: string }
+): boolean;
 export function isInsecureHttpUrlOnHttps(url?: string | null): boolean;
+export function registerArtworkHostname(hostname?: string | null): void;
+export function clearConfiguredArtworkHostnames(): void;
+export function isCastReceiver(): boolean;
 export function getCachedSecureThumbnail(url?: string | null): string | null;
 export function clearSecureThumbnailCache(url?: string): void;
 export function resolveSecureThumbnailUrl(hass?: any, url?: string | null): Promise<string | null>;
@@ -599,7 +605,11 @@ export function getMaxCollapsedArtworkWidth(cardWidth: number): number;
 export function getBackgroundSizeForFit(fit?: string): string;
 export function isExternalImageUrl(url?: string): boolean;
 export function normalizeImageSourceValue(value: any): string;
-export function resolveImageUrlFromInput(input: string, hass?: any): string | null;
+export function resolveImageUrlFromInput(
+  input: string,
+  hass?: any,
+  hostname?: string
+): string | null;
 export function compileArtworkOverrides(overrides?: any): any[];
 
 export declare class QueueController {

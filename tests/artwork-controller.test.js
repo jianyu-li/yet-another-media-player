@@ -1,4 +1,4 @@
-import { describe, it, beforeEach } from "node:test";
+import { describe, it, beforeEach, afterEach } from "node:test";
 import assert from "node:assert/strict";
 import {
   ArtworkController,
@@ -9,6 +9,7 @@ import {
   resolveImageUrlFromInput,
   compileArtworkOverrides,
 } from "../src/controllers/artwork-controller.js";
+import { clearConfiguredArtworkHostnames } from "../src/yamp-utils.js";
 
 describe("ArtworkController & Pure Artwork Helpers", () => {
   describe("getMaxCollapsedArtworkWidth", () => {
@@ -172,6 +173,7 @@ describe("ArtworkController & Pure Artwork Helpers", () => {
     let controller;
 
     beforeEach(() => {
+      clearConfiguredArtworkHostnames();
       mockHost = {
         config: {
           artwork_position: "center center",
@@ -293,6 +295,10 @@ describe("ArtworkController & Pure Artwork Helpers", () => {
       assert.strictEqual(controller.aspectRatioCache["https://example.com/art-59.jpg"], 1.5);
     });
 
+    afterEach(() => {
+      clearConfiguredArtworkHostnames();
+    });
+
     it("clears aspectRatioCache and template caches on hostDisconnected", () => {
       controller._setAspectRatio("https://example.com/test.jpg", 1.0);
       controller.artworkOverrideTemplateCache["test"] = { value: "val", resolving: false };
@@ -302,6 +308,74 @@ describe("ArtworkController & Pure Artwork Helpers", () => {
       assert.deepStrictEqual(controller.aspectRatioCache, {});
       assert.deepStrictEqual(controller.artworkOverrideTemplateCache, {});
       assert.strictEqual(controller.artworkOverrideIndexMap, null);
+    });
+
+    it("resolves relative entity_picture with artwork_hostname on cast receiver and remote https origins", () => {
+      const origWindow = globalThis.window;
+      try {
+        mockHost.config.artwork_hostname = "http://192.168.1.50:8123";
+        mockHost.config.media_artwork_overrides = [];
+        const stateObj = {
+          entity_id: "media_player.living_room",
+          state: "playing",
+          attributes: {
+            entity_picture: "/api/media_player_proxy/media_player.living_room?token=xyz",
+          },
+        };
+
+        // Test on cast receiver origin
+        globalThis.window = /** @type {any} */ ({
+          location: { protocol: "https:", hostname: "cast.home-assistant.io" },
+        });
+        clearConfiguredArtworkHostnames();
+        let art = controller.getArtworkUrl(stateObj);
+        assert.ok(art);
+        assert.strictEqual(
+          art.url,
+          "http://192.168.1.50:8123/api/media_player_proxy/media_player.living_room?token=xyz"
+        );
+
+        // Test on remote https origin
+        globalThis.window = /** @type {any} */ ({
+          location: { protocol: "https:", hostname: "ha.remote.com" },
+        });
+        clearConfiguredArtworkHostnames();
+        art = controller.getArtworkUrl(stateObj);
+        assert.ok(art);
+        assert.strictEqual(
+          art.url,
+          "http://192.168.1.50:8123/api/media_player_proxy/media_player.living_room?token=xyz"
+        );
+      } finally {
+        clearConfiguredArtworkHostnames();
+        globalThis.window = origWindow;
+      }
+    });
+
+    it("prepends artwork_hostname in resolveImageUrlFromInput for entity IDs and relative URLs on https:", () => {
+      const origWindow = globalThis.window;
+      try {
+        globalThis.window = /** @type {any} */ ({
+          location: { protocol: "https:", hostname: "ha.remote.com" },
+        });
+        clearConfiguredArtworkHostnames();
+        mockHost.config.artwork_hostname = "http://192.168.1.50:8123";
+        mockHost.hass.states["media_player.speaker"] = {
+          state: "playing",
+          attributes: {
+            entity_picture_local: "/local/speaker_art.jpg",
+          },
+        };
+
+        const directUrlRes = controller.resolveImageUrlFromInput("/local/idle.jpg");
+        assert.strictEqual(directUrlRes, "http://192.168.1.50:8123/local/idle.jpg");
+
+        const entityUrlRes = controller.resolveImageUrlFromInput("media_player.speaker");
+        assert.strictEqual(entityUrlRes, "http://192.168.1.50:8123/local/speaker_art.jpg");
+      } finally {
+        clearConfiguredArtworkHostnames();
+        globalThis.window = origWindow;
+      }
     });
   });
 });

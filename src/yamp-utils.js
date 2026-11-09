@@ -979,6 +979,40 @@ export function getArtworkUrl(
   return { url: artworkUrl, sizePercentage, objectFit, objectPosition };
 }
 
+const configuredArtworkHostnames = new Set();
+
+/**
+ * Register a configured artwork hostname to bypass mixed-content rejection.
+ * @param {string | null | undefined} hostname
+ */
+export function registerArtworkHostname(hostname) {
+  if (!hostname || typeof hostname !== "string") return;
+  const cleanHost = hostname.trim().replace(/\/+$/, "").toLowerCase();
+  if (cleanHost && /^https?:\/\//i.test(cleanHost)) {
+    configuredArtworkHostnames.add(cleanHost);
+  }
+}
+
+/**
+ * Clear all registered artwork hostnames (primarily for test isolation).
+ */
+export function clearConfiguredArtworkHostnames() {
+  configuredArtworkHostnames.clear();
+}
+
+/**
+ * Check if running inside Google Cast receiver environment (e.g., Nest Hub, Chromecast).
+ * @returns {boolean}
+ */
+export function isCastReceiver() {
+  return Boolean(
+    typeof window !== "undefined" &&
+    (window.location?.hostname === "cast.home-assistant.io" ||
+      /** @type {any} */ (window).cast?.framework ||
+      /** @type {any} */ (window).__onGCastApiAvailable)
+  );
+}
+
 /**
  * Applies a hostname prefix to a relative URL.
  * @param {string} url - The artwork URL
@@ -988,16 +1022,20 @@ export function getArtworkUrl(
 export function applyHostnameToUrl(url, hostname) {
   let finalUrl = url;
 
-  // Apply hostname prefix if configured and artwork URL is relative
-  if (finalUrl && hostname && !/^https?:\/\//i.test(finalUrl) && !finalUrl.startsWith("data:")) {
-    const cleanHost = hostname.endsWith("/") ? hostname.slice(0, -1) : hostname;
-    const cleanUrl = finalUrl.startsWith("/") ? finalUrl : `/${finalUrl}`;
-    finalUrl = cleanHost + cleanUrl;
-  }
-
-  // Validate artwork URL to prevent proxy errors (e.g. containing undefined/null)
-  if (finalUrl && !isValidArtworkUrl(finalUrl)) {
-    return null;
+  if (hostname && typeof hostname === "string" && hostname.trim() !== "") {
+    registerArtworkHostname(hostname);
+    const cleanHost = hostname.trim().replace(/\/+$/, "");
+    if (finalUrl && !/^https?:\/\//i.test(finalUrl) && !finalUrl.startsWith("data:")) {
+      const cleanUrl = finalUrl.startsWith("/") ? finalUrl : `/${finalUrl}`;
+      finalUrl = cleanHost + cleanUrl;
+    }
+    if (finalUrl && !isValidArtworkUrl(finalUrl, { allowHttp: true, hostname: cleanHost })) {
+      return null;
+    }
+  } else {
+    if (finalUrl && !isValidArtworkUrl(finalUrl)) {
+      return null;
+    }
   }
 
   return finalUrl;
@@ -1018,7 +1056,16 @@ export function isInsecureHttpUrlOnHttps(url) {
   if (typeof window === "undefined" || window.location?.protocol !== "https:") {
     return false;
   }
-  return /^http:\/\//i.test(url.trim());
+  if (isCastReceiver()) return false;
+  const trimmed = url.trim();
+  if (!/^http:\/\//i.test(trimmed)) return false;
+  const lower = trimmed.toLowerCase();
+  for (const host of configuredArtworkHostnames) {
+    if (lower === host || lower.startsWith(host + "/") || lower.startsWith(host + "?")) {
+      return false;
+    }
+  }
+  return true;
 }
 
 /**
@@ -1114,16 +1161,25 @@ export async function resolveSecureThumbnailUrl(hass, url) {
 /**
  * Validate artwork URL to prevent proxy errors
  * @param {string | null | undefined} [url] - Artwork URL to validate
+ * @param {{ allowHttp?: boolean, hostname?: string }} [options={}] - Validation options
  * @returns {boolean} True if valid
  */
-export function isValidArtworkUrl(url) {
+export function isValidArtworkUrl(url, options = {}) {
   if (!url || typeof url !== "string") return false;
 
   // Check for obviously invalid URLs
   if (url.includes("undefined") || url.includes("null") || url.trim() === "") return false;
 
+  let allowInsecure = Boolean(options?.allowHttp);
+  if (!allowInsecure && options?.hostname && typeof options.hostname === "string") {
+    const cleanHost = options.hostname.trim().replace(/\/+$/, "").toLowerCase();
+    if (cleanHost && url.trim().toLowerCase().startsWith(cleanHost)) {
+      allowInsecure = true;
+    }
+  }
+
   // Reject insecure HTTP URLs on HTTPS pages to prevent browser Mixed Content warnings
-  if (isInsecureHttpUrlOnHttps(url)) return false;
+  if (!allowInsecure && isInsecureHttpUrlOnHttps(url)) return false;
 
   // Skip validation for data URLs and base64 images
   if (url.startsWith("data:")) return true;
