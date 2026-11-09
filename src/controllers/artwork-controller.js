@@ -12,6 +12,8 @@ import {
   getValidArtworkAttr,
   resolveSelectedArtwork,
   resolveStringTemplate,
+  applyHostnameToUrl,
+  registerArtworkHostname,
 } from "../yamp-utils.js";
 import { countMainControls } from "../controls-row.js";
 import { ARTWORK_OVERRIDE_MATCH_KEYS } from "../constants.js";
@@ -104,27 +106,30 @@ export function normalizeImageSourceValue(value) {
  * Resolves an image URL from an input string, which may be an entity ID or direct URL.
  * @param {string} input
  * @param {any} hass
+ * @param {string} [hostname=""]
  * @returns {string|null}
  */
-export function resolveImageUrlFromInput(input, hass) {
+export function resolveImageUrlFromInput(input, hass, hostname = "") {
   const normalized = normalizeImageSourceValue(input);
   if (!normalized || !hass) return null;
+  let rawUrl = null;
   if (hass.states?.[normalized]) {
     const stateObj = hass.states[normalized];
-    return (
+    rawUrl =
       stateObj.attributes?.entity_picture_local ||
       stateObj.attributes?.entity_picture ||
       (stateObj.state &&
       typeof stateObj.state === "string" &&
       (stateObj.state.startsWith("http") || stateObj.state.startsWith("/"))
         ? stateObj.state
-        : null)
-    );
+        : null);
+  } else if (normalized.startsWith("http") || normalized.startsWith("/")) {
+    rawUrl = normalized;
   }
-  if (normalized.startsWith("http") || normalized.startsWith("/")) {
-    return normalized;
+  if (rawUrl && hostname) {
+    return applyHostnameToUrl(rawUrl, hostname);
   }
-  return null;
+  return rawUrl;
 }
 
 /**
@@ -328,8 +333,12 @@ export class ArtworkController {
       !ignoreIdleImage &&
       (this.host?._isIdle || forceIdleImage) &&
       Boolean(this.host?.config?.idle_image);
+    const hostname = this.host?.config?.artwork_hostname || "";
+    if (hostname) {
+      registerArtworkHostname(hostname);
+    }
     const res = getArtworkUrl(state, {
-      hostname: this.host?.config?.artwork_hostname || "",
+      hostname,
       overrides: Array.isArray(this.host?.config?.media_artwork_overrides)
         ? this.host.config.media_artwork_overrides
         : [],
@@ -345,7 +354,7 @@ export class ArtworkController {
 
     let { url, sizePercentage, objectFit, objectPosition } = res;
 
-    if (url && !isValidArtworkUrl(url)) {
+    if (url && !isValidArtworkUrl(url, { hostname })) {
       url = null;
     }
 
@@ -513,7 +522,11 @@ export class ArtworkController {
    * @returns {string|null}
    */
   resolveImageUrlFromInput(input) {
-    return resolveImageUrlFromInput(input, this.host?.hass);
+    return resolveImageUrlFromInput(
+      input,
+      this.host?.hass,
+      this.host?.config?.artwork_hostname || ""
+    );
   }
 
   /**

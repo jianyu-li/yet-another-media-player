@@ -1,4 +1,4 @@
-import { describe, it } from "node:test";
+import { describe, it, afterEach } from "node:test";
 import assert from "node:assert/strict";
 import { formatTime } from "../src/progress-bar.js";
 import {
@@ -9,6 +9,9 @@ import {
   clearSecureThumbnailCache,
   resolveSecureThumbnailUrl,
   applyHostnameToUrl,
+  registerArtworkHostname,
+  clearConfiguredArtworkHostnames,
+  isCastReceiver,
   getEntityName,
   isPlaceholderMediaTitle,
   areEntitiesPlayingSameMedia,
@@ -52,6 +55,9 @@ const mockHass = (partial = {}) =>
   });
 
 describe("yamp-utils & progress-bar helpers", () => {
+  afterEach(() => {
+    clearConfiguredArtworkHostnames();
+  });
   describe("formatTime", () => {
     it("formats standard durations under 1 hour in m:ss format", () => {
       assert.equal(formatTime(0), "0:00");
@@ -188,6 +194,55 @@ describe("yamp-utils & progress-bar helpers", () => {
         globalThis.window = origWindow;
       }
     });
+
+    it("recognizes Cast receiver environment and allows http URLs on https:", () => {
+      const origWindow = globalThis.window;
+      try {
+        globalThis.window = /** @type {any} */ ({
+          location: { protocol: "https:", hostname: "cast.home-assistant.io" },
+        });
+        assert.equal(isCastReceiver(), true);
+        assert.equal(isInsecureHttpUrlOnHttps("http://192.168.1.50:8123/api/image.png"), false);
+
+        globalThis.window = /** @type {any} */ ({
+          location: { protocol: "https:", hostname: "dashboard.example.com" },
+          cast: { framework: {} },
+        });
+        assert.equal(isCastReceiver(), true);
+        assert.equal(isInsecureHttpUrlOnHttps("http://192.168.1.50:8123/api/image.png"), false);
+      } finally {
+        globalThis.window = origWindow;
+      }
+    });
+
+    it("exempts registered artwork hostnames and restores rejection upon clearConfiguredArtworkHostnames", () => {
+      const origWindow = globalThis.window;
+      try {
+        globalThis.window = /** @type {any} */ ({
+          location: { protocol: "https:", hostname: "ha.remote.com" },
+        });
+        clearConfiguredArtworkHostnames();
+        assert.equal(
+          isInsecureHttpUrlOnHttps("http://192.168.1.50:8123/api/media_player_proxy/1"),
+          true
+        );
+
+        registerArtworkHostname("http://192.168.1.50:8123/");
+        assert.equal(
+          isInsecureHttpUrlOnHttps("http://192.168.1.50:8123/api/media_player_proxy/1"),
+          false
+        );
+
+        clearConfiguredArtworkHostnames();
+        assert.equal(
+          isInsecureHttpUrlOnHttps("http://192.168.1.50:8123/api/media_player_proxy/1"),
+          true
+        );
+      } finally {
+        clearConfiguredArtworkHostnames();
+        globalThis.window = origWindow;
+      }
+    });
   });
 
   describe("resolveSecureThumbnailUrl & getCachedSecureThumbnail", () => {
@@ -286,6 +341,54 @@ describe("yamp-utils & progress-bar helpers", () => {
     it("returns null if the resulting URL contains invalid patterns", () => {
       const bad = "/api/image/undefined/art.png";
       assert.equal(applyHostnameToUrl(bad, "http://192.168.1.100:8123"), null);
+    });
+
+    it("resolves relative URLs with http hostname on https: origins and validates without leaking unrelated hostnames", () => {
+      const origWindow = globalThis.window;
+      try {
+        globalThis.window = /** @type {any} */ ({
+          location: { protocol: "https:", hostname: "cast.home-assistant.io" },
+        });
+        clearConfiguredArtworkHostnames();
+
+        const castRes = applyHostnameToUrl(
+          "/api/media_player_proxy/media_player.nest?token=abc",
+          "http://192.168.1.100:8123"
+        );
+        assert.equal(
+          castRes,
+          "http://192.168.1.100:8123/api/media_player_proxy/media_player.nest?token=abc"
+        );
+        assert.equal(isValidArtworkUrl(castRes), true);
+
+        // Also test general https origin like https://example.com
+        globalThis.window = /** @type {any} */ ({
+          location: { protocol: "https:", hostname: "example.com" },
+        });
+        clearConfiguredArtworkHostnames();
+
+        const res = applyHostnameToUrl(
+          "/api/media_player_proxy/media_player.nest?token=abc",
+          "http://192.168.1.100:8123"
+        );
+        assert.equal(
+          res,
+          "http://192.168.1.100:8123/api/media_player_proxy/media_player.nest?token=abc"
+        );
+        assert.equal(isValidArtworkUrl(res), true);
+
+        // Unrelated http URLs still rejected on https:
+        assert.equal(isValidArtworkUrl("http://other-host:8095/imageproxy/1"), false);
+
+        // Invalid patterns still return null on https:
+        assert.equal(
+          applyHostnameToUrl("/api/image/undefined/art.png", "http://192.168.1.100:8123"),
+          null
+        );
+      } finally {
+        clearConfiguredArtworkHostnames();
+        globalThis.window = origWindow;
+      }
     });
   });
 
