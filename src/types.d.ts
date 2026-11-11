@@ -164,6 +164,23 @@ export interface ArtworkOverrideRule {
   match_key?: string;
   match_value?: string;
   url?: string;
+  missing_art?: boolean;
+  missing_art_url?: string;
+  idle_image?: boolean;
+  idle_image_url?: string;
+  image_url?: string;
+  size_percentage?: number;
+  object_fit?:
+    | "cover"
+    | "contain"
+    | "fill"
+    | "scale-down"
+    | "none"
+    | "scaled-contain"
+    | "scaled-contain-alternate"
+    | "no_artwork"
+    | string;
+  object_position?: "top center" | "center center" | "bottom center" | string;
   [key: string]: any;
 }
 

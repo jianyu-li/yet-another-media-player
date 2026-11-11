@@ -503,13 +503,13 @@ export function renderArtworkTab() {
                               rule.match_type === "missing_art"
                                 ? html`
                                     <div class="config-subtitle small">
-                                      ${localize("editor.descriptions.missing_art_match")}
+                                      ${localize("editor.subtitles.missing_art_match")}
                                     </div>
                                   `
                                 : rule.match_type === "idle_image"
                                   ? html`
                                       <div class="config-subtitle small">
-                                        ${localize("editor.descriptions.idle_image_match")}
+                                        ${localize("editor.subtitles.idle_image_match")}
                                       </div>
                                     `
                                   : rule.match_type === "entity_id"
