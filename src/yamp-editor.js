@@ -202,11 +202,15 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
 
       const sizePercentage = item.size_percentage;
 
-      if (item.missing_art_url !== undefined) {
+      if (
+        item.missing_art === true ||
+        item.missing_art_url !== undefined ||
+        item.match_type === "missing_art"
+      ) {
         return {
           match_type: "missing_art",
           match_value: "",
-          image_url: item.missing_art_url ?? "",
+          image_url: item.missing_art_url ?? item.image_url ?? "",
           size_percentage: sizePercentage,
           object_fit: item.object_fit,
           object_position: item.object_position,
@@ -258,12 +262,14 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
     const objectFit = rule.object_fit === "default" ? undefined : rule.object_fit;
 
     if (rule.match_type === "missing_art") {
-      if (!image) return null;
+      const hasSize =
+        rule.size_percentage !== undefined &&
+        rule.size_percentage !== "" &&
+        !isNaN(Number(rule.size_percentage));
       return {
-        missing_art_url: image,
-        ...(rule.size_percentage !== undefined
-          ? { size_percentage: Number(rule.size_percentage) }
-          : {}),
+        missing_art: true,
+        ...(image ? { missing_art_url: image } : {}),
+        ...(hasSize ? { size_percentage: Number(rule.size_percentage) } : {}),
         ...(objectFit !== undefined ? { object_fit: objectFit } : {}),
         ...(rule.object_position !== undefined && rule.object_position !== "default"
           ? { object_position: rule.object_position }

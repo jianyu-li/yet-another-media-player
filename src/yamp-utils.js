@@ -743,6 +743,14 @@ function _findArtworkOverride(state, overrides, resolveOverrideSource, options =
     overrides.find((override) => {
       // Don't match idle_image rules when not in idle image mode
       if (override?.idle_image === true || override?.match_type === "idle_image") return false;
+      // Don't match missing_art rules here (they are handled when hasExistingArtwork is false)
+      if (
+        override?.missing_art === true ||
+        override?.missing_art_url !== undefined ||
+        override?.match_type === "missing_art"
+      ) {
+        return false;
+      }
 
       return ARTWORK_OVERRIDE_MATCH_KEYS.some((key) => {
         const expected = override[key];
@@ -853,8 +861,13 @@ function _findArtworkOverride(state, overrides, resolveOverrideSource, options =
 
   if (override?.image_url) {
     overrideSource = override.image_url;
-  } else if (override?.missing_art_url && !hasExistingArtwork) {
-    overrideSource = override.missing_art_url;
+  } else if (
+    (override?.missing_art === true ||
+      override?.missing_art_url !== undefined ||
+      override?.match_type === "missing_art") &&
+    !hasExistingArtwork
+  ) {
+    overrideSource = override.missing_art_url || override.image_url || null;
     overrideType = "missing";
   } else if (override && hasExistingArtwork) {
     overrideSource =
@@ -864,10 +877,16 @@ function _findArtworkOverride(state, overrides, resolveOverrideSource, options =
   }
 
   if (!override && !hasExistingArtwork) {
-    const missingOverride = overrides.find((item) => item?.missing_art_url);
-    if (missingOverride?.missing_art_url) {
+    const missingOverride = overrides.find(
+      (item) =>
+        (item?.missing_art === true ||
+          item?.missing_art_url !== undefined ||
+          item?.match_type === "missing_art") &&
+        (!item?.entity_id || item.entity_id === entityId || item.entity_id === "*")
+    );
+    if (missingOverride) {
       override = missingOverride;
-      overrideSource = missingOverride.missing_art_url;
+      overrideSource = missingOverride.missing_art_url || missingOverride.image_url || null;
       overrideType = "missing";
     }
   }
@@ -943,6 +962,10 @@ export function getArtworkUrl(
     sizePercentage = resolvedOverride.sizePercentage;
     objectFit = resolvedOverride.objectFit;
     objectPosition = resolvedOverride.objectPosition;
+  }
+
+  if (objectFit === "no_artwork") {
+    return { url: null, sizePercentage, objectFit: "no_artwork", objectPosition };
   }
 
   // If no override found, use standard artwork (only when not in idle image mode)
@@ -1369,7 +1392,8 @@ export function resolveSelectedArtwork({
   mainState = null,
   isPlayingSameMedia = false,
 }) {
-  let selectedArt = metadataArtwork?.url ? metadataArtwork : null;
+  const isArtValid = (art) => Boolean(art?.url || art?.objectFit === "no_artwork");
+  let selectedArt = isArtValid(metadataArtwork) ? metadataArtwork : null;
 
   const matchesTitle = (titleA, titleB) =>
     typeof titleA === "string" &&
@@ -1380,12 +1404,12 @@ export function resolveSelectedArtwork({
   // allow fallback to playback/main entity ONLY if they match the displayed title or are verified to play the same media.
   if (displayTitle && !selectedArt) {
     if (
-      playbackArtwork?.url &&
+      isArtValid(playbackArtwork) &&
       (matchesTitle(playbackStateObj?.attributes?.media_title, displayTitle) || isPlayingSameMedia)
     ) {
       selectedArt = playbackArtwork;
     } else if (
-      mainArtwork?.url &&
+      isArtValid(mainArtwork) &&
       (matchesTitle(mainState?.attributes?.media_title, displayTitle) || isPlayingSameMedia)
     ) {
       selectedArt = mainArtwork;
@@ -1394,16 +1418,16 @@ export function resolveSelectedArtwork({
 
   // When no display title is present (e.g. system sounds, gaming, idle), fall back to any available artwork.
   if (!displayTitle && !selectedArt) {
-    if (playbackArtwork?.url) {
+    if (isArtValid(playbackArtwork)) {
       selectedArt = playbackArtwork;
-    } else if (mainArtwork?.url) {
+    } else if (isArtValid(mainArtwork)) {
       selectedArt = mainArtwork;
     } else {
       selectedArt = playbackArtwork || mainArtwork || null;
     }
   }
 
-  return selectedArt || (metadataArtwork?.url ? metadataArtwork : null);
+  return selectedArt || (isArtValid(metadataArtwork) ? metadataArtwork : null);
 }
 
 const _globRegexCache = new Map();
