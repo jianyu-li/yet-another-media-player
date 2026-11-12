@@ -799,6 +799,7 @@ entities:
 **Single-Row Layout & Features:**
 - **Compact Horizontal Bar**: Features rounded-square album artwork (or music note placeholder), track title, and **artist name** (or album) subtitle in an ultra-compact single row.
 - **Quick Controls**: Circular play/pause (respects `swap_pause_for_stop` when modern layout is configured) and next track buttons (`mdi:skip-next`), honoring your `hidden_controls` configuration.
+- **Press-and-Hold Horizontal Volume Slider**: Press and hold anywhere on the card to reveal a sleek horizontal volume overlay. Slide left or right across the card to adjust volume smoothly, releasing when done.
 - **Integrated Progress Bar**: A sleek progress bar rendered along the bottom edge during active playback when track duration is available.
 - **Theme & Artwork Fade**: Fully inherits your card styling, including Home Assistant themes (`match_theme`), card background, custom font colors (`font_color`), and blurred artwork fade (`--yamp-background-fade`).
 - **Minimal No-Menu Design**: Intentionally omits sheet menus, hamburger icons, and full-screen menu overlays to keep the interface fast and distraction-free.
