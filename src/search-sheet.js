@@ -496,8 +496,8 @@ export function renderSearchResultActions({
 
   const isLoading =
     loadingSearchRowMenuId != null &&
-    item?.media_content_id != null &&
-    loadingSearchRowMenuId === item.media_content_id;
+    ((item?.media_content_id != null && loadingSearchRowMenuId === item.media_content_id) ||
+      (item?.uri != null && loadingSearchRowMenuId === item.uri));
 
   return html`
     <div class="${containerClass}">
@@ -827,13 +827,12 @@ export function renderSearchResultItem({
     item.media_content_id != null &&
     activeSearchRowMenuId === item.media_content_id;
   const hideActions = isSelectionFlow;
+  const isLoading =
+    loadingSearchRowMenuId != null &&
+    ((item?.media_content_id != null && loadingSearchRowMenuId === item.media_content_id) ||
+      (item?.uri != null && loadingSearchRowMenuId === item.uri));
 
   if (isGridMode) {
-    const isLoading =
-      loadingSearchRowMenuId != null &&
-      item.media_content_id != null &&
-      loadingSearchRowMenuId === item.media_content_id;
-
     return html`
       <button
         class="entity-options-item menu-action-item search-result-grid-mode ${
@@ -893,11 +892,7 @@ export function renderSearchResultItem({
         isActive ? "menu-active" : ""
       } ${isClickable ? "clickable" : ""}"
       @click=${(e) => {
-        if (
-          loadingSearchRowMenuId != null &&
-          item.media_content_id != null &&
-          loadingSearchRowMenuId === item.media_content_id
-        ) {
+        if (isLoading) {
           return;
         }
         if (isSelectionFlow || (!isCard && isClickable)) {
@@ -1043,10 +1038,7 @@ export function renderSearchResultItem({
         hideActions,
       })}
       ${
-        isSelectionFlow &&
-        loadingSearchRowMenuId != null &&
-        item.media_content_id != null &&
-        loadingSearchRowMenuId === item.media_content_id
+        isSelectionFlow && isLoading
           ? html`
               <div class="search-row-loading-overlay">
                 <ha-icon icon="mdi:loading" class="spin"></ha-icon>
