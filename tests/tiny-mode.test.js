@@ -609,4 +609,22 @@ describe("Tiny Mode & 3-Mode Collapsed State", () => {
       assert.equal(host._showSearchSheetInOptions.mock.calls.length, 1);
     });
   });
+
+  describe("Tiny mode hold-to-volume rendering and horizontal styles", () => {
+    it("wires holdable class, active hold overlay, and horizontal fill styles", async () => {
+      const { readFileSync } = await import("node:fs");
+      const tinyCardSrc = readFileSync(new URL("../src/tiny-card.js", import.meta.url), "utf8");
+      const volumeStylesSrc = readFileSync(
+        new URL("../src/styles/volume-progress.js", import.meta.url),
+        "utf8"
+      );
+
+      assert.ok(tinyCardSrc.includes("tiny-mode-holdable"));
+      assert.ok(tinyCardSrc.includes("tiny-hold-active"));
+      assert.ok(tinyCardSrc.includes("@click=${volumeHoldHandlers?.clickCapture}"));
+      assert.ok(volumeStylesSrc.includes(".tiny-mode .volume-hold-fill"));
+      assert.ok(volumeStylesSrc.includes("width: var(--yamp-volume-hold-level, 0%);"));
+      assert.ok(volumeStylesSrc.includes("transition: width 60ms linear;"));
+    });
+  });
 });

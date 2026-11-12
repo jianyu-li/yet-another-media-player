@@ -284,6 +284,7 @@ export function renderTinyCard({
   volumeOverlayValue,
   dismissVolumeOverlay,
   volumeHoldController,
+  volumeHoldHandlers,
   currentVolumeStateObj,
   gestureHandlers,
   gestureStyles,
@@ -356,11 +357,20 @@ export function renderTinyCard({
       <div
         class="yamp-card-inner tiny-mode ${shouldDimIdle ? "dim-idle" : ""} ${
           hasArtworkOrCardBg ? "has-artwork-bg" : "no-artwork-bg"
-        } ${config.dim_chips_on_idle === false ? "no-chip-dim" : ""}"
+        } ${config.dim_chips_on_idle === false ? "no-chip-dim" : ""} ${
+          volumeHoldHandlers && !tinyChipOverlayOpen ? "tiny-mode-holdable" : ""
+        } ${volumeHoldController?.active ? "tiny-hold-active" : ""}"
         data-match-theme="${String(config.match_theme === true)}"
         data-has-font-color="${String(hasFontColor)}"
         data-artwork-fit="${activeArtworkFit}"
         data-has-background-image="${String(hasCardBg)}"
+        @pointerdown=${volumeHoldHandlers?.onPointerDown}
+        @pointermove=${volumeHoldHandlers?.onPointerMove}
+        @pointerup=${volumeHoldHandlers?.onPointerUp}
+        @pointercancel=${volumeHoldHandlers?.onPointerCancel}
+        @lostpointercapture=${volumeHoldHandlers?.onLostPointerCapture}
+        @contextmenu=${volumeHoldHandlers?.onContextMenu}
+        @click=${volumeHoldHandlers?.clickCapture}
         style=${
           [
             hasCustomCardHeight ? `height:${customCardHeight}px;` : null,

@@ -3387,11 +3387,11 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   // Whether the press-and-hold volume overlay is available for the active entity
-  _canUseVolumeHold(allowMenuMode = false, isTitle = false) {
+  _canUseVolumeHold(allowMenuMode = false, isTitle = false, isTiny = false) {
     if (isTitle) {
       if (!this._getEffectiveHoldTitleForVolume()) return false;
     } else {
-      if (!allowMenuMode && this._getEffectiveVolumeMode() !== "stepper") return false;
+      if (!allowMenuMode && !isTiny && this._getEffectiveVolumeMode() !== "stepper") return false;
       if (this._getEffectiveVolumeMode() === "hidden") return false;
     }
     const entity = this._getVolumeEntity(this._selectedIndex);
@@ -7907,6 +7907,9 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       volumeOverlayValue: this._volumeOverlayValue,
       dismissVolumeOverlay: () => this._dismissVolumeOverlay(),
       volumeHoldController: this._volumeHoldController,
+      volumeHoldHandlers: this._canUseVolumeHold(false, false, true)
+        ? this._volumeHoldController
+        : null,
       currentVolumeStateObj: this.currentVolumeStateObj,
       gestureHandlers: {
         onPointerDown: this._onTapAreaPointerDown,

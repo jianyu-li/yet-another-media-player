@@ -1060,7 +1060,9 @@ export interface YetAnotherMediaPlayerCard {
   idleController?: IdleController;
   _idleController?: IdleController;
   _ensureIdleController?(): IdleController;
-  _canUseVolumeHold?: (allowMenuMode?: boolean, isTitle?: boolean) => boolean;
+  _canUseVolumeHold?: (allowMenuMode?: boolean, isTitle?: boolean, isTiny?: boolean) => boolean;
+  _gestureActive?: boolean;
+  _gestureHoldTimer?: any;
   _holdTitleForVolume?: boolean;
   _getEffectiveHoldTitleForVolume?: () => boolean;
   _applyVolumeLevel?: (newVol: number) => void;

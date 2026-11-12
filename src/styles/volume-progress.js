@@ -580,4 +580,27 @@ export const volumeProgressStyles = css`
     font-size: 1.4rem;
     letter-spacing: 0;
   }
+
+  .tiny-mode-holdable {
+    touch-action: pan-y;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-touch-callout: none;
+  }
+
+  .tiny-mode-holdable.tiny-hold-active {
+    touch-action: none;
+    cursor: ew-resize;
+  }
+
+  .tiny-mode .volume-hold-fill,
+  .yamp-card-inner.tiny-mode .volume-hold-fill {
+    top: 0;
+    bottom: 0;
+    left: 0;
+    right: auto;
+    width: var(--yamp-volume-hold-level, 0%);
+    height: 100%;
+    transition: width 60ms linear;
+  }
 `;
