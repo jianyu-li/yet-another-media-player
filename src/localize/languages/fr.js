@@ -95,6 +95,11 @@ export default {
         description:
           "Contrôles maximisés, grand texte et barre de progression imposante pour une visibilité à distance.",
       },
+      tiny: {
+        label: "Lecteur Tiny",
+        description:
+          "Barre de lecteur ultra-compacte sur une seule ligne avec illustration, titre, artiste et commandes rapides.",
+      },
     },
     placeholders: {
       search: "Rechercher de la musique...",
@@ -202,6 +207,8 @@ export default {
       adaptive_text: "Choisir quels textes doivent s'adapter à l'espace.",
       collapse_expand:
         "Toujours réduit crée un mini lecteur. Agrandir à la Recherche agrandit temporairement.",
+      always_collapsed:
+        "Choisissez le mode d'affichage de la carte : Standard (carte complète), Mini (carte compacte réduite) ou Tiny (barre sur une seule ligne).",
       disable_mini_menu:
         "Revenir aux listes standards au lieu d'utiliser les nouveaux mini menus en grille en mode 'Toujours réduit'.",
       idle_screen: "Choisir l'écran à afficher automatiquement en veille.",
@@ -232,6 +239,8 @@ export default {
         "Modèle Jinja résolvant un entity_id de télécommande (ex. remote.salon_tv) :",
       not_available_alt_collapsed: "Non disponible en mode 'Toujours réduit'.",
       not_available_collapsed: "Non disponible si 'Toujours réduit' est activé.",
+      not_available_tiny: "Non disponible en mode Tiny",
+      forced_by_card_type_tiny: "Contrôlé par Type de carte : Tiny",
       only_available_collapsed: "Uniquement disponible si 'Toujours réduit' est activé.",
       only_available_mini_menu:
         "Uniquement disponible lorsque 'Toujours réduit' est vrai et 'Développer lors de la recherche' est faux",
@@ -461,6 +470,12 @@ export default {
       players: "Lecteurs",
       up_next: "À suivre",
       remote_control: "Télécommande",
+      tiny: "Tiny",
+    },
+    always_collapsed_options: {
+      standard: "Standard",
+      mini: "Mini",
+      tiny: "Tiny",
     },
     appearance_options: {
       automatic: "Automatique",

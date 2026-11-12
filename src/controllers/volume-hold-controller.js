@@ -13,6 +13,20 @@ export const MIN_RANGE_PX = 150;
 export const RELEASE_LINGER_MS = 550;
 
 /**
+ * Computes clamped rounded volume given a pixel delta along the active drag axis.
+ * @param {number} startValue 0..1
+ * @param {number} deltaPx positive increases volume, negative decreases volume
+ * @param {number} rangePx pixels for a full 0→1 sweep
+ * @returns {number} clamped 0..1, rounded to 0.01
+ */
+function computeHoldVolumeDelta(startValue, deltaPx, rangePx) {
+  const range = rangePx > 0 ? rangePx : MIN_RANGE_PX;
+  const raw = (Number(startValue) || 0) + deltaPx / range;
+  const clamped = Math.max(0, Math.min(1, raw));
+  return Math.round(clamped * 100) / 100;
+}
+
+/**
  * Computes the volume for a relative vertical drag. Up (smaller Y) = louder.
  * @param {number} startValue 0..1
  * @param {number} startY
@@ -21,10 +35,19 @@ export const RELEASE_LINGER_MS = 550;
  * @returns {number} clamped 0..1, rounded to 0.01
  */
 export function computeHoldVolume(startValue, startY, currentY, rangePx) {
-  const range = rangePx > 0 ? rangePx : MIN_RANGE_PX;
-  const raw = (Number(startValue) || 0) + (startY - currentY) / range;
-  const clamped = Math.max(0, Math.min(1, raw));
-  return Math.round(clamped * 100) / 100;
+  return computeHoldVolumeDelta(startValue, startY - currentY, rangePx);
+}
+
+/**
+ * Computes the volume for a relative horizontal drag. Right (larger X) = louder.
+ * @param {number} startValue 0..1
+ * @param {number} startX
+ * @param {number} currentX
+ * @param {number} rangePx pixels for a full 0→1 sweep
+ * @returns {number} clamped 0..1, rounded to 0.01
+ */
+export function computeHoldHorizontalVolume(startValue, startX, currentX, rangePx) {
+  return computeHoldVolumeDelta(startValue, currentX - startX, rangePx);
 }
 
 /**
@@ -65,7 +88,11 @@ export class VolumeHoldController {
     /** @type {number} */
     this._startY = 0;
     /** @type {number} */
+    this._lastX = 0;
+    /** @type {number} */
     this._lastY = 0;
+    /** @type {boolean} */
+    this._isHorizontal = false;
     /** @type {number} */
     this._startValue = 0;
     /** @type {number} */
@@ -92,19 +119,18 @@ export class VolumeHoldController {
       if (!e.isPrimary) return;
       if (e.pointerType === "mouse" && e.button !== 0) return;
       if (this._pointerId !== null) return;
-      const isTitle = !!(
-        /** @type {HTMLElement} */ (e.currentTarget)?.classList?.contains("track-title-holdable") ||
-        /** @type {HTMLElement} */ (e.currentTarget)?.classList?.contains("track-options-title")
-      );
-      const isMenu =
-        !isTitle &&
-        !!(
-          this.host?._showEntityOptions ||
-          /** @type {HTMLElement} */ (e.currentTarget)?.classList?.contains(
-            "persistent-volume-stepper"
-          )
-        );
-      if (!this.host?._canUseVolumeHold?.(isMenu, isTitle)) return;
+      const el = /** @type {HTMLElement | null} */ (e.currentTarget);
+      const { isTitle, isMenu, isTiny } = this._resolveHoldContext(el);
+      if (isTiny) {
+        if (this.host?._tinyChipOverlayOpen) return;
+        const path = e.composedPath?.() || [];
+        if (
+          path.some((/** @type {any} */ node) => node?.classList?.contains?.("tiny-chip-overlay"))
+        ) {
+          return;
+        }
+      }
+      if (!this.host?._canUseVolumeHold?.(isMenu, isTitle, isTiny)) return;
 
       this._clearSuppressClick();
       if (this.releasing) {
@@ -116,9 +142,11 @@ export class VolumeHoldController {
       }
 
       this._pointerId = e.pointerId;
-      this._element = /** @type {HTMLElement} */ (e.currentTarget);
+      this._element = el;
+      this._isHorizontal = isTiny;
       this._startX = e.clientX;
       this._startY = e.clientY;
+      this._lastX = e.clientX;
       this._lastY = e.clientY;
 
       if (this._holdTimer) clearTimeout(this._holdTimer);
@@ -127,6 +155,7 @@ export class VolumeHoldController {
 
     this.onPointerMove = (/** @type {PointerEvent} */ e) => {
       if (this._pointerId === null || e.pointerId !== this._pointerId) return;
+      this._lastX = e.clientX;
       this._lastY = e.clientY;
 
       if (!this.active && this._holdTimer) {
@@ -146,7 +175,9 @@ export class VolumeHoldController {
         if (e.cancelable) {
           e.preventDefault();
         }
-        const v = computeHoldVolume(this._startValue, this._startY, e.clientY, this._rangePx);
+        const v = this._isHorizontal
+          ? computeHoldHorizontalVolume(this._startValue, this._startX, e.clientX, this._rangePx)
+          : computeHoldVolume(this._startValue, this._startY, e.clientY, this._rangePx);
         if (v !== this.value) {
           this.value = v;
           this._maybeUnmute();
@@ -178,12 +209,32 @@ export class VolumeHoldController {
     };
   }
 
+  /**
+   * Resolve which hold-to-volume trigger context owns the pointer target element.
+   * @param {HTMLElement | null} el
+   * @returns {{ isTitle: boolean, isMenu: boolean, isTiny: boolean }}
+   */
+  _resolveHoldContext(el) {
+    const isTitle = !!(
+      el?.classList?.contains("track-title-holdable") ||
+      el?.classList?.contains("track-options-title")
+    );
+    const isMenu =
+      !isTitle &&
+      !!(this.host?._showEntityOptions || el?.classList?.contains("persistent-volume-stepper"));
+    const isTiny =
+      !isTitle && !isMenu && !!(el?.classList?.contains("tiny-mode") || this.host?._isTinyMode);
+    return { isTitle, isMenu, isTiny };
+  }
+
   _reset() {
     this._pointerId = null;
     this._element = null;
     this._startX = 0;
     this._startY = 0;
+    this._lastX = 0;
     this._lastY = 0;
+    this._isHorizontal = false;
     this._startValue = 0;
     this._rangePx = MIN_RANGE_PX;
     this._lastSent = null;
@@ -210,29 +261,33 @@ export class VolumeHoldController {
 
   _activate() {
     this._holdTimer = null;
-    const isTitle = !!(
-      this._element?.classList?.contains("track-title-holdable") ||
-      this._element?.classList?.contains("track-options-title")
-    );
-    const isMenu =
-      !isTitle &&
-      !!(
-        this.host?._showEntityOptions ||
-        this._element?.classList?.contains("persistent-volume-stepper")
-      );
-    if (!this.host?._canUseVolumeHold?.(isMenu, isTitle)) {
+    const { isTitle, isMenu, isTiny } = this._resolveHoldContext(this._element);
+    if (isTiny && this.host?._tinyChipOverlayOpen) {
+      this._reset();
+      return;
+    }
+    if (!this.host?._canUseVolumeHold?.(isMenu, isTitle, isTiny)) {
       this._reset();
       return;
     }
 
+    this._isHorizontal = isTiny;
     const st = this.host.currentVolumeStateObj;
     this._startValue = Number(st?.attributes?.volume_level ?? 0);
     this.value = Math.round(this._startValue * 100) / 100;
+    this._startX = this._lastX;
     this._startY = this._lastY;
 
     const cardEl = this.host.renderRoot?.querySelector?.("ha-card");
-    const rectHeight = cardEl?.getBoundingClientRect?.().height || 0;
-    this._rangePx = Math.max(MIN_RANGE_PX, rectHeight);
+    const rect = cardEl?.getBoundingClientRect?.();
+    const rectSize = this._isHorizontal ? rect?.width || 0 : rect?.height || 0;
+    this._rangePx = Math.max(MIN_RANGE_PX, rectSize);
+
+    if (this.host._gestureHoldTimer) {
+      clearTimeout(this.host._gestureHoldTimer);
+      this.host._gestureHoldTimer = null;
+    }
+    this.host._gestureActive = false;
 
     this.host._groupBaseVolume = this._startValue;
     this.host._volumeDraggingEntity = "hold";

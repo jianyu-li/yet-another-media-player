@@ -94,6 +94,11 @@ export default {
         description:
           "Maksimizirane kontrole, veliko besedilo in masivna vrstica napredka za ogled od daleč.",
       },
+      tiny: {
+        label: "Tiny predvajalnik",
+        description:
+          "Izjemno kompaktna enovrstična vrstica predvajalnika z grafiko, naslovom, izvajalcem in hitrimi kontrolniki.",
+      },
     },
     placeholders: {
       search: "Išči glasbo...",
@@ -196,6 +201,8 @@ export default {
         "Skrij lebdeči indikator napredka prerazvrščanja čakalne vrste na dnu.",
       adaptive_text: "Izberi skupine besedila za prilagajanje velikosti.",
       collapse_expand: "Vedno skrčeno ustvari mini predvajalnik.",
+      always_collapsed:
+        "Izberite način prikaza kartice: Standardno (polna kartica), Mini (kompaktna strnjena kartica) ali Tiny (enovrstična vrstica).",
       disable_mini_menu:
         "Vrnite se na standardne sezname namesto uporabe novih mini mrežnih menijev v načinu 'Vedno strnjeno'.",
       idle_screen: "Izberi zaslon, prikazan v mirovanju.",
@@ -225,6 +232,8 @@ export default {
         "Vnesite Jinja predlogo, ki vrne entity_id daljinskega upravljalnika (npr. remote.dnevna_soba_tv):",
       not_available_alt_collapsed: "Ni na voljo z alternativno vrstico napredka.",
       not_available_collapsed: "Ni na voljo v vedno skrčenem načinu.",
+      not_available_tiny: "Ni na voljo v načinu Tiny",
+      forced_by_card_type_tiny: "Nadzoruje Vrsta kartice: Tiny",
       only_available_collapsed: "Na voljo le v vedno skrčenem načinu.",
       only_available_mini_menu:
         "Na voljo samo, ko je 'Vedno strnjeno' omogočeno in 'Razširi ob iskanju' onemogočeno",
@@ -450,6 +459,12 @@ export default {
       players: "Predvajalniki",
       up_next: "Sledi",
       remote_control: "Daljinski upravljalnik",
+      tiny: "Tiny",
+    },
+    always_collapsed_options: {
+      standard: "Standardno",
+      mini: "Mini",
+      tiny: "Tiny",
     },
     appearance_options: {
       automatic: "Samodejno",

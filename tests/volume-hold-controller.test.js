@@ -3,6 +3,7 @@ import assert from "node:assert/strict";
 import {
   VolumeHoldController,
   computeHoldVolume,
+  computeHoldHorizontalVolume,
   getVolumeIconForPercent,
   HOLD_DELAY_MS,
   RELEASE_LINGER_MS,
@@ -34,6 +35,33 @@ describe("VolumeHoldController & Helpers", () => {
     it("falls back to MIN_RANGE_PX when range is <= 0", () => {
       const vol = computeHoldVolume(0.5, 200, 150, 0);
       // (200 - 150) / 150 = 50 / 150 = 0.333... -> 0.5 + 0.33 = 0.83
+      assert.strictEqual(vol, 0.83);
+    });
+  });
+
+  describe("computeHoldHorizontalVolume", () => {
+    it("increases volume when dragging right (larger X)", () => {
+      const vol = computeHoldHorizontalVolume(0.5, 100, 200, 200);
+      assert.strictEqual(vol, 1);
+    });
+
+    it("decreases volume when dragging left (smaller X)", () => {
+      const vol = computeHoldHorizontalVolume(0.5, 200, 100, 200);
+      assert.strictEqual(vol, 0);
+    });
+
+    it("clamps values between 0 and 1", () => {
+      assert.strictEqual(computeHoldHorizontalVolume(0.9, 100, 250, 200), 1);
+      assert.strictEqual(computeHoldHorizontalVolume(0.1, 200, 50, 200), 0);
+    });
+
+    it("rounds to nearest 0.01", () => {
+      const vol = computeHoldHorizontalVolume(0.5, 100, 105, 200);
+      assert.strictEqual(vol, 0.53);
+    });
+
+    it("falls back to MIN_RANGE_PX when range is <= 0", () => {
+      const vol = computeHoldHorizontalVolume(0.5, 100, 150, 0);
       assert.strictEqual(vol, 0.83);
     });
   });
@@ -524,6 +552,170 @@ describe("VolumeHoldController & Helpers", () => {
       });
       assert.strictEqual(card._getEffectiveHoldTitleForVolume(), false);
       assert.strictEqual(card._canUseVolumeHold(false, true), false);
+    });
+
+    it("allows hold in tiny mode with default slider volume_mode", () => {
+      card.setConfig({
+        entities: ["media_player.test"],
+        card_type: "tiny",
+      });
+      assert.strictEqual(card._canUseVolumeHold(false, false), false);
+      assert.strictEqual(card._canUseVolumeHold(false, false, true), true);
+    });
+
+    it("rejects tiny hold when volume_mode is hidden or volume set is unsupported", () => {
+      card.setConfig({
+        entities: ["media_player.test"],
+        card_type: "tiny",
+        volume_mode: "hidden",
+      });
+      assert.strictEqual(card._canUseVolumeHold(false, false, true), false);
+
+      card.setConfig({
+        entities: ["media_player.test"],
+        card_type: "tiny",
+      });
+      card.hass.states["media_player.test"].attributes.supported_features = 0;
+      assert.strictEqual(card._canUseVolumeHold(false, false, true), false);
+    });
+  });
+
+  describe("Tiny mode horizontal VolumeHoldController behavior", () => {
+    it("uses horizontal width range, drags horizontally, and cancels host tap gesture", () => {
+      mock.timers.enable();
+      try {
+        let tapTimerFired = false;
+        const targetEl = {
+          classList: { contains: (cls) => cls === "tiny-mode" },
+          _captured: null,
+          setPointerCapture(id) {
+            this._captured = id;
+          },
+          hasPointerCapture(id) {
+            return this._captured === id;
+          },
+          releasePointerCapture(id) {
+            if (this._captured === id) this._captured = null;
+          },
+        };
+        const canUseSpy = mock.fn(() => true);
+        const applySpy = mock.fn();
+        const host = {
+          addController: mock.fn(),
+          requestUpdate: mock.fn(),
+          _isTinyMode: true,
+          _tinyChipOverlayOpen: false,
+          _gestureActive: true,
+          _gestureHoldTimer: setTimeout(() => {
+            tapTimerFired = true;
+          }, 500),
+          _canUseVolumeHold: canUseSpy,
+          _applyVolumeLevel: applySpy,
+          _suppressVolumeOverlay: mock.fn(),
+          _dismissVolumeOverlay: mock.fn(),
+          _onMuteToggle: mock.fn(),
+          _supportsFeature: mock.fn(() => true),
+          currentVolumeStateObj: {
+            attributes: {
+              volume_level: 0.5,
+              is_volume_muted: false,
+            },
+          },
+          renderRoot: {
+            querySelector: mock.fn(() => ({
+              getBoundingClientRect: () => ({ width: 200, height: 64 }),
+            })),
+          },
+        };
+        const ctrl = new VolumeHoldController(host);
+
+        ctrl.onPointerDown(
+          /** @type {any} */ ({
+            isPrimary: true,
+            pointerType: "touch",
+            pointerId: 7,
+            clientX: 100,
+            clientY: 30,
+            currentTarget: targetEl,
+            composedPath: () => [targetEl],
+          })
+        );
+
+        assert.strictEqual(canUseSpy.mock.calls.length, 1);
+        assert.deepStrictEqual(canUseSpy.mock.calls[0].arguments, [false, false, true]);
+
+        mock.timers.tick(HOLD_DELAY_MS);
+        assert.strictEqual(ctrl.active, true);
+        assert.strictEqual(host._gestureActive, false);
+        assert.strictEqual(host._gestureHoldTimer, null);
+
+        // Dragging right by 50px across 200px width increases volume from 0.50 to 0.75
+        ctrl.onPointerMove(
+          /** @type {any} */ ({
+            pointerId: 7,
+            clientX: 150,
+            clientY: 32,
+            cancelable: true,
+            preventDefault: mock.fn(),
+          })
+        );
+        assert.strictEqual(ctrl.value, 0.75);
+
+        // Dragging left to X=60px (-40px across 200px width) sets volume to 0.30
+        ctrl.onPointerMove(
+          /** @type {any} */ ({
+            pointerId: 7,
+            clientX: 60,
+            clientY: 32,
+            cancelable: true,
+            preventDefault: mock.fn(),
+          })
+        );
+        assert.strictEqual(ctrl.value, 0.3);
+
+        ctrl.onPointerUp(/** @type {any} */ ({ pointerId: 7 }));
+        assert.strictEqual(ctrl.active, false);
+        assert.strictEqual(ctrl.releasing, true);
+        assert.strictEqual(applySpy.mock.calls.at(-1).arguments[0], 0.3);
+
+        mock.timers.tick(RELEASE_LINGER_MS);
+        assert.strictEqual(ctrl.releasing, false);
+        assert.strictEqual(tapTimerFired, false);
+      } finally {
+        mock.timers.reset();
+      }
+    });
+
+    it("does not activate in tiny mode while chip overlay is open", () => {
+      mock.timers.enable();
+      try {
+        /** @type {any} */
+        const targetEl = { classList: { contains: (cls) => cls === "tiny-mode" } };
+        const host = /** @type {any} */ ({
+          addController: mock.fn(),
+          requestUpdate: mock.fn(),
+          _isTinyMode: true,
+          _tinyChipOverlayOpen: true,
+          _canUseVolumeHold: mock.fn(() => true),
+        });
+        const ctrl = new VolumeHoldController(host);
+
+        ctrl.onPointerDown(
+          /** @type {any} */ ({
+            isPrimary: true,
+            pointerType: "touch",
+            pointerId: 9,
+            clientX: 100,
+            clientY: 30,
+            currentTarget: targetEl,
+            composedPath: () => [targetEl],
+          })
+        );
+        mock.timers.tick(HOLD_DELAY_MS);
+        assert.strictEqual(ctrl.active, false);
+      } finally {
+        mock.timers.reset();
+      }
     });
   });
 });

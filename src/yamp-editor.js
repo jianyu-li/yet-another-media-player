@@ -2,7 +2,12 @@ import { LitElement, html, nothing } from "lit";
 import { editorStyles } from "./styles/editor.js";
 import { localize, setHassLanguage } from "./localize/localize.js";
 
-import { SUPPORT_GROUPING, TEMPLATE_CONFIGS, getTemplatePresetDefaults } from "./constants.js";
+import {
+  SUPPORT_GROUPING,
+  TEMPLATE_CONFIGS,
+  getTemplatePresetDefaults,
+  normalizeCollapsedMode,
+} from "./constants.js";
 import { getActionPlacement, getEntityName, isValidArtworkUrl } from "./yamp-utils.js";
 import { normalizeImageSourceValue } from "./controllers/artwork-controller.js";
 import "./yamp-sortable.js";
@@ -544,6 +549,12 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
       merged.card_type = templateBase.card_type;
     }
 
+    if (merged.always_collapsed !== undefined) {
+      if (!this._looksLikeTemplate(merged.always_collapsed)) {
+        merged.always_collapsed = normalizeCollapsedMode(merged.always_collapsed);
+      }
+    }
+
     if (!Array.isArray(definedYaml.adaptive_text_targets)) {
       if (definedYaml.adaptive_text === false) {
         merged.adaptive_text_targets = [];
@@ -720,6 +731,13 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
       if (newYaml.card_type === "default" || newYaml.card_type === "standard") {
         delete newYaml.card_type;
       }
+      if (
+        newYaml.always_collapsed === "standard" ||
+        newYaml.always_collapsed === "default" ||
+        newYaml.always_collapsed === false
+      ) {
+        delete newYaml.always_collapsed;
+      }
       newYaml.template = templateName;
     }
 
@@ -791,6 +809,27 @@ export class YetAnotherMediaPlayerEditor extends LitElement {
           this._yamlConfig.adaptive_text_targets !== null) ||
         (this._yamlConfig.adaptive_text !== undefined && this._yamlConfig.adaptive_text !== null)
       );
+    }
+    const templateBase = getTemplatePresetDefaults(this._getEffectiveTemplate());
+    if (key === "always_collapsed") {
+      const yamlVal = this._yamlConfig.always_collapsed;
+      if (yamlVal === undefined || yamlVal === null) return false;
+      if (this._looksLikeTemplate(yamlVal)) return true;
+      return (
+        normalizeCollapsedMode(yamlVal) !== normalizeCollapsedMode(templateBase.always_collapsed)
+      );
+    }
+    if (key === "card_type") {
+      const yamlVal = this._yamlConfig.card_type;
+      if (
+        yamlVal === undefined ||
+        yamlVal === null ||
+        yamlVal === "default" ||
+        yamlVal === "standard"
+      ) {
+        return false;
+      }
+      return yamlVal !== templateBase.card_type;
     }
     return this._yamlConfig[key] !== undefined && this._yamlConfig[key] !== null;
   }

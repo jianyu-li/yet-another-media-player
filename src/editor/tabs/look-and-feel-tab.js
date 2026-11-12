@@ -1,6 +1,6 @@
 import { html } from "lit";
 import { localize } from "../../localize/localize.js";
-import { DEFAULT_BACKGROUND_FADE } from "../../constants.js";
+import { DEFAULT_BACKGROUND_FADE, normalizeCollapsedMode } from "../../constants.js";
 import {
   VOLUME_MODE_SELECTOR,
   VOLUME_STEP_SELECTOR,
@@ -13,6 +13,18 @@ import {
  * @this {import("../../types.d.ts").YetAnotherMediaPlayerEditor}
  */
 export function renderVisualTab() {
+  const isCardTypeTiny =
+    this._config.card_type === "tiny" ||
+    this._config.card_type === "tiny_player" ||
+    this._config.card_type === "tiny-player";
+  const isAlwaysCollapsedTemplate =
+    !isCardTypeTiny && this._isTemplateValue(this._config.always_collapsed);
+  const collapsedMode = isCardTypeTiny
+    ? "tiny"
+    : isAlwaysCollapsedTemplate
+      ? "template"
+      : normalizeCollapsedMode(this._config.always_collapsed);
+
   return html`
     <div class="config-section">
       <div class="section-header">
@@ -158,7 +170,8 @@ export function renderVisualTab() {
         <div
           title=${
             this._config.alternate_progress_bar ||
-            (!this._isTemplateValue(this._config.always_collapsed) && this._config.always_collapsed)
+            collapsedMode === "mini" ||
+            collapsedMode === "tiny"
               ? localize("editor.subtitles.not_available_alt_collapsed")
               : ""
           }
@@ -167,7 +180,11 @@ export function renderVisualTab() {
             id="display-timestamps-toggle"
             .checked=${this._config.display_timestamps ?? false}
             @change=${(e) => this._updateConfig("display_timestamps", e.target.checked)}
-            .disabled=${this._config.alternate_progress_bar || (!this._isTemplateValue(this._config.always_collapsed) && this._config.always_collapsed)}
+            .disabled=${Boolean(
+              this._config.alternate_progress_bar ||
+              collapsedMode === "mini" ||
+              collapsedMode === "tiny"
+            )}
           ></ha-switch>
           <span>${localize("editor.labels.display_timestamps")}</span>
           ${this._renderTemplateIndicator("display_timestamps")}
@@ -764,33 +781,30 @@ export function renderVisualTab() {
           <span>${localize("editor.labels.collapse_on_idle")}</span>
         </div>
         <div
-          style="${this._isTemplateValue(this._config.always_collapsed) || !this._config.always_collapsed ? "" : "opacity: 0.5;"}"
+          style="${collapsedMode === "mini" || collapsedMode === "tiny" ? "opacity: 0.5;" : ""}"
           title="${
-            this._isTemplateValue(this._config.always_collapsed) || !this._config.always_collapsed
-              ? ""
-              : localize("editor.subtitles.not_available_collapsed")
+            collapsedMode === "mini" || collapsedMode === "tiny"
+              ? localize("editor.subtitles.not_available_collapsed")
+              : ""
           }"
         >
           <ha-switch
             id="hide-menu-player-toggle"
             .checked=${this._config.hide_menu_player ?? false}
             @change=${(e) => this._updateConfig("hide_menu_player", e.target.checked)}
-            .disabled=${
-              (!this._isTemplateValue(this._config.always_collapsed) &&
-                !!this._config.always_collapsed) ||
-              (this._config.always_collapsed === true &&
-                this._config.pin_search_headers === true &&
-                this._config.expand_on_search === true)
-            }
+            .disabled=${collapsedMode === "mini" || collapsedMode === "tiny"}
           ></ha-switch>
           <span>${localize("editor.labels.hide_menu_player_toggle")}</span>
           ${this._renderTemplateIndicator("hide_menu_player")}
         </div>
       </div>
       ${
-        this._isTemplateMode("always_collapsed", this._config.always_collapsed)
+        !isCardTypeTiny && this._isTemplateMode("always_collapsed", this._config.always_collapsed)
           ? html`
-              <div class="form-row">
+              <div
+                class="form-row"
+                data-search-keys="always_collapsed standard mini tiny expand_on_search"
+              >
                 <div class="editor-field-wrapper">
                   <div class="grow-children" style="flex-direction: column;">
                     <span class="form-label">${localize("editor.labels.always_collapsed")}</span>
@@ -823,27 +837,51 @@ export function renderVisualTab() {
             `
           : html`
               <div
-                data-search-keys="always_collapsed expand_on_search"
+                data-search-keys="always_collapsed standard mini tiny expand_on_search"
                 class="form-row form-row-multi-column"
               >
-                <div style="display: flex; align-items: center; gap: 8px;">
-                  <ha-switch
-                    id="always-collapsed-toggle"
-                    .checked=${this._config.always_collapsed === true}
-                    @change=${(e) => this._updateConfig("always_collapsed", e.target.checked)}
-                  ></ha-switch>
-                  <span>${localize("editor.labels.always_collapsed")}</span>
+                <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
+                  <ha-selector
+                    style="flex: 1;"
+                    .hass=${this.hass}
+                    .selector=${{
+                      select: {
+                        mode: "dropdown",
+                        options: [
+                          {
+                            value: "standard",
+                            label:
+                              localize("editor.always_collapsed_options.standard") || "Standard",
+                          },
+                          {
+                            value: "mini",
+                            label: localize("editor.always_collapsed_options.mini") || "Mini",
+                          },
+                          {
+                            value: "tiny",
+                            label: localize("editor.always_collapsed_options.tiny") || "Tiny",
+                          },
+                        ],
+                      },
+                    }}
+                    .value=${isCardTypeTiny ? "tiny" : normalizeCollapsedMode(this._config.always_collapsed)}
+                    .disabled=${isCardTypeTiny}
+                    helper="${isCardTypeTiny ? localize("editor.subtitles.forced_by_card_type_tiny") || "Controlled by Card Type: Tiny" : ""}"
+                    label="${localize("editor.labels.always_collapsed")}"
+                    @value-changed=${(e) => this._updateConfig("always_collapsed", e.detail.value)}
+                  ></ha-selector>
                   ${this._renderTemplateIndicator("always_collapsed")}
                   ${this._renderTemplateToggle(
                     "always_collapsed",
                     this._config.always_collapsed,
-                    (v) => this._updateConfig("always_collapsed", v)
+                    (v) => this._updateConfig("always_collapsed", v),
+                    isCardTypeTiny
                   )}
                 </div>
                 <div
-                  style="${this._config.always_collapsed ? "" : "opacity: 0.5;"}"
+                  style="${collapsedMode === "mini" ? "" : "opacity: 0.5;"}"
                   title="${
-                    this._config.always_collapsed
+                    collapsedMode === "mini"
                       ? ""
                       : localize("editor.subtitles.only_available_collapsed")
                   }"
@@ -852,7 +890,7 @@ export function renderVisualTab() {
                     id="expand-on-search-toggle"
                     .checked=${this._config.expand_on_search ?? false}
                     @change=${(e) => this._updateConfig("expand_on_search", e.target.checked)}
-                    .disabled=${!this._config.always_collapsed}
+                    .disabled=${collapsedMode !== "mini"}
                   ></ha-switch>
                   <span>${localize("editor.labels.expand_on_search")}</span>
                 </div>
@@ -865,9 +903,9 @@ export function renderVisualTab() {
       <div
         data-search-keys="disable_mini_menu"
         class="form-row"
-        style="${this._config.always_collapsed === true && !this._config.expand_on_search ? "" : "opacity: 0.5;"}"
+        style="${collapsedMode === "mini" && !this._config.expand_on_search ? "" : "opacity: 0.5;"}"
         title="${
-          this._config.always_collapsed === true && !this._config.expand_on_search
+          collapsedMode === "mini" && !this._config.expand_on_search
             ? ""
             : localize("editor.subtitles.only_available_mini_menu")
         }"
@@ -877,7 +915,7 @@ export function renderVisualTab() {
             id="disable-mini-menu-toggle"
             .checked=${this._config.disable_mini_menu === true}
             @change=${(e) => this._updateConfig("disable_mini_menu", e.target.checked)}
-            .disabled=${!(this._config.always_collapsed === true && !this._config.expand_on_search)}
+            .disabled=${!(collapsedMode === "mini" && !this._config.expand_on_search)}
           ></ha-switch>
           <span>${localize("editor.labels.disable_mini_menu")}</span>
         </div>

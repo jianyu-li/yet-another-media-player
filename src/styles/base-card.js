@@ -1281,4 +1281,144 @@ export const baseCardStyles = css`
     width: 34px;
     height: 34px;
   }
+
+  /* ============================================
+     Tiny Mode Styles
+     ============================================ */
+  ha-card.yamp-card.tiny-mode-card,
+  :host([data-tiny-mode="true"]) ha-card.yamp-card {
+    min-height: 64px;
+    height: 100%;
+    border-radius: var(--border-radius);
+    box-shadow: var(--ha-card-box-shadow, none);
+  }
+
+  ha-card.yamp-card.tiny-mode-card:has(> .yamp-card-inner.no-artwork-bg),
+  :host([data-tiny-mode="true"]) ha-card.yamp-card:has(> .yamp-card-inner.no-artwork-bg) {
+    background: var(--card-bg);
+  }
+
+  .yamp-card-inner.tiny-mode {
+    min-height: 64px;
+    height: 100%;
+    justify-content: center;
+  }
+
+  .yamp-card-inner.tiny-mode.no-artwork-bg {
+    background: var(--card-bg);
+    color: var(--primary-text);
+  }
+
+  .yamp-card-inner.tiny-mode.has-artwork-bg {
+    color: #fff;
+  }
+
+  .yamp-card-inner.tiny-mode[data-has-font-color="true"] {
+    color: var(--primary-text);
+  }
+
+  .tiny-row {
+    position: relative;
+    z-index: ${Z_LAYERS.FLOATING_ELEMENT};
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 8px 12px;
+    min-height: 64px;
+    box-sizing: border-box;
+    width: 100%;
+  }
+
+  .tiny-artwork-container {
+    flex: 0 0 48px;
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    overflow: hidden;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 1px 4px rgba(0, 0, 0, 0.22);
+  }
+
+  .tiny-artwork {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: var(--yamp-artwork-fit, cover);
+  }
+
+  .tiny-artwork-placeholder {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: color-mix(in srgb, var(--primary-text) 8%, transparent);
+    padding: 8px;
+    box-sizing: border-box;
+  }
+
+  .tiny-artwork-placeholder svg {
+    display: block;
+    width: 100%;
+    height: 100%;
+    opacity: 0.85;
+    pointer-events: none;
+  }
+
+  .tiny-details {
+    flex: 1 1 auto;
+    min-inline-size: 0;
+    min-width: 0;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 2px;
+    text-align: left;
+  }
+
+  :host([data-details-alignment="center"]) .tiny-details {
+    align-items: center;
+    text-align: center;
+  }
+
+  :host([data-details-alignment="right"]) .tiny-details {
+    align-items: flex-end;
+    text-align: right;
+  }
+
+  .tiny-title {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 0.98em;
+    font-weight: 600;
+    line-height: 1.25;
+    color: inherit;
+    min-inline-size: 0;
+  }
+
+  .tiny-subtitle {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    font-size: 0.85em;
+    font-weight: 400;
+    line-height: 1.2;
+    opacity: 0.8;
+    color: inherit;
+    min-inline-size: 0;
+  }
+
+  .yamp-card-inner.tiny-mode.no-artwork-bg:not([data-has-font-color="true"]) .tiny-subtitle {
+    color: var(--secondary-text);
+    opacity: 1;
+  }
+
+  .dim-idle .tiny-details,
+  .dim-idle .tiny-controls {
+    opacity: 0.28;
+    transition: opacity 0.5s;
+  }
 `;

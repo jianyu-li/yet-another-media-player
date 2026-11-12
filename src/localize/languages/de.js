@@ -93,6 +93,11 @@ export default {
         description:
           "Maximierte Steuerelemente, großer Text und ein massiver Fortschrittsbalken für die Betrachtung aus der Ferne.",
       },
+      tiny: {
+        label: "Tiny Player",
+        description:
+          "Ultrakompakte einzeilige Player-Leiste mit Artwork, Titel, Interpret und Schnellsteuerung.",
+      },
     },
     placeholders: {
       search: "Musik suchen...",
@@ -205,6 +210,8 @@ export default {
         "Textgruppen wählen, die mit dem Platz skalieren (leer lassen zum Deaktivieren).",
       collapse_expand:
         "Immer eingeklappt aktiviert den Mini-Player-Modus. Bei Suche ausklappen aktiviert ihn temporär.",
+      always_collapsed:
+        "Wählen Sie, wie die Karte angezeigt wird: Standard (vollständige Karte), Mini (kompakte eingeklappte Karte) oder Tiny (einzeilige Leiste).",
       disable_mini_menu:
         "Kehrt zu Standardlisten zurück, anstatt die neuen Mini-Grid-Menüs im Modus 'Immer eingeklappt' zu verwenden.",
       idle_screen: "Wählen Sie, welcher Bildschirm im Leerlauf automatisch angezeigt wird.",
@@ -240,6 +247,8 @@ export default {
       not_available_alt_collapsed:
         "Nicht verfügbar mit alternativem Fortschrittsbalken oder im Modus 'Immer eingeklappt'.",
       not_available_collapsed: "Nicht verfügbar, wenn 'Immer eingeklappt' aktiviert ist.",
+      not_available_tiny: "Nicht verfügbar im Tiny-Modus",
+      forced_by_card_type_tiny: "Gesteuert durch Kartentyp: Tiny",
       only_available_collapsed: "Nur verfügbar, wenn 'Immer eingeklappt' aktiviert ist.",
       only_available_mini_menu:
         "Nur verfügbar, wenn 'Immer eingeklappt' aktiviert und 'Bei Suche erweitern' deaktiviert ist",
@@ -468,6 +477,12 @@ export default {
       players: "Player",
       up_next: "Als Nächstes",
       remote_control: "Fernbedienung",
+      tiny: "Tiny",
+    },
+    always_collapsed_options: {
+      standard: "Standard",
+      mini: "Mini",
+      tiny: "Tiny",
     },
     appearance_options: {
       automatic: "Automatisch",

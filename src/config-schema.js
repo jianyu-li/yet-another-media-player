@@ -63,7 +63,7 @@ export const TEMPLATE_CONFIGS = Object.freeze({
   minimal_mini: {
     match_theme: true,
     appearance: "automatic",
-    always_collapsed: true,
+    always_collapsed: "mini",
     show_chip_row: "in_menu",
     details_alignment: "left",
     hold_to_pin: true,
@@ -76,7 +76,7 @@ export const TEMPLATE_CONFIGS = Object.freeze({
   normal_mini: {
     match_theme: true,
     appearance: "automatic",
-    always_collapsed: true,
+    always_collapsed: "mini",
     show_chip_row: "auto",
     details_alignment: "left",
     hold_to_pin: true,
@@ -84,6 +84,14 @@ export const TEMPLATE_CONFIGS = Object.freeze({
     volume_mode: "slider",
     extend_artwork: true,
     blurred_artwork: true,
+  },
+  tiny: {
+    match_theme: true,
+    appearance: "automatic",
+    card_type: "tiny",
+    always_collapsed: "tiny",
+    blurred_artwork: true,
+    progress_bar_height: 2,
   },
   dedicated_search: {
     match_theme: true,
@@ -194,7 +202,7 @@ export const CARD_CONFIG_DEFAULTS = Object.freeze({
   show_volume_overlay: false,
   hold_title_for_volume: false,
   always_show_quick_group: false,
-  always_collapsed: false,
+  always_collapsed: "standard",
   hide_menu_player: false,
   hide_active_entity_label: false,
   hide_active_entity_label_on_idle: false,
@@ -266,6 +274,44 @@ export function isFieldTemplateSupported(fieldName) {
 }
 
 /**
+ * Normalize collapsed mode value to "standard" | "mini" | "tiny"
+ * @param {any} value
+ * @returns {"standard" | "mini" | "tiny"}
+ */
+export function normalizeCollapsedMode(value) {
+  if (value === true) return "mini";
+  if (value === false || value === undefined || value === null || value === "") return "standard";
+  if (typeof value === "string") {
+    const s = value.trim().toLowerCase();
+    if (s === "tiny" || s === "tiny_player" || s === "tiny-player") {
+      return "tiny";
+    }
+    if (
+      s === "mini" ||
+      s === "collapsed" ||
+      s === "true" ||
+      s === "1" ||
+      s === "on" ||
+      s === "yes"
+    ) {
+      return "mini";
+    }
+    if (
+      s === "standard" ||
+      s === "default" ||
+      s === "false" ||
+      s === "0" ||
+      s === "off" ||
+      s === "no"
+    ) {
+      return "standard";
+    }
+    return "standard";
+  }
+  return "standard";
+}
+
+/**
  * Get defaults for a specific template preset
  * @param {string} [templateName]
  * @returns {Record<string, any>}
@@ -289,6 +335,9 @@ export function getTemplatePresetDefaults(templateName = "custom") {
   }
   if (norm === "search" || norm === "dedicated_search") {
     return TEMPLATE_CONFIGS.dedicated_search;
+  }
+  if (norm === "tiny" || norm === "tiny_player" || norm === "tiny-player") {
+    return TEMPLATE_CONFIGS.tiny;
   }
   return TEMPLATE_CONFIGS[norm] || TEMPLATE_CONFIGS[templateName] || {};
 }
@@ -324,6 +373,18 @@ export function normalizeCardConfig(rawConfig = {}) {
       definedRaw.card_type === "standard")
   ) {
     normalized.card_type = templateBase.card_type;
+  }
+  if (normalized.card_type === "tiny_player" || normalized.card_type === "tiny-player") {
+    normalized.card_type = "tiny";
+  }
+  const collapsedVal = normalized.always_collapsed;
+  const isCollapsedTemplate =
+    typeof collapsedVal === "string" &&
+    (collapsedVal.includes("{{") ||
+      collapsedVal.includes("{%") ||
+      collapsedVal.trim().startsWith("[[["));
+  if (!isCollapsedTemplate) {
+    normalized.always_collapsed = normalizeCollapsedMode(collapsedVal);
   }
   if (definedRaw.adaptive_text === false && !Array.isArray(definedRaw.adaptive_text_targets)) {
     normalized.adaptive_text_targets = [];

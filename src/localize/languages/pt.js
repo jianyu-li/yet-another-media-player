@@ -94,6 +94,11 @@ export default {
         description:
           "Controlos maximizados, texto grande e barra de progresso maciça para visualização à distância.",
       },
+      tiny: {
+        label: "Reprodutor Tiny",
+        description:
+          "Barra de reprodução ultracompacta de linha única com capa, título, artista e controlos rápidos.",
+      },
     },
     placeholders: {
       search: "Procurar música...",
@@ -194,6 +199,8 @@ export default {
       adaptive_text: "Escolher que textos se adaptam ao espaço.",
       collapse_expand:
         "Sempre contraído ativa modo mini. Expandir ao procurar expande temporariamente.",
+      always_collapsed:
+        "Escolha como o cartão é exibido: Padrão (cartão completo), Mini (cartão compacto recolhido) ou Tiny (barra de linha única).",
       disable_mini_menu:
         "Reverter para listas padrão em vez de usar os novos mini menus em grade no modo 'Sempre recolhido'.",
       idle_screen: "Escolher ecrã a mostrar em repouso.",
@@ -224,6 +231,8 @@ export default {
         "Modelo Jinja que resolve um entity_id de controlo remoto (ex. remote.sala_tv):",
       not_available_alt_collapsed: "Não disponível em modo contraído.",
       not_available_collapsed: "Não disponível se contraído.",
+      not_available_tiny: "Não disponível no modo Tiny",
+      forced_by_card_type_tiny: "Controlado por Tipo de cartão: Tiny",
       only_available_collapsed: "Apenas disponível se contraído.",
       only_available_mini_menu:
         "Disponível apenas quando 'Sempre recolhido' é verdadeiro e 'Expandir na pesquisa' é falso",
@@ -454,6 +463,12 @@ export default {
       players: "Leitores",
       up_next: "A seguir",
       remote_control: "Controle Remoto",
+      tiny: "Tiny",
+    },
+    always_collapsed_options: {
+      standard: "Padrão",
+      mini: "Mini",
+      tiny: "Tiny",
     },
     appearance_options: {
       automatic: "Automático",

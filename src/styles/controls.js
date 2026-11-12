@@ -401,4 +401,100 @@ export const controlsStyles = css`
     justify-content: center;
     color: inherit;
   }
+
+  /* ============================================
+     Tiny Mode Controls
+     ============================================ */
+  .tiny-controls {
+    flex: 0 0 auto;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    position: relative;
+    z-index: ${Z_LAYERS.FLOATING_CONTROLS};
+  }
+
+  .tiny-control-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: none;
+    border-radius: 50%;
+    cursor: pointer;
+    padding: 0;
+    color: inherit;
+    background: transparent;
+    transition:
+      background var(--transition-normal),
+      color var(--transition-normal),
+      transform 0.12s ease;
+  }
+
+  .tiny-control-btn:active {
+    transform: scale(0.94);
+  }
+
+  .tiny-control-btn ha-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: inherit;
+  }
+
+  .tiny-play-btn {
+    width: 38px;
+    height: 38px;
+    background: rgba(255, 255, 255, 0.18);
+  }
+
+  .yamp-card-inner.tiny-mode.no-artwork-bg .tiny-play-btn,
+  .yamp-card-inner.tiny-mode[data-has-font-color="true"] .tiny-play-btn {
+    background: color-mix(in srgb, var(--primary-text) 14%, transparent);
+  }
+
+  .tiny-play-btn ha-icon {
+    --mdc-icon-size: 22px;
+    width: 22px;
+    height: 22px;
+  }
+
+  .tiny-next-btn,
+  .tiny-players-btn {
+    width: 34px;
+    height: 34px;
+  }
+
+  .tiny-next-btn ha-icon {
+    --mdc-icon-size: 22px;
+    width: 22px;
+    height: 22px;
+  }
+
+  .tiny-players-btn ha-icon {
+    --mdc-icon-size: 19px;
+    width: 19px;
+    height: 19px;
+  }
+
+  .tiny-players-btn.active,
+  .tiny-players-btn[active] {
+    color: var(--custom-accent);
+  }
+
+  @media (hover: hover) {
+    .tiny-play-btn:hover {
+      background: var(--custom-accent);
+      color: #fff;
+    }
+
+    .tiny-next-btn:hover,
+    .tiny-players-btn:hover {
+      color: var(--custom-accent);
+    }
+  }
+
+  .yamp-card-inner.tiny-mode[data-has-font-color="true"] .tiny-control-btn,
+  .yamp-card-inner.tiny-mode[data-has-font-color="true"] .tiny-control-btn ha-icon {
+    color: var(--yamp-icon-color, var(--primary-text));
+  }
 `;

@@ -93,6 +93,11 @@ export default {
         description:
           "Gemaximaliseerde bediening, grote tekst en een enorme voortgangsbalk voor weergave op afstand.",
       },
+      tiny: {
+        label: "Tiny speler",
+        description:
+          "Ultracompacte spelerbalk van één rij met artwork, titel, artiest en snelle bediening.",
+      },
     },
     placeholders: {
       search: "Zoek muziek...",
@@ -208,6 +213,8 @@ export default {
         "Kies welke tekstgroepen moeten schalen met de beschikbare ruimte (laat leeg om adaptieve tekst uit te schakelen).",
       collapse_expand:
         "Altijd Ingeklapt creëert de mini-spelermodus. Uitklappen bij Zoeken klapt tijdelijk uit tijdens het zoeken.",
+      always_collapsed:
+        "Kies hoe de kaart wordt weergegeven: Standaard (volledige kaart), Mini (compacte ingeklapte kaart) of Tiny (enkele rij).",
       disable_mini_menu:
         "Keer terug naar standaardlijsten in plaats van de nieuwe mini rastermenu's te gebruiken in de modus 'Altijd ingeklapt'.",
       idle_screen:
@@ -249,6 +256,8 @@ export default {
       not_available_alt_collapsed:
         "Niet beschikbaar met Alternatieve Voortgangsbalk of Altijd Ingeklapte modus",
       not_available_collapsed: "Niet beschikbaar wanneer Altijd Ingeklapt is ingeschakeld",
+      not_available_tiny: "Niet beschikbaar in Tiny-modus",
+      forced_by_card_type_tiny: "Bepaald door Kaarttype: Tiny",
       only_available_collapsed: "Alleen beschikbaar wanneer Altijd Ingeklapt is ingeschakeld",
       only_available_mini_menu:
         "Alleen beschikbaar wanneer 'Altijd ingeklapt' waar is en 'Uitvouwen bij zoeken' onwaar is",
@@ -477,6 +486,12 @@ export default {
       players: "Spelers",
       up_next: "Hierna",
       remote_control: "Afstandsbediening",
+      tiny: "Tiny",
+    },
+    always_collapsed_options: {
+      standard: "Standaard",
+      mini: "Mini",
+      tiny: "Tiny",
     },
     appearance_options: {
       automatic: "Automatisch",

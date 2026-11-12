@@ -1,11 +1,24 @@
 import { html } from "lit";
 import { localize } from "../../localize/localize.js";
+import { normalizeCollapsedMode } from "../../constants.js";
 
 /**
  * Render the Behavior tab in the YAMP card editor.
  * @this {import("../../types.d.ts").YetAnotherMediaPlayerEditor}
  */
 export function renderBehaviorTab() {
+  const collapsedMode = normalizeCollapsedMode(this._config.always_collapsed);
+  const isTiny =
+    this._config.card_type === "tiny" ||
+    this._config.card_type === "tiny_player" ||
+    this._config.card_type === "tiny-player" ||
+    collapsedMode === "tiny";
+  const pinSearchHeadersDisabled =
+    isTiny ||
+    (this._config.entities?.length === 1 &&
+      collapsedMode === "mini" &&
+      this._config.expand_on_search !== true);
+
   return html`
     <div class="config-section">
       <div class="form-row">
@@ -31,6 +44,7 @@ export function renderBehaviorTab() {
                     value: "remote_control",
                     label: localize("editor.card_type_options.remote_control"),
                   },
+                  { value: "tiny", label: localize("editor.card_type_options.tiny") || "Tiny" },
                 ],
               },
             }}
@@ -45,7 +59,11 @@ export function renderBehaviorTab() {
               this._config.card_type === "transfer_queue" ||
               this._config.card_type === "transfer-queue"
                 ? "group_players"
-                : (this._config.card_type ?? "default")
+                : this._config.card_type === "tiny" ||
+                    this._config.card_type === "tiny_player" ||
+                    this._config.card_type === "tiny-player"
+                  ? "tiny"
+                  : (this._config.card_type ?? "default")
             }
             label="${localize("editor.fields.card_type")}"
             @value-changed=${(e) => this._updateConfig("card_type", e.detail.value)}
@@ -272,30 +290,22 @@ export function renderBehaviorTab() {
         class="form-row form-row-multi-column"
       >
         <div
-          style="${
-            this._config.entities?.length === 1 &&
-            this._config.always_collapsed === true &&
-            this._config.expand_on_search !== true
-              ? "opacity: 0.5;"
-              : ""
-          }"
+          style="${pinSearchHeadersDisabled ? "opacity: 0.5;" : ""}"
           title="${
-            this._config.entities?.length === 1 &&
-            this._config.always_collapsed === true &&
-            this._config.expand_on_search !== true
-              ? "Not available with one entity in Always Collapsed mode unless Expand on Search is enabled"
-              : ""
+            isTiny
+              ? localize("editor.subtitles.not_available_tiny")
+              : this._config.entities?.length === 1 &&
+                  collapsedMode === "mini" &&
+                  this._config.expand_on_search !== true
+                ? "Not available with one entity in Always Collapsed mode unless Expand on Search is enabled"
+                : ""
           }"
         >
           <ha-switch
             id="pin-search-headers-toggle"
             .checked=${this._config.pin_search_headers ?? false}
             @change=${(e) => this._updateConfig("pin_search_headers", e.target.checked)}
-            .disabled=${
-              this._config.entities?.length === 1 &&
-              this._config.always_collapsed === true &&
-              this._config.expand_on_search !== true
-            }
+            .disabled=${pinSearchHeadersDisabled}
           ></ha-switch>
           <span>${localize("editor.labels.pin_headers")}</span>
           ${this._renderTemplateIndicator("pin_search_headers")}

@@ -428,4 +428,89 @@ export const chipStyles = css`
     width: 100%;
     color: inherit;
   }
+
+  /* ============================================
+     Tiny Mode Chip Overlay
+     ============================================ */
+  .tiny-chip-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: ${Z_LAYERS.FLOATING_CONTROLS + 5};
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 0 10px;
+    background: var(--yamp-overlay-bg, rgba(0, 0, 0, 0.82));
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: var(--border-radius);
+    animation: yamp-tiny-overlay-in 0.18s ease-out;
+    box-sizing: border-box;
+  }
+
+  @keyframes yamp-tiny-overlay-in {
+    from {
+      opacity: 0;
+      transform: translateY(-4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .tiny-chip-overlay {
+      animation: none;
+    }
+  }
+
+  .tiny-chip-row {
+    flex: 1 1 auto;
+    min-inline-size: 0;
+    min-width: 0;
+    margin-bottom: 0;
+    padding: 6px 4px;
+    align-items: center;
+  }
+
+  .tiny-overlay-close-btn {
+    flex: 0 0 32px;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    border: 1px solid var(--yamp-button-border, rgba(255, 255, 255, 0.2));
+    background: var(--yamp-button-bg, rgba(255, 255, 255, 0.1));
+    color: var(--yamp-overlay-text, var(--primary-text));
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    padding: 0;
+    transition:
+      background var(--transition-normal),
+      color var(--transition-normal),
+      transform 0.12s ease;
+  }
+
+  .tiny-overlay-close-btn:active {
+    transform: scale(0.94);
+  }
+
+  .tiny-overlay-close-btn ha-icon {
+    --mdc-icon-size: 18px;
+    width: 18px;
+    height: 18px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: inherit;
+  }
+
+  @media (hover: hover) {
+    .tiny-overlay-close-btn:hover {
+      background: var(--custom-accent);
+      color: #fff;
+    }
+  }
 `;

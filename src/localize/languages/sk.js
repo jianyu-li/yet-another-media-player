@@ -93,6 +93,11 @@ export default {
         description:
           "Maximalizované ovládacie prvky, veľký text a masívny indikátor priebehu pre sledovanie z diaľky.",
       },
+      tiny: {
+        label: "Tiny prehrávač",
+        description:
+          "Ultrakompaktný jednoriadkový panel prehrávača s obalom, názvom, interpretom a rýchlym ovládaním.",
+      },
     },
     placeholders: {
       search: "Hľadať hudbu...",
@@ -203,6 +208,8 @@ export default {
         "Vyberte skupiny textu, ktoré sa majú škálovať podľa priestoru (nechajte prázdne pre vypnutie).",
       collapse_expand:
         '"Vždy zbalené" vytvorí režim mini prehrávača. "Rozbaliť pri hľadaní" kartu dočasne rozbalí pri vyhľadávaní.',
+      always_collapsed:
+        "Vyberte spôsob zobrazenia karty: Štandard (úplná karta), Mini (kompaktná zbalená karta) alebo Tiny (jednoriadkový panel).",
       disable_mini_menu:
         "Návrat k štandardným zoznamom namiesto použitia nových mini mriežkových ponúk v režime 'Vždy zbalené'.",
       idle_screen: "Vyberte obrazovku, ktorá sa má automaticky zobraziť v režime nečinnosti.",
@@ -241,6 +248,8 @@ export default {
       not_available_alt_collapsed:
         "Nedostupné s alternatívnym indikátorom priebehu alebo v režime Vždy zbalené.",
       not_available_collapsed: "Nedostupné, keď je zapnuté Vždy zbalené.",
+      not_available_tiny: "Nedostupné v režime Tiny",
+      forced_by_card_type_tiny: "Riadené typom karty: Tiny",
       only_available_collapsed: "Dostupné len pri zapnutom režime Vždy zbalené.",
       only_available_mini_menu:
         "K dispozícii iba vtedy, keď je 'Vždy zbalené' zapnuté a 'Rozbaliť pri vyhľadávaní' vypnuté",
@@ -468,6 +477,12 @@ export default {
       players: "Prehrávače",
       up_next: "Nasleduje",
       remote_control: "Diaľkové ovládanie",
+      tiny: "Tiny",
+    },
+    always_collapsed_options: {
+      standard: "Štandard",
+      mini: "Mini",
+      tiny: "Tiny",
     },
     appearance_options: {
       automatic: "Automaticky",

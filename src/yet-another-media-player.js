@@ -8,6 +8,7 @@ import { renderActionChipRow } from "./action-chip-row.js";
 import { renderControlsRow, countMainControls } from "./controls-row.js";
 import { renderVolumeRow } from "./volume-row.js";
 import { renderProgressBar } from "./progress-bar.js";
+import { renderTinyCard } from "./tiny-card.js";
 import { yampCardStyles } from "./yamp-card-styles.js";
 import { QueueDragMixin } from "./yamp-queue-drag.js";
 import "./lyrics-view.js";
@@ -91,6 +92,7 @@ import {
   DEFAULT_BACKGROUND_FADE,
   GROUP_SELECTION_FEEDBACK_DURATION_MS,
   getTemplatePresetDefaults,
+  normalizeCollapsedMode,
   CANONICAL_MENU_OPTION_MAP,
   SESSION_STORAGE_PREFIX,
   SESSION_STORAGE_TTL_MS,
@@ -543,7 +545,8 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     _sessionEntities: { state: true },
     _autoEntities: { state: true },
     _playerSearchQuery: { state: true },
-    _renderTick: { state: true }
+    _renderTick: { state: true },
+    _tinyChipOverlayOpen: { state: true }
   };
 
   static styles = yampCardStyles;
@@ -614,13 +617,17 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
     // Check if any overlay, sheet, or menu is active
     if (
-      this._showEntityOptions ||
-      this._showSearchInSheet ||
-      this._showTransferQueue ||
-      this._showGrouping ||
-      this._showRemoteControl ||
-      this._showSourceList ||
-      this._lyricsActive
+      this._isTinyMode
+        ? this._tinyChipOverlayOpen
+        : (
+            this._showEntityOptions ||
+            this._showSearchInSheet ||
+            this._showTransferQueue ||
+            this._showGrouping ||
+            this._showRemoteControl ||
+            this._showSourceList ||
+            this._lyricsActive
+          )
     ) {
       return true;
     }
@@ -760,23 +767,40 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     return raw;
   }
 
-  get _alwaysCollapsed() {
+  get _collapsedMode() {
     if (this._isFullScreen) {
-      return false;
+      return "standard";
+    }
+    if (this._cardType === "tiny") {
+      return "tiny";
     }
     const raw = this.config?.always_collapsed;
-    if (typeof raw === 'string' && (raw.includes('{{') || raw.includes('{%') || raw.trim().startsWith('[[['))) {
-      const resolved = this._alwaysCollapsedResolveCache?.['card']?.value;
-      if (resolved !== undefined && resolved !== null && resolved !== "") {
-        // If JS template evaluated to boolean, handle it
-        if (typeof resolved === 'boolean') return resolved;
-
-        const lower = String(resolved).trim().toLowerCase();
-        return lower === "true" || lower === "1" || lower === "on" || lower === "yes";
+    if (
+      typeof raw === "string" &&
+      (raw.includes("{{") || raw.includes("{%") || raw.trim().startsWith("[[["))
+    ) {
+      let resolved = this._alwaysCollapsedResolveCache?.["card"]?.value;
+      if (resolved === undefined && raw.trim().startsWith("[[[")) {
+        try {
+          resolved = resolveStringTemplateSync(this.hass, raw, this._getTemplateContext());
+        } catch {
+          resolved = undefined;
+        }
       }
-      return false; // Default until template resolves
+      if (resolved !== undefined && resolved !== null && resolved !== "") {
+        return normalizeCollapsedMode(resolved);
+      }
+      return "standard"; // Default until template resolves
     }
-    return !!raw;
+    return normalizeCollapsedMode(raw);
+  }
+
+  get _isTinyMode() {
+    return this._collapsedMode === "tiny";
+  }
+
+  get _alwaysCollapsed() {
+    return this._collapsedMode !== "standard";
   }
 
   get _backgroundFade() {
@@ -861,6 +885,13 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       type = templateCardType;
     }
     type = type || "default";
+    if (
+      type === "tiny" ||
+      type === "tiny_player" ||
+      type === "tiny-player"
+    ) {
+      return "tiny";
+    }
     if (
       type === "group_players" ||
       type === "group-players" ||
@@ -1050,6 +1081,9 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     // Overlay state for transfer queue sheet
     this._showTransferQueue = false;
     this._showRemoteControl = false;
+    this._tinyChipOverlayOpen = false;
+    this._tinyChipOverlayOutsideHandler = null;
+    this._tinyChipOverlayKeyHandler = null;
     this._cardHeightTemplateValue = {};
     this._cardHeightResolveCache = {};
     this._backgroundFadeTemplateValue = {};
@@ -2908,7 +2942,10 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       this._mediaSessionOverride = null;
     }
     this.config = config;
-    if (this._cardType === "group_players") {
+    if (this._cardType === "tiny") {
+      this._clearMenuFlagsForTinyMode();
+      this._tinyChipOverlayOpen = false;
+    } else if (this._cardType === "group_players") {
       this._showEntityOptions = true;
       this._setIdleState(false);
       this._showGrouping = true;
@@ -3350,11 +3387,11 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   // Whether the press-and-hold volume overlay is available for the active entity
-  _canUseVolumeHold(allowMenuMode = false, isTitle = false) {
+  _canUseVolumeHold(allowMenuMode = false, isTitle = false, isTiny = false) {
     if (isTitle) {
       if (!this._getEffectiveHoldTitleForVolume()) return false;
     } else {
-      if (!allowMenuMode && this._getEffectiveVolumeMode() !== "stepper") return false;
+      if (!allowMenuMode && !isTiny && this._getEffectiveVolumeMode() !== "stepper") return false;
       if (this._getEffectiveVolumeMode() === "hidden") return false;
     }
     const entity = this._getVolumeEntity(this._selectedIndex);
@@ -4255,6 +4292,9 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   get isAnyMenuOpen() {
+    if (this._isTinyMode) {
+      return !!this._tinyChipOverlayOpen;
+    }
     return (
       this._showEntityOptions ||
       this._showGrouping ||
@@ -4275,7 +4315,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
   /** Whether the mini grid menu layout is active (always_collapsed + no expand_on_search + mini menus enabled). */
   get _isGridMode() {
-    return this._alwaysCollapsed && (!this._expandOnSearch || !this._showSearchInSheet) && !this.config.disable_mini_menu;
+    return this._collapsedMode === "mini" && (!this._expandOnSearch || !this._showSearchInSheet) && !this.config.disable_mini_menu;
   }
 
   _renderMainMenu(sourceList, menuOnlyActions, showChipsInMenu) {
@@ -5213,7 +5253,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
     // Notify HA if collapsed state changes
     // If expand on search is enabled and search is open, force expanded state
-    if (this._alwaysCollapsed && this._expandOnSearch && (this._showSearchInSheet)) {
+    if (this._collapsedMode === "mini" && this._expandOnSearch && (this._showSearchInSheet)) {
       const collapsedNow = false;
       if (this._prevCollapsed !== collapsedNow) {
         this._prevCollapsed = collapsedNow;
@@ -5240,6 +5280,16 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._addGrabScroll('.search-filter-chips');
     this._addVerticalGrabScroll('.floating-source-index');
 
+    if (this._isTinyMode) {
+      this._clearMenuFlagsForTinyMode();
+    }
+    if ((!this._isTinyMode || (this.entityObjs || []).length <= 1) && this._tinyChipOverlayOpen) {
+      this._closeTinyChipOverlay();
+    }
+    if (this._tinyChipOverlayOpen) {
+      this._addGrabScroll('.tiny-chip-overlay .chip-row');
+    }
+
     if (this._lastRenderedCollapsed && !this._lastRenderedHideControls) {
       const contentEl = this.renderRoot?.querySelector('.card-lower-content');
       if (contentEl) {
@@ -5264,7 +5314,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     // Autofocus the in-sheet search box when opening the search in entity options
     if (this._showSearchInSheet) {
       // Use a longer delay when expand on search is enabled to allow for card expansion
-      const focusDelay = this._alwaysCollapsed && this._expandOnSearch ? 300 : 200;
+      const focusDelay = this._collapsedMode === "mini" && this._expandOnSearch ? 300 : 200;
 
       setTimeout(() => {
         const focusSearchInput = () => {
@@ -5382,6 +5432,70 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._closeEntityOptions();
   }
 
+  _clearMenuFlagsForTinyMode() {
+    if (this._showEntityOptions) this._showEntityOptions = false;
+    if (this._showGrouping) this._showGrouping = false;
+    if (this._showRemoteControl) this._showRemoteControl = false;
+    if (this._showSearchInSheet) this._showSearchInSheet = false;
+    if (this._showSourceList) this._showSourceList = false;
+    if (this._showTransferQueue) this._showTransferQueue = false;
+    if (this._showResolvedEntities) this._showResolvedEntities = false;
+    if (this._showSourceMenu) this._showSourceMenu = false;
+    if (this._lyricsActive) this._lyricsActive = false;
+  }
+
+  _toggleTinyChipOverlay() {
+    if (this._tinyChipOverlayOpen) {
+      this._closeTinyChipOverlay();
+    } else {
+      this._openTinyChipOverlay();
+    }
+  }
+
+  _openTinyChipOverlay() {
+    if ((this.entityObjs || []).length <= 1) return;
+    this._tinyChipOverlayOpen = true;
+    this._addTinyChipOverlayOutsideHandler();
+    this.requestUpdate();
+  }
+
+  _closeTinyChipOverlay() {
+    this._removeTinyChipOverlayOutsideHandler();
+    this._tinyChipOverlayOpen = false;
+    this.requestUpdate();
+  }
+
+  _addTinyChipOverlayOutsideHandler() {
+    if (this._tinyChipOverlayOutsideHandler) return;
+    this._tinyChipOverlayOutsideHandler = (evt) => {
+      const overlay = this.renderRoot?.querySelector('.tiny-chip-overlay');
+      const btn = this.renderRoot?.querySelector('.tiny-players-btn');
+      const path = evt.composedPath ? evt.composedPath() : [];
+      if ((overlay && path.includes(overlay)) || (btn && path.includes(btn))) {
+        return;
+      }
+      this._closeTinyChipOverlay();
+    };
+    this._tinyChipOverlayKeyHandler = (evt) => {
+      if (evt.key === "Escape") {
+        this._closeTinyChipOverlay();
+      }
+    };
+    window.addEventListener('pointerdown', this._tinyChipOverlayOutsideHandler, true);
+    window.addEventListener('keydown', this._tinyChipOverlayKeyHandler);
+  }
+
+  _removeTinyChipOverlayOutsideHandler() {
+    if (this._tinyChipOverlayOutsideHandler) {
+      window.removeEventListener('pointerdown', this._tinyChipOverlayOutsideHandler, true);
+      this._tinyChipOverlayOutsideHandler = null;
+    }
+    if (this._tinyChipOverlayKeyHandler) {
+      window.removeEventListener('keydown', this._tinyChipOverlayKeyHandler);
+      this._tinyChipOverlayKeyHandler = null;
+    }
+  }
+
   _onPinClick(e) {
     e.stopPropagation();
     this._manualSelect = false;
@@ -5395,6 +5509,10 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     if (this._holdToPin && this._justPinned) {
       this._justPinned = false;
       return;
+    }
+
+    if (this._tinyChipOverlayOpen) {
+      this._closeTinyChipOverlay();
     }
 
     // Select the tapped chip immediately
@@ -6528,7 +6646,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const collapsedBaselineHeight = this._collapsedBaselineHeight || 220;
 
     const hasSingleEntity = this.entityObjs.length === 1;
-    const isMinHeight = hasSingleEntity && this._alwaysCollapsed && this.config.expand_on_search !== true;
+    const isMinHeight = hasSingleEntity && this._collapsedMode === "mini" && this.config.expand_on_search !== true;
     const effectivePinHeaders = this.config.pin_search_headers === true && !isMinHeight;
     const showSearchHeaders = !(this.config.hide_search_headers_on_idle === true && this._isIdle);
 
@@ -6979,7 +7097,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     // Collapse artwork/details on idle if configured and/or always_collapsed
     // If expand on search is enabled and search is open, force expanded state
     let collapsed;
-    if (this._alwaysCollapsed && this._expandOnSearch && (this._showSearchInSheet)) {
+    if (this._collapsedMode === "mini" && this._expandOnSearch && (this._showSearchInSheet)) {
       collapsed = false;
     } else {
       collapsed = this._alwaysCollapsed
@@ -7107,8 +7225,10 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           : (hasCustomCardHeight ? effectiveCustomLowerHeight : 325))
       : null;
 
-    this._lastRenderedCollapsed = collapsed;
-    this._lastRenderedHideControls = hideControlsNow;
+    if (!this._isTinyMode) {
+      this._lastRenderedCollapsed = collapsed;
+      this._lastRenderedHideControls = hideControlsNow;
+    }
 
     const activeArtworkFit = artworkObjectFit || this._artworkObjectFit;
     const isAlternateFit = activeArtworkFit === "scaled-contain-alternate";
@@ -7169,6 +7289,38 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
 
 
+    const backgroundFade = this._getBackgroundFade();
+    if (this._isTinyMode) {
+      return this._renderTinyCard({
+        customCardHeight,
+        hasCustomCardHeight,
+        backgroundFade,
+        hasFontColor,
+        cardFontColor,
+        activeArtworkFit,
+        hasCardBg,
+        cardBgStyle,
+        isDirectColorOrGradient,
+        artworkUrl,
+        idleImageUrl,
+        sharedBackgroundStyle,
+        shouldDimIdle,
+        playbackStateObj,
+        isPlaying,
+        shouldShowDetails,
+        title,
+        artist,
+        showAlbum,
+        album,
+        activeChipName,
+        currentHiddenControls,
+        progress,
+        duration,
+        hasMultipleEntities,
+        tapAction,
+      });
+    }
+
     const isVolumeHiddenByConfig =
       hideControlsNow ||
       this._getEffectiveVolumeMode() === "hidden" ||
@@ -7196,7 +7348,6 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       (volumeRowWillCollapse ? 0 : 56)
     );
     const lyricsBottomOffset = lowerControlsH;
-    const backgroundFade = this._getBackgroundFade();
     const lyricsFade = backgroundFade;
     const lyricsBlurPx = lyricsFade === 0 ? 0 : Math.min(5, Number(((lyricsFade / 80) * 5).toFixed(1)));
     const lyricsBackdropFilter = lyricsBlurPx === 0 ? "none" : `blur(${lyricsBlurPx}px)`;
@@ -7740,6 +7891,39 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     return { customCardHeight, hasCustomCardHeight };
   }
 
+  _renderTinyCard(params) {
+    return renderTinyCard({
+      ...params,
+      config: this.config,
+      artworkGradientDisabled: this._artworkGradientDisabled,
+      isIdle: this._isIdle,
+      controlLayout: this._controlLayout,
+      swapPauseForStop: this._swapPauseForStop,
+      tinyChipOverlayOpen: this._tinyChipOverlayOpen,
+      supportsFeature: (stateObj, feature) => this._supportsFeature(stateObj, feature),
+      chipRowProps: this._tinyChipOverlayOpen && params.hasMultipleEntities ? this._getChipRowProps() : null,
+      volumeOverlayActive: this._volumeOverlayActive,
+      volumeOverlayIcon: this._volumeOverlayActive ? this._getVolumeOverlayIcon() : "",
+      volumeOverlayValue: this._volumeOverlayValue,
+      dismissVolumeOverlay: () => this._dismissVolumeOverlay(),
+      volumeHoldController: this._volumeHoldController,
+      volumeHoldHandlers: this._canUseVolumeHold(false, false, true)
+        ? this._volumeHoldController
+        : null,
+      currentVolumeStateObj: this.currentVolumeStateObj,
+      gestureHandlers: {
+        onPointerDown: this._onTapAreaPointerDown,
+        onPointerMove: this._onTapAreaPointerMove,
+        onPointerUp: this._onTapAreaPointerUp,
+        onPointerCancel: this._onTapAreaPointerCancel,
+      },
+      gestureStyles: this._getGestureStyles(),
+      onToggleChipOverlay: () => this._toggleTinyChipOverlay(),
+      onCloseChipOverlay: () => this._closeTinyChipOverlay(),
+      onControlClick: (action) => this._onControlClick(action),
+    });
+  }
+
   /**
    * Compute the maximum allowed collapsed artwork width based on the card's
    * rendered width. The 220px clearance reserves horizontal space for the
@@ -7756,6 +7940,9 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     host.setAttribute("data-match-theme", String(config.match_theme === true));
     host.setAttribute("data-appearance", appearance);
     host.setAttribute("data-always-collapsed", String(this._alwaysCollapsed));
+    host.setAttribute("data-collapsed-mode", this._collapsedMode);
+    host.setAttribute("data-tiny-mode", String(this._isTinyMode));
+    host.setAttribute("data-card-type", this._cardType);
 
     if (this._isFullScreen) {
       host.setAttribute("fullscreen", "");
@@ -7777,7 +7964,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
     // Calculate if we're in absolute minimum height mode (64px)
     const hasSingleEntity = (this.entityObjs || []).length === 1;
-    const isMinHeight = hasSingleEntity && this._alwaysCollapsed && config.expand_on_search !== true;
+    const isMinHeight = hasSingleEntity && this._collapsedMode === "mini" && config.expand_on_search !== true;
     const effectivePinHeaders = config.pin_search_headers === true && !isMinHeight;
     host.setAttribute("data-pin-search-headers", String(effectivePinHeaders));
     host.setAttribute("data-in-search", String(this._showSearchInSheet));
@@ -8032,17 +8219,21 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
   // Home assistant layout options
   getGridOptions() {
+    if (this._isTinyMode) {
+      return {
+        min_rows: 1,
+        columns: 12,
+      };
+    }
     // Use the same logic as in render() to know if the card is collapsed.
     let collapsed;
-    if (this._alwaysCollapsed && this._expandOnSearch && (this._showSearchInSheet)) {
+    if (this._collapsedMode === "mini" && this._expandOnSearch && (this._showSearchInSheet)) {
       collapsed = false;
     } else {
       collapsed = this._alwaysCollapsed
         ? true
         : (this._collapseOnIdle ? this._isIdle : false);
     }
-
-
 
     const minRows = collapsed ? 2 : 4;
 
@@ -8144,7 +8335,13 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       {
         name: "always_collapsed",
         selector: {
-          boolean: {}
+          select: {
+            options: [
+              { value: "standard", label: "Standard" },
+              { value: "mini", label: "Mini" },
+              { value: "tiny", label: "Tiny" }
+            ]
+          }
         },
         required: false
       },
@@ -8389,6 +8586,8 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   disconnectedCallback() {
+    this._removeTinyChipOverlayOutsideHandler();
+    this._tinyChipOverlayOpen = false;
     this._cleanupKioskSatellite();
     this._isEditorPreviewCached = undefined;
     if (this._activeDragCleanup) {
@@ -8780,6 +8979,13 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   async _openEntityOptions() {
+    if (this._isTinyMode) {
+      if (this.entityObjs.length > 1) {
+        this._toggleTinyChipOverlay();
+      }
+      return;
+    }
+
     // Resolve all templates before opening the menu so feature checking works correctly
     for (let i = 0; i < this.entityObjs.length; i++) {
       await this._ensureResolvedMaForIndex(i);

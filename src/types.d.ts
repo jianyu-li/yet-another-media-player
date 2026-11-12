@@ -284,7 +284,16 @@ export interface YampCardConfig {
   card_height?: string;
   appearance?:
     "automatic" | "glassmorphism" | "minimal" | "flat" | "transparent" | "custom" | string;
-  card_type?: "standard" | "search" | "group_players" | "players" | string;
+  card_type?:
+    | "standard"
+    | "default"
+    | "search"
+    | "group_players"
+    | "players"
+    | "up_next"
+    | "remote_control"
+    | "tiny"
+    | string;
   control_layout?: "classic" | "modern" | "stacked" | string;
   volume_mode?: "slider" | "stepper" | "buttons" | "none" | "hidden" | string;
   volume_step?: number;
@@ -333,7 +342,7 @@ export interface YampCardConfig {
   hold_title_for_volume?: boolean;
   hold_track_title_for_volume?: boolean;
   always_show_quick_group?: boolean;
-  always_collapsed?: boolean;
+  always_collapsed?: "standard" | "mini" | "tiny" | boolean | string;
   hide_menu_player?: boolean;
   hide_active_entity_label?: boolean;
   hide_active_entity_label_on_idle?: boolean;
@@ -403,6 +412,7 @@ export interface LyricsLine {
   isInstrumental?: boolean;
 }
 
+export function normalizeCollapsedMode(value?: any): "standard" | "mini" | "tiny";
 export function getEntityName(
   hass?: HomeAssistant | null,
   stateOrEntityId?: HassEntity | string | null
@@ -1035,6 +1045,9 @@ export interface YetAnotherMediaPlayerCard {
   currentEntityId?: string;
   config?: YampCardConfig;
   _config?: YampCardConfig;
+  _collapsedMode?: "standard" | "mini" | "tiny";
+  _isTinyMode?: boolean;
+  _tinyChipOverlayOpen?: boolean;
   templateController?: TemplateController;
   lyricsController?: LyricsController;
   artworkController?: ArtworkController;
@@ -1047,7 +1060,9 @@ export interface YetAnotherMediaPlayerCard {
   idleController?: IdleController;
   _idleController?: IdleController;
   _ensureIdleController?(): IdleController;
-  _canUseVolumeHold?: (allowMenuMode?: boolean, isTitle?: boolean) => boolean;
+  _canUseVolumeHold?: (allowMenuMode?: boolean, isTitle?: boolean, isTiny?: boolean) => boolean;
+  _gestureActive?: boolean;
+  _gestureHoldTimer?: any;
   _holdTitleForVolume?: boolean;
   _getEffectiveHoldTitleForVolume?: () => boolean;
   _applyVolumeLevel?: (newVol: number) => void;

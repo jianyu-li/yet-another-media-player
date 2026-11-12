@@ -136,7 +136,14 @@ export class IdleController {
    * Applies the configured idle screen if idle and not yet applied.
    */
   applyIdleScreen() {
-    if (!this.host || this.host._cardType === "group_players" || this.idleScreenApplied) return;
+    if (
+      !this.host ||
+      this.host._cardType === "group_players" ||
+      this.host._isTinyMode ||
+      this.host._cardType === "tiny" ||
+      this.idleScreenApplied
+    )
+      return;
     const mode = this.host._idleScreen || "default";
     const searchFilter = IDLE_SCREEN_SEARCH_FILTER_MAP[mode];
     if (!searchFilter) return;
