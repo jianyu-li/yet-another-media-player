@@ -90,6 +90,11 @@ export default {
         description:
           "Maximized controls, large text, and a massive progress bar for across room viewing.",
       },
+      tiny: {
+        label: "Tiny Player",
+        description:
+          "Ultra-compact single-row player bar with artwork, title, artist, and quick controls.",
+      },
     },
     placeholders: {
       search: "Search music...",
@@ -197,6 +202,8 @@ export default {
         "Choose which text groups should scale with available space (leave empty to disable adaptive text).",
       collapse_expand:
         "Always Collapsed creates mini player mode. Expand on Search temporarily expands when searching.",
+      always_collapsed:
+        "Choose how the card is displayed: Standard (full card), Mini (compact collapsed card), or Tiny (single-row bar).",
       disable_mini_menu:
         "Revert to standard lists instead of using the new mini grid menus in Always Collapsed mode.",
       idle_screen: "Choose which screen to display automatically when the card becomes idle.",
@@ -233,6 +240,8 @@ export default {
       not_available_alt_collapsed:
         "Not available with Alternate Progress Bar or Always Collapsed mode",
       not_available_collapsed: "Not available when Always Collapsed is enabled",
+      not_available_tiny: "Not available in Tiny mode",
+      forced_by_card_type_tiny: "Controlled by Card Type: Tiny",
       only_available_collapsed: "Only available when Always Collapsed is enabled",
       only_available_mini_menu:
         "Only available when Always Collapsed is true and Expand on Search is false",
@@ -455,6 +464,12 @@ export default {
       players: "Players",
       up_next: "Up Next",
       remote_control: "Remote Control",
+      tiny: "Tiny",
+    },
+    always_collapsed_options: {
+      standard: "Standard",
+      mini: "Mini",
+      tiny: "Tiny",
     },
     queue_controls_style_options: {
       drag_handle: "Drag Handle",

@@ -93,6 +93,11 @@ export default {
         description:
           "Maksimizovane kontrole, veliki tekst i masivna traka napretka za pregled iz druge prostorije.",
       },
+      tiny: {
+        label: "Tiny plejer",
+        description:
+          "Ultra-kompaktna jednoredna traka plejera sa omotom, naslovom, izvođačem i brzim kontrolama.",
+      },
     },
     placeholders: {
       search: "Pretraži muziku...",
@@ -199,6 +204,8 @@ export default {
         "Izaberi koje grupe teksta treba da se skaliraju sa dostupnim prostorom (ostavi prazno da onemogućiš adaptivni tekst).",
       collapse_expand:
         "Uvek sažeto kreira mini plejer režim. Proširi pri pretrazi privremeno proširuje karticu.",
+      always_collapsed:
+        "Izaberi kako se kartica prikazuje: Standardno (puna kartica), Mini (kompaktna sažeta kartica) ili Tiny (jednoredna traka).",
       disable_mini_menu:
         "Vrati se na standardne liste umesto korišćenja novog mini menija u režimu Uvek sažeto.",
       idle_screen: "Izaberi koji ekran da se automatski prikaže kada kartica pređe u mirovanje.",
@@ -235,6 +242,8 @@ export default {
       not_available_alt_collapsed:
         "Nije dostupno sa alternativnom trakom napretka ili u režimu Uvek sažeto",
       not_available_collapsed: "Nije dostupno kada je omogućeno Uvek sažeto",
+      not_available_tiny: "Nije dostupno u Tiny režimu",
+      forced_by_card_type_tiny: "Kontroliše se tipom kartice: Tiny",
       only_available_collapsed: "Dostupno samo kada je omogućeno Uvek sažeto",
       only_available_mini_menu:
         "Dostupno samo kada je Uvek sažeto uključeno i Proširi pri pretrazi isključeno",
@@ -456,6 +465,12 @@ export default {
       players: "Plejeri",
       up_next: "Sledeće",
       remote_control: "Daljinska kontrola",
+      tiny: "Tiny",
+    },
+    always_collapsed_options: {
+      standard: "Standardno",
+      mini: "Mini",
+      tiny: "Tiny",
     },
     queue_controls_style_options: {
       drag_handle: "Ručka za prevlačenje",

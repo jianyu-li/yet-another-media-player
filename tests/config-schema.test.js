@@ -11,6 +11,7 @@ import {
   TEMPLATE_CONFIGS,
   TEMPLATE_SUPPORTED_FIELDS,
   isFieldTemplateSupported,
+  normalizeCollapsedMode,
   getTemplatePresetDefaults,
   normalizeCardConfig,
   normalizeEntityConfig,
@@ -58,6 +59,7 @@ describe("config-schema", () => {
       assert.equal(CARD_CONFIG_DEFAULTS.show_album, true);
       assert.equal(CARD_CONFIG_DEFAULTS.full_screen, false);
       assert.equal(CARD_CONFIG_DEFAULTS.show_player_search, true);
+      assert.equal(CARD_CONFIG_DEFAULTS.always_collapsed, "standard");
     });
   });
 
@@ -89,6 +91,7 @@ describe("config-schema", () => {
         "crisp_clean",
         "minimal_mini",
         "normal_mini",
+        "tiny",
         "dedicated_search",
         "dedicated_grouping",
         "quick_and_easy",
@@ -102,7 +105,12 @@ describe("config-schema", () => {
       assert.deepEqual(TEMPLATE_CONFIGS.custom, {});
       assert.equal(TEMPLATE_CONFIGS.large_modern.control_layout, "modern");
       assert.equal(TEMPLATE_CONFIGS.crisp_clean.volume_mode, "stepper");
-      assert.equal(TEMPLATE_CONFIGS.minimal_mini.always_collapsed, true);
+      assert.equal(TEMPLATE_CONFIGS.minimal_mini.always_collapsed, "mini");
+      assert.equal(TEMPLATE_CONFIGS.normal_mini.always_collapsed, "mini");
+      assert.equal(TEMPLATE_CONFIGS.tiny.card_type, "tiny");
+      assert.equal(TEMPLATE_CONFIGS.tiny.always_collapsed, "tiny");
+      assert.equal(TEMPLATE_CONFIGS.tiny.blurred_artwork, true);
+      assert.equal(TEMPLATE_CONFIGS.tiny.progress_bar_height, 2);
       assert.equal(TEMPLATE_CONFIGS.dedicated_search.card_type, "search");
       assert.equal(TEMPLATE_CONFIGS.dedicated_grouping.card_type, "group_players");
       assert.equal(TEMPLATE_CONFIGS.quick_and_easy.always_show_quick_group, true);
@@ -179,6 +187,11 @@ describe("config-schema", () => {
         "lock_screen_controls",
         "full_screen",
         "show_chip_row",
+        "always_collapsed",
+        "control_layout",
+        "music_assistant_entity",
+        "volume_entity",
+        "remote_entity",
       ];
       expectedFields.forEach((field) => {
         assert.ok(TEMPLATE_SUPPORTED_FIELDS.has(field), `Field should support templates: ${field}`);
@@ -202,6 +215,7 @@ describe("config-schema", () => {
       assert.equal(isFieldTemplateSupported("lyrics"), true);
       assert.equal(isFieldTemplateSupported("idle_image"), true);
       assert.equal(isFieldTemplateSupported("show_chip_row"), true);
+      assert.equal(isFieldTemplateSupported("always_collapsed"), true);
       assert.equal(isFieldTemplateSupported("volume_step"), false);
       assert.equal(isFieldTemplateSupported("entities"), false);
       assert.equal(isFieldTemplateSupported("template"), false);
@@ -217,11 +231,73 @@ describe("config-schema", () => {
     });
   });
 
+  describe("normalizeCollapsedMode", () => {
+    it("handles boolean inputs correctly", () => {
+      assert.equal(normalizeCollapsedMode(true), "mini");
+      assert.equal(normalizeCollapsedMode(false), "standard");
+    });
+
+    it("handles null, undefined, and empty string as standard", () => {
+      assert.equal(normalizeCollapsedMode(null), "standard");
+      assert.equal(normalizeCollapsedMode(undefined), "standard");
+      assert.equal(normalizeCollapsedMode(""), "standard");
+      assert.equal(normalizeCollapsedMode("   "), "standard");
+    });
+
+    it("handles standard mode strings and synonyms", () => {
+      assert.equal(normalizeCollapsedMode("standard"), "standard");
+      assert.equal(normalizeCollapsedMode("default"), "standard");
+      assert.equal(normalizeCollapsedMode("false"), "standard");
+      assert.equal(normalizeCollapsedMode("0"), "standard");
+      assert.equal(normalizeCollapsedMode("off"), "standard");
+      assert.equal(normalizeCollapsedMode("no"), "standard");
+      assert.equal(normalizeCollapsedMode(" Standard "), "standard");
+    });
+
+    it("handles mini mode strings and synonyms", () => {
+      assert.equal(normalizeCollapsedMode("mini"), "mini");
+      assert.equal(normalizeCollapsedMode("collapsed"), "mini");
+      assert.equal(normalizeCollapsedMode("true"), "mini");
+      assert.equal(normalizeCollapsedMode("1"), "mini");
+      assert.equal(normalizeCollapsedMode("on"), "mini");
+      assert.equal(normalizeCollapsedMode("yes"), "mini");
+      assert.equal(normalizeCollapsedMode(" Mini "), "mini");
+      assert.equal(normalizeCollapsedMode("COLLAPSED"), "mini");
+    });
+
+    it("handles tiny mode strings and synonyms", () => {
+      assert.equal(normalizeCollapsedMode("tiny"), "tiny");
+      assert.equal(normalizeCollapsedMode("tiny_player"), "tiny");
+      assert.equal(normalizeCollapsedMode("tiny-player"), "tiny");
+      assert.equal(normalizeCollapsedMode(" Tiny "), "tiny");
+      assert.equal(normalizeCollapsedMode("TINY_PLAYER"), "tiny");
+      assert.equal(normalizeCollapsedMode("tiny-PLAYER"), "tiny");
+    });
+
+    it("falls back to standard for unknown strings or arbitrary types", () => {
+      assert.equal(normalizeCollapsedMode("unknown_mode"), "standard");
+      assert.equal(normalizeCollapsedMode(/** @type {any} */ (123)), "standard");
+      assert.equal(normalizeCollapsedMode(/** @type {any} */ ({})), "standard");
+      assert.equal(normalizeCollapsedMode(/** @type {any} */ ([])), "standard");
+    });
+  });
+
   describe("getTemplatePresetDefaults", () => {
     it("returns the preset object for known templates", () => {
       const largeModern = getTemplatePresetDefaults("large_modern");
       assert.equal(largeModern.control_layout, "modern");
       assert.equal(largeModern.progress_bar_height, 16);
+    });
+
+    it("resolves tiny, tiny_player, and tiny-player aliases properly", () => {
+      const aliases = ["tiny", "tiny_player", "tiny-player", "TINY", "tiny-Player"];
+      aliases.forEach((alias) => {
+        const defaults = getTemplatePresetDefaults(alias);
+        assert.equal(defaults.card_type, "tiny");
+        assert.equal(defaults.always_collapsed, "tiny");
+        assert.equal(defaults.blurred_artwork, true);
+        assert.equal(defaults.progress_bar_height, 2);
+      });
     });
 
     it("resolves players, group_players, and dedicated_grouping aliases properly", () => {
@@ -347,6 +423,63 @@ describe("config-schema", () => {
         progress_bar_height: undefined,
       });
       assert.equal(normalized.progress_bar_height, 16);
+    });
+
+    it("normalizes always_collapsed backwards compatible boolean and string values", () => {
+      assert.equal(normalizeCardConfig().always_collapsed, "standard");
+      assert.equal(normalizeCardConfig({ always_collapsed: true }).always_collapsed, "mini");
+      assert.equal(normalizeCardConfig({ always_collapsed: false }).always_collapsed, "standard");
+      assert.equal(normalizeCardConfig({ always_collapsed: "true" }).always_collapsed, "mini");
+      assert.equal(normalizeCardConfig({ always_collapsed: "false" }).always_collapsed, "standard");
+      assert.equal(normalizeCardConfig({ always_collapsed: "collapsed" }).always_collapsed, "mini");
+      assert.equal(normalizeCardConfig({ always_collapsed: "mini" }).always_collapsed, "mini");
+      assert.equal(normalizeCardConfig({ always_collapsed: "tiny" }).always_collapsed, "tiny");
+      assert.equal(
+        normalizeCardConfig({ always_collapsed: "tiny_player" }).always_collapsed,
+        "tiny"
+      );
+      assert.equal(
+        normalizeCardConfig({ always_collapsed: "tiny-player" }).always_collapsed,
+        "tiny"
+      );
+      assert.equal(
+        normalizeCardConfig({ always_collapsed: "standard" }).always_collapsed,
+        "standard"
+      );
+    });
+
+    it("preserves Jinja2 and JS templates for always_collapsed without normalizing", () => {
+      const jinjaExpr = "{{ 'tiny' if is_state('sun.sun', 'above_horizon') else 'mini' }}";
+      const jinjaBlock =
+        "{% if is_state('sun.sun', 'above_horizon') %}tiny{% else %}standard{% endif %}";
+      const jsTemplate =
+        "[[[ return states['media_player.kitchen'].state === 'playing' ? 'tiny' : 'standard'; ]]]";
+
+      assert.equal(
+        normalizeCardConfig({ always_collapsed: jinjaExpr }).always_collapsed,
+        jinjaExpr
+      );
+      assert.equal(
+        normalizeCardConfig({ always_collapsed: jinjaBlock }).always_collapsed,
+        jinjaBlock
+      );
+      assert.equal(
+        normalizeCardConfig({ always_collapsed: jsTemplate }).always_collapsed,
+        jsTemplate
+      );
+    });
+
+    it("normalizes card_type tiny_player and tiny-player aliases to tiny", () => {
+      assert.equal(normalizeCardConfig({ card_type: "tiny_player" }).card_type, "tiny");
+      assert.equal(normalizeCardConfig({ card_type: "tiny-player" }).card_type, "tiny");
+    });
+
+    it("applies template preset defaults for template: 'tiny'", () => {
+      const normalized = normalizeCardConfig({ template: "tiny" });
+      assert.equal(normalized.card_type, "tiny");
+      assert.equal(normalized.always_collapsed, "tiny");
+      assert.equal(normalized.blurred_artwork, true);
+      assert.equal(normalized.progress_bar_height, 2);
     });
   });
 

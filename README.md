@@ -32,6 +32,7 @@ YAMP is a full-featured Home Assistant media card for controlling multiple entit
 ![Scaled Contain Preview](preview/scale-contain-artwork-preview.png)
 ![Chips in menu mode](preview/in-menu-mode.png)
 ![Search view card](preview/search_card_view.png)
+![Tiny mode preview](preview/tiny.png)
 
 ---
 
@@ -43,7 +44,7 @@ Below you will find a list of all configuration options.
 |----------------------------|--------------|--------------|-------------|-------------------------------------------------------------------------------------------------|
 | **Entities**               |              |              |             |                                                                                                 |
 | `type`                     | string       | Yes          | —           | `custom:yet-another-media-player`                                                               |
-| `card_type`               | choice       | No           | `default`   | Card interface mode: `default` for standard player, `search` for search card, `players` (or `group_players`) for players management, `up_next` for upcoming queue, or `remote_control` for remote pad |
+| `card_type`               | choice       | No           | `default`   | Card interface mode: `default` (or `standard`) for standard player, `tiny` (or `tiny_player`) for ultra-compact single-row player bar, `search` for search card, `players` (or `group_players`) for players management, `up_next` for upcoming queue, or `remote_control` for remote pad |
 | `entities`                 | string/array | Yes          | —           | List of your media player entities                                                              |
 | `volume_entity`            | string       | No           | —           | Separate entity for volume control ([Supports Templates](#template-support)) |
 | `remote_entity`            | string       | No           | —           | Explicit remote entity for remote controls overlay ([Supports Templates](#template-support)) |
@@ -65,10 +66,10 @@ Below you will find a list of all configuration options.
 |                                                                                                 |
 | **Behavior**               |              |              |             |                                                                                                 |
 | `collapse_on_idle`         | boolean      | No           | `false`     | Collapse the card when nothing is playing                                                       |
-| `always_collapsed`         | boolean      | No           | `false`     | Keep the card collapsed even when something is playing ([Supports Templates](#template-support))                                          |
-| `disable_mini_menu`        | boolean      | No           | `false`     | Fallback to standard full-width menus instead of the mini grid menu layout when in `always_collapsed` mode |
-| `expand_on_search`         | boolean      | No           | `false`     | Temporarily expand the card when search is open (only available when `always_collapsed` is `true`) |
-| `hide_menu_player`         | boolean      | No           | `false`     | Hide the persistent media controls in the bottom sheet menu to reclaim space (only available when `always_collapsed` is `false`) |
+| `always_collapsed`         | choice       | No           | `standard`  | Collapsed display mode: `standard` (full card), `mini` (compact collapsed card), or `tiny` (ultra-compact single-row bar). Backwards compatible with legacy booleans (`false` &rarr; `standard`, `true` &rarr; `mini`) and dynamic templates ([Supports Templates](#template-support)) |
+| `disable_mini_menu`        | boolean      | No           | `false`     | Fallback to standard full-width lists instead of mini grid menus when in `mini` mode (does not apply to `tiny` or `standard`) |
+| `expand_on_search`         | boolean      | No           | `false`     | Temporarily expand the card when search is open (only available in `mini` mode; `tiny` mode uses a single-row layout with no menu sheets) |
+| `hide_menu_player`         | boolean      | No           | `false`     | Hide persistent media controls in bottom sheet menus to reclaim space (only available in `standard` mode; disabled when collapsed in `mini` or `tiny` mode) |
 | `hide_reorder_progress`   | boolean      | No           | `false`     | Hide the floating queue re-ordering progress indicator at the bottom (also hidden if `hide_menu_player` is `true`) |
 | `lock_screen_controls` *(Experimental)* | boolean / string | No       | `false`     | Enable lock screen and system media controls (Media Session API) *(Experimental)* for active playback on mobile and desktop devices ([Supports Templates](#template-support), see [Lock Screen Controls](#lock-screen--media-session-controls)) |
 | `full_screen`              | boolean / string | No           | `false`     | Display the card as an in-window full-screen dashboard overlay ([Supports Templates](#template-support), see [Full Screen Overlay](#full-screen-overlay)) |
@@ -742,7 +743,7 @@ Experience synchronized, real-time lyrics directly within the card. YAMP support
   - **Radio Playback**: During internet radio playback, station names populated in the album metadata and stream durations are automatically omitted from LRCLIB lookups, allowing accurate lyrics matching.
   - `background_fade`: Adjust the overlay background fade opacity percentage (`0` to `100`, default `75`). Controls lyrics and menu overlays. Supports templates for dynamic transparency based on player state or theme (legacy alias: `lyrics_background_fade`).
 - **Toggle Action**: You can assign the `toggle_lyrics` action to a chip or gesture to quickly show/hide the lyrics without opening the menu.
-- **Constraints**: The lyrics viewer is automatically disabled when the card is in `always_collapsed: true` mode to maintain layout performance.
+- **Constraints**: The lyrics viewer is automatically disabled when the card is in `always_collapsed` mode (`mini` or `tiny`) to maintain layout performance.
 
 ### Add to Playlist (mass_queue)
 
@@ -783,6 +784,32 @@ Set `card_type: up_next` to turn YAMP into a permanent upcoming tracks queue car
 
 Set `card_type: remote_control` to lock YAMP to the remote control pad.
 
+### Tiny Mode (card_type: tiny)
+
+Set `card_type: tiny` (or `always_collapsed: tiny`, or `template: tiny`) to transform YAMP into an ultra-compact single-row player bar. Perfect for dense dashboards, top/bottom navigation bars, header rows, or secondary companion cards.
+
+```yaml
+type: custom:yet-another-media-player
+card_type: tiny
+entities:
+  - media_player.living_room_speaker
+  - media_player.kitchen_speaker
+```
+
+**Single-Row Layout & Features:**
+- **Compact Horizontal Bar**: Features rounded-square album artwork (or music note placeholder), track title, and **artist name** (or album) subtitle in an ultra-compact single row.
+- **Quick Controls**: Circular play/pause (respects `swap_pause_for_stop` when modern layout is configured) and next track buttons (`mdi:skip-next`), honoring your `hidden_controls` configuration.
+- **Integrated Progress Bar**: A sleek progress bar rendered along the bottom edge during active playback when track duration is available.
+- **Theme & Artwork Fade**: Fully inherits your card styling, including Home Assistant themes (`match_theme`), card background, custom font colors (`font_color`), and blurred artwork fade (`--yamp-background-fade`).
+- **Minimal No-Menu Design**: Intentionally omits sheet menus, hamburger icons, and full-screen menu overlays to keep the interface fast and distraction-free.
+
+**Multi-Entity Player Switching & Auto-Dismiss Chip Overlay:**
+- When multiple entities are configured (`entities > 1`), a dedicated player switch button (`mdi:speaker-multiple`) appears alongside playback controls. Tapping either the album artwork or the track title/artist details also toggles the player chip overlay.
+- **Horizontal Chip Row Overlay**: Opens a floating horizontal chip row across the card displaying all configured media player entities.
+- **Auto-Dismiss on Selection**: Tapping any player chip immediately switches active playback to that player and **automatically dismisses the overlay**.
+- **Quick Dismiss**: The overlay can also be dismissed at any time by tapping the close button (`mdi:close`), pressing the **Escape** key (`Esc`), or clicking anywhere outside the card.
+- When only a single entity is configured (or if custom tap gestures are defined via `tap_action`), tapping the artwork or track details triggers standard tap actions instead.
+
 # Look and Feel
 
 ## Card Templates
@@ -804,6 +831,7 @@ entities:
 - **`crisp_clean`**: A clean, minimalist layout with scaled-contain artwork, modern player controls, center-aligned track details, and stepper volume controls.
 - **`minimal_mini`**: A compact mini card with no visible artwork, stepper volume control, and clean text alignment.
 - **`normal_mini`**: The standard compact mini player card with a blurred background artwork effect.
+- **`tiny`** (or **`tiny_player`**): An ultra-compact single-row player bar featuring artwork, track title, artist name subtitle, circular controls, bottom progress bar, and an auto-dismissing multi-entity chip overlay (sets `card_type: tiny`, `always_collapsed: tiny`, `blurred_artwork: true`, `progress_bar_height: 2`).
 - **`dedicated_search`**: A standalone search and library browsing card without the main media player interface (forces `card_type: search`).
 - **`dedicated_grouping`** (or **`players`**, **`group_players`**): A standalone player grouping card (forces `card_type: group_players`).
 - **`quick_and_easy`**: Designed for high accessibility and fast control, featuring a persistent entity chip row, volume overlays, and always-active quick grouping mode.
@@ -845,7 +873,7 @@ The following configuration keys support templates:
 - **`navigation_path`**: Create dynamic navigation URLs (e.g., search IMDb or Genius).
 - **`volume_entity`**: Dynamically select which entity controls volume for a specific player.
 - **`music_assistant_entity`**: Dynamically select the companion Music Assistant entity.
-- **`always_collapsed`**: Dynamically determine if the card should be fully collapsed.
+- **`always_collapsed`**: Dynamically determine card collapsed display mode: `"standard"`, `"mini"`, or `"tiny"`. Backwards compatible with legacy booleans (`false` &rarr; `"standard"`, `true` &rarr; `"mini"`).
 - **`lock_screen_controls`**: Dynamically enable or disable lock screen controls.
 - **`full_screen`**: Dynamically toggle full-screen dashboard overlay mode.
 - **`control_layout`**: Dynamically select the control layout style (`classic` or `modern`).
@@ -1009,6 +1037,31 @@ full_screen: "{{ is_state('input_boolean.theater_mode', 'on') }}"
 full_screen: "[[[ return is_state('input_boolean.theater_mode', 'on'); ]]]"
 ```
 
+### Dynamic Collapsed Mode (Standard, Mini, Tiny)
+Switch between standard full player, compact mini mode, and ultra-compact tiny player dynamically based on room presence, theater mode, or playback state.
+
+**Jinja2 (Server-Side)**
+```yaml
+always_collapsed: |
+  {% if is_state('input_boolean.theater_mode', 'on') %}
+    tiny
+  {% elif is_idle %}
+    mini
+  {% else %}
+    standard
+  {% endif %}
+```
+
+**JavaScript (Client-Side)**
+```yaml
+always_collapsed: |
+  [[[
+    if (is_state('input_boolean.theater_mode', 'on')) return 'tiny';
+    if (is_idle) return 'mini';
+    return 'standard';
+  ]]]
+```
+
 ### Kiosk Satellite Optimizations
 
 When running inside the [Kiosk Satellite](https://kiosksatellite.com/) Android app on wall tablets and smart displays, YAMP automatically provides `is_kiosk` and `kiosk_name` in its template context, alongside native runtime integration enhancements:
@@ -1076,11 +1129,18 @@ card_mod:
 > Control when the card collapses and which views show while idle.
 
 - **Collapse on Idle**: Collapse the card when nothing is playing.
-- **Always Collapsed**: Keep the card collapsed even when something is playing.
-- **Hide Menu Player**: Hide the persistent media controls in the bottom sheet menu to reclaim space.
+- **Always Collapsed**: Choose how the card displays when collapsed:
+  - `standard`: Default full-featured media card with full controls, artwork, and menu sheets.
+  - `mini`: Compact collapsed card with mini grid menus, progress bar, and optional artwork.
+  - `tiny`: Ultra-compact single-row player bar with artwork, title, artist, circular buttons, and auto-dismissing multi-entity chip overlay.
+  - *Backwards Compatibility*: Legacy boolean YAML values (`false` &rarr; `standard`, `true` &rarr; `mini`) and dynamic templates are fully supported.
+- **Mini Menu & Sheet Behavior**:
+  - `disable_mini_menu`: Applies in `mini` mode to revert the mini grid menu back to full-width lists (does not apply to `tiny` or `standard`).
+  - `expand_on_search`: Applies in `mini` mode to temporarily expand the card when searching (`tiny` mode uses a dedicated single-row bar with no menu sheets).
+  - `hide_menu_player`: Reclaims space by hiding persistent media controls inside bottom sheet menus in `standard` mode (disabled in `mini` or `tiny` mode).
 
 ### Expand on Search Example
-When using `always_collapsed: true`, you can enable `expand_on_search: true` to temporarily expand the card to its normal size when the search interface is open:
+When using `always_collapsed: mini` (or legacy `always_collapsed: true`), you can enable `expand_on_search: true` to temporarily expand the card to its normal size when the search interface is open:
 
 ```yaml
 type: custom:yet-another-media-player
@@ -1090,7 +1150,7 @@ entities:
 actions:
   - icon: mdi:magnify
     menu_item: search
-always_collapsed: true
+always_collapsed: mini
 expand_on_search: true
 ```
 
@@ -1643,7 +1703,7 @@ media_artwork_overrides:
 idle_image: camera.family_slideshow
 idle_timeout_ms: 30000
 collapse_on_idle: true
-always_collapsed: true
+always_collapsed: mini # standard, mini, or tiny (booleans true/false also supported)
 expand_on_search: true
 hide_menu_player: false  
 hide_reorder_progress: false  

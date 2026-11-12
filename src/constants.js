@@ -69,4 +69,5 @@ export {
   getTemplatePresetDefaults,
   normalizeCardConfig,
   normalizeEntityConfig,
+  normalizeCollapsedMode,
 } from "./config-schema.js";

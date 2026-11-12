@@ -1,6 +1,7 @@
 import { html, nothing } from "lit";
 import { localize } from "../../localize/localize.js";
 import { getEntityName } from "../../yamp-utils.js";
+import { normalizeCollapsedMode } from "../../constants.js";
 
 /**
  * Render the Artwork tab in the YAMP card editor.
@@ -115,7 +116,7 @@ export function renderArtworkTab() {
             <div style="display: flex; align-items: center; gap: 8px; flex: 1;">
               <ha-switch
                 id="blurred-artwork-toggle"
-                .checked=${this._config.blurred_artwork === true || (this._config.blurred_artwork !== false && (this._config.always_collapsed === true || this._config.artwork_object_fit === "scaled-contain"))}
+                .checked=${this._config.blurred_artwork === true || (this._config.blurred_artwork !== false && (normalizeCollapsedMode(this._config.always_collapsed) !== "standard" || this._config.card_type === "tiny" || this._config.artwork_object_fit === "scaled-contain"))}
                 @change=${(e) => this._updateConfig("blurred_artwork", e.target.checked)}
               ></ha-switch>
               <div style="display: flex; flex-direction: column;">

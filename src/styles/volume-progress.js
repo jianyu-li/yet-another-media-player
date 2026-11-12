@@ -546,4 +546,38 @@ export const volumeProgressStyles = css`
       opacity: 0;
     }
   }
+
+  /* ============================================
+     Tiny Mode Progress & Volume Overlay
+     ============================================ */
+  .tiny-mode .collapsed-progress-bar,
+  .yamp-card-inner.tiny-mode .collapsed-progress-bar {
+    bottom: 0;
+    left: 0;
+    border-radius: 0;
+    height: 3px;
+  }
+
+  .tiny-mode .volume-overlay,
+  .yamp-card-inner.tiny-mode .volume-overlay {
+    flex-direction: row;
+    gap: 10px;
+    padding: 6px 14px;
+    border-radius: var(--border-radius);
+    background: var(--volume-overlay-collapsed-bg, rgba(0, 0, 0, 0.75));
+  }
+
+  .tiny-mode .volume-overlay ha-icon,
+  .yamp-card-inner.tiny-mode .volume-overlay ha-icon {
+    --mdc-icon-size: 24px;
+    width: 24px;
+    height: 24px;
+    margin-bottom: 0;
+  }
+
+  .tiny-mode .volume-overlay-text,
+  .yamp-card-inner.tiny-mode .volume-overlay-text {
+    font-size: 1.4rem;
+    letter-spacing: 0;
+  }
 `;

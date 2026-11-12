@@ -95,6 +95,11 @@ export default {
         description:
           "Controlli ingranditi, testo grande e una barra di avanzamento massiccia per la visione a distanza.",
       },
+      tiny: {
+        label: "Lettore Tiny",
+        description:
+          "Barra del lettore ultracompatta a riga singola con copertina, titolo, artista e controlli rapidi.",
+      },
     },
     placeholders: {
       search: "Cerca musica...",
@@ -195,6 +200,8 @@ export default {
       adaptive_text: "Scegli quali testi si adattano allo spazio.",
       collapse_expand:
         "Sempre contratto attiva il modo mini. Espandi alla ricerca espande temporaneamente.",
+      always_collapsed:
+        "Scegli come visualizzare la scheda: Standard (scheda completa), Mini (scheda compatta contratta) o Tiny (barra a riga singola).",
       disable_mini_menu:
         "Torna agli elenchi standard invece di usare i nuovi mini menu a griglia in modalità 'Sempre compresso'.",
       idle_screen: "Scegli schermata da mostrare in riposo.",
@@ -225,6 +232,8 @@ export default {
         "Modello Jinja che restituisce un entity_id telecomando (es. remote.salotto_tv):",
       not_available_alt_collapsed: "Non disponibile in modo contratto.",
       not_available_collapsed: "Non disponibile se contratto.",
+      not_available_tiny: "Non disponibile in modalità Tiny",
+      forced_by_card_type_tiny: "Controllato da Tipo di scheda: Tiny",
       only_available_collapsed: "Solo disponibile se contratto.",
       only_available_mini_menu:
         "Disponibile solo quando 'Sempre compresso' è vero ed 'Espandi in ricerca' è falso",
@@ -454,6 +463,12 @@ export default {
       players: "Lettori",
       up_next: "In coda",
       remote_control: "Telecomando",
+      tiny: "Tiny",
+    },
+    always_collapsed_options: {
+      standard: "Standard",
+      mini: "Mini",
+      tiny: "Tiny",
     },
     appearance_options: {
       automatic: "Automatico",
