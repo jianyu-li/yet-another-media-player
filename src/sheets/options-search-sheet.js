@@ -277,6 +277,13 @@ export function renderSearchInOptions(showSearchHeaders, pinSearchHeaders = fals
     !isPinned && currentOffset > 0
       ? `margin-top: -${currentOffset}px; opacity: ${opacity.toFixed(3)};${isRetracted ? " pointer-events: none;" : ""}`
       : "";
+  const currentLevel = this._searchHierarchy?.[this._searchHierarchy.length - 1];
+  const isCollectionLoading = Boolean(
+    this._loadingSearchRowMenuId != null &&
+    currentLevel &&
+    ((currentLevel.uri && this._loadingSearchRowMenuId === currentLevel.uri) ||
+      (currentLevel.name && this._loadingSearchRowMenuId === currentLevel.name))
+  );
   return html`
     <div
       class="entity-options-search"
@@ -314,10 +321,18 @@ export function renderSearchInOptions(showSearchHeaders, pinSearchHeaders = fals
                       ? html`
                           <button
                             class="entity-options-search-breadcrumb-play"
-                            @click=${() => this._playCurrentCollection()}
+                            ?disabled=${isCollectionLoading}
+                            @click=${() => {
+                              if (!isCollectionLoading) {
+                                this._playCurrentCollection();
+                              }
+                            }}
                             title="${localize("search.play_collection")}"
                           >
-                            <ha-icon icon="mdi:play"></ha-icon>
+                            <ha-icon
+                              icon="${isCollectionLoading ? "mdi:loading" : "mdi:play"}"
+                              class="${isCollectionLoading ? "spin" : ""}"
+                            ></ha-icon>
                           </button>
                         `
                       : nothing

@@ -1268,20 +1268,54 @@ export class SearchController {
   }
 
   async playCurrentCollection() {
-    if (this.host._searchHierarchy.length === 0) return;
+    if (!this.host._searchHierarchy || this.host._searchHierarchy.length === 0) return;
     const currentLevel = this.host._searchHierarchy[this.host._searchHierarchy.length - 1];
-    if (!currentLevel || !currentLevel.uri) {
-      this.host._searchError = localize("search.play_collection_error");
+    if (!currentLevel) return;
+
+    const collectionToken = currentLevel.uri || currentLevel.name;
+    this.host._loadingSearchRowMenuId = collectionToken;
+    this.host.requestUpdate();
+
+    try {
+      if (!currentLevel.uri) {
+        if (currentLevel.name && this.host?._isMusicAssistantEntity?.()) {
+          try {
+            const searchEntityIdTemplate = this.host._getSearchEntityId(this.host._selectedIndex);
+            const searchEntityId = await this.host._resolveTemplateAtActionTime(
+              searchEntityIdTemplate,
+              this.host.currentEntityId
+            );
+            if (currentLevel.type === "album") {
+              currentLevel.uri = await this.resolveAlbumUri(
+                currentLevel.name,
+                null,
+                searchEntityId
+              );
+            } else if (currentLevel.type === "playlist") {
+              currentLevel.uri = await this.resolvePlaylistUri(currentLevel.name, searchEntityId);
+            }
+          } catch (e) {
+            console.warn("yamp: error resolving collection URI on play:", e);
+          }
+        }
+      }
+
+      if (!currentLevel.uri) {
+        this.host._searchError = localize("search.play_collection_error");
+        this.host.requestUpdate();
+        return;
+      }
+
+      const item = {
+        media_content_id: currentLevel.uri,
+        media_content_type: currentLevel.type,
+      };
+
+      await this.playMediaFromSearch(item);
+    } finally {
+      this.host._loadingSearchRowMenuId = null;
       this.host.requestUpdate();
-      return;
     }
-
-    const item = {
-      media_content_id: currentLevel.uri,
-      media_content_type: currentLevel.type,
-    };
-
-    await this.playMediaFromSearch(item);
   }
 
   handleSearchSubmit() {
@@ -1349,7 +1383,7 @@ export class SearchController {
     this.host._mediaSessionManager?.startPlaybackGesture(targetEntityId);
     this.host._searchError = "";
 
-    this.host._loadingSearchRowMenuId = item?.media_content_id || null;
+    this.host._loadingSearchRowMenuId = item?.media_content_id || item?.uri || null;
     this.host.requestUpdate();
 
     let playbackStarted;

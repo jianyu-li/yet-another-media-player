@@ -722,12 +722,12 @@ export class QueueController {
   setSearchResultsFromMassQueue(tracks, queryName) {
     if (!this.host) return;
     this.host._searchResults = tracks.map((track) => ({
-      media_content_id: track.media_content_id,
-      media_content_type: "track",
-      media_class: "track",
-      title: track.media_title,
-      artist: track.media_artist,
-      album: track.media_album_name,
+      media_content_id: track.media_content_id || track.uri,
+      media_content_type: track.media_content_type || track.media_type || "track",
+      media_class: track.media_class || "track",
+      title: track.media_title || track.title || track.name || "Unknown Track",
+      artist: track.media_artist || track.artist || "",
+      album: track.media_album_name || track.album || "",
       thumbnail:
         track.local_image_encoded ||
         getCachedSecureThumbnail(track.media_image) ||
