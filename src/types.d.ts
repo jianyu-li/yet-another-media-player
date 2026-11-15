@@ -266,6 +266,9 @@ export interface YampEntityConfig {
   lyrics?: boolean | string;
   hidden_controls?: string[] | string;
   hidden_filter_chips?: string[];
+  remote_entity?: string | boolean;
+  remote_platform?: string;
+  remote_commands?: Record<string, string> | string;
   hide_remote_buttons?: string[] | string;
   hidden_menu_options?: string[] | string;
   hide_menu_options?: string[] | string;
@@ -295,6 +298,9 @@ export interface YampCardConfig {
     | "tiny"
     | string;
   control_layout?: "classic" | "modern" | "stacked" | string;
+  hide_remote_buttons?: string[] | string;
+  remote_platform?: string;
+  remote_commands?: Record<string, string> | string;
   volume_mode?: "slider" | "stepper" | "buttons" | "none" | "hidden" | string;
   volume_step?: number;
   hold_to_pin?: boolean;
@@ -1027,6 +1033,18 @@ export function searchMediaPlayers(
   limit?: number,
   entitiesRegistry?: Record<string, any> | null
 ): Array<{ id: string; name: string; state: string; icon: string; isPlaying: boolean }>;
+export function parseRemoteCommandsMap(raw: any): Record<string, string> | null;
+export function resolveRemoteCommand(
+  command: string,
+  targetEntity?: string | null,
+  hass?: HomeAssistant | any,
+  options?: {
+    customCommands?: Record<string, string> | string;
+    platform?: string;
+    currentEntityId?: string;
+  }
+): string;
+export const ANDROIDTV_REMOTE_COMMAND_MAP: Readonly<Record<string, string>>;
 
 export interface GroupPlayerState {
   isGroupable: boolean;

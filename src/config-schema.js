@@ -261,6 +261,8 @@ export const TEMPLATE_SUPPORTED_FIELDS = Object.freeze(
     "music_assistant_entity",
     "volume_entity",
     "remote_entity",
+    "remote_platform",
+    "remote_commands",
   ])
 );
 

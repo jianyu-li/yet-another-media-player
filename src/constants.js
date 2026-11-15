@@ -54,6 +54,17 @@ export const CANONICAL_MENU_OPTION_MAP = Object.freeze({
   fullscreen: "full_screen",
 });
 
+export const ANDROIDTV_REMOTE_COMMAND_MAP = Object.freeze({
+  up: "DPAD_UP",
+  down: "DPAD_DOWN",
+  left: "DPAD_LEFT",
+  right: "DPAD_RIGHT",
+  select: "DPAD_CENTER",
+  back: "BACK",
+  home: "HOME",
+  menu: "MENU",
+});
+
 export {
   DEFAULT_PROGRESS_BAR_HEIGHT,
   DEFAULT_IDLE_TIMEOUT_MS,

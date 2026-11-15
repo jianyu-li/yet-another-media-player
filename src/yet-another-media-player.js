@@ -66,6 +66,7 @@ import {
   resolveTemplateAtActionTime,
   resolveStringTemplate,
   resolveStringTemplateSync,
+  evaluateJsTemplate,
   getActionPlacement,
   findAssociatedButtonEntities,
   getMusicAssistantState,
@@ -77,6 +78,8 @@ import {
   findPlayingUnconfiguredPlayers,
   isKioskSatellite,
   getMediaPlayerEntityIds,
+  parseRemoteCommandsMap,
+  resolveRemoteCommand,
 } from "./yamp-utils.js";
 import { localize, setHassLanguage } from "./localize/localize.js";
 
@@ -3188,6 +3191,8 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         hidden_controls,
         hidden_filter_chips: typeof e === "string" ? undefined : e.hidden_filter_chips,
         hide_remote_buttons: typeof e === "string" ? undefined : e.hide_remote_buttons,
+        remote_platform: typeof e === "string" ? undefined : e.remote_platform,
+        remote_commands: typeof e === "string" ? undefined : e.remote_commands,
         hidden_menu_options: typeof e === "string" ? undefined : (e.hidden_menu_options ?? e.hide_menu_options),
         hide_menu_options: typeof e === "string" ? undefined : (e.hidden_menu_options ?? e.hide_menu_options),
         disable_auto_select: this._isAutoSelectDisabled(index),
@@ -9069,11 +9074,89 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     return strict ? null : currentId;
   }
 
+  _resolveRemoteValueSync(raw, context, allowObject = false) {
+    if (typeof raw !== "string") return { value: raw, needsAsync: false };
+    const trimmed = raw.trim();
+    if (trimmed.startsWith("[[[") && trimmed.endsWith("]]]")) {
+      const evaluated = evaluateJsTemplate(raw, this.hass, context);
+      if (allowObject && evaluated && typeof evaluated === "object" && !Array.isArray(evaluated)) {
+        return { value: evaluated, needsAsync: false };
+      }
+      return {
+        value: evaluated !== undefined && evaluated !== null ? String(evaluated).trim() : "",
+        needsAsync: false,
+      };
+    }
+    if (raw.includes("{{") || raw.includes("{%")) {
+      const syncVal = resolveStringTemplateSync(this.hass, raw, context);
+      if (syncVal !== null) return { value: syncVal, needsAsync: false };
+      return { value: raw, needsAsync: true };
+    }
+    return { value: raw, needsAsync: false };
+  }
+
+  async _resolveRemoteValueAsync(raw, context, allowObject = false) {
+    const syncRes = this._resolveRemoteValueSync(raw, context, allowObject);
+    if (!syncRes.needsAsync) return syncRes.value;
+    return await resolveStringTemplate(this.hass, raw, context);
+  }
+
   _sendRemoteCommand(command) {
     const targetEntity = this._getRemoteControlEntity();
     if (!targetEntity) return;
 
-    sendRemoteCommand(this.hass, targetEntity, command);
+    const obj = this.entityObjs?.[this._selectedIndex];
+    const rawCustom = obj?.remote_commands ?? this.config?.remote_commands;
+    const rawPlatform = obj?.remote_platform ?? this.config?.remote_platform;
+    const context = this._getTemplateContext();
+
+    const customRes = this._resolveRemoteValueSync(rawCustom, context, true);
+    const platformRes = this._resolveRemoteValueSync(rawPlatform, context, false);
+
+    let customMap = !customRes.needsAsync ? parseRemoteCommandsMap(customRes.value) : null;
+    let perKeyRes = { value: undefined, needsAsync: false };
+    if (customMap && typeof customMap[command] === "string") {
+      perKeyRes = this._resolveRemoteValueSync(customMap[command], context, false);
+      if (!perKeyRes.needsAsync) {
+        customMap = { ...customMap, [command]: perKeyRes.value };
+      }
+    }
+
+    if (customRes.needsAsync || platformRes.needsAsync || perKeyRes.needsAsync) {
+      this._sendRemoteCommandAsync(command, targetEntity, rawCustom, rawPlatform, context);
+      return;
+    }
+
+    const resolvedCommand = resolveRemoteCommand(command, targetEntity, this.hass, {
+      customCommands: customMap ?? customRes.value,
+      platform: platformRes.value,
+      currentEntityId: this.currentEntityId,
+    });
+    sendRemoteCommand(this.hass, targetEntity, resolvedCommand);
+  }
+
+  async _sendRemoteCommandAsync(command, targetEntity, rawCustom, rawPlatform, context) {
+    try {
+      const [resolvedCustom, resolvedPlatform] = await Promise.all([
+        this._resolveRemoteValueAsync(rawCustom, context, true),
+        this._resolveRemoteValueAsync(rawPlatform, context, false),
+      ]);
+
+      let customMap = parseRemoteCommandsMap(resolvedCustom);
+      if (customMap && typeof customMap[command] === "string") {
+        const resolvedKey = await this._resolveRemoteValueAsync(customMap[command], context, false);
+        customMap = { ...customMap, [command]: resolvedKey };
+      }
+
+      const resolvedCommand = resolveRemoteCommand(command, targetEntity, this.hass, {
+        customCommands: customMap ?? resolvedCustom,
+        platform: resolvedPlatform,
+        currentEntityId: this.currentEntityId,
+      });
+      await sendRemoteCommand(this.hass, targetEntity, resolvedCommand);
+    } catch (err) {
+      console.error(`YAMP: Error resolving remote command '${command}' for ${targetEntity}:`, err);
+    }
   }
 
   _openRemoteControl() {

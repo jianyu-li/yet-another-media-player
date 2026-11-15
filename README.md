@@ -48,6 +48,8 @@ Below you will find a list of all configuration options.
 | `entities`                 | string/array | Yes          | —           | List of your media player entities                                                              |
 | `volume_entity`            | string       | No           | —           | Separate entity for volume control ([Supports Templates](#template-support)) |
 | `remote_entity`            | string       | No           | —           | Explicit remote entity for remote controls overlay ([Supports Templates](#template-support)) |
+| `remote_platform`          | string       | No           | —           | Explicit platform for the remote entity (e.g. `androidtv_remote`). Overrides registry auto-detection ([Supports Templates](#template-support)) |
+| `remote_commands`          | object/string| No           | —           | Custom command mappings or JSON string for remote buttons (e.g. `{"up": "DPAD_UP"}`) ([Supports Templates](#template-support)) |
 | `follow_active_volume`     | boolean      | No           | `false`     | Make volume entity follow the active playback entity                                            |
 | `music_assistant_entity`   | string       | No           | —           | Music Assistant entity for search/grouping ([Supports Templates](#template-support)) |
 | `prefer_ma_metadata`       | boolean      | No           | `false`     | Prioritize the Music Assistant entity for artwork and metadata resolution regardless of which device is playing |
@@ -478,6 +480,31 @@ entities:
       - menu
 ```
 
+### Remote Platform & Command Mapping
+
+YAMP provides built-in integration with Home Assistant `remote` entities for directional navigation (D-pad), selection, menu, home, and back controls.
+
+#### Automatic Android TV Remote Mapping
+When controlling an Android TV device (e.g. `androidtv_remote` platform), YAMP automatically translates standard directional commands into the appropriate DPAD keycodes (`DPAD_UP`, `DPAD_DOWN`, `DPAD_LEFT`, `DPAD_RIGHT`, `DPAD_CENTER`, `BACK`, `HOME`, `MENU`) without requiring manual command mapping.
+
+#### Custom Platform & Command Overrides
+If your remote device requires custom keycodes or integration-specific command names, you can specify `remote_platform` or define `remote_commands` mappings (per-entity or at card level):
+
+```yaml
+type: custom:yet-another-media-player
+entities:
+  - entity_id: media_player.living_room_tv
+    remote_entity: remote.living_room_tv
+    remote_platform: androidtv_remote
+    remote_commands:
+      up: DPAD_UP
+      down: DPAD_DOWN
+      select: DPAD_CENTER
+      menu: KEY_MENU
+```
+
+Both `remote_platform` and `remote_commands` [support templates](#template-support) (Jinja2 and JavaScript).
+
 ### Hidden Menu Options Configuration
 
 You can hide specific options from the options sheet menu globally at the card level or on a per-entity basis using the `hidden_menu_options` (or `hide_menu_options`) option.
@@ -874,6 +901,9 @@ The following configuration keys support templates:
 - **`navigation_path`**: Create dynamic navigation URLs (e.g., search IMDb or Genius).
 - **`volume_entity`**: Dynamically select which entity controls volume for a specific player.
 - **`music_assistant_entity`**: Dynamically select the companion Music Assistant entity.
+- **`remote_entity`**: Dynamically select which remote entity to use for remote controls.
+- **`remote_platform`**: Dynamically determine or override the remote platform (e.g. `"androidtv_remote"`).
+- **`remote_commands`**: Dynamically provide custom command mappings or JSON string for remote actions.
 - **`always_collapsed`**: Dynamically determine card collapsed display mode: `"standard"`, `"mini"`, or `"tiny"`. Backwards compatible with legacy booleans (`false` &rarr; `"standard"`, `true` &rarr; `"mini"`).
 - **`lock_screen_controls`**: Dynamically enable or disable lock screen controls.
 - **`full_screen`**: Dynamically toggle full-screen dashboard overlay mode.

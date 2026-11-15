@@ -1,6 +1,6 @@
 // Utility functions for Yet Another Media Player (YAMP)
 import { localize } from "./localize/localize.js";
-import { ARTWORK_OVERRIDE_MATCH_KEYS } from "./constants.js";
+import { ARTWORK_OVERRIDE_MATCH_KEYS, ANDROIDTV_REMOTE_COMMAND_MAP } from "./constants.js";
 
 // WeakMap cache for compiled override regexes to avoid mutating config objects
 const overrideRegexCache = new WeakMap();
@@ -1668,4 +1668,65 @@ export function searchMediaPlayers(
   });
 
   return results.slice(0, limit);
+}
+
+/**
+ * Parses a remote_commands configuration value (object or JSON string) into a key-to-command map.
+ *
+ * @param {any} raw - Object map or JSON string (supports single-quoted fallback)
+ * @returns {Record<string, string>|null} Parsed command map or null
+ */
+export function parseRemoteCommandsMap(raw) {
+  let parsed = raw;
+  if (typeof parsed === "string") {
+    try {
+      parsed = JSON.parse(parsed);
+    } catch (_) {
+      try {
+        parsed = JSON.parse(parsed.replace(/'/g, '"'));
+      } catch (_ignored) {
+        return null;
+      }
+    }
+  }
+  return parsed && typeof parsed === "object" && !Array.isArray(parsed) ? parsed : null;
+}
+
+/**
+ * Resolves the appropriate command string to send to a remote entity,
+ * accounting for custom command overrides and platform-specific mappings
+ * (such as androidtv_remote requiring DPAD keycodes).
+ *
+ * @param {string} command - Generic command name (e.g. 'up', 'down', 'select')
+ * @param {string} [targetEntity] - Target remote entity ID
+ * @param {import("./types.d.ts").HomeAssistant|any} [hass] - Home Assistant instance
+ * @param {object} [options]
+ * @param {Record<string, string>|string} [options.customCommands] - Custom remote_commands map or JSON string
+ * @param {string} [options.platform] - Explicit remote platform override
+ * @param {string} [options.currentEntityId] - Associated media player entity ID
+ * @returns {string} The resolved command string to dispatch
+ */
+export function resolveRemoteCommand(command, targetEntity, hass = null, options = {}) {
+  if (!command) return command;
+
+  // 1. Custom command override takes highest precedence
+  const custom = parseRemoteCommandsMap(options.customCommands);
+  if (custom && typeof custom[command] === "string" && custom[command].trim() !== "") {
+    return custom[command].trim();
+  }
+
+  // 2. Platform detection (e.g., androidtv_remote)
+  const rawPlatform =
+    options.platform ||
+    (targetEntity && hass?.entities?.[targetEntity]?.platform) ||
+    (options.currentEntityId && hass?.entities?.[options.currentEntityId]?.platform);
+  const platform = typeof rawPlatform === "string" ? rawPlatform.trim().toLowerCase() : "";
+
+  if (platform === "androidtv_remote") {
+    if (ANDROIDTV_REMOTE_COMMAND_MAP[command]) {
+      return ANDROIDTV_REMOTE_COMMAND_MAP[command];
+    }
+  }
+
+  return command;
 }
