@@ -83,4 +83,23 @@ describe("Test Harness Verification", () => {
       ".entity-options-overlay background must reference --yamp-background-fade"
     );
   });
+
+  it("defines pseudo-element artwork gradient overlay for entity-options-overlay in menusSheetsStyles", () => {
+    const normalizedCss = menusSheetsStyles.cssText.replace(/\s+/g, " ");
+    assert.match(
+      normalizedCss,
+      /:host\(\s*\[data-menu-artwork-gradient="true"\]:not\(\[data-disable-artwork-gradient="true"\]\):not\(\s*\[data-hide-menu-player="true"\]\s*\):not\(\[data-hide-persistent-controls="true"\]\)\s*\)\s*\.entity-options-overlay:has\(> \.persistent-media-controls\)::before/,
+      "menusSheetsStyles should scope pseudo-element gradient to entity-options-overlay containing visible persistent controls"
+    );
+    assert.ok(
+      normalizedCss.includes("rgba(0, 0, 0, 0) 24%"),
+      "menusSheetsStyles entity-options-overlay::before should fade out by 24%"
+    );
+    assert.ok(
+      normalizedCss.includes(
+        ':host([data-menu-artwork-gradient="true"]:not([data-disable-artwork-gradient="true"])) .persistent-media-controls { --yamp-overlay-text: #fff;'
+      ),
+      "menusSheetsStyles should override --yamp-overlay-text to #fff on .persistent-media-controls when data-menu-artwork-gradient is true and data-disable-artwork-gradient is false"
+    );
+  });
 });

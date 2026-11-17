@@ -195,6 +195,39 @@ export const menusSheetsStyles = css`
     justify-content: center;
   }
 
+  :host(
+      [data-menu-artwork-gradient="true"]:not([data-disable-artwork-gradient="true"]):not(
+          [data-hide-menu-player="true"]
+        ):not([data-hide-persistent-controls="true"])
+    )
+    .entity-options-overlay:has(> .persistent-media-controls)::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+    background: linear-gradient(
+      to top,
+      rgba(0, 0, 0, 0.88) 0%,
+      rgba(0, 0, 0, 0.62) 6%,
+      rgba(0, 0, 0, 0.32) 12%,
+      rgba(0, 0, 0, 0.12) 18%,
+      rgba(0, 0, 0, 0.03) 22%,
+      rgba(0, 0, 0, 0) 24%
+    );
+  }
+
+  :host([data-menu-artwork-gradient="true"]:not([data-disable-artwork-gradient="true"]))
+    .persistent-media-controls {
+    --yamp-overlay-text: #fff;
+    --yamp-overlay-text-secondary: rgba(255, 255, 255, 0.7);
+    --primary-text: #fff;
+    --primary-text-color: #fff;
+    --secondary-text: rgba(255, 255, 255, 0.7);
+    --secondary-text-color: rgba(255, 255, 255, 0.7);
+    --search-text-secondary: rgba(255, 255, 255, 0.7);
+  }
+
   /* Opening animations for hamburger menu */
   @keyframes overlayFadeIn {
     from {
@@ -295,6 +328,7 @@ export const menusSheetsStyles = css`
     max-height: calc(96% - 70px);
     min-height: 90px;
     position: relative;
+    z-index: 1;
   }
 
   /* Expand container height when hide_menu_player is enabled (no persistent controls) */

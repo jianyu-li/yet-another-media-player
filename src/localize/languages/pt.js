@@ -268,6 +268,8 @@ export default {
       hide_collapsed_artwork:
         "Ocultar a imagem pequena à direita quando o cartão estiver recolhido",
       disable_artwork_gradient: "Desativar o gradiente inferior sobreposto na capa",
+      menu_artwork_gradient:
+        "Manter o gradiente inferior da capa visível quando a sobreposição do menu estiver aberta",
       show_idle_artwork_when_not_playing:
         "Quando ativado, a seleção de uma ficha que não esteja sendo reproduzida exibirá a imagem de repouso configurada em vez da imagem de reprodução ativa.",
       prefer_ma_metadata:
@@ -337,6 +339,7 @@ export default {
       blurred_artwork: "Imagem desfocada",
       hide_collapsed_artwork: "Ocultar imagem reduzida",
       disable_artwork_gradient: "Desativar gradiente da capa",
+      menu_artwork_gradient: "Gradiente da capa no menu",
       show_idle_artwork_when_not_playing: "Mostrar imagem de repouso quando não reproduzindo",
       prefer_ma_metadata: "Preferir metadados do Music Assistant",
       show_volume_overlay: "Mostrar sobreposição de volume",

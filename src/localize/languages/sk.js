@@ -282,6 +282,8 @@ export default {
       blurred_artwork: "Vždy rozmazať obrázok na pozadí",
       hide_collapsed_artwork: "Skryť malý obrázok vpravo, keď je karta zbalená",
       disable_artwork_gradient: "Zakázať prekrytie spodného prechodu na obrázku",
+      menu_artwork_gradient:
+        "Ponechať spodný prechod obrázka viditeľný, keď je otvorené prekrytie menu",
       show_idle_artwork_when_not_playing:
         "Keď je táto možnosť povolená, pri výbere čipu, na ktorom sa momentálne nič neprehráva, sa namiesto aktívnej grafiky prehrávania zobrazí nakonfigurovaný obrázok pri nečinnosti.",
       prefer_ma_metadata:
@@ -351,6 +353,7 @@ export default {
       blurred_artwork: "Rozmazaný obrázok",
       hide_collapsed_artwork: "Skryť zmenšený obrázok",
       disable_artwork_gradient: "Zakázať prechod obrázka",
+      menu_artwork_gradient: "Prechod obrázka v menu",
       show_idle_artwork_when_not_playing: "Zobraziť obrázok nečinnosti, keď sa neprehráva",
       prefer_ma_metadata: "Uprednostniť metadáta z Music Assistant",
       show_volume_overlay: "Zobraziť prekrytie hlasitosti",

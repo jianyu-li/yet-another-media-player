@@ -276,6 +276,8 @@ export default {
       blurred_artwork: "Always blur the background artwork",
       hide_collapsed_artwork: "Hide the smaller artwork on the right when the card is collapsed",
       disable_artwork_gradient: "Disable the bottom fade gradient overlay on the artwork",
+      menu_artwork_gradient:
+        "Keep the bottom artwork fade gradient visible when the menu overlay is open",
       show_idle_artwork_when_not_playing:
         "When enabled, selecting a chip that is not currently playing will display the configured idle image instead of the active playback artwork.",
       prefer_ma_metadata:
@@ -343,6 +345,7 @@ export default {
       blurred_artwork: "Blurred Artwork",
       hide_collapsed_artwork: "Hide Collapsed Artwork",
       disable_artwork_gradient: "Disable Artwork Gradient",
+      menu_artwork_gradient: "Menu Artwork Gradient",
       show_idle_artwork_when_not_playing: "Show Idle Image When Not Playing",
       prefer_ma_metadata: "Prefer Music Assistant Metadata",
       show_volume_overlay: "Show Volume Overlay",

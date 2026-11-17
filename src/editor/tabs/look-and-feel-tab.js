@@ -359,6 +359,27 @@ export function renderVisualTab() {
               `
         }
       </div>
+      <div
+        class="form-row"
+        data-search-keys="menu_artwork_gradient background_fade artwork gradient menu overlay"
+        style="${this._config.disable_artwork_gradient === true ? "opacity: 0.5;" : ""}"
+        title="${
+          this._config.disable_artwork_gradient === true
+            ? localize("editor.subtitles.disable_artwork_gradient")
+            : ""
+        }"
+      >
+        <div>
+          <ha-switch
+            id="menu-artwork-gradient-toggle"
+            .checked=${this._config.menu_artwork_gradient === true}
+            @change=${(e) => this._updateConfig("menu_artwork_gradient", e.target.checked)}
+            .disabled=${this._config.disable_artwork_gradient === true}
+          ></ha-switch>
+          <span>${localize("editor.labels.menu_artwork_gradient")}</span>
+        </div>
+        <div class="config-subtitle">${localize("editor.subtitles.menu_artwork_gradient")}</div>
+      </div>
       <div class="form-row">
         <div style="display: flex; align-items: center; gap: 8px;">
           <ha-selector

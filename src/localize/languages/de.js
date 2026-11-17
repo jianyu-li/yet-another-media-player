@@ -283,6 +283,8 @@ export default {
       hide_collapsed_artwork:
         "Das kleine Artwork auf der rechten Seite ausblenden, wenn die Karte eingeklappt ist",
       disable_artwork_gradient: "Den unteren Farbverlauf auf dem Artwork deaktivieren",
+      menu_artwork_gradient:
+        "Den unteren Artwork-Farbverlauf sichtbar halten, wenn das Menü-Overlay geöffnet ist",
       show_idle_artwork_when_not_playing:
         "Wenn aktiviert, wird beim Auswählen eines Chips, auf dem derzeit nichts abgespielt wird, das konfigurierte Ruhebild anstelle des aktiven Wiedergabe-Artworks angezeigt.",
       prefer_ma_metadata:
@@ -352,6 +354,7 @@ export default {
       blurred_artwork: "Verschwommenes Artwork",
       hide_collapsed_artwork: "Verkleinertes Artwork ausblenden",
       disable_artwork_gradient: "Artwork-Farbverlauf deaktivieren",
+      menu_artwork_gradient: "Menü-Artwork-Farbverlauf",
       show_idle_artwork_when_not_playing: "Ruhebild anzeigen, wenn nicht abgespielt wird",
       prefer_ma_metadata: "Music Assistant Metadaten bevorzugen",
       show_volume_overlay: "Lautstärke-Overlay anzeigen",
