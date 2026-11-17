@@ -60,6 +60,7 @@ describe("config-schema", () => {
       assert.equal(CARD_CONFIG_DEFAULTS.full_screen, false);
       assert.equal(CARD_CONFIG_DEFAULTS.show_player_search, true);
       assert.equal(CARD_CONFIG_DEFAULTS.always_collapsed, "standard");
+      assert.equal(CARD_CONFIG_DEFAULTS.menu_artwork_gradient, false);
     });
   });
 
@@ -221,6 +222,8 @@ describe("config-schema", () => {
       assert.equal(isFieldTemplateSupported("template"), false);
       assert.equal(isFieldTemplateSupported("hidden_menu_options"), false);
       assert.equal(isFieldTemplateSupported("hide_menu_options"), false);
+      assert.equal(isFieldTemplateSupported("menu_artwork_gradient"), false);
+      assert.equal(TEMPLATE_SUPPORTED_FIELDS.has("menu_artwork_gradient"), false);
     });
 
     it("returns false for invalid, null, or empty field names", () => {
@@ -480,6 +483,19 @@ describe("config-schema", () => {
       assert.equal(normalized.always_collapsed, "tiny");
       assert.equal(normalized.blurred_artwork, true);
       assert.equal(normalized.progress_bar_height, 2);
+    });
+
+    it("normalizes menu_artwork_gradient configuration option", () => {
+      assert.equal(normalizeCardConfig().menu_artwork_gradient, false);
+      assert.equal(normalizeCardConfig({}).menu_artwork_gradient, false);
+      assert.equal(
+        normalizeCardConfig({ menu_artwork_gradient: true }).menu_artwork_gradient,
+        true
+      );
+      assert.equal(
+        normalizeCardConfig({ menu_artwork_gradient: false }).menu_artwork_gradient,
+        false
+      );
     });
   });
 

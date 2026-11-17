@@ -356,6 +356,7 @@ export interface YampCardConfig {
   show_album?: boolean;
   background_fade?: number | string;
   lyrics_background_fade?: number | string;
+  menu_artwork_gradient?: boolean;
   lock_screen_controls?: boolean | string;
   full_screen?: boolean | string;
   show_player_search?: boolean;
@@ -1092,6 +1093,7 @@ export interface YetAnotherMediaPlayerCard {
   _backgroundFadeResolveCache?: Record<string, TemplateResolveCacheEntry<string | number>>;
   _lyricsBackgroundFadeTemplateValue?: Record<string, TemplateValueEntry>;
   _lyricsBackgroundFadeResolveCache?: Record<string, TemplateResolveCacheEntry<string | number>>;
+  readonly _menuArtworkGradient?: boolean;
   _aiRadioShowsAvailable?: boolean;
   _isFullScreen?: boolean;
   _fullScreenOverride?: boolean | null;

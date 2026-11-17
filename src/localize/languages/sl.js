@@ -264,6 +264,8 @@ export default {
       blurred_artwork: "Vedno zamegli ozadje",
       hide_collapsed_artwork: "Skrij majhno sliko na desni, ko je kartica strnjena",
       disable_artwork_gradient: "Onemogoči spodnji barvni prehod na grafiki",
+      menu_artwork_gradient:
+        "Ohrani viden spodnji barvni prehod grafike, ko je odprta prekrivna plošča menija",
       show_idle_artwork_when_not_playing:
         "Ko je to omogočeno, se ob izbiri čipa, na katerem se trenutno nič ne predvaja, prikaže nastavljena slika za nedejavnost namesto aktivne grafike predvajanja.",
       prefer_ma_metadata:
@@ -333,6 +335,7 @@ export default {
       blurred_artwork: "Zamegljena grafika",
       hide_collapsed_artwork: "Skrij skrčeno grafika",
       disable_artwork_gradient: "Onemogoči prehod grafike",
+      menu_artwork_gradient: "Prehod grafike v meniju",
       show_idle_artwork_when_not_playing: "Prikaži sliko za nedejavnost, ko se ne predvaja",
       prefer_ma_metadata: "Prednost metapodatkom Music Assistant",
       show_volume_overlay: "Prikaži prekrivno ploščo za glasnost",

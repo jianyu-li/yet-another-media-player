@@ -268,6 +268,8 @@ export default {
       blurred_artwork: "Sfoca sempre l'immagine di sfondo",
       hide_collapsed_artwork: "Nascondi l'immagine piccola a destra quando la scheda è compressa",
       disable_artwork_gradient: "Disattiva la sfumatura inferiore sull'immagine di copertina",
+      menu_artwork_gradient:
+        "Mantieni visibile la sfumatura inferiore della copertina quando l'overlay del menu è aperto",
       show_idle_artwork_when_not_playing:
         "Se abilitato, selezionando un chip che non è attualmente in riproduzione verrà mostrata l'immagine inattiva configurata invece della copertina di riproduzione attiva.",
       prefer_ma_metadata:
@@ -337,6 +339,7 @@ export default {
       blurred_artwork: "Immagine sfocata",
       hide_collapsed_artwork: "Nascondi immagine contratta",
       disable_artwork_gradient: "Disattiva sfumatura copertina",
+      menu_artwork_gradient: "Sfumatura copertina nel menu",
       show_idle_artwork_when_not_playing: "Mostra immagine inattiva quando non in riproduzione",
       prefer_ma_metadata: "Preferisci i metadati di Music Assistant",
       show_volume_overlay: "Mostra overlay volume",

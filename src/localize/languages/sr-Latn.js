@@ -277,6 +277,7 @@ export default {
       blurred_artwork: "Uvek zamuti pozadinski omot",
       hide_collapsed_artwork: "Sakrij manji omot sa desne strane kada je kartica sažeta",
       disable_artwork_gradient: "Onemogući donji gradijent preko omota",
+      menu_artwork_gradient: "Zadrži donji gradijent omota vidljivim kada je meni otvoren",
       show_idle_artwork_when_not_playing:
         "Kada je omogućeno, izbor čipa koji trenutno ne svira prikazuje konfigurisan idle omot umesto aktivnog omota reprodukcije.",
       prefer_ma_metadata:
@@ -344,6 +345,7 @@ export default {
       blurred_artwork: "Zamućen omot",
       hide_collapsed_artwork: "Sakrij omot u sažetom prikazu",
       disable_artwork_gradient: "Onemogući gradijent omota",
+      menu_artwork_gradient: "Gradijent omota u meniju",
       show_idle_artwork_when_not_playing: "Prikaži sliku mirovanja kada ne svira",
       prefer_ma_metadata: "Preferiraj Music Assistant metapodatke",
       show_volume_overlay: "Prikaži indikator jačine zvuka",

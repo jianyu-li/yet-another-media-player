@@ -277,6 +277,7 @@ export default {
       blurred_artwork: "Увек замути позадински омот",
       hide_collapsed_artwork: "Сакриј мањи омот са десне стране када је картица сажета",
       disable_artwork_gradient: "Онемогући доњи градијент преко омота",
+      menu_artwork_gradient: "Задржи доњи градијент омота видљивим када је мени отворен",
       show_idle_artwork_when_not_playing:
         "Када је омогућено, избор чипа који тренутно не свира приказује конфигурисан омот мировања уместо активног омота репродукције.",
       prefer_ma_metadata:
@@ -344,6 +345,7 @@ export default {
       blurred_artwork: "Замучен омот",
       hide_collapsed_artwork: "Сакриј омот у сажетом приказу",
       disable_artwork_gradient: "Онемогући градијент омота",
+      menu_artwork_gradient: "Градијент омота у менију",
       show_idle_artwork_when_not_playing: "Прикажи слику мировања када не свира",
       prefer_ma_metadata: "Преферирај Music Assistant метаподатке",
       show_volume_overlay: "Прикажи индикатор јачине звука",

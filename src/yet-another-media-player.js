@@ -871,6 +871,10 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     return this.config?.disable_artwork_gradient === true;
   }
 
+  get _menuArtworkGradient() {
+    return this.config?.menu_artwork_gradient === true;
+  }
+
   get _artworkObjectFit() {
     const fit = this._baseArtworkObjectFit || "cover";
     if (fit === "scaled-contain-alternate" && this._alwaysCollapsed) {
@@ -7964,6 +7968,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     host.setAttribute("data-hide-menu-player", String(config.hide_menu_player === true || forceHideMenuPlayer));
     host.setAttribute("data-extend-artwork", String(this._extendArtwork));
     host.setAttribute("data-disable-artwork-gradient", String(this._artworkGradientDisabled));
+    host.setAttribute("data-menu-artwork-gradient", String(this._menuArtworkGradient));
     host.setAttribute("data-control-layout", this._controlLayout || "classic");
     host.setAttribute("data-details-alignment", config.details_alignment || "left");
 

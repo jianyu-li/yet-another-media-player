@@ -210,6 +210,7 @@ export const CARD_CONFIG_DEFAULTS = Object.freeze({
   show_album: true,
   background_fade: DEFAULT_BACKGROUND_FADE,
   lyrics_background_fade: DEFAULT_LYRICS_BACKGROUND_FADE,
+  menu_artwork_gradient: false,
   lock_screen_controls: false,
   full_screen: false,
   show_player_search: true,
