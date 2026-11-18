@@ -59,7 +59,7 @@ Below you will find a list of all configuration options.
 | `hidden_remote_buttons`    | array/template| No           | `[]`        | Array of remote button names to hide for this specific entity's remote overlay (Supports Templates) |
 | `hidden_menu_options`      | array        | No           | `[]`        | Array of options sheet menu items to hide (can be set at card level or per-entity) |
 | `hidden_filter_chips`      | array        | No           | `[]`        | Hide specific search filter chips for this entity (UI only; does not change search results) |
-| `disable_auto_select`      | boolean      | No           | `false`     | Prevents the card from automatically switching to this entity when playback starts, even if it is a group master |
+| `disable_auto_select`      | boolean/template | No       | `false`     | Prevents the card from automatically switching to this entity when playback starts, even if it is a group master ([Supports Templates](#template-support)) |
 | `show_player_search`       | boolean      | No           | `true`      | Allow searching and adding unconfigured media players to the card for the session in the Players menu (see [Dynamic & Session Players](#dynamic--session-players)) |
 | `auto_add_playing_entities`| boolean      | No           | `false`     | Automatically display unconfigured media players while they are actively playing, and remove them once playback goes idle |
 | `auto_add_exclude`         | array/string | No           | `[]`        | Comma-separated list or array of entity IDs, friendly names, or wildcard glob patterns (e.g. `media_player.*frame`, `*tv*`) to exclude from search and auto-discovery |
@@ -245,13 +245,34 @@ entities:
 
 ### Disable Auto-Select (Per-Entity)
 
-Use `disable_auto_select: true` to prevent the card from automatically jumping to a specific entity when it starts playing. 
+Use `disable_auto_select: true` to prevent the card from automatically jumping to a specific entity when it starts playing. `disable_auto_select` also supports **Jinja2** (`{{ ... }}`) and **JavaScript** (`[[[ ... ]]]`) templates (see [Template Support](#template-support)), allowing you to disable auto-select conditionally based on source, time, or other entity states.
 
 **When enabled for an entity:**
 - The card will **not** auto-switch to this chip when it starts playing.
 - The card will **not** auto-switch to this chip if it becomes the master of a group (unless you manually select it first).
 - The chip will **not** re-order to the front of the chip row when it begins playing.
 - The card will **not** wake from idle mode if this is the only active player.
+
+For example, to prevent a soundbar or AV receiver from auto-selecting when it is on the `"Television"` source (while still auto-selecting when playing music):
+
+**Jinja2 (Server-Side)**
+```yaml
+type: custom:yet-another-media-player
+entities:
+  - entity_id: media_player.living_room_soundbar
+    name: Soundbar
+    disable_auto_select: "{{ state_attr('media_player.living_room_soundbar', 'source') == 'Television' }}"
+```
+
+**JavaScript (Client-Side)**
+```yaml
+type: custom:yet-another-media-player
+entities:
+  - entity_id: media_player.living_room_soundbar
+    name: Soundbar
+    disable_auto_select: "[[[ return state_attr('media_player.living_room_soundbar', 'source') === 'Television'; ]]]"
+```
+
 ### Group Volume Override (Per-Entity)
 
 Use `group_volume: false` on an entity to isolate its volume control from the group:
@@ -905,6 +926,7 @@ The following configuration keys support templates:
 - **`navigation_path`**: Create dynamic navigation URLs (e.g., search IMDb or Genius).
 - **`volume_entity`**: Dynamically select which entity controls volume for a specific player.
 - **`music_assistant_entity`**: Dynamically select the companion Music Assistant entity.
+- **`disable_auto_select`**: Conditionally prevent an entity from auto-selecting or waking from idle when playback starts (e.g., based on active source or device state).
 - **`remote_entity`**: Dynamically select which remote entity to use for remote controls.
 - **`remote_platform`**: Dynamically determine or override the remote platform (e.g. `"androidtv_remote"`).
 - **`remote_commands`**: Dynamically provide custom command mappings or JSON string for remote actions.

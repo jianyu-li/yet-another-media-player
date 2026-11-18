@@ -575,15 +575,67 @@ export function renderEntityEditor(entity, idx = this._entityEditorIndex, isSear
           <div class="config-subtitle">${localize("editor.subtitles.prefer_ma_metadata")}</div>
         </div>
 
-        <div class="form-row">
-          <ha-switch
-            id="disable-auto-select-toggle"
-            .checked=${entity?.disable_auto_select ?? false}
-            @change=${(e) => this._updateEntityProperty("disable_auto_select", e.target.checked)}
-          ></ha-switch>
-          <label for="disable-auto-select-toggle">${localize("editor.labels.disable_auto_select")}</label>
-          <div class="config-subtitle">${localize("editor.subtitles.disable_auto_select")}</div>
-        </div>
+        ${
+          this._isTemplateMode("disable_auto_select", entity?.disable_auto_select)
+            ? html`
+                <div class="form-row" data-search-keys="disable_auto_select auto select disable">
+                  <div class="editor-field-wrapper">
+                    <div class="grow-children" style="flex-direction: column;">
+                      <span class="form-label"
+                        >${localize("editor.labels.disable_auto_select")}</span
+                      >
+                      <ha-code-editor
+                        lint
+                        .hass=${this.hass}
+                        mode="jinja2"
+                        autocomplete-entities
+                        label="${localize("editor.labels.disable_auto_select")}"
+                        .value=${
+                          typeof entity?.disable_auto_select === "string"
+                            ? entity.disable_auto_select
+                            : ""
+                        }
+                        @value-changed=${(e) =>
+                          this._updateEntityProperty("disable_auto_select", e.detail.value)}
+                      ></ha-code-editor>
+                    </div>
+                    <div class="field-actions">
+                      ${this._renderTemplateToggle(
+                        "disable_auto_select",
+                        entity?.disable_auto_select,
+                        (v) => this._updateEntityProperty("disable_auto_select", v)
+                      )}
+                    </div>
+                  </div>
+                  <div class="config-subtitle">
+                    ${localize("editor.subtitles.disable_auto_select")}
+                  </div>
+                </div>
+              `
+            : html`
+                <div class="form-row" data-search-keys="disable_auto_select auto select disable">
+                  <div style="display: flex; align-items: center; gap: 8px;">
+                    <ha-switch
+                      id="disable-auto-select-toggle"
+                      .checked=${entity?.disable_auto_select === true}
+                      @change=${(e) =>
+                        this._updateEntityProperty("disable_auto_select", e.target.checked)}
+                    ></ha-switch>
+                    <label for="disable-auto-select-toggle"
+                      >${localize("editor.labels.disable_auto_select")}</label
+                    >
+                    ${this._renderTemplateToggle(
+                      "disable_auto_select",
+                      entity?.disable_auto_select,
+                      (v) => this._updateEntityProperty("disable_auto_select", v)
+                    )}
+                  </div>
+                  <div class="config-subtitle">
+                    ${localize("editor.subtitles.disable_auto_select")}
+                  </div>
+                </div>
+              `
+        }
 
         <div class="form-row">
           <ha-switch

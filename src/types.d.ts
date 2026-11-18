@@ -272,6 +272,7 @@ export interface YampEntityConfig {
   hide_remote_buttons?: string[] | string;
   hidden_menu_options?: string[] | string;
   hide_menu_options?: string[] | string;
+  disable_auto_select?: boolean | string;
   transient?: "session" | "auto";
 }
 
@@ -1121,6 +1122,8 @@ export interface YetAnotherMediaPlayerCard {
   _backgroundFadeResolveCache?: Record<string, TemplateResolveCacheEntry<string | number>>;
   _lyricsBackgroundFadeTemplateValue?: Record<string, TemplateValueEntry>;
   _lyricsBackgroundFadeResolveCache?: Record<string, TemplateResolveCacheEntry<string | number>>;
+  disableAutoSelectTemplateValues?: Record<string | number, TemplateValueEntry<any>>;
+  disableAutoSelectResolveCache?: Record<number, TemplateResolveCacheEntry<any>>;
   readonly _menuArtworkGradient?: boolean;
   _aiRadioShowsAvailable?: boolean;
   _similarTracksStatus?: "loading" | "success" | null;

@@ -58,6 +58,11 @@ export class TemplateController {
     /** @type {Record<number, { value: any, ts: number }>} */
     this.hiddenControlsResolveCache = {};
 
+    /** @type {Record<string | number, { template: string, resolved: any }>} */
+    this.disableAutoSelectTemplateValues = {};
+    /** @type {Record<number, { value: any, ts: number }>} */
+    this.disableAutoSelectResolveCache = {};
+
     /** @type {Record<string | number, { template: string, resolved: string | null }>} */
     this.actionInMenuTemplateValues = {};
     /** @type {Record<number, { value: string, ts: number }>} */
@@ -155,6 +160,12 @@ export class TemplateController {
         cache: this.hiddenControlsResolveCache,
       };
     }
+    if (type === "disable_auto_select") {
+      return {
+        templateVals: this.disableAutoSelectTemplateValues,
+        cache: this.disableAutoSelectResolveCache,
+      };
+    }
     if (type === "control_layout") {
       return {
         templateVals: this.controlLayoutTemplateValue,
@@ -225,8 +236,12 @@ export class TemplateController {
     this.templateSubscriptions[subKey] = subToken;
 
     try {
-      const context =
+      const baseContext =
         typeof this.host._getTemplateContext === "function" ? this.host._getTemplateContext() : {};
+      const context =
+        type === "disable_auto_select" && typeof idx === "number" && this.host.entityIds?.[idx]
+          ? { ...baseContext, entity: this.host.entityIds[idx] }
+          : baseContext;
       const setStatements = Object.entries(context)
         .map(([key, value]) => `{% set ${key} = ${JSON.stringify(value)} %}`)
         .join(" ");
@@ -255,7 +270,8 @@ export class TemplateController {
               type === "lock_screen_controls" ||
               type === "full_screen" ||
               type === "show_chip_row" ||
-              type === "hidden_controls"
+              type === "hidden_controls" ||
+              type === "disable_auto_select"
             ) {
               isValid = true; // Any string result is valid
             }
@@ -282,7 +298,8 @@ export class TemplateController {
               type === "lock_screen_controls" ||
               type === "full_screen" ||
               type === "show_chip_row" ||
-              type === "hidden_controls"
+              type === "hidden_controls" ||
+              type === "disable_auto_select"
             ) {
               const currentCached = cache[idx]?.value;
               if (isValid && currentCached !== resolved) {
@@ -292,6 +309,9 @@ export class TemplateController {
             }
 
             if (shouldUpdate) {
+              if (type === "disable_auto_select" && this.host && "_cachedEntityObjs" in this.host) {
+                this.host._cachedEntityObjs = null;
+              }
               this.host.triggerRender?.() || this.host.requestUpdate?.();
             }
           },
@@ -356,15 +376,14 @@ export class TemplateController {
   /**
    * Evaluates a client-side JavaScript template enclosed in [[[ ... ]]].
    * @param {string} templateStr
+   * @param {Record<string, any> | null} [extraContext=null]
    * @returns {any}
    */
-  evaluateJsTemplate(templateStr) {
-    return evaluateJsTemplate(
-      templateStr,
-      this.host?.hass,
-      typeof this.host?._getTemplateContext === "function" ? this.host._getTemplateContext() : {},
-      this.compiledJsTemplates
-    );
+  evaluateJsTemplate(templateStr, extraContext = null) {
+    const baseContext =
+      typeof this.host?._getTemplateContext === "function" ? this.host._getTemplateContext() : {};
+    const context = extraContext ? { ...baseContext, ...extraContext } : baseContext;
+    return evaluateJsTemplate(templateStr, this.host?.hass, context, this.compiledJsTemplates);
   }
 
   /**
@@ -407,7 +426,11 @@ export class TemplateController {
         this.unsubscribeFromTemplate(idx, typeKey);
         if (templateValsObj[idx]) delete templateValsObj[idx];
 
-        const resolvedValue = this.evaluateJsTemplate(rawValue);
+        const extraContext =
+          typeKey === "disable_auto_select" && typeof idx === "number" && this.host.entityIds?.[idx]
+            ? { entity: this.host.entityIds[idx] }
+            : null;
+        const resolvedValue = this.evaluateJsTemplate(rawValue, extraContext);
         const currentCached = allowObject ? cacheObj[idx]?.value : cacheObj[idx]?.id;
 
         let changed;
@@ -424,6 +447,9 @@ export class TemplateController {
             cacheObj[idx] = { value: resolvedValue, ts: Date.now() };
           } else {
             cacheObj[idx] = { id: resolvedValue, ts: Date.now() };
+          }
+          if (typeKey === "disable_auto_select" && this.host && "_cachedEntityObjs" in this.host) {
+            this.host._cachedEntityObjs = null;
           }
           this.host.triggerRender?.() || this.host.requestUpdate?.();
         }
@@ -525,6 +551,24 @@ export class TemplateController {
       { allowObject: true },
       this.hiddenControlsResolveCache,
       this.hiddenControlsTemplateValues
+    );
+  }
+
+  /**
+   * Resolves and caches the disable_auto_select setting for a given chip index.
+   * @param {number} idx
+   */
+  async ensureResolvedDisableAutoSelectForIndex(idx) {
+    const conf = this.host._effectiveEntities?.[idx];
+    if (!conf) return;
+    const raw = typeof conf === "string" ? undefined : conf.disable_auto_select;
+    return this.ensureResolvedTemplateForIndex(
+      idx,
+      "disable_auto_select",
+      raw,
+      { allowObject: true },
+      this.disableAutoSelectResolveCache,
+      this.disableAutoSelectTemplateValues
     );
   }
 
@@ -638,6 +682,8 @@ export class TemplateController {
         this.ensureResolvedRemoteForIndex(idx);
       } else if (typeKey === "hidden_controls") {
         this.ensureResolvedHiddenControlsForIndex(idx);
+      } else if (typeKey === "disable_auto_select") {
+        this.ensureResolvedDisableAutoSelectForIndex(idx);
       }
     });
   }

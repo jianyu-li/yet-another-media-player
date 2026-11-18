@@ -492,8 +492,56 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     return minWide || controls <= 5;
   }
   _isAutoSelectDisabled(idx) {
-    const conf = this._effectiveEntities[idx];
-    return typeof conf === "string" ? false : !!conf?.disable_auto_select;
+    const conf = this._effectiveEntities?.[idx];
+    const raw = typeof conf === "string" ? false : conf?.disable_auto_select;
+    if (
+      typeof raw === "string" &&
+      (raw.includes("{{") || raw.includes("{%") || raw.trim().startsWith("[[["))
+    ) {
+      let resolved;
+      if (raw.trim().startsWith("[[[")) {
+        if (!this._evaluatingAutoSelectIndices) {
+          this._evaluatingAutoSelectIndices = new Set();
+        }
+        if (this._evaluatingAutoSelectIndices.has(idx)) {
+          return false;
+        }
+        this._evaluatingAutoSelectIndices.add(idx);
+        try {
+          const entityId = this.entityIds?.[idx];
+          const extraContext = entityId ? { entity: entityId } : null;
+          if (typeof this._templateController?.evaluateJsTemplate === "function") {
+            resolved = this._templateController.evaluateJsTemplate(raw, extraContext);
+          } else {
+            const baseContext =
+              typeof this._getTemplateContext === "function" ? this._getTemplateContext() : {};
+            const context = extraContext ? { ...baseContext, ...extraContext } : baseContext;
+            resolved = evaluateJsTemplate(
+              raw,
+              this.hass,
+              context,
+              this._compiledJsTemplates || {}
+            );
+          }
+        } catch {
+          resolved = false;
+        } finally {
+          this._evaluatingAutoSelectIndices.delete(idx);
+        }
+      } else {
+        resolved = this._disableAutoSelectResolveCache?.[idx]?.value;
+      }
+
+      if (typeof resolved === "boolean") {
+        return resolved;
+      }
+      if (resolved !== undefined && resolved !== null && resolved !== "") {
+        const lower = String(resolved).trim().toLowerCase();
+        return lower === "true" || lower === "1" || lower === "on" || lower === "yes";
+      }
+      return false;
+    }
+    return !!raw;
   }
 
   get sortedEntityIds() {
@@ -745,6 +793,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       for (let i = 0; i < this._jsTemplateEntities.length; i++) {
         const id = this._jsTemplateEntities[i];
         if (currentStates[id] !== oldStates[id]) {
+          this._cachedEntityObjs = null;
           return true;
         }
       }
@@ -1333,6 +1382,8 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._alwaysCollapsedResolveCache = this._templateController.alwaysCollapsedResolveCache;
     this._hiddenControlsTemplateValues = this._templateController.hiddenControlsTemplateValues;
     this._hiddenControlsResolveCache = this._templateController.hiddenControlsResolveCache;
+    this._disableAutoSelectTemplateValues = this._templateController.disableAutoSelectTemplateValues;
+    this._disableAutoSelectResolveCache = this._templateController.disableAutoSelectResolveCache;
     this._controlLayoutTemplateValue = this._templateController.controlLayoutTemplateValue;
     this._controlLayoutResolveCache = this._templateController.controlLayoutResolveCache;
     this._cardHeightTemplateValue = this._templateController.cardHeightTemplateValue;
@@ -1464,8 +1515,12 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     return this._templateController.ensureResolvedHiddenControlsForIndex(idx);
   }
 
-  _evaluateJsTemplate(templateStr) {
-    return this._templateController.evaluateJsTemplate(templateStr);
+  _ensureResolvedDisableAutoSelectForIndex(idx) {
+    return this._templateController.ensureResolvedDisableAutoSelectForIndex(idx);
+  }
+
+  _evaluateJsTemplate(templateStr, extraContext = null) {
+    return this._templateController.evaluateJsTemplate(templateStr, extraContext);
   }
 
   _syncTemplateSubscriptions(type, currentContext, rawConfigData) {
@@ -3201,63 +3256,75 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     if (this._cachedEntityObjs) {
       return this._cachedEntityObjs;
     }
+    const isReentrant = Boolean(
+      this._buildingEntityObjs || this._evaluatingAutoSelectIndices?.size
+    );
     const entities = this._effectiveEntities;
     const configEntityIds = this.entityIds;
-    this._cachedEntityObjs = entities.map((e, index) => {
-      const entity_id = typeof e === "string" ? e : e.entity_id || e.entity;
-      const name = typeof e === "string" ? "" : (e.name || "");
-      const volume_entity = typeof e === "string" ? undefined : e.volume_entity;
-      const remote_entity = typeof e === "string" ? undefined : e.remote_entity;
-      const music_assistant_entity = typeof e === "string" ? undefined : e.music_assistant_entity;
-      const sync_power = typeof e === "string" ? false : !!e.sync_power;
-      const follow_active_volume = typeof e === "string" ? false : !!e.follow_active_volume;
-      const hidden_controls = typeof e === "string" ? undefined : e.hidden_controls;
-      const transient = typeof e === "string" ? undefined : e.transient;
-      let group_volume;
+    const prevBuilding = this._buildingEntityObjs;
+    this._buildingEntityObjs = true;
+    try {
+      const mapped = entities.map((e, index) => {
+        const entity_id = typeof e === "string" ? e : e.entity_id || e.entity;
+        const name = typeof e === "string" ? "" : (e.name || "");
+        const volume_entity = typeof e === "string" ? undefined : e.volume_entity;
+        const remote_entity = typeof e === "string" ? undefined : e.remote_entity;
+        const music_assistant_entity = typeof e === "string" ? undefined : e.music_assistant_entity;
+        const sync_power = typeof e === "string" ? false : !!e.sync_power;
+        const follow_active_volume = typeof e === "string" ? false : !!e.follow_active_volume;
+        const hidden_controls = typeof e === "string" ? undefined : e.hidden_controls;
+        const transient = typeof e === "string" ? undefined : e.transient;
+        let group_volume;
 
-      if (typeof e === "object" && typeof e.group_volume !== "undefined") {
-        group_volume = e.group_volume;
-      } else {
-        // Determine group_volume default
-        const state = this.hass?.states?.[entity_id];
-        if (state && Array.isArray(state.attributes.group_members) && state.attributes.group_members.length > 0) {
-          // Are any group members in entityIds?
-          const otherMembers = state.attributes.group_members.filter(id => id !== entity_id);
-          const visibleMembers = otherMembers.filter(id => configEntityIds.includes(id));
-          group_volume = visibleMembers.length > 0;
+        if (typeof e === "object" && typeof e.group_volume !== "undefined") {
+          group_volume = e.group_volume;
+        } else {
+          // Determine group_volume default
+          const state = this.hass?.states?.[entity_id];
+          if (state && Array.isArray(state.attributes.group_members) && state.attributes.group_members.length > 0) {
+            // Are any group members in entityIds?
+            const otherMembers = state.attributes.group_members.filter(id => id !== entity_id);
+            const visibleMembers = otherMembers.filter(id => configEntityIds.includes(id));
+            group_volume = visibleMembers.length > 0;
+          }
         }
+
+        const entity_volume_mode = typeof e === "string" ? undefined : e.entity_volume_mode;
+        const entity_volume_step = typeof e === "string" ? undefined : e.entity_volume_step;
+
+        return {
+          entity_id,
+          name,
+          volume_entity,
+          remote_entity,
+          music_assistant_entity,
+          sync_power,
+          follow_active_volume,
+          hidden_controls,
+          hidden_filter_chips: typeof e === "string" ? undefined : e.hidden_filter_chips,
+          hide_remote_buttons: typeof e === "string" ? undefined : e.hide_remote_buttons,
+          remote_platform: typeof e === "string" ? undefined : e.remote_platform,
+          remote_commands: typeof e === "string" ? undefined : e.remote_commands,
+          hidden_menu_options: typeof e === "string" ? undefined : (e.hidden_menu_options ?? e.hide_menu_options),
+          hide_menu_options: typeof e === "string" ? undefined : (e.hidden_menu_options ?? e.hide_menu_options),
+          disable_auto_select: isReentrant ? false : this._isAutoSelectDisabled(index),
+          prefer_ma_metadata: typeof e === "string" ? false : !!e.prefer_ma_metadata,
+          ...(transient ? { transient } : {}),
+          ...(typeof group_volume !== "undefined" ? { group_volume } : {}),
+          ...(entity_volume_mode ? { entity_volume_mode } : {}),
+          ...(typeof entity_volume_step === "number" ? { entity_volume_step } : {}),
+          ...(typeof e === "object" && typeof (e.hold_title_for_volume ?? e.hold_track_title_for_volume) === "boolean"
+            ? { hold_title_for_volume: (e.hold_title_for_volume ?? e.hold_track_title_for_volume) }
+            : {}),
+        };
+      });
+      if (!isReentrant) {
+        this._cachedEntityObjs = mapped;
       }
-
-      const entity_volume_mode = typeof e === "string" ? undefined : e.entity_volume_mode;
-      const entity_volume_step = typeof e === "string" ? undefined : e.entity_volume_step;
-
-      return {
-        entity_id,
-        name,
-        volume_entity,
-        remote_entity,
-        music_assistant_entity,
-        sync_power,
-        follow_active_volume,
-        hidden_controls,
-        hidden_filter_chips: typeof e === "string" ? undefined : e.hidden_filter_chips,
-        hide_remote_buttons: typeof e === "string" ? undefined : e.hide_remote_buttons,
-        remote_platform: typeof e === "string" ? undefined : e.remote_platform,
-        remote_commands: typeof e === "string" ? undefined : e.remote_commands,
-        hidden_menu_options: typeof e === "string" ? undefined : (e.hidden_menu_options ?? e.hide_menu_options),
-        hide_menu_options: typeof e === "string" ? undefined : (e.hidden_menu_options ?? e.hide_menu_options),
-        disable_auto_select: this._isAutoSelectDisabled(index),
-        prefer_ma_metadata: typeof e === "string" ? false : !!e.prefer_ma_metadata,
-        ...(transient ? { transient } : {}),
-        ...(typeof group_volume !== "undefined" ? { group_volume } : {}),
-        ...(entity_volume_mode ? { entity_volume_mode } : {}),
-        ...(typeof entity_volume_step === "number" ? { entity_volume_step } : {}),
-        ...(typeof e === "object" && typeof (e.hold_title_for_volume ?? e.hold_track_title_for_volume) === "boolean"
-          ? { hold_title_for_volume: (e.hold_title_for_volume ?? e.hold_track_title_for_volume) }
-          : {}),
-      };
-    });
-    return this._cachedEntityObjs;
+      return mapped;
+    } finally {
+      this._buildingEntityObjs = prevBuilding;
+    }
   }
 
 
@@ -4939,6 +5006,9 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
   }
 
   updated(changedProps) {
+    if (changedProps.has("hass")) {
+      this._cachedEntityObjs = null;
+    }
     if (changedProps.has("hass") && this.hass) {
       const currentLang = this.hass.selectedLanguage || this.hass.language || this.hass.locale?.language;
       if (currentLang) {
@@ -4969,6 +5039,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._syncEntityTemplateSubscriptions('vol', currentContext);
     this._syncEntityTemplateSubscriptions('remote', currentContext);
     this._syncEntityTemplateSubscriptions('hidden_controls', currentContext);
+    this._syncEntityTemplateSubscriptions('disable_auto_select', currentContext);
     if (changedProps.has("_selectedIndex")) {
       this._lastMediaTitle = null;
       this._searchResultsByType = {};

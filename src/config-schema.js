@@ -264,6 +264,7 @@ export const TEMPLATE_SUPPORTED_FIELDS = Object.freeze(
     "remote_entity",
     "remote_platform",
     "remote_commands",
+    "disable_auto_select",
   ])
 );
 
