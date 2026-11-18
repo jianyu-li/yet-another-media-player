@@ -80,11 +80,13 @@ import {
   getMediaPlayerEntityIds,
   parseRemoteCommandsMap,
   resolveRemoteCommand,
+  isPodcastOrAudiobook,
 } from "./yamp-utils.js";
 import { localize, setHassLanguage } from "./localize/localize.js";
 
 
 import {
+  SUPPORT_SEEK,
   SUPPORT_VOLUME_SET,
   SUPPORT_VOLUME_MUTE,
   SUPPORT_TURN_ON,
@@ -93,6 +95,7 @@ import {
   SUPPORT_GROUPING,
   DEFAULT_PROGRESS_BAR_HEIGHT,
   DEFAULT_BACKGROUND_FADE,
+  DEFAULT_SKIP_SECONDS,
   GROUP_SELECTION_FEEDBACK_DURATION_MS,
   getTemplatePresetDefaults,
   normalizeCollapsedMode,
@@ -426,6 +429,44 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     if (item) item.scrollIntoView({ behavior: "smooth", block: "center" });
   }
 
+  _isActiveCompanionMaState(playbackStateObj, maState) {
+    if (!maState?.entity_id) return false;
+    if (playbackStateObj?.entity_id === maState.entity_id) return true;
+    return (
+      ["playing", "paused", "buffering"].includes(maState.state) &&
+      this._areEntitiesPlayingSameMedia(playbackStateObj, maState)
+    );
+  }
+
+  _isPodcastOrAudiobookPlaying(playbackStateObj) {
+    if (isPodcastOrAudiobook(playbackStateObj)) return true;
+    const metadataStateObj = this.metadataStateObj;
+    if (
+      metadataStateObj &&
+      (playbackStateObj?.entity_id === metadataStateObj.entity_id ||
+        this._areEntitiesPlayingSameMedia(playbackStateObj, metadataStateObj)) &&
+      isPodcastOrAudiobook(metadataStateObj)
+    ) {
+      return true;
+    }
+    const maState = this._getMusicAssistantState();
+    return (
+      this._isActiveCompanionMaState(playbackStateObj, maState) &&
+      isPodcastOrAudiobook(maState)
+    );
+  }
+
+  _canSkipPlayback(playbackStateObj) {
+    const maState = this._getMusicAssistantState();
+    const isMaActive = this._isActiveCompanionMaState(playbackStateObj, maState);
+    return Boolean(
+      (this._massQueueAvailable &&
+        this.config?.disable_mass_queue !== true &&
+        isMaActive) ||
+        this._supportsFeature(playbackStateObj, SUPPORT_SEEK)
+    );
+  }
+
   // Show Stop button if supported and layout allows.
   _shouldShowStopButton(stateObj) {
     if (!this._supportsFeature(stateObj, SUPPORT_STOP)) return false;
@@ -435,13 +476,17 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     const minWide = row.offsetWidth > 480;
     const hiddenControls = this._getHiddenControlsForCurrentEntity();
     const showFavorite = !hiddenControls.favorite && !!this._getFavoriteButtonEntity();
+    const showSkip = Boolean(
+      this._isPodcastOrAudiobookPlaying?.(stateObj) && this._canSkipPlayback?.(stateObj)
+    );
     const controls = countMainControls(
       stateObj,
       (s, f) => this._supportsFeature(s, f),
       showFavorite,
       hiddenControls,
       true,
-      this._controlLayout
+      this._controlLayout,
+      showSkip
     );
     // Limit Stop visibility on compact layouts.
     return minWide || controls <= 5;
@@ -533,6 +578,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     _showSearchInSheet: { state: true },
     _addToPlaylistTarget: { state: true },
     _showMediaTitleOptions: { state: true },
+    _similarTracksStatus: { state: true },
     _dismissMenuAfterPlaylistAdd: { state: false },
     _lyricsActive: { state: true },
     _massLyrics: { state: true },
@@ -1077,6 +1123,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     // Overlay state for entity options
     this._showEntityOptions = false;
     this._showMediaTitleOptions = false;
+    this._similarTracksStatus = null;
     this._dismissMenuAfterPlaylistAdd = false;
     // Overlay state for grouping sheet
     this._showGrouping = false;
@@ -5527,6 +5574,9 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     // Select the tapped chip immediately
     this._volumeHoldController?.cancel();
     this._selectedIndex = idx;
+    this._showMediaTitleOptions = false;
+    this._searchController?.clearSimilarStatus?.();
+    this._similarTracksStatus = null;
 
     // Wake from idle if the selected entity is actually playing
     if (this._isIdle) {
@@ -6109,6 +6159,69 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
         this._mediaSessionManager?.startPlaybackGesture(targetEntity);
         mediaPreviousTrack(this.hass, targetEntity);
         break;
+      case "skip_back":
+      case "skip_forward": {
+        const delta = action === "skip_forward" ? DEFAULT_SKIP_SECONDS : -DEFAULT_SKIP_SECONDS;
+        const metaState = this.metadataStateObj;
+        const useMetaTrackId =
+          metaState &&
+          (metaState.entity_id === targetEntity ||
+            this._areEntitiesPlayingSameMedia(stateObj, metaState));
+        const trackId =
+          (useMetaTrackId &&
+            (metaState.attributes?.media_content_id || metaState.attributes?.media_title)) ||
+          stateObj?.attributes?.media_content_id ||
+          stateObj?.attributes?.media_title;
+        let currentPos;
+        if (this._seekAnchor && this._seekAnchor.trackId === trackId) {
+          currentPos = Number(this._seekAnchor.position) || 0;
+          if (stateObj?.state === "playing") {
+            currentPos += Math.max(0, (Date.now() - this._seekAnchor.timestamp) / 1000);
+          }
+        } else {
+          currentPos = Number(stateObj?.attributes?.media_position) || 0;
+          if (stateObj?.state === "playing" && stateObj?.attributes?.media_position_updated_at) {
+            const updatedAt = Date.parse(stateObj.attributes.media_position_updated_at);
+            if (Number.isFinite(updatedAt)) {
+              currentPos += Math.max(0, (Date.now() - updatedAt) / 1000);
+            }
+          }
+        }
+        const duration = Number(stateObj?.attributes?.media_duration) || 0;
+        const rawTargetPos = Math.round(currentPos + delta);
+        const targetPos =
+          duration > 0 ? Math.min(duration, Math.max(0, rawTargetPos)) : Math.max(0, rawTargetPos);
+
+        this._seekAnchor = {
+          position: targetPos,
+          timestamp: Date.now(),
+          trackId,
+        };
+        this._seekConvergenceLock = Date.now() + 2000;
+        this._seekOffset = null;
+        this.requestUpdate();
+
+        const maState = this._getMusicAssistantState();
+        const maEntityId = maState?.entity_id;
+        const isMaActive = this._isActiveCompanionMaState(stateObj, maState);
+        const useMassQueue =
+          this._massQueueAvailable && isMaActive && this.config?.disable_mass_queue !== true;
+        if (useMassQueue) {
+          try {
+            await this.hass.callService("mass_queue", "skip", {
+              entity: maEntityId,
+              skip_seconds: delta,
+            });
+          } catch (_err) {
+            if (this._supportsFeature(stateObj, SUPPORT_SEEK)) {
+              mediaSeek(this.hass, targetEntity, targetPos);
+            }
+          }
+        } else if (this._supportsFeature(stateObj, SUPPORT_SEEK)) {
+          mediaSeek(this.hass, targetEntity, targetPos);
+        }
+        break;
+      }
       case "stop":
         mediaStop(this.hass, targetEntity);
         if (stateObj) {
@@ -7569,7 +7682,22 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
           }
           return detailStyleParts.join(';');
         })()}">
-                    ${this._showMediaTitleOptions ? html`
+                    ${this._showMediaTitleOptions ? (() => {
+                      const similarStatus = this._similarTracksStatus;
+                      const similarIcon =
+                        similarStatus === "loading"
+                          ? "mdi:loading"
+                          : similarStatus === "success"
+                            ? "mdi:check"
+                            : "mdi:radio";
+                      const similarIconClass = similarStatus === "loading" ? "spin" : "";
+                      const similarLabel =
+                        similarStatus === "loading"
+                          ? localize("search.similar_loading") || "Finding similar songs..."
+                          : similarStatus === "success"
+                            ? localize("search.similar_queued") || "Queued similar songs"
+                            : localize("search.play_similar");
+                      return html`
                       <div class="title track-options-row" style="display: flex; gap: 16px; align-items: center; cursor: pointer;">
                         ${this._massQueueAvailable ? html`
                           <div class="track-options-btn" @click=${(e) => { e.stopPropagation(); this._handleAddCurrentToPlaylist(); }} title="${localize('search.labels.add_to_playlist')}">
@@ -7577,15 +7705,33 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
                             <span>${localize('search.add_to_playlist')}</span>
                           </div>
                         ` : nothing}
-                        <div class="track-options-btn" @click=${(e) => { e.stopPropagation(); this._handlePlaySimilar(); }} title="${localize('search.play_similar')}">
-                          <ha-icon icon="mdi:radio"></ha-icon>
-                          <span>${localize('search.play_similar')}</span>
+                        <div
+                          class="track-options-btn"
+                          @click=${(e) => {
+                            e.stopPropagation();
+                            if (this._similarTracksStatus === "loading") return;
+                            this._handlePlaySimilar();
+                          }}
+                          title="${similarLabel}"
+                        >
+                          <ha-icon icon="${similarIcon}" class="${similarIconClass}"></ha-icon>
+                          <span>${similarLabel}</span>
                         </div>
-                        <div class="track-options-btn track-options-close" @click=${(e) => { e.stopPropagation(); this._showMediaTitleOptions = false; }} title="${localize('common.close')}">
+                        <div
+                          class="track-options-btn track-options-close"
+                          @click=${(e) => {
+                            e.stopPropagation();
+                            this._showMediaTitleOptions = false;
+                            this._searchController?.clearSimilarStatus?.();
+                            this._similarTracksStatus = null;
+                          }}
+                          title="${localize('common.close')}"
+                        >
                           <ha-icon icon="mdi:close"></ha-icon>
                         </div>
                       </div>
-                    ` : (() => {
+                    `;
+                    })() : (() => {
                       const canHoldTitle = shouldShowDetails && !!title && this._canUseVolumeHold(false, true);
                       const titleHoldHandlers = canHoldTitle ? this._volumeHoldController : null;
                       return html`
@@ -7721,6 +7867,7 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
                     ${renderControlsRow({
         stateObj: playbackStateObj,
         showStop: this._shouldShowStopButton(playbackStateObj),
+        showSkip: this._isPodcastOrAudiobookPlaying(playbackStateObj) && this._canSkipPlayback(playbackStateObj),
         shuffleActive,
         repeatActive,
         onControlClick: (action) => this._onControlClick(action),

@@ -534,6 +534,8 @@ export default {
       repeat: "Ponovi",
       lock_screen_ready: "Kontrole na zaključanom ekranu aktivne",
       lock_screen_connecting: "Povezivanje kontrola na zaključanom ekranu...",
+      skip_back: "Preskoči unazad 15 s",
+      skip_forward: "Preskoči unapred 15 s",
     },
     menu: {
       more_info: "Više informacija",
@@ -614,6 +616,8 @@ export default {
     radio_mode: "Radio režim",
     show_track_options: "Prikaži opcije pesme",
     play_similar: "Pusti slične pesme",
+    similar_loading: "Traženje sličnih pesama...",
+    similar_queued: "Slične pesme dodate u red",
     close: "Zatvori pretragu",
     no_results: "Nema rezultata.",
     play_next: "Pusti sledeće",

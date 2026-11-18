@@ -529,6 +529,8 @@ export default {
       repeat: "Repetir",
       lock_screen_ready: "Controlos do ecrã de bloqueio ativos",
       lock_screen_connecting: "A ligar os controlos do ecrã de bloqueio...",
+      skip_back: "Recuar 15s",
+      skip_forward: "Avançar 15s",
     },
     menu: {
       more_info: "Mais info",
@@ -609,6 +611,8 @@ export default {
     radio_mode: "Modo Rádio",
     show_track_options: "Mostrar opções da faixa",
     play_similar: "Tocar músicas semelhantes",
+    similar_loading: "A procurar músicas semelhantes...",
+    similar_queued: "Músicas semelhantes adicionadas à fila",
     close: "Fechar",
     no_results: "Sem resultados.",
     play_next: "Reproduzir seguinte",

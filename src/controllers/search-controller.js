@@ -280,6 +280,8 @@ export class SearchController {
   constructor(host) {
     /** @type {any} */
     this.host = host;
+    this._similarStatusTimer = null;
+    this._similarOpToken = 0;
 
     if (host && typeof host.addController === "function") {
       host.addController(this);
@@ -295,6 +297,11 @@ export class SearchController {
    * Lit lifecycle hook: disconnectedCallback
    */
   hostDisconnected() {
+    this._similarOpToken++;
+    if (this._similarStatusTimer) {
+      clearTimeout(this._similarStatusTimer);
+      this._similarStatusTimer = null;
+    }
     if (this.host?._searchHeaderTransitionTimer) {
       clearTimeout(this.host._searchHeaderTransitionTimer);
       this.host._searchHeaderTransitionTimer = null;
@@ -482,9 +489,102 @@ export class SearchController {
     );
   }
 
-  handlePlaySimilar() {
+  clearSimilarStatus() {
+    this._similarOpToken++;
+    if (this._similarStatusTimer) {
+      clearTimeout(this._similarStatusTimer);
+      this._similarStatusTimer = null;
+    }
+    if (this.host && this.host._similarTracksStatus !== null) {
+      this.host._similarTracksStatus = null;
+    }
+  }
+
+  async handlePlaySimilar() {
+    if (this.host?._similarTracksStatus === "loading") return;
+    if (this._similarStatusTimer) {
+      clearTimeout(this._similarStatusTimer);
+      this._similarStatusTimer = null;
+    }
+
+    const maState = this.host?._getMusicAssistantState?.();
+    const playbackState =
+      this.host?.currentActivePlaybackStateObj ||
+      this.host?.currentPlaybackStateObj ||
+      this.host?.currentStateObj;
+
+    const isValidTrackUri = (val) =>
+      typeof val === "string" &&
+      val.includes("://") &&
+      !val.toLowerCase().startsWith("http://") &&
+      !val.toLowerCase().startsWith("https://");
+
+    const maContentId = maState?.attributes?.media_content_id;
+    const playbackContentId = playbackState?.attributes?.media_content_id;
+    const trackUri = isValidTrackUri(maContentId)
+      ? maContentId
+      : isValidTrackUri(playbackContentId)
+        ? playbackContentId
+        : null;
     const mockItem = this.getMockItemFromCurrentTrack();
-    if (!mockItem) return;
+
+    const isMaActive =
+      Boolean(maState?.entity_id) &&
+      (playbackState?.entity_id === maState.entity_id ||
+        (["playing", "paused", "buffering"].includes(maState.state) &&
+          this.host?._areEntitiesPlayingSameMedia?.(playbackState, maState) !== false));
+
+    const canSeamlessRadio =
+      isMaActive &&
+      !this.isCurrentlyPlayingRadio() &&
+      Boolean(trackUri || mockItem) &&
+      !(trackUri && trackUri.toLowerCase().startsWith("library://radio/"));
+
+    const opToken = ++this._similarOpToken;
+
+    if (canSeamlessRadio) {
+      this.host._similarTracksStatus = "loading";
+      this.host?.requestUpdate?.();
+      try {
+        /** @type {Record<string, any>} */
+        const playParams = {
+          entity_id: maState.entity_id,
+          media_id: trackUri || mockItem?.media_content_id,
+          media_type: "track",
+          enqueue: "replace_next",
+          radio_mode: true,
+        };
+        if (!trackUri && mockItem?.media_artist) {
+          playParams.artist = mockItem.media_artist;
+        }
+        await this.host.hass.callService("music_assistant", "play_media", playParams);
+        if (opToken !== this._similarOpToken) return;
+        this.invalidateUpcomingCache();
+        if (this.host._upcomingFilterActive) {
+          this.host._queueController?.refreshQueue?.();
+        }
+        this.host._similarTracksStatus = "success";
+        this.host?.requestUpdate?.();
+        this._similarStatusTimer = setTimeout(() => {
+          this._similarStatusTimer = null;
+          if (this.host) {
+            this.host._similarTracksStatus = null;
+            this.host._showMediaTitleOptions = false;
+            this.host.requestUpdate?.();
+          }
+        }, 1500);
+        return;
+      } catch (_error) {
+        if (opToken !== this._similarOpToken) return;
+        // Fall through to playMediaFromSearch fallback
+      }
+      this.host._similarTracksStatus = null;
+    }
+
+    if (!mockItem) {
+      this.host?.requestUpdate?.();
+      return;
+    }
 
     this.host._showMediaTitleOptions = false;
     this.host._radioModeActive = true;

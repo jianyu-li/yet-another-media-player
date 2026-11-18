@@ -24,6 +24,7 @@ import {
  * @param {string} [params.controlLayout]
  * @param {boolean} [params.swapPauseForStop]
  * @param {string | null} [params.lockScreenState]
+ * @param {boolean} [params.showSkip]
  */
 export function renderControlsRow({
   stateObj,
@@ -39,6 +40,7 @@ export function renderControlsRow({
   controlLayout = "classic",
   swapPauseForStop = false,
   lockScreenState = null,
+  showSkip = false,
 }) {
   if (!stateObj) return nothing;
 
@@ -64,6 +66,8 @@ export function renderControlsRow({
   let showPowerButton =
     !hiddenControls.power &&
     (supportsFeature(stateObj, SUPPORT_TURN_OFF) || supportsFeature(stateObj, SUPPORT_TURN_ON));
+  const showSkipBack = Boolean(showSkip && !hiddenControls.skip_back);
+  const showSkipForward = Boolean(showSkip && !hiddenControls.skip_forward);
 
   const swapPauseWithStop = normalizedLayout === "modern" && swapPauseForStop && canShowStop;
   const isPlayingState = stateObj.state === "playing";
@@ -91,7 +95,8 @@ export function renderControlsRow({
     showFavorite,
     hiddenControls,
     showStop,
-    normalizedLayout
+    normalizedLayout,
+    showSkip
   );
 
   const baseRowClass = adaptiveControls ? "controls-row adaptive" : "controls-row";
@@ -131,30 +136,57 @@ export function renderControlsRow({
       <div class=${rowClass} style=${rowStyle}>
         <div class="controls-left">
           ${
-            showShuffleButton
+            showSkipBack
               ? html`
-                  <button
-                    class="modern-button small${shuffleActive ? " active" : ""}"
-                    @click=${() => onControlClick("shuffle")}
-                    title="${localize("card.media_controls.shuffle")}"
-                  >
-                    <ha-icon .icon=${"mdi:shuffle"}></ha-icon>
-                  </button>
-                `
-              : nothing
-          }
-          ${
-            showPrevious
-              ? html`
+                  ${
+                    showPrevious
+                      ? html`
+                          <button
+                            class="modern-button small"
+                            @click=${() => onControlClick("prev")}
+                            title="${localize("card.media_controls.previous")}"
+                          >
+                            <ha-icon .icon=${"mdi:skip-previous"}></ha-icon>
+                          </button>
+                        `
+                      : nothing
+                  }
                   <button
                     class="modern-button medium"
-                    @click=${() => onControlClick("prev")}
-                    title="${localize("card.media_controls.previous")}"
+                    @click=${() => onControlClick("skip_back")}
+                    title="${localize("card.media_controls.skip_back") || "Skip back 15s"}"
                   >
-                    <ha-icon .icon=${"mdi:skip-previous"}></ha-icon>
+                    <ha-icon .icon=${"mdi:rewind-15"}></ha-icon>
                   </button>
                 `
-              : nothing
+              : html`
+                  ${
+                    showShuffleButton
+                      ? html`
+                          <button
+                            class="modern-button small${shuffleActive ? " active" : ""}"
+                            @click=${() => onControlClick("shuffle")}
+                            title="${localize("card.media_controls.shuffle")}"
+                          >
+                            <ha-icon .icon=${"mdi:shuffle"}></ha-icon>
+                          </button>
+                        `
+                      : nothing
+                  }
+                  ${
+                    showPrevious
+                      ? html`
+                          <button
+                            class="modern-button medium"
+                            @click=${() => onControlClick("prev")}
+                            title="${localize("card.media_controls.previous")}"
+                          >
+                            <ha-icon .icon=${"mdi:skip-previous"}></ha-icon>
+                          </button>
+                        `
+                      : nothing
+                  }
+                `
           }
         </div>
 
@@ -184,32 +216,63 @@ export function renderControlsRow({
 
         <div class="controls-right">
           ${
-            showNext
+            showSkipForward
               ? html`
                   <button
                     class="modern-button medium"
-                    @click=${() => onControlClick("next")}
-                    title="${localize("card.media_controls.next")}"
+                    @click=${() => onControlClick("skip_forward")}
+                    title="${localize("card.media_controls.skip_forward") || "Skip forward 15s"}"
                   >
-                    <ha-icon .icon=${"mdi:skip-next"}></ha-icon>
+                    <ha-icon .icon=${"mdi:fast-forward-15"}></ha-icon>
                   </button>
+                  ${
+                    showNext
+                      ? html`
+                          <button
+                            class="modern-button small"
+                            @click=${() => onControlClick("next")}
+                            title="${localize("card.media_controls.next")}"
+                          >
+                            <ha-icon .icon=${"mdi:skip-next"}></ha-icon>
+                          </button>
+                        `
+                      : nothing
+                  }
                 `
-              : nothing
-          }
-          ${
-            showRepeatButton
-              ? html`
-                  <button
-                    class="modern-button small${repeatActive ? " active" : ""}"
-                    @click=${() => onControlClick("repeat")}
-                    title="${localize("card.media_controls.repeat")}"
-                  >
-                    <ha-icon
-                      .icon=${stateObj.attributes.repeat === "one" ? "mdi:repeat-once" : "mdi:repeat"}
-                    ></ha-icon>
-                  </button>
+              : html`
+                  ${
+                    showNext
+                      ? html`
+                          <button
+                            class="modern-button medium"
+                            @click=${() => onControlClick("next")}
+                            title="${localize("card.media_controls.next")}"
+                          >
+                            <ha-icon .icon=${"mdi:skip-next"}></ha-icon>
+                          </button>
+                        `
+                      : nothing
+                  }
+                  ${
+                    showRepeatButton
+                      ? html`
+                          <button
+                            class="modern-button small${repeatActive ? " active" : ""}"
+                            @click=${() => onControlClick("repeat")}
+                            title="${localize("card.media_controls.repeat")}"
+                          >
+                            <ha-icon
+                              .icon=${
+                                stateObj.attributes.repeat === "one"
+                                  ? "mdi:repeat-once"
+                                  : "mdi:repeat"
+                              }
+                            ></ha-icon>
+                          </button>
+                        `
+                      : nothing
+                  }
                 `
-              : nothing
           }
         </div>
       </div>
@@ -227,6 +290,19 @@ export function renderControlsRow({
                 title="${localize("card.media_controls.previous")}"
               >
                 <ha-icon .icon=${"mdi:skip-previous"}></ha-icon>
+              </button>
+            `
+          : nothing
+      }
+      ${
+        showSkipBack
+          ? html`
+              <button
+                class="button"
+                @click=${() => onControlClick("skip_back")}
+                title="${localize("card.media_controls.skip_back") || "Skip back 15s"}"
+              >
+                <ha-icon .icon=${"mdi:rewind-15"}></ha-icon>
               </button>
             `
           : nothing
@@ -253,6 +329,19 @@ export function renderControlsRow({
                 title="${localize("card.media_controls.stop")}"
               >
                 <ha-icon .icon=${"mdi:stop"}></ha-icon>
+              </button>
+            `
+          : nothing
+      }
+      ${
+        showSkipForward
+          ? html`
+              <button
+                class="button"
+                @click=${() => onControlClick("skip_forward")}
+                title="${localize("card.media_controls.skip_forward") || "Skip forward 15s"}"
+              >
+                <ha-icon .icon=${"mdi:fast-forward-15"}></ha-icon>
               </button>
             `
           : nothing
@@ -335,9 +424,12 @@ export function countMainControls(
   showFavorite = false,
   hiddenControls = {},
   showStop = false,
-  controlLayout = "classic"
+  controlLayout = "classic",
+  showSkip = false
 ) {
   const normalizedLayout = controlLayout === "modern" ? "modern" : "classic";
+  const showSkipBack = Boolean(showSkip && !hiddenControls.skip_back);
+  const showSkipForward = Boolean(showSkip && !hiddenControls.skip_forward);
   const isIdleOrInactiveState =
     !stateObj ||
     stateObj.state === "idle" ||
@@ -352,15 +444,27 @@ export function countMainControls(
     (supportsFeature(stateObj, SUPPORT_PREVIOUS_TRACK) || isIdleOrInactiveState)
   )
     count++;
+  if (showSkipBack) count++;
   if (!hiddenControls.play_pause) count++; // play/pause button always present if row exists
   if (normalizedLayout !== "modern" && !hiddenControls.stop && showStop) count++;
+  if (showSkipForward) count++;
   if (
     !hiddenControls.next &&
     (supportsFeature(stateObj, SUPPORT_NEXT_TRACK) || isIdleOrInactiveState)
   )
     count++;
-  if (!hiddenControls.shuffle && supportsFeature(stateObj, SUPPORT_SHUFFLE)) count++;
-  if (!hiddenControls.repeat && supportsFeature(stateObj, SUPPORT_REPEAT_SET)) count++;
+  if (
+    !(normalizedLayout === "modern" && showSkipBack) &&
+    !hiddenControls.shuffle &&
+    supportsFeature(stateObj, SUPPORT_SHUFFLE)
+  )
+    count++;
+  if (
+    !(normalizedLayout === "modern" && showSkipForward) &&
+    !hiddenControls.repeat &&
+    supportsFeature(stateObj, SUPPORT_REPEAT_SET)
+  )
+    count++;
   if (normalizedLayout !== "modern" && !hiddenControls.favorite && showFavorite) count++; // favorite button
   if (
     normalizedLayout !== "modern" &&

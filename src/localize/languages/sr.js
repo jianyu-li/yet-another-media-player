@@ -534,6 +534,8 @@ export default {
       repeat: "Понови",
       lock_screen_ready: "Контроле на закључаном екрану активне",
       lock_screen_connecting: "Повезивање контрола на закључаном екрану...",
+      skip_back: "Прескочи уназад 15 с",
+      skip_forward: "Прескочи унапред 15 с",
     },
     menu: {
       more_info: "Више информација",
@@ -614,6 +616,8 @@ export default {
     radio_mode: "Радио режим",
     show_track_options: "Прикажи опције песме",
     play_similar: "Пусти сличне песме",
+    similar_loading: "Тражење сличних песама...",
+    similar_queued: "Сличне песме додате у ред",
     close: "Затвори претрагу",
     no_results: "Нема резултата.",
     play_next: "Пусти следеће",

@@ -536,6 +536,8 @@ export default {
       repeat: "Répéter",
       lock_screen_ready: "Contrôles de l'écran de verrouillage actifs",
       lock_screen_connecting: "Connexion des contrôles de l'écran de verrouillage...",
+      skip_back: "Reculer de 15 s",
+      skip_forward: "Avancer de 15 s",
     },
     menu: {
       more_info: "Plus d'infos",
@@ -616,6 +618,8 @@ export default {
     radio_mode: "Mode Radio",
     show_track_options: "Afficher les options du titre",
     play_similar: "Lire des chansons similaires",
+    similar_loading: "Recherche de chansons similaires...",
+    similar_queued: "Chansons similaires ajoutées à la file",
     close: "Fermer la recherche",
     no_results: "Aucun résultat.",
     play_next: "Lire après",

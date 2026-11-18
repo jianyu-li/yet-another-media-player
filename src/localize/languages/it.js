@@ -529,6 +529,8 @@ export default {
       repeat: "Ripeti",
       lock_screen_ready: "Controlli schermata di blocco attivi",
       lock_screen_connecting: "Connessione controlli schermata di blocco...",
+      skip_back: "Indietro di 15s",
+      skip_forward: "Avanti di 15s",
     },
     menu: {
       more_info: "Più info",
@@ -609,6 +611,8 @@ export default {
     radio_mode: "Modo Radio",
     show_track_options: "Mostra opzioni brano",
     play_similar: "Riproduci brani simili",
+    similar_loading: "Ricerca di brani simili...",
+    similar_queued: "Brani simili aggiunti alla coda",
     close: "Chiudi",
     no_results: "Nessun risultato.",
     play_next: "Riprod. successivo",

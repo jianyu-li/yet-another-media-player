@@ -198,7 +198,7 @@ export function renderEntityEditor(entity, idx = this._entityEditorIndex, isSear
           ></ha-selector>
         </div>
 
-        <div class="form-row" data-search-keys="hidden_controls previous play_pause stop next shuffle repeat favorite power">
+        <div class="form-row" data-search-keys="hidden_controls previous skip_back play_pause stop next skip_forward shuffle repeat favorite power">
           <div class="editor-field-wrapper">
             ${
               this._isTemplateMode("hidden_controls", entity?.hidden_controls)
@@ -238,9 +238,11 @@ export function renderEntityEditor(entity, idx = this._entityEditorIndex, isSear
                           multiple: true,
                           options: [
                             { value: "previous", label: "Previous Track" },
+                            { value: "skip_back", label: "Skip Back 15s" },
                             { value: "play_pause", label: "Play/Pause" },
                             { value: "stop", label: "Stop" },
                             { value: "next", label: "Next Track" },
+                            { value: "skip_forward", label: "Skip Forward 15s" },
                             { value: "shuffle", label: "Shuffle" },
                             { value: "repeat", label: "Repeat" },
                             { value: "favorite", label: "Favorite" },
