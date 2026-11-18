@@ -218,7 +218,21 @@ export async function getMassQueueConfigEntryId(hass, targetEntityId = null) {
       }
     }
 
-    const resolvedId = _resolveIntegrationId(hass, null, ["mass_queue"]);
+    let resolvedId = _resolveIntegrationId(hass, null, ["mass_queue"]);
+
+    if (!resolvedId && targetEntityId && hass.connection?.sendMessagePromise) {
+      try {
+        const info = await hass.connection.sendMessagePromise({
+          type: "mass_queue/get_info",
+          entity_id: targetEntityId,
+        });
+        if (info?.entries?.mass_queue) {
+          resolvedId = info.entries.mass_queue;
+        }
+      } catch (e) {
+        // Ignored: WebSocket call failed
+      }
+    }
 
     cachedMassQueueEntryId = resolvedId || "auto";
     cachedMassQueueEntryTs = now;

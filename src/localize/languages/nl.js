@@ -552,6 +552,8 @@ export default {
       repeat: "Herhalen",
       lock_screen_ready: "Vergrendelschermbediening actief",
       lock_screen_connecting: "Vergrendelschermbediening verbinden...",
+      skip_back: "15s terug",
+      skip_forward: "15s vooruit",
     },
     menu: {
       more_info: "Meer Info",
@@ -632,6 +634,8 @@ export default {
     radio_mode: "Radiomodus",
     show_track_options: "Nummeropties weergeven",
     play_similar: "Vergelijkbare nummers afspelen",
+    similar_loading: "Vergelijkbare nummers zoeken...",
+    similar_queued: "Vergelijkbare nummers aan wachtrij toegevoegd",
     close: "Zoeken Sluiten",
     no_results: "Geen resultaten.",
     play_next: "Volgende afspelen",

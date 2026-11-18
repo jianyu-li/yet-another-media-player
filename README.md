@@ -412,6 +412,8 @@ You can hide specific media player controls on a per-entity basis using the `hid
 - `play_pause` - Play/Pause button  
 - `stop` - Stop button
 - `next` - Next Track button
+- `skip_back` - Skip back 15s button (shown when playing podcasts or audiobooks)
+- `skip_forward` - Skip forward 15s button (shown when playing podcasts or audiobooks)
 - `shuffle` - Shuffle button
 - `repeat` - Repeat button
 - `favorite` - Favorite button (requires Music Assistant entity)
@@ -671,7 +673,7 @@ Initiate a search using the hamburger menu and selecting `search`. Press Enter o
 
 You can click or tap the **current media title** in the card to reveal quick actions for the playing track:
 - **Add to Playlist**: Quick-add the current song to any editable Music Assistant playlist. (Requires [mass_queue](#optional-music-assistant-queue-actions-mass_queue))
-- **Play Similar Songs**: Instantly starts a Radio Mode/Similar Songs stream based on the current track. NOTE: This will restart the currently playing song with a new radio queue. 
+- **Play Similar Songs**: Populates a full dynamic queue of similar songs based on the current track. On Music Assistant, it replaces the upcoming queue in the background (`replace_next` + `radio_mode`) without restarting or interrupting the currently playing song. When Music Assistant is not the active playback entity, it falls back to standard Radio Mode playback.
 
 - **Bonus Tip**: You can also click or tap the **artist name** on a currently playing track to initiate a search for that artist!
 ![preview Image Search](preview/search.png)
@@ -737,6 +739,7 @@ Once installed and configured, YAMP will automatically detect the integration an
 - Browsing playlist tracks
 - Queue item reordering: move up, move down, move next
 - Queue item removal
+- **Podcast & Audiobook Skip Controls (`mass_queue.skip`)**: When listening to a podcast or audiobook, YAMP automatically shows 15-second skip back and skip forward buttons in the playback controls row (using `mass_queue.skip` on Music Assistant entities, with relative `media_seek` fallback when supported).
 
 These features are optional. Without the integration, YAMP will fall back to Home Assistant's built-in `browse_media` or search-based navigation, though album tracklists may be less comprehensive or ordered differently.
 

@@ -543,6 +543,8 @@ export default {
       repeat: "Wiederholen",
       lock_screen_ready: "Sperrbildschirm-Steuerung aktiv",
       lock_screen_connecting: "Sperrbildschirm-Steuerung wird verbunden...",
+      skip_back: "15s zurückspringen",
+      skip_forward: "15s vorspringen",
     },
     menu: {
       more_info: "Mehr Info",
@@ -623,6 +625,8 @@ export default {
     radio_mode: "Radiomodus",
     show_track_options: "Titeloptionen anzeigen",
     play_similar: "Ähnliche Lieder abspielen",
+    similar_loading: "Ähnliche Lieder werden gesucht...",
+    similar_queued: "Ähnliche Lieder zur Warteschlange hinzugefügt",
     close: "Suche schließen",
     no_results: "Keine Ergebnisse.",
     play_next: "Als Nächstes spielen",

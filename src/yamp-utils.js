@@ -1730,3 +1730,49 @@ export function resolveRemoteCommand(command, targetEntity, hass = null, options
 
   return command;
 }
+
+/**
+ * Checks whether the given media player state represents an active podcast or audiobook playback.
+ * @param {import("./types.d.ts").HassEntity|null|undefined} stateObj
+ * @returns {boolean}
+ */
+export function isPodcastOrAudiobook(stateObj) {
+  if (!stateObj?.attributes || !["playing", "paused", "buffering"].includes(stateObj.state)) {
+    return false;
+  }
+  const attrs = stateObj.attributes;
+  const contentType =
+    typeof attrs.media_content_type === "string"
+      ? attrs.media_content_type.trim().toLowerCase()
+      : "";
+  const massItemType =
+    typeof attrs.mass_item_type === "string" ? attrs.mass_item_type.trim().toLowerCase() : "";
+  const contentId =
+    typeof attrs.media_content_id === "string" ? attrs.media_content_id.trim().toLowerCase() : "";
+
+  if (
+    contentType === "podcast" ||
+    contentType === "podcast_episode" ||
+    contentType === "audiobook"
+  ) {
+    return true;
+  }
+  if (
+    massItemType === "podcast" ||
+    massItemType === "podcast_episode" ||
+    massItemType === "audiobook"
+  ) {
+    return true;
+  }
+  if (
+    contentId.startsWith("library://podcast") ||
+    contentId.startsWith("library://audiobook") ||
+    contentId.startsWith("podcast://") ||
+    contentId.startsWith("audiobook://") ||
+    contentId.startsWith("spotify:episode:") ||
+    contentId.startsWith("spotify://episode/")
+  ) {
+    return true;
+  }
+  return false;
+}

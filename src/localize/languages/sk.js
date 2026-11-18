@@ -543,6 +543,8 @@ export default {
       repeat: "Opakovať",
       lock_screen_ready: "Ovládacie prvky na uzamknutej obrazovke aktívne",
       lock_screen_connecting: "Pripájanie ovládacích prvkov na uzamknutej obrazovke...",
+      skip_back: "Preskočiť späť o 15 s",
+      skip_forward: "Preskočiť dopredu o 15 s",
     },
     menu: {
       more_info: "Viac informácií",
@@ -623,6 +625,8 @@ export default {
     radio_mode: "Režim rádio",
     show_track_options: "Zobraziť možnosti skladby",
     play_similar: "Prehrať podobné skladby",
+    similar_loading: "Hľadajú sa podobné skladby...",
+    similar_queued: "Podobné skladby pridané do fronty",
     close: "Zatvoriť vyhľadávanie",
     no_results: "Žiadne výsledky.",
     play_next: "Prehrať ako nasledujúce",

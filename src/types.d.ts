@@ -809,7 +809,7 @@ export declare class SearchController {
   removeSearchSwipeHandlers(): void;
   getMockItemFromCurrentTrack(): any;
   isCurrentlyPlayingRadio(): boolean;
-  handlePlaySimilar(): void;
+  handlePlaySimilar(): Promise<void> | void;
   handleAddCurrentToPlaylist(): Promise<void>;
   searchArtistFromNowPlaying(): Promise<void>;
   resolveMediaUri(
@@ -1045,7 +1045,35 @@ export function resolveRemoteCommand(
     currentEntityId?: string;
   }
 ): string;
+export const DEFAULT_SKIP_SECONDS: number;
 export const ANDROIDTV_REMOTE_COMMAND_MAP: Readonly<Record<string, string>>;
+export function isPodcastOrAudiobook(stateObj?: any): boolean;
+export function renderControlsRow(params: {
+  stateObj?: any;
+  showStop?: boolean;
+  shuffleActive?: boolean;
+  repeatActive?: boolean;
+  onControlClick?: (action: string) => void;
+  supportsFeature?: (stateObj: any, bit: number) => boolean;
+  showFavorite?: boolean;
+  favoriteActive?: boolean;
+  hiddenControls?: Record<string, boolean>;
+  adaptiveControls?: boolean;
+  controlLayout?: string;
+  swapPauseForStop?: boolean;
+  lockScreenState?: string | null;
+  showSkip?: boolean;
+  [key: string]: any;
+}): any;
+export function countMainControls(
+  stateObj?: any,
+  supportsFeature?: any,
+  showFavorite?: boolean,
+  hiddenControls?: Record<string, boolean>,
+  showStop?: boolean,
+  controlLayout?: string,
+  showSkip?: boolean
+): number;
 
 export interface GroupPlayerState {
   isGroupable: boolean;
@@ -1095,6 +1123,10 @@ export interface YetAnotherMediaPlayerCard {
   _lyricsBackgroundFadeResolveCache?: Record<string, TemplateResolveCacheEntry<string | number>>;
   readonly _menuArtworkGradient?: boolean;
   _aiRadioShowsAvailable?: boolean;
+  _similarTracksStatus?: "loading" | "success" | null;
+  _isPodcastOrAudiobookPlaying?: (playbackStateObj: any) => boolean;
+  _isActiveCompanionMaState?: (playbackStateObj: any, maState: any) => boolean;
+  _canSkipPlayback?: (playbackStateObj: any) => boolean;
   _isFullScreen?: boolean;
   _fullScreenOverride?: boolean | null;
   _toggleFullScreen?: () => void;

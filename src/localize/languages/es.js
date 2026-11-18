@@ -532,6 +532,8 @@ export default {
       repeat: "Repetir",
       lock_screen_ready: "Controles de pantalla de bloqueo activos",
       lock_screen_connecting: "Conectando controles de pantalla de bloqueo...",
+      skip_back: "Retroceder 15s",
+      skip_forward: "Avanzar 15s",
     },
     menu: {
       more_info: "Más info",
@@ -612,6 +614,8 @@ export default {
     radio_mode: "Modo Radio",
     show_track_options: "Mostrar opciones de canción",
     play_similar: "Reproducir canciones similares",
+    similar_loading: "Buscando canciones similares...",
+    similar_queued: "Canciones similares añadidas a la cola",
     close: "Cerrar",
     no_results: "Sin resultados.",
     play_next: "Reprod. siguiente",

@@ -534,6 +534,8 @@ export default {
       repeat: "Repeat",
       lock_screen_ready: "Lock screen controls active",
       lock_screen_connecting: "Connecting lock screen controls...",
+      skip_back: "Skip back 15s",
+      skip_forward: "Skip forward 15s",
     },
     menu: {
       more_info: "More Info",
@@ -614,6 +616,8 @@ export default {
     radio_mode: "Radio Mode",
     show_track_options: "Show track options",
     play_similar: "Play similar songs",
+    similar_loading: "Finding similar songs...",
+    similar_queued: "Queued similar songs",
     close: "Close Search",
     no_results: "No results.",
     play_next: "Play next",
