@@ -819,5 +819,112 @@ describe("SearchController & Pure Search Helpers", () => {
         assert.strictEqual(searchMediaClass, "artist");
       });
     });
+
+    describe("showSearchSheetInOptions autofocus handling", () => {
+      /** @type {number} */
+      let focusCalls;
+      /** @type {boolean} */
+      let inputPresent;
+
+      beforeEach(() => {
+        focusCalls = 0;
+        inputPresent = true;
+        mockCard._cardType = "standard";
+        mockCard._disableSearchAutofocus = false;
+        mockCard._searchInputAutoFocused = false;
+        mockCard._alwaysCollapsed = false;
+        mockCard._collapsedMode = "standard";
+        mockCard._expandOnSearch = false;
+        mockCard.renderRoot = {
+          querySelector: (/** @type {string} */ selector) =>
+            selector === "#search-input-box" && inputPresent ? { focus: () => focusCalls++ } : null,
+        };
+        controller.doSearch = async () => {};
+        controller.checkAiRadioAvailability = async () => {};
+      });
+
+      it("skips scheduling when _disableSearchAutofocus is true or _cardType is up_next", (t) => {
+        const clock = t.mock.timers;
+        clock.enable({ apis: ["setTimeout"] });
+
+        mockCard._disableSearchAutofocus = true;
+        controller.showSearchSheetInOptions();
+        assert.strictEqual(controller._focusTimer, null);
+
+        mockCard._disableSearchAutofocus = false;
+        mockCard._cardType = "up_next";
+        controller.showSearchSheetInOptions("next-up");
+        assert.strictEqual(controller._focusTimer, null);
+
+        clock.tick(250);
+        clock.tick(250);
+        assert.strictEqual(focusCalls, 0);
+        assert.strictEqual(mockCard._searchInputAutoFocused, false);
+        controller.hostDisconnected();
+      });
+
+      it("guards initial and retry timers if disabled or closed mid-flight", (t) => {
+        const clock = t.mock.timers;
+        clock.enable({ apis: ["setTimeout"] });
+
+        controller.showSearchSheetInOptions();
+        clock.tick(100);
+        mockCard._disableSearchAutofocus = true;
+        clock.tick(150);
+        clock.tick(250);
+        assert.strictEqual(focusCalls, 0);
+
+        mockCard._disableSearchAutofocus = false;
+        inputPresent = false;
+        controller.showSearchSheetInOptions();
+        clock.tick(200);
+        inputPresent = true;
+        mockCard._showSearchInSheet = false;
+        clock.tick(250);
+        assert.strictEqual(focusCalls, 0);
+        controller.hostDisconnected();
+      });
+
+      it("focuses immediately at 200ms and retries at +200ms when input mounts late", (t) => {
+        const clock = t.mock.timers;
+        clock.enable({ apis: ["setTimeout"] });
+
+        controller.showSearchSheetInOptions();
+        clock.tick(200);
+        assert.strictEqual(focusCalls, 1);
+        assert.strictEqual(mockCard._searchInputAutoFocused, true);
+
+        focusCalls = 0;
+        inputPresent = false;
+        controller.showSearchSheetInOptions();
+        clock.tick(200);
+        assert.strictEqual(focusCalls, 0);
+        inputPresent = true;
+        clock.tick(200);
+        assert.strictEqual(focusCalls, 1);
+        assert.strictEqual(mockCard._searchInputAutoFocused, true);
+        controller.hostDisconnected();
+      });
+
+      it("preserves active timer when preservePending is true and cancels on hide or disconnect", (t) => {
+        const clock = t.mock.timers;
+        clock.enable({ apis: ["setTimeout"] });
+
+        controller.showSearchSheetInOptions();
+        const originalTimer = controller._focusTimer;
+        controller.scheduleSearchInputFocus({ preservePending: true });
+        assert.strictEqual(controller._focusTimer, originalTimer);
+        clock.tick(100);
+        controller.hideSearchSheetInOptions();
+        clock.tick(350);
+        assert.strictEqual(focusCalls, 0);
+
+        controller.showSearchSheetInOptions();
+        clock.tick(100);
+        controller.hostDisconnected();
+        clock.tick(350);
+        assert.strictEqual(focusCalls, 0);
+      });
+    });
   });
 });

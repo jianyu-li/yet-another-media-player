@@ -828,6 +828,8 @@ export declare class SearchController {
   resolvePlaylistUri(playlistName: string, entityId?: string): Promise<string | null>;
   searchAlbumFromNowPlaying(): Promise<void>;
   showSearchSheetInOptions(mode?: string): void;
+  clearFocusTimers(): void;
+  scheduleSearchInputFocus(options?: { preservePending?: boolean }): void;
   openQuickSearchOverlay(mode?: string): void;
   hideSearchSheetInOptions(): void;
   closeMenuIfOpen(): void;
