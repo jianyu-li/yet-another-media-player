@@ -3051,26 +3051,6 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
       this._mediaSessionOverride = null;
     }
     this.config = config;
-    if (this._cardType === "tiny") {
-      this._clearMenuFlagsForTinyMode();
-      this._tinyChipOverlayOpen = false;
-    } else if (this._cardType === "group_players") {
-      this._showEntityOptions = true;
-      this._setIdleState(false);
-      this._showGrouping = true;
-    } else if (this._cardType === "search") {
-      this._showEntityOptions = true;
-      this._setIdleState(false);
-      this._showSearchSheetInOptions?.();
-    } else if (this._cardType === "up_next") {
-      this._showEntityOptions = true;
-      this._setIdleState(false);
-      this._showSearchSheetInOptions?.("next-up");
-    } else if (this._cardType === "remote_control") {
-      this._showEntityOptions = true;
-      this._setIdleState(false);
-      this._showRemoteControl = true;
-    }
     const configuredSet = new Set(
       (config.entities || [])
         .map((e) => (typeof e === "string" ? e : e?.entity_id || e?.entity))
@@ -3134,6 +3114,9 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._swapPauseForStop = config.swap_pause_for_stop === true;
     this._holdToPin = !!config.hold_to_pin;
     this._disableSearchAutofocus = config.disable_autofocus === true;
+    if (this._disableSearchAutofocus) {
+      this._searchController?.clearFocusTimers?.();
+    }
     if (this._holdToPin) {
       this._holdHandler = createHoldToPinHandler({
         onPin: (idx) => this._pinChip(idx),
@@ -3159,11 +3142,6 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._hasSeenPlayback = false;
     this._appearance = config.appearance || "automatic";
     this._ensureIdleController().setConfig(this.config);
-    if (this._isIdle) {
-      this._applyIdleScreen();
-    }
-
-    this._updateHostAttributes();
     // Volume overlay toggle
     this._showVolumeOverlay = !!config.show_volume_overlay;
     // Hold track title for volume overlay toggle
@@ -3178,6 +3156,31 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
     this._displayTimestamps = !!config.display_timestamps;
     // Keep search filters on submit
     this._keepFiltersOnSearch = !!config.keep_filters_on_search;
+    if (this._cardType === "tiny") {
+      this._clearMenuFlagsForTinyMode();
+      this._tinyChipOverlayOpen = false;
+    } else if (this._cardType === "group_players") {
+      this._showEntityOptions = true;
+      this._setIdleState(false);
+      this._showGrouping = true;
+    } else if (this._cardType === "search") {
+      this._showEntityOptions = true;
+      this._setIdleState(false);
+      this._showSearchSheetInOptions?.();
+    } else if (this._cardType === "up_next") {
+      this._showEntityOptions = true;
+      this._setIdleState(false);
+      this._showSearchSheetInOptions?.("next-up");
+    } else if (this._cardType === "remote_control") {
+      this._showEntityOptions = true;
+      this._setIdleState(false);
+      this._showRemoteControl = true;
+    }
+    if (this._isIdle) {
+      this._applyIdleScreen();
+    }
+
+    this._updateHostAttributes();
     // Allow main controls to grow with available space
     this._adaptiveControls = config.adaptive_controls === true;
     // Allow typography to scale with available space
@@ -5440,31 +5443,11 @@ export class YetAnotherMediaPlayerCard extends QueueDragMixin(LitElement) {
 
     // Autofocus the in-sheet search box when opening the search in entity options
     if (this._showSearchInSheet) {
+      this._searchController?.scheduleSearchInputFocus({ preservePending: true });
       // Use a longer delay when expand on search is enabled to allow for card expansion
       const focusDelay = this._collapsedMode === "mini" && this._expandOnSearch ? 300 : 200;
 
       setTimeout(() => {
-        const focusSearchInput = () => {
-          const inputEl = this.renderRoot.querySelector('#search-input-box');
-          if (inputEl) {
-            inputEl.focus();
-            this._searchInputAutoFocused = true;
-            return true;
-          }
-          return false;
-        };
-
-        if (!this._disableSearchAutofocus && !this._searchInputAutoFocused) {
-          const focusedNow = focusSearchInput();
-          if (!focusedNow) {
-            // If input not found yet, try again with a longer delay
-            setTimeout(() => {
-              if (this._showSearchInSheet && !this._disableSearchAutofocus && !this._searchInputAutoFocused) {
-                focusSearchInput();
-              }
-            }, 200);
-          }
-        }
         // Only scroll filter chip row to start if the set of chips has changed
         const classes = this._getVisibleSearchFilterClasses();
         const classStr = classes.join(",");

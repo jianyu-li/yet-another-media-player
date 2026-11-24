@@ -282,6 +282,10 @@ export class SearchController {
     this.host = host;
     this._similarStatusTimer = null;
     this._similarOpToken = 0;
+    /** @type {ReturnType<typeof setTimeout> | null} */
+    this._focusTimer = null;
+    /** @type {ReturnType<typeof setTimeout> | null} */
+    this._focusRetryTimer = null;
 
     if (host && typeof host.addController === "function") {
       host.addController(this);
@@ -298,6 +302,7 @@ export class SearchController {
    */
   hostDisconnected() {
     this._similarOpToken++;
+    this.clearFocusTimers();
     if (this._similarStatusTimer) {
       clearTimeout(this._similarStatusTimer);
       this._similarStatusTimer = null;
@@ -791,6 +796,69 @@ export class SearchController {
     });
   }
 
+  /**
+   * Cancels any pending search input autofocus timers.
+   */
+  clearFocusTimers() {
+    if (this._focusTimer) {
+      clearTimeout(this._focusTimer);
+      this._focusTimer = null;
+    }
+    if (this._focusRetryTimer) {
+      clearTimeout(this._focusRetryTimer);
+      this._focusRetryTimer = null;
+    }
+  }
+
+  /**
+   * Schedules autofocus on `#search-input-box` with a single retry if the input has not mounted yet.
+   * @param {{ preservePending?: boolean }} [options]
+   */
+  scheduleSearchInputFocus({ preservePending = false } = {}) {
+    if (
+      !this.host._showSearchInSheet ||
+      this.host._disableSearchAutofocus ||
+      this.host._searchInputAutoFocused ||
+      this.host._cardType === "up_next"
+    ) {
+      if (!preservePending) {
+        this.clearFocusTimers();
+      }
+      return;
+    }
+    if (preservePending && (this._focusTimer || this._focusRetryTimer)) {
+      return;
+    }
+    this.clearFocusTimers();
+    const isMiniCollapsed =
+      this.host._collapsedMode === "mini" ||
+      (!this.host._collapsedMode && Boolean(this.host._alwaysCollapsed));
+    const focusDelay = isMiniCollapsed && this.host._expandOnSearch ? 300 : 200;
+    const canFocusSearchInput = () =>
+      Boolean(
+        this.host._showSearchInSheet &&
+        !this.host._disableSearchAutofocus &&
+        !this.host._searchInputAutoFocused &&
+        this.host._cardType !== "up_next"
+      );
+    const tryFocus = () => {
+      if (!canFocusSearchInput()) return true;
+      const inp = this.host.renderRoot?.querySelector("#search-input-box");
+      if (!inp) return false;
+      inp.focus();
+      this.host._searchInputAutoFocused = true;
+      return true;
+    };
+    this._focusTimer = setTimeout(() => {
+      this._focusTimer = null;
+      if (tryFocus()) return;
+      this._focusRetryTimer = setTimeout(() => {
+        this._focusRetryTimer = null;
+        tryFocus();
+      }, 200);
+    }, focusDelay);
+  }
+
   showSearchSheetInOptions(mode = "default") {
     this.host._showSearchInSheet = true;
     this.host._searchHeadersRetracted = false;
@@ -844,22 +912,7 @@ export class SearchController {
       }
     }, 100);
 
-    if (!this.host._disableSearchAutofocus) {
-      const focusDelay = this.host._alwaysCollapsed && this.host._expandOnSearch ? 300 : 200;
-      setTimeout(() => {
-        const inp = this.host.renderRoot?.querySelector("#search-input-box");
-        if (inp) {
-          inp.focus();
-        } else {
-          setTimeout(() => {
-            const retryInp = this.host.renderRoot?.querySelector("#search-input-box");
-            if (retryInp) {
-              retryInp.focus();
-            }
-          }, 200);
-        }
-      }, focusDelay);
-    }
+    this.scheduleSearchInputFocus();
   }
 
   openQuickSearchOverlay(mode = "default") {
@@ -884,6 +937,7 @@ export class SearchController {
     this.host._searchQuery = "";
     this.host._searchDisplaySortOverride = null;
     this.host._searchInputAutoFocused = false;
+    this.clearFocusTimers();
     this.host._searchLoading = false;
     this.host._searchAttempted = false;
     this.host._searchResultsByType = {};

@@ -206,7 +206,9 @@ export class IdleController {
         // Dedicated search mode: auto-open search as the primary view
         this.host._showEntityOptions = true;
         this.setIdleState(false);
-        this.host._showSearchSheetInOptions?.();
+        if (!this.host._showSearchInSheet) {
+          this.host._showSearchSheetInOptions?.();
+        }
         this.host.requestUpdate?.();
         return;
       }
@@ -214,7 +216,9 @@ export class IdleController {
         // Dedicated up next mode: auto-open search filtered to up next
         this.host._showEntityOptions = true;
         this.setIdleState(false);
-        this.host._showSearchSheetInOptions?.("next-up");
+        if (!this.host._showSearchInSheet) {
+          this.host._showSearchSheetInOptions?.("next-up");
+        }
         this.host.requestUpdate?.();
         return;
       }
